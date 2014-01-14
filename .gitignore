@@ -1,0 +1,9 @@
+*.o
+*.a
+*.out
+lib/
+build/
+__pycache__/
+*.pyc
+*.sw*
+.venv
