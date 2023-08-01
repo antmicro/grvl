@@ -6,6 +6,8 @@ include(FetchContent)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake ${CMAKE_MODULE_PATH})
 
 set(GRVL_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR})
+option(GRVL_ZEPHYR OFF)
+
 
 if(ENABLE_CLANG_TIDY)
   set(CMAKE_CXX_CLANG_TIDY
@@ -69,8 +71,11 @@ endif()
 
 # DEPENDENCIES END
 
-include(${CMAKE_CURRENT_LIST_DIR}/env_support/sdl.cmake)
-
+if(GRVL_ZEPHYR)
+  include(${CMAKE_CURRENT_LIST_DIR}/env_support/zephyr.cmake)
+else()
+  include(${CMAKE_CURRENT_LIST_DIR}/env_support/sdl.cmake)
+endif()
 
 set_target_properties(tinyxml2 PROPERTIES CXX_CLANG_TIDY "")
 set_target_properties(zlib PROPERTIES CXX_CLANG_TIDY "")
