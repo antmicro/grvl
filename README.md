@@ -52,7 +52,3 @@ add_subdirectory(<grvl_path>)
     ...
 target_link_libraries(app PRIVATE grvl)
 ```
-
-## grvl Documentation
-
-[Grvl Documentation](https://antmicro.github.io/grvl) provides an overview of grvl's usage as well as a detailed description of the API.
