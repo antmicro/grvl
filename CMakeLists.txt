@@ -81,3 +81,38 @@ set_target_properties(tinyxml2 PROPERTIES CXX_CLANG_TIDY "")
 set_target_properties(zlib PROPERTIES CXX_CLANG_TIDY "")
 set_target_properties(libjpeg PROPERTIES CXX_CLANG_TIDY "")
 set_target_properties(libpng PROPERTIES CXX_CLANG_TIDY "")
+
+# DOCS
+
+set(SPHINX_SOURCE ${CMAKE_CURRENT_LIST_DIR}/docs/src)
+set(SPHINX_BUILD ${CMAKE_CURRENT_LIST_DIR}/build/sphinx)
+set(SPHINX_TARGETS html tex)
+find_package(Doxygen)
+find_package(Sphinx)
+
+set(DOXYGEN_INDEX_FILE ${CMAKE_CURRENT_LIST_DIR}/docs/doxydocs/html/index.html)
+
+add_custom_command(OUTPUT ${DOXYGEN_INDEX_FILE}
+                   COMMAND ${DOXYGEN_EXECUTABLE} docs/Doxyfile
+                   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                   MAIN_DEPENDENCY docs/Doxyfile
+                   COMMENT "Generating docs")
+
+add_custom_target(Doxygen ALL DEPENDS ${DOXYGEN_INDEX_FILE})
+
+add_custom_target(Sphinx_HTML ALL
+                  COMMAND ${SPHINX_EXECUTABLE} -b html
+                  ${SPHINX_SOURCE} ${SPHINX_BUILD}/html
+                  -Dbreathe_projects.grvl=${CMAKE_CURRENT_LIST_DIR}/build/doxydocs/xml
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                  COMMENT "Generating HTML documentation with Sphinx")
+
+add_custom_target(Sphinx_PDF ALL
+                  COMMAND ${SPHINX_EXECUTABLE} -M latexpdf
+                  ${SPHINX_SOURCE} ${SPHINX_BUILD}/pdf
+                  -Dbreathe_projects.grvl=${CMAKE_CURRENT_LIST_DIR}/build/doxydocs/xml
+                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                  COMMENT "Generating PDF documentation with Sphinx")
+
+add_dependencies(Sphinx_HTML Doxygen)
+add_dependencies(Sphinx_PDF Doxygen)
