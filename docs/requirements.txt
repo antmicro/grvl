@@ -1,2 +1,4 @@
-https://github.com/antmicro/antmicro-sphinx-utils/archive/main.zip
+sphinx-immaterial
+antmicro_sphinx_utils@https://github.com/antmicro/antmicro-sphinx-utils/archive/main.zip
 breathe
+mathjax
