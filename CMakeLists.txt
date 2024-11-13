@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.18.4)
 project(grvl LANGUAGES C CXX)
+set(CXX_STANDARD 11)
 
 include(FetchContent)
 
