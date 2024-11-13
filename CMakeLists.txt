@@ -69,6 +69,18 @@ endif()
     FetchContent_Populate(libpng)
     message("libpng src" ${libpng_SOURCE_DIR})
   endif()
+  
+  FetchContent_Declare(
+    duktape
+    URL https://github.com/svaarala/duktape/releases/download/v2.7.0/duktape-2.7.0.tar.xz
+    URL_HASH SHA256=90f8d2fa8b5567c6899830ddef2c03f3c27960b11aca222fa17aa7ac613c2890
+  )
+
+  FetchContent_GetProperties(duktape)
+  if(NOT duktape_POPULATED)
+    FetchContent_Populate(duktape)
+    message("duktape src" ${duktape_SOURCE_DIR})
+  endif()
 
 # DEPENDENCIES END
 
@@ -82,6 +94,7 @@ set_target_properties(tinyxml2 PROPERTIES CXX_CLANG_TIDY "")
 set_target_properties(zlib PROPERTIES CXX_CLANG_TIDY "")
 set_target_properties(libjpeg PROPERTIES CXX_CLANG_TIDY "")
 set_target_properties(libpng PROPERTIES CXX_CLANG_TIDY "")
+set_target_properties(duktape PROPERTIES CXX_CLANG_TIDY "")
 
 # DOCS
 

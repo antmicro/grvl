@@ -9,6 +9,7 @@ add_subdirectory(${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
 add_subdirectory(${tinyxml2_SOURCE_DIR} ${tinyxml2_BINARY_DIR})
 target_include_directories(grvl PUBLIC ${libjpeg_SOURCE_DIR})
 target_include_directories(grvl PUBLIC ${libpng_SOURCE_DIR})
+target_include_directories(grvl PUBLIC ${duktape_SOURCE_DIR}/src)
 
 add_library(libjpeg STATIC)
 
@@ -38,5 +39,11 @@ file(GLOB PNGLIB_SRC
 
 target_sources(libpng PRIVATE ${PNGLIB_SRC})
 
+add_library(duktape STATIC)
+file(GLOB DUKTAPE_SRC
+  ${duktape_SOURCE_DIR}/src/*.c
+)
+target_sources(duktape PRIVATE ${DUKTAPE_SRC})
+
 target_sources(grvl PRIVATE ${GRVL_SOURCE})
-target_link_libraries(grvl PUBLIC zlib tinyxml2 libjpeg libpng)
+target_link_libraries(grvl PUBLIC zlib tinyxml2 libjpeg libpng duktape)

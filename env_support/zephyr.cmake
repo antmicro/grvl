@@ -11,6 +11,7 @@ zephyr_include_directories(${zlib_SOURCE_DIR})
 zephyr_include_directories(${tinyxml2_SOURCE_DIR})
 zephyr_include_directories(${libpng_SOURCE_DIR})
 zephyr_include_directories(${libjpeg_SOURCE_DIR})
+zephyr_include_directories(${duktape_SOURCE_DIR}/src)
 
 zephyr_library_named(tinyxml2)
 zephyr_library_sources(${tinyxml2_SOURCE_DIR}/tinyxml2.cpp)
@@ -67,4 +68,10 @@ message("pnglib src" ${PNGLIB_SRC})
 
 zephyr_library_sources(${PNGLIB_SRC})
 
-target_link_libraries(grvl PUBLIC zlib tinyxml2 libjpeg libpng)
+zephyr_library_named(duktape)
+file(GLOB DUKTAPE_SRC
+  ${duktape_SOURCE_DIR}/src/*.c
+)
+zephyr_library_sources(${DUKTAPE_SRC})
+
+target_link_libraries(grvl PUBLIC zlib tinyxml2 libjpeg libpng duktape)
