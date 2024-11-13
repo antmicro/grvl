@@ -16,6 +16,7 @@
 
 #include "Manager.h"
 // #include "ListItem.h"
+#include "ParsingUtils.h"
 
 #ifdef __ZEPHYR__
 #include <zephyr/logging/log.h>
@@ -53,94 +54,9 @@ namespace grvl {
     WIDGET(Slider);
     WIDGET(SwitchButton);
 
-    static Event::ArgVector GetArguments(const string& CallbackString);
-    static string GetFunctionName(const string& CallbackString);
-
     static inline float MotionFunc(float x)
     {
         return (sin(3.1415 * x - 1.57) + 1) / 2; //NOLINT(readability-magic-numbers)
-    }
-
-    static string GetFunctionName(const string& CallbackString)
-    {
-        return CallbackString.substr(0, CallbackString.find_first_of(" (", 0));
-    }
-
-    static Event::ArgVector GetArguments(const string& CallbackString)
-    {
-        Event::ArgVector Vec;
-        size_t start_pos = CallbackString.find_first_of("(", 0); //NOLINT
-
-        unsigned int currentChar = start_pos + 1;
-        string argument;
-
-        enum mode {
-            Regular,
-            Text
-        } currentMode
-            = Regular;
-
-        while(currentChar < CallbackString.size()) {
-            switch(CallbackString[currentChar]) {
-                case ' ':
-                    if(currentMode == Regular) {
-                        break;
-                    } else if(currentMode == Text) {
-                        argument.push_back(CallbackString[currentChar]);
-                    }
-                    break;
-                case '\\': // add special character
-                    if(currentChar + 1 < CallbackString.size() && currentMode == Text) {
-                        currentChar++;
-                        switch(CallbackString[currentChar]) {
-                            case '\'':
-                                argument.push_back('\'');
-                                break;
-                            case 'r': // CR
-                                argument.push_back('\r');
-                                break;
-                            case 'n': // NL
-                                argument.push_back('\n');
-                                break;
-                            case 'b': // BS
-                                argument.push_back('\b');
-                                break;
-                            case 't': // TAB
-                                argument.push_back('\t');
-                                break;
-                        }
-                    }
-                    break;
-                case '\'':
-                    if(currentMode == Regular) {
-                        currentMode = Text;
-                    } else if(currentMode == Text) {
-                        currentMode = Regular;
-                    }
-                    break;
-                case ')':
-                    if(currentMode == Regular) {
-                        Vec.push_back(argument);
-                        currentChar = CallbackString.size(); // Finish parsing
-                    } else {
-                        argument.push_back(CallbackString[currentChar]);
-                    }
-                    break;
-                case ',':
-                    if(currentMode == Regular) {
-                        Vec.push_back(argument);
-                        argument.clear();
-                    } else if(currentMode == Text) {
-                        argument.push_back(CallbackString[currentChar]);
-                    }
-                    break;
-                default:
-                    argument.push_back(CallbackString[currentChar]);
-                    break;
-            }
-            currentChar++;
-        }
-        return Vec;
     }
 
     static void ClosePopupCallback(void* sender, const Event::ArgVector& Args)
@@ -1425,9 +1341,9 @@ namespace grvl {
         if(!eventName) {
             return Event();
         }
-            string FunctionName = GetFunctionName(string(eventName));
+            string FunctionName = ParsingUtils::GetFunctionName(string(eventName));
             Event::CallbackPointer callbackPtr = GetCallbackFromContainer(FunctionName);
-            Event::ArgVector argVec = GetArguments(string(eventName));
+            Event::ArgVector argVec = ParsingUtils::GetArguments(string(eventName));
 
         if(callbackPtr) {
             return Event(callbackPtr, argVec);
