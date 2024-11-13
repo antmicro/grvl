@@ -17,6 +17,7 @@
 //NOLINTBEGIN(readability-magic-numbers)
 #include "XMLSupport.h"
 #include "Manager.h"
+#include "ParsingUtils.h"
 
 namespace grvl {
 
@@ -88,6 +89,19 @@ namespace grvl {
         }
 
         return val;
+    }
+
+    CallbackDefinition XMLSupport::ParseCallback(const char* callbackDefinition)
+    {
+        if (!callbackDefinition || strlen(callbackDefinition) == 0) {
+            return CallbackDefinition{};
+        }
+
+        CallbackDefinition result_callback_definition{};
+        result_callback_definition.functionName = ParsingUtils::GetFunctionName(callbackDefinition);
+        result_callback_definition.args = ParsingUtils::GetArguments(callbackDefinition);
+
+        return result_callback_definition;
     }
 
     bool XMLSupport::TryGetIntAttribute(XMLElement* element, const char* attributeName, int32_t* value)

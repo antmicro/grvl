@@ -91,11 +91,16 @@ namespace grvl {
 
         Touch::TouchResponse ProcessMove(int32_t StartX, int32_t StartY, int32_t DeltaX, int32_t DeltaY);
 
-        string& GetText();
+        const char* GetText();
         Font const* GetButtonFont();
         Image* GetImagePointer();
 
         virtual void ClearTouch();
+
+        void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder) override;
+
+        GENERATE_DUK_STRING_GETTER(AbstractButton, Text, GetText)
+        GENERATE_DUK_STRING_SETTER(AbstractButton, Text, SetText)
 
     protected:
         string Text;

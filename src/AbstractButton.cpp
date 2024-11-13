@@ -96,9 +96,9 @@ namespace grvl {
         onLongPressRepeat.SetSenderPointer(this);
     }
 
-    string& AbstractButton::GetText()
+    const char* AbstractButton::GetText()
     {
-        return Text;
+        return Text.c_str();
     }
 
     Image* AbstractButton::GetImagePointer()
@@ -151,6 +151,12 @@ namespace grvl {
 
         this->SetText(XMLSupport::GetAttributeOrDefault(xmlElement, "text", ""));
         this->SetTextFont(man->GetFontPointer(XMLSupport::GetAttributeOrDefault(xmlElement, "font", "normal")));
+    }
+
+    void AbstractButton::PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder)
+    {
+        Component::PopulateJavaScriptObject(jsObjectBuilder);
+        jsObjectBuilder.AddProperty("text", AbstractButton::JSGetTextWrapper, AbstractButton::JSSetTextWrapper);
     }
 
 } /* namespace grvl */

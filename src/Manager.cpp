@@ -18,6 +18,8 @@
 // #include "ListItem.h"
 #include "ParsingUtils.h"
 
+#include <JSEngine.h>
+
 #ifdef __ZEPHYR__
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(MANAGER, LOG_LEVEL_INF);
@@ -462,6 +464,20 @@ namespace grvl {
             return searchImage->second;
         }
         return NULL;
+    }
+    
+    Event Manager::GetOrCreateCallback(const std::string& callbackFunctionName, const Event::ArgVector& callbackArgs)
+    {
+        if (Event::CallbackPointer foundCallback = GetCallbackFromContainer(callbackFunctionName)) {
+            return Event{foundCallback, callbackArgs};
+        }
+
+        return JSEngine::CreateJavaScriptFunctionCallEvent(callbackFunctionName, callbackArgs);
+    }
+
+    Event Manager::GetOrCreateCallback(const CallbackDefinition& callbackDefinition)
+    {
+        return GetOrCreateCallback(callbackDefinition.functionName, callbackDefinition.args);
     }
 
     int8_t Manager::IsInitializationFinished()
@@ -1271,6 +1287,11 @@ namespace grvl {
                     ParseStylesheet(nextElement);
                 }
 
+                nextElement = Root->FirstChildElement("script");
+                if(nextElement) {
+                    ParseScripts(nextElement);
+                }
+
                 nextElement = Root->FirstChildElement("keypadMapping");
                 if(nextElement) {
                     ParseKeypadMapping(nextElement);
@@ -1334,6 +1355,17 @@ namespace grvl {
         if(GetScreen("start"))
             SetActiveScreen("start", 0);
         return 0;
+    }
+
+    void Manager::ParseScripts(XMLElement* script)
+    {
+        if (const char* embeddedJavaScriptCode = script->GetText()) {
+            std::size_t embeddedJavaScriptCodeSize = strlen(embeddedJavaScriptCode);
+            JSEngine::LoadJavaScriptCode(embeddedJavaScriptCode, embeddedJavaScriptCodeSize);
+        }
+
+        const char* linkedJavaScriptCodePath = XMLSupport::GetAttributeOrDefault(script, "src", "");
+        JSEngine::LoadJavaScriptCode(linkedJavaScriptCodePath);
     }
 
     Event Manager::GetEventWithArguments(const char* eventName) const
@@ -1449,6 +1481,11 @@ namespace grvl {
     Manager& Manager::GetInstance()
     {
         return *instance;
+    }
+
+    Component* Manager::FindElementInTheActiveScreenById(const char* id)
+    {
+        return ActiveScreen->GetElement(id);
     }
 
 } /* namespace grvl */

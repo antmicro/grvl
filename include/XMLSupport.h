@@ -19,6 +19,7 @@
 
 #include "Label.h"
 #include "tinyxml2.h"
+#include "CallbackDefinition.h"
 
 using namespace tinyxml2;
 
@@ -29,6 +30,7 @@ namespace grvl {
         static uint32_t GetAttributeOrDefault(XMLElement* element, const char* attributeName, uint32_t defaultValue);
         static bool GetAttributeOrDefault(XMLElement* element, const char* attributeName, bool defaultValue);
         static const char* GetAttributeOrDefault(XMLElement* element, const char* attributeName, const char* defaultValue);
+        static CallbackDefinition ParseCallback(const char* callbackDefinition);
         static enum Label::TextHorizontalAlignment ParseAlignmentOrDefault(XMLElement* element, const char* attributeName,
                                                                            enum Label::TextHorizontalAlignment defaultValue);
         static bool TryGetAttribute(XMLElement* element, const char* attributeName, const char** value);

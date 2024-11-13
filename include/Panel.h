@@ -70,8 +70,6 @@ namespace grvl {
         static Panel* BuildFromXML(XMLElement* xmlElement);
 
         virtual void Draw(Painter& painter, int32_t ParentX, int32_t ParentY, int32_t ParentWidth, int32_t ParentHeight);
-
-    protected:
     };
 
 } /* namespace grvl */

@@ -70,6 +70,9 @@ namespace grvl {
                           int32_t ParentHeight)
             = 0;
 
+        virtual void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder);
+        static duk_ret_t JSGetElementByIdWrapper(duk_context* ctx);
+
     protected:
         vector<Component*> Elements;
         bool childDropped;

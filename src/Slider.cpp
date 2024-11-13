@@ -443,7 +443,7 @@ namespace grvl {
             man->BindImageContentToImage(tempChar, result->GetScrollImagePointer());
         }
 
-        result->SetOnValueChangeEvent(man->GetEventWithArguments(xmlElement->Attribute("onValueChange")));
+        result->SetOnValueChangeEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onValueChange"))));
 
         return result;
     }

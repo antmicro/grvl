@@ -23,6 +23,8 @@
 #include "stl.h"
 #include "tinyxml2.h"
 
+#include <duktape.h>
+
 using namespace tinyxml2;
 
 namespace grvl {
@@ -106,7 +108,7 @@ namespace grvl {
         void SetTextFont(Font const* font);
 
         /// @return Label's text.
-        string& GetText();
+        const char* GetText();
 
         TextHorizontalAlignment GetMode();
         uint32_t GetFrameColor() const;
@@ -115,6 +117,11 @@ namespace grvl {
         static Label* BuildFromXML(XMLElement* xmlElement);
 
         virtual void Draw(Painter& painter, int32_t ParentX, int32_t ParentY, int32_t ParentWidth, int32_t ParentHeight);
+
+        void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder) override;
+
+        GENERATE_DUK_STRING_GETTER(Label, Text, GetText)
+        GENERATE_DUK_STRING_SETTER(Label, Text, SetText)
     };
 } /* namespace grvl */
 

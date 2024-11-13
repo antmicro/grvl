@@ -67,5 +67,11 @@ namespace grvl {
     {
         Component::InitFromXML(xmlElement);
     }
+    
+    void ProgressBar::PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder)
+    {
+        Component::PopulateJavaScriptObject(jsObjectBuilder);
+        jsObjectBuilder.AddProperty("progressValue", ProgressBar::JSGetProgressValueWrapper, ProgressBar::JSSetProgressValueWrapper);
+    }
 
 } /* namespace grvl */

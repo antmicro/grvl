@@ -69,9 +69,9 @@ namespace grvl {
             XMLSupport::ParseAlignmentOrDefault(xmlElement, "alignment", Label::Center));
         result->SetVisible(XMLSupport::GetAttributeOrDefault(xmlElement, "visible", true));
         result->SetVisibleSeconds(XMLSupport::GetAttributeOrDefault(xmlElement, "seconds", false));
-        result->SetOnClickEvent(man->GetEventWithArguments(xmlElement->Attribute("onClick")));
-        result->SetOnReleaseEvent(man->GetEventWithArguments(xmlElement->Attribute("onRelease")));
-        result->SetOnPressEvent(man->GetEventWithArguments(xmlElement->Attribute("onPress")));
+        result->SetOnClickEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onClick"))));
+        result->SetOnReleaseEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onRelease"))));
+        result->SetOnPressEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onPress"))));
 
         result->Start();
 
@@ -106,6 +106,14 @@ namespace grvl {
             lastCurrentTime = Obj.lastCurrentTime;
         }
         return *this;
+    }
+    
+    void Clock::PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder)
+    {
+        Label::PopulateJavaScriptObject(jsObjectBuilder);
+        jsObjectBuilder.AddProperty("isRunning", Clock::JSGetIsRunningWrapper);
+        jsObjectBuilder.AttachMemberFunction("Start", Clock::JSStartWrapper);
+        jsObjectBuilder.AttachMemberFunction("Stop", Clock::JSStopWrapper);
     }
 
 } /* namespace grvl */

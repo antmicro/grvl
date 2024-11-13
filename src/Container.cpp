@@ -17,6 +17,7 @@
 #include "Container.h"
 #include "Manager.h"
 #include "XMLSupport.h"
+#include "JSEngine.h"
 
 namespace grvl {
 
@@ -140,6 +141,30 @@ namespace grvl {
         }
         return Touch::TouchNA;
         ;
+    }
+
+    void Container::PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder)
+    {
+        Component::PopulateJavaScriptObject(jsObjectBuilder);
+        jsObjectBuilder.AttachMemberFunction("GetElementById", Panel::JSGetElementByIdWrapper, 1);
+    }
+
+    duk_ret_t Container::JSGetElementByIdWrapper(duk_context* ctx)
+    {
+        duk_push_this(ctx);
+        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
+        Container* container = static_cast<Container*>(duk_to_pointer(ctx, -1));
+        if (!container) {
+            return 0;
+        }
+
+        const char* componentName = duk_to_string(ctx, 0);
+        if (Component* foundComponent = container->GetElement(componentName)) {
+            JSEngine::PushComponentAsJSObjectOntoStack(foundComponent);
+            return 1;
+        }
+
+        return 0;
     }
 
 } /* namespace grvl */

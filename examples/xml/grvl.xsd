@@ -9,6 +9,7 @@
             <xs:choice minOccurs="0" maxOccurs="unbounded">
                 <xs:element name="guiConfig" type="guiConfigType" />
                 <xs:element name="stylesheet" type="stylesheetType" />
+                <xs:element name="script" type="scriptType" />
                 <xs:element name="keypadMapping" type="keypadMappingType"/>
                 <xs:element ref="header"/>
                 <xs:element ref="footer"/>
@@ -233,6 +234,10 @@
     </xs:complexType>
 
     <xs:complexType name="stylesheetType" mixed="true">
+    </xs:complexType>
+    
+    <xs:complexType name="scriptType" mixed="true">
+        <xs:attribute name="src" type="xs:string" />
     </xs:complexType>
 
     <xs:complexType name="keypadMappingType">

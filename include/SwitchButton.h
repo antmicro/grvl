@@ -22,6 +22,7 @@
 #include "Painter.h"
 #include "stl.h"
 #include "tinyxml2.h"
+#include "JSObjectBuilder.h"
 
 using namespace tinyxml2;
 
@@ -122,6 +123,10 @@ namespace grvl {
         static SwitchButton* BuildFromXML(XMLElement* xmlElement);
 
         virtual void Draw(Painter& painter, int32_t ParentX, int32_t ParentY, int32_t ParentWidth, int32_t ParentHeight);
+
+        void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder) override;
+
+        GENERATE_DUK_BOOLEAN_GETTER(SwitchButton, SwitchState, GetSwitchState)
 
     protected:
         uint32_t SwitchColor, ActiveSwitchColor, TextColor, ActiveTextColor, FrameColor, SelectedFrameColor;

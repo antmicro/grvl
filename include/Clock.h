@@ -94,6 +94,12 @@ namespace grvl {
         void Stop();
         bool IsRunning() const;
 
+        void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder) override;
+
+        GENERATE_DUK_MEMBER_FUNCTION(Clock, Start)
+        GENERATE_DUK_MEMBER_FUNCTION(Clock, Stop)
+        GENERATE_DUK_BOOLEAN_GETTER(Clock, IsRunning, IsRunning)
+
     private:
         bool isRunning;
         bool visibleSeconds;

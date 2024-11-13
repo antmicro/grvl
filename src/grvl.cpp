@@ -16,6 +16,8 @@
 
 #include "grvl.h"
 
+#include "JSEngine.h"
+
 namespace grvl {
 
     static gui_callbacks_t callbacks;
@@ -34,7 +36,18 @@ namespace grvl {
             callbacks.mutex_unlock = NULL;
             callbacks.mutex_destroy = NULL;
             callbacks.get_timestamp = NULL;
+
+            callbacks.duk_alloc_func = NULL;
+            callbacks.duk_realloc_func = NULL;
+            callbacks.duk_free_func = NULL;
         }
+
+        JSEngine::Initialize(n_callbacks);
+    }
+
+    void grvl::Destroy()
+    {
+        JSEngine::Destroy();
     }
 
     gui_callbacks_t* grvl::Callbacks()

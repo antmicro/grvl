@@ -18,6 +18,8 @@
 #define GRVL_EVENT_H_
 
 #include "stl.h"
+
+#include <functional>
 #include <stdint.h>
 
 namespace grvl {
@@ -27,6 +29,7 @@ namespace grvl {
     public:
         typedef vector<string> ArgVector;
         typedef void (*CallbackPointer)(void* senderPtr, const Event::ArgVector&);
+        using CallbackFunction = std::function<void(void* senderPtr, const Event::ArgVector&)>;
 
         Event()
             : senderPtr(NULL)
@@ -52,6 +55,9 @@ namespace grvl {
         {
         }
 
+        Event(CallbackFunction eventCallback)
+            : eventCallback{std::move(eventCallback)} {}
+
         virtual ~Event();
 
         Event& operator=(const Event& Obj);
@@ -65,7 +71,7 @@ namespace grvl {
     private:
         ArgVector argVec;
         void* senderPtr;
-        CallbackPointer eventCallback;
+        CallbackFunction eventCallback;
     };
 
 } /* namespace grvl */

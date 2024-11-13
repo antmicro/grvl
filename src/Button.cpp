@@ -19,6 +19,9 @@
 #include "grvl.h"
 #include "Manager.h"
 #include "XMLSupport.h"
+#include "JSEngine.h"
+#include "JSObject.h"
+#include "JSObjectBuilder.h"
 
 namespace grvl {
 
@@ -80,6 +83,8 @@ namespace grvl {
 
         result->SetTextTopOffset(XMLSupport::GetAttributeOrDefault(xmlElement, "text_top_offset", (uint32_t)0));
 
+        result->SetOnClickEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onClick"))));
+
         const char* tempChar = xmlElement->Attribute("image");
         if(tempChar) {
             Image buttonImg(NULL, 0, 0, 0);
@@ -95,8 +100,8 @@ namespace grvl {
             result->SetImagePosition(imgX, imgY);
         }
 
-        result->SetOnLongPressEvent(man->GetEventWithArguments(xmlElement->Attribute("onLongPress")));
-        result->SetOnLongPressRepeatEvent(man->GetEventWithArguments(xmlElement->Attribute("onLongPressRepeat")));
+        result->SetOnLongPressEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPress"))));
+        result->SetOnLongPressRepeatEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPressRepeat"))));
 
         return result;
     }
@@ -277,6 +282,15 @@ namespace grvl {
                 ButtonImage.SetPosition(width / 2 - ButtonImage.GetWidth() / 2, height / 2 - ButtonImage.GetHeight() / 2);
             }
         }
+    }
+
+    void Button::PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder)
+    {
+        AbstractButton::PopulateJavaScriptObject(jsObjectBuilder);
+        jsObjectBuilder.AddProperty("icoColor", Button::JSGetIcoColorWrapper, Button::JSSetIcoColorWrapper);
+        jsObjectBuilder.AddProperty("activeIcoColor", Button::JSGetActiveIcoColorWrapper, Button::JSSetActiveIcoColorWrapper);
+        jsObjectBuilder.AddProperty("frameColor", Button::JSGetFrameColorWrapper, Button::JSSetFrameColorWrapper);
+        jsObjectBuilder.AddProperty("selectedFrameColor", Button::JSGetSelectedFrameColorWrapper, Button::JSSetSelectedFrameColorWrapper);
     }
 
 } /* namespace grvl */

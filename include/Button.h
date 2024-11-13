@@ -127,6 +127,20 @@ namespace grvl {
 
         virtual void Draw(Painter& painter, int32_t ParentX, int32_t ParentY, int32_t ParentWidth, int32_t ParentHeight);
 
+        virtual void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder);
+
+        GENERATE_DUK_UNSIGNED_INT_GETTER(Button, IcoColor, GetIcoColor)
+        GENERATE_DUK_UNSIGNED_INT_SETTER(Button, IcoColor, SetIcoColor)
+
+        GENERATE_DUK_UNSIGNED_INT_GETTER(Button, ActiveIcoColor, GetActiveIcoColor)
+        GENERATE_DUK_UNSIGNED_INT_SETTER(Button, ActiveIcoColor, SetActiveIcoColor)
+        
+        GENERATE_DUK_UNSIGNED_INT_GETTER(Button, FrameColor, GetFrameColor)
+        GENERATE_DUK_UNSIGNED_INT_SETTER(Button, FrameColor, SetFrameColor)
+        
+        GENERATE_DUK_UNSIGNED_INT_GETTER(Button, SelectedFrameColor, GetSelectedFrameColor)
+        GENERATE_DUK_UNSIGNED_INT_SETTER(Button, SelectedFrameColor, SetSelectedFrameColor)
+
     protected:
         uint32_t IcoColor, ActiveIcoColor, FrameColor, SelectedFrameColor;
         int16_t IcoChar;

@@ -225,10 +225,10 @@ namespace grvl {
             result->SetSize(result->GetImagePointer()->GetWidth(), result->GetImagePointer()->GetHeight());
         }
 
-        result->SetOnSwitchONEvent(man->GetEventWithArguments(xmlElement->Attribute("onSwitchON")));
-        result->SetOnSwitchOFFEvent(man->GetEventWithArguments(xmlElement->Attribute("onSwitchOFF")));
-        result->SetOnLongPressEvent(man->GetEventWithArguments(xmlElement->Attribute("onLongPress")));
-        result->SetOnLongPressRepeatEvent(man->GetEventWithArguments(xmlElement->Attribute("onLongPressRepeat")));
+        result->SetOnSwitchONEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onSwitchON"))));
+        result->SetOnSwitchOFFEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onSwitchOFF"))));
+        result->SetOnLongPressEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPress"))));
+        result->SetOnLongPressRepeatEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPressRepeat"))));
 
         return result;
     }
@@ -275,6 +275,12 @@ namespace grvl {
     {
         onSwitchOFF = event;
         onSwitchOFF.SetSenderPointer(this);
+    }
+
+    void SwitchButton::PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder)
+    {
+        AbstractButton::PopulateJavaScriptObject(jsObjectBuilder);
+        jsObjectBuilder.AddProperty("switchState", SwitchButton::JSGetSwitchStateWrapper);
     }
 
 } /* namespace grvl */

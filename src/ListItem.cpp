@@ -303,8 +303,8 @@ namespace grvl {
             man->BindImageContentToImage(tempChar, result->GetRoundingImagePointer());
         }
 
-        result->SetOnLongPressEvent(man->GetEventWithArguments(xmlElement->Attribute("onLongPress")));
-        result->SetOnLongPressRepeatEvent(man->GetEventWithArguments(xmlElement->Attribute("onLongPressRepeat")));
+        result->SetOnLongPressEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPress"))));
+        result->SetOnLongPressRepeatEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPressRepeat"))));
 
         return result;
     }

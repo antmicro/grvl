@@ -176,14 +176,13 @@ namespace grvl {
 
     void AbstractView::InitFromXML(XMLElement* xmlElement)
     {
-
         Component::InitFromXML(xmlElement);
         Manager* man = &Manager::GetInstance();
-        this->SetOnSlideToLeftEvent(man->GetEventWithArguments(xmlElement->Attribute("onSlideToLeft")));
-        this->SetOnSlideToRightEvent(man->GetEventWithArguments(xmlElement->Attribute("onSlideToRight")));
+        this->SetOnSlideToLeftEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onSlideToLeft"))));
+        this->SetOnSlideToRightEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onSlideToRight"))));
 
-        this->SetOnLongPressEvent(man->GetEventWithArguments(xmlElement->Attribute("onLongPress")));
-        this->SetOnLongPressRepeatEvent(man->GetEventWithArguments(xmlElement->Attribute("onLongPressRepeat")));
+        this->SetOnLongPressEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPress"))));
+        this->SetOnLongPressRepeatEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPressRepeat"))));
 
         string collectionString = XMLSupport::GetAttributeOrDefault(xmlElement, "collection", "0/0");
         this->SetCollectionSize(XMLSupport::GetCollectionSize(collectionString));

@@ -24,6 +24,8 @@
 #include <string.h>
 #include <sys/time.h>
 
+#include <duktape.h>
+
 namespace grvl {
 
     typedef struct {
@@ -46,6 +48,10 @@ namespace grvl {
         void (*mutex_unlock)(void* mutex);
         void (*mutex_destroy)(void* mutex);
         uint64_t (*get_timestamp)(void);
+
+        duk_alloc_function duk_alloc_func;
+        duk_realloc_function duk_realloc_func;
+        duk_free_function duk_free_func;
     } gui_callbacks_t;
 
     /// Class used to initialize the library.
@@ -54,6 +60,7 @@ namespace grvl {
     public:
         /// Method accepting callbacks to platform-dependent functions, e.g. for memory management.
         static void Init(gui_callbacks_t* n_callbacks);
+        static void Destroy();
         static gui_callbacks_t* Callbacks();
         static void Log(const char* text, ...);
     };

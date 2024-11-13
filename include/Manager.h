@@ -262,7 +262,14 @@ namespace grvl {
         /// @param name Identifier of an event that should invoke the callback.
         /// @param Callback Callback that should be called on event.
         Manager& AddCallbackToContainer(const string& name, Event::CallbackPointer Callback);
-        Event::CallbackPointer GetCallbackFromContainer(const string& name) const;
+        
+        /// Tries to search if there is callback defined with C/C++ code (added by AddCallbackToContainer), if not
+        /// then it creates new one that will call JavaScript code with provided constant args.
+        ///
+        /// @param callbackFunctionName Identifier of a function invoked by the callback.
+        /// @param callbackArgs Constant args that will be passed as callback function arguments
+        Event GetOrCreateCallback(const string& callbackFunctionName, const Event::ArgVector& callbackArgs);
+        Event GetOrCreateCallback(const CallbackDefinition& callbackDefinition);
 
         /// Register font in content manager.
         ///
@@ -326,6 +333,8 @@ namespace grvl {
         Manager& SetCancelExternalContentRequestCallback(ContentManager::ContentCallback cancelRequestCallback);
         Painter painter; // TODO
 
+        Component* FindElementInTheActiveScreenById(const char* id);
+
     private:
         Manager(uint32_t xSize, uint32_t ySize, int bpp, bool rotate90 = false, uint8_t* framebuffer = NULL);
 
@@ -381,6 +390,7 @@ namespace grvl {
         void ParseGuiConfiguration(XMLElement* ConfigNode);
         void ParseKeypadMapping(XMLElement* KeypadNode);
         void ParseStylesheet(XMLElement* stylesheet);
+        void ParseScripts(XMLElement* scripts);
         void ParseStyle(char* active_object, char* active_parameter, char* active_parameter_value);
 
         void ProcessEvents();
@@ -388,6 +398,8 @@ namespace grvl {
         void ShowPopup();
 
         void ApplyTransparency();
+
+        Event::CallbackPointer GetCallbackFromContainer(const string& name) const;
     };
 
 } /* namespace grvl */

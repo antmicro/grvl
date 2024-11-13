@@ -52,7 +52,7 @@ namespace grvl {
             result->SetID(id);
         }
 
-        result->SetOnClickEvent(man->GetEventWithArguments(xmlElement->Attribute("onClick")));
+        result->SetOnClickEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onClick"))));
         return result;
     }
 

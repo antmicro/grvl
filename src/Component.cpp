@@ -19,6 +19,7 @@
 #include "Manager.h"
 #include "Misc.h"
 #include "XMLSupport.h"
+#include "JSObjectBuilder.h"
 
 namespace grvl {
 
@@ -81,6 +82,25 @@ namespace grvl {
             X = x;
             Y = y;
         }
+    }
+    void Component::SetX(int32_t x)
+    {
+        X = x;
+    }
+
+    void Component::SetY(int32_t y)
+    {
+        Y = y;
+    }
+
+    void Component::SetWidth(int32_t width)
+    {
+        Width = width;
+    }
+
+    void Component::SetHeight(int32_t height)
+    {
+        Height = height;
     }
 
     uint32_t Component::GetBackgroundColor() const
@@ -376,9 +396,23 @@ namespace grvl {
                 xmlElement, "activeBackgroundColor", (uint32_t)this->GetBackgroundColor()));
         this->SetForegroundColor(XMLSupport::GetAttributeOrDefault(xmlElement, "textColor", defaultForeground));
 
-        this->SetOnClickEvent(man->GetEventWithArguments(xmlElement->Attribute("onClick")));
-        this->SetOnReleaseEvent(man->GetEventWithArguments(xmlElement->Attribute("onRelease")));
-        this->SetOnPressEvent(man->GetEventWithArguments(xmlElement->Attribute("onPress")));
+        this->SetOnClickEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onClick"))));
+        this->SetOnReleaseEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onRelease"))));
+        this->SetOnPressEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onPress"))));
+    }
+
+    void Component::PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder)
+    {
+        jsObjectBuilder.AddProperty("name", Component::JSGetIdWrapper);
+        jsObjectBuilder.AddProperty("x", Component::JSGetXWrapper, Component::JSSetXWrapper);
+        jsObjectBuilder.AddProperty("y", Component::JSGetYWrapper, Component::JSSetYWrapper);
+        jsObjectBuilder.AddProperty("width", Component::JSGetWidthWrapper, Component::JSSetWidthWrapper);
+        jsObjectBuilder.AddProperty("height", Component::JSGetHeightWrapper, Component::JSSetHeightWrapper);
+        jsObjectBuilder.AddProperty("foregroundColor", Component::JSGetForegroundColorWrapper, Component::JSSetForegroundColorWrapper);
+        jsObjectBuilder.AddProperty("activeForegroundColor", Component::JSGetActiveForegroundColorWrapper, Component::JSSetActiveForegroundColorWrapper);
+        jsObjectBuilder.AddProperty("backgroundColor", Component::JSGetBackgroundColorWrapper, Component::JSSetBackgroundColorWrapper);
+        jsObjectBuilder.AddProperty("activeBackgroundColor", Component::JSGetActiveBackgroundColorWrapper, Component::JSSetActiveBackgroundColorWrapper);
+        jsObjectBuilder.AddProperty("visibility", Component::JSGetVisibleWrapper, Component::JSSetVisibleWrapper);
     }
 
 } /* namespace grvl */

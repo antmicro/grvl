@@ -18,6 +18,8 @@
 #include "Component.h"
 #include "Manager.h"
 #include "XMLSupport.h"
+#include "JSObject.h"
+#include "JSObjectBuilder.h"
 
 namespace grvl {
 
@@ -132,9 +134,15 @@ namespace grvl {
         return *this;
     }
 
-    string& Label::GetText()
+    const char* Label::GetText()
     {
-        return Text;
+        return Text.c_str();
+    }
+
+    void Label::PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder)
+    {
+        Component::PopulateJavaScriptObject(jsObjectBuilder);
+        jsObjectBuilder.AddProperty("text", Label::JSGetTextWrapper, Label::JSSetTextWrapper);
     }
 
 } /* namespace grvl */

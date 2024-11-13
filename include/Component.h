@@ -17,6 +17,8 @@
 #ifndef GRVL_COMPONENT_H_
 #define GRVL_COMPONENT_H_
 
+#include <duktape.h>
+
 #include "Definitions.h"
 #include "Event.h"
 #include "Painter.h"
@@ -24,6 +26,8 @@
 #include "stl.h"
 #include "tinyxml2.h"
 #include <stdint.h>
+#include "JSObject.h"
+#include "JSObjectBuilder.h"
 
 namespace grvl {
 
@@ -32,6 +36,57 @@ namespace grvl {
     void __attribute__((used))* TEMP_##name##id = register_widget_constructor((void*)&WidgetCreate##name##id, (char*)#name);
 #define WIDGET1(id, name) WIDGET2(id, name)
 #define WIDGET(name) WIDGET1(__COUNTER__, name)
+
+#define GENERATE_DUK_GETTER(class, property_name, getter_func_name, duk_push_func_name)              \
+    static duk_ret_t JSGet##property_name##Wrapper(duk_context* ctx)                                 \
+    {                                                                                                \
+        duk_push_this(ctx);                                                                          \
+        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);                                \
+        class* component = static_cast<class*>(duk_to_pointer(ctx, -1));                             \
+        if (component) {                                                                             \
+            duk_push_func_name(ctx, component->getter_func_name());                                  \
+            return 1;                                                                                \
+        }                                                                                            \
+                                                                                                     \
+        return 0;                                                                                    \
+    }
+
+#define GENERATE_DUK_SETTER(class, property_name, setter_func_name, duk_get_func_name)               \
+    static duk_ret_t JSSet##property_name##Wrapper(duk_context* ctx)                                 \
+    {                                                                                                \
+        duk_push_this(ctx);                                                                          \
+        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);                                \
+        class* component = static_cast<class*>(duk_to_pointer(ctx, -1));                             \
+        if (component) {                                                                             \
+            component->setter_func_name(duk_get_func_name(ctx, 0));                                  \
+        }                                                                                            \
+                                                                                                     \
+        return 0;                                                                                    \
+    }    
+
+#define GENERATE_DUK_STRING_GETTER(class, property_name, getter_func_name) GENERATE_DUK_GETTER(class, property_name, getter_func_name, duk_push_string)
+#define GENERATE_DUK_STRING_SETTER(class, property_name, setter_func_name) GENERATE_DUK_SETTER(class, property_name, setter_func_name, duk_to_string)
+#define GENERATE_DUK_INT_GETTER(class, property_name, getter_func_name) GENERATE_DUK_GETTER(class, property_name, getter_func_name, duk_push_int)
+#define GENERATE_DUK_INT_SETTER(class, property_name, setter_func_name) GENERATE_DUK_SETTER(class, property_name, setter_func_name, duk_to_int)
+#define GENERATE_DUK_UNSIGNED_INT_GETTER(class, property_name, getter_func_name) GENERATE_DUK_GETTER(class, property_name, getter_func_name, duk_push_uint)
+#define GENERATE_DUK_UNSIGNED_INT_SETTER(class, property_name, setter_func_name) GENERATE_DUK_SETTER(class, property_name, setter_func_name, duk_to_uint)
+#define GENERATE_DUK_BOOLEAN_GETTER(class, property_name, getter_func_name) GENERATE_DUK_GETTER(class, property_name, getter_func_name, duk_push_boolean)
+#define GENERATE_DUK_BOOLEAN_SETTER(class, property_name, setter_func_name) GENERATE_DUK_SETTER(class, property_name, setter_func_name, duk_to_boolean)
+#define GENERATE_DUK_FLOAT_GETTER(class, property_name, getter_func_name) GENERATE_DUK_GETTER(class, property_name, getter_func_name, duk_push_number)
+#define GENERATE_DUK_FLOAT_SETTER(class, property_name, setter_func_name) GENERATE_DUK_SETTER(class, property_name, setter_func_name, duk_to_number)
+
+#define GENERATE_DUK_MEMBER_FUNCTION(class, func_name)                             \
+    static duk_ret_t JS##func_name##Wrapper(duk_context* ctx)                      \
+    {                                                                              \
+        duk_push_this(ctx);                                                        \
+        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);              \
+        class* component = static_cast<class*>(duk_to_pointer(ctx, -1));           \
+        if (component) {                                                           \
+            component->func_name();                                                \
+        }                                                                          \
+                                                                                   \
+        return 0;                                                                  \
+    }
 
     typedef struct {
         void* fun;
@@ -106,7 +161,12 @@ namespace grvl {
 
         void SetID(const char* id);
         virtual void SetPosition(int32_t x, int32_t y);
+        virtual void SetX(int32_t x);
+        virtual void SetY(int32_t y);
         virtual void SetSize(int32_t width, int32_t height);
+        virtual void SetWidth(int32_t height);
+        virtual void SetHeight(int32_t width);
+
         /// Sets component's background color.
         ///
         /// @param color Desired color in ARGB8888 format.
@@ -157,6 +217,37 @@ namespace grvl {
             = 0;
 
         bool CheckSizeValidity(Component* child) const;
+
+        virtual void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder);
+
+        GENERATE_DUK_STRING_GETTER(Component, Id, GetID)
+
+        GENERATE_DUK_INT_GETTER(Component, X, GetX)
+        GENERATE_DUK_INT_SETTER(Component, X, SetX)
+
+        GENERATE_DUK_INT_GETTER(Component, Y, GetY)
+        GENERATE_DUK_INT_SETTER(Component, Y, SetY)
+
+        GENERATE_DUK_INT_GETTER(Component, Width, GetWidth)
+        GENERATE_DUK_INT_SETTER(Component, Width, SetWidth)
+
+        GENERATE_DUK_INT_GETTER(Component, Height, GetHeight)
+        GENERATE_DUK_INT_SETTER(Component, Height, SetHeight)
+
+        GENERATE_DUK_UNSIGNED_INT_GETTER(Component, ForegroundColor, GetForegroundColor)
+        GENERATE_DUK_UNSIGNED_INT_SETTER(Component, ForegroundColor, SetForegroundColor)
+
+        GENERATE_DUK_UNSIGNED_INT_GETTER(Component, ActiveForegroundColor, GetActiveBackgroundColor)
+        GENERATE_DUK_UNSIGNED_INT_SETTER(Component, ActiveForegroundColor, SetActiveBackgroundColor)
+
+        GENERATE_DUK_UNSIGNED_INT_GETTER(Component, BackgroundColor, GetBackgroundColor)
+        GENERATE_DUK_UNSIGNED_INT_SETTER(Component, BackgroundColor, SetBackgroundColor)
+
+        GENERATE_DUK_UNSIGNED_INT_GETTER(Component, ActiveBackgroundColor, GetActiveBackgroundColor)
+        GENERATE_DUK_UNSIGNED_INT_SETTER(Component, ActiveBackgroundColor, SetActiveBackgroundColor)
+
+        GENERATE_DUK_BOOLEAN_GETTER(Component, Visible, IsVisible)
+        GENERATE_DUK_BOOLEAN_SETTER(Component, Visible, SetVisible)
 
     protected:
         string ID;
