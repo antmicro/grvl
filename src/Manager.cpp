@@ -42,6 +42,7 @@ namespace grvl {
 
     // Widget list
     WIDGET(Button);
+    WIDGET(Separator);
     WIDGET(Clock);
     WIDGET(Label);
     WIDGET(Image);

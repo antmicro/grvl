@@ -50,6 +50,7 @@
 #include "Slider.h"
 #include "SwitchButton.h"
 #include "ScrollPanel.h"
+#include "Separator.h"
 // #include "Ico.h"
 // #include "Touch.h"
 // #include "Event.h"
