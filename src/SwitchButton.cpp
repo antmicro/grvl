@@ -33,12 +33,6 @@ namespace grvl {
         uint32_t TempFrameColor = 0;
         static constexpr auto widthMultiplier = 0.4;
 
-        if(State == OnAndSelected || State == OffAndSelected) {
-            TempFrameColor = SelectedFrameColor;
-        } else {
-            TempFrameColor = FrameColor;
-        }
-
         // Late image assignment
         if(Height + Width <= 0 && !ButtonImage.IsEmpty()) {
             Height = ButtonImage.GetHeight();
@@ -57,11 +51,16 @@ namespace grvl {
                 }
 
                 if(Width > 0 && Height > 0) {
-                    painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor);
+                    if (BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
+                        painter.FillRoundRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor, BorderArcRadius);
+                    } else {
+                        painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor);
+                    }
+                    DrawBorderIfNecessary(painter, X + ParentRenderX, Y + ParentRenderY, Width, Height);
+
                     painter.FillRectangle(
                         ParentRenderX + X + ((uint32_t)Width * widthMultiplier), ParentRenderY + Y + 1, ((uint32_t)Width * (1.0 - widthMultiplier)), Height - 1,
                         ActiveSwitchColor);
-                    painter.DrawRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, TempFrameColor);
                 }
 
                 if(!Text.empty()) {
@@ -83,9 +82,13 @@ namespace grvl {
                 }
 
                 if(Height > 0 && Width > 0) {
-                    painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor);
+                    if (BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
+                        painter.FillRoundRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor, BorderArcRadius);
+                    } else {
+                        painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor);
+                    }
+                    DrawBorderIfNecessary(painter, X + ParentRenderX, Y + ParentRenderY, Width, Height);
                     painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, ((uint32_t)Width * (1.0 - widthMultiplier)), Height, SwitchColor);
-                    painter.DrawRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, TempFrameColor);
                 }
 
                 if(!Text.empty()) {
@@ -118,11 +121,6 @@ namespace grvl {
         ActiveTextColor = color;
     }
 
-    void SwitchButton::SetFrameColor(uint32_t color)
-    {
-        FrameColor = color;
-    }
-
     uint32_t SwitchButton::GetSwitchColor() const
     {
         return SwitchColor;
@@ -141,21 +139,6 @@ namespace grvl {
     uint32_t SwitchButton::GetActiveTextColor() const
     {
         return ActiveTextColor;
-    }
-
-    uint32_t SwitchButton::GetFrameColor() const
-    {
-        return FrameColor;
-    }
-
-    void SwitchButton::SetSelectedFrameColor(uint32_t color)
-    {
-        SelectedFrameColor = color;
-    }
-
-    uint32_t SwitchButton::GetSelectedFrameColor() const
-    {
-        return SelectedFrameColor;
     }
 
     void SwitchButton::OnPress()
@@ -210,8 +193,6 @@ namespace grvl {
         static constexpr auto defaultTextColor = 0xFFFFFFFF;
         result->SetTextColor(XMLSupport::ParseColor(xmlElement, "textColor", defaultTextColor));
         result->SetActiveTextColor(XMLSupport::ParseColor(xmlElement, "activeTextColor", result->GetTextColor()));
-        result->SetFrameColor(XMLSupport::ParseColor(xmlElement, "frameColor", (uint32_t)COLOR_ARGB8888_TRANSPARENT));
-        result->SetSelectedFrameColor(XMLSupport::ParseColor(xmlElement, "selectedFrameColor", (uint32_t)result->GetFrameColor()));
         result->SetSwitchColor(XMLSupport::ParseColor(xmlElement, "switchColor", (uint32_t)COLOR_ARGB8888_TRANSPARENT));
         result->SetActiveSwitchColor(XMLSupport::ParseColor(xmlElement, "activeSwitchColor", (uint32_t)result->GetSwitchColor()));
 

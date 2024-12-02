@@ -56,7 +56,13 @@ namespace grvl {
             return;
         }
 
-        painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor);
+        if (BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
+            painter.FillRoundRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor, BorderArcRadius);
+        } else {
+            painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor);
+        }
+        DrawBorderIfNecessary(painter, X + ParentRenderX, Y + ParentRenderY, Width, Height);
+
         int barWidth = (Width) * ((ProgressValue) / 100.0);
         if(barWidth > 0) {
             painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, barWidth, Height, ForegroundColor);

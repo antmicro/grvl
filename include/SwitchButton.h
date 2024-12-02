@@ -67,8 +67,6 @@ namespace grvl {
             , ActiveSwitchColor(COLOR_ARGB8888_LIGHTBLUE)
             , TextColor(COLOR_ARGB8888_BLACK)
             , ActiveTextColor(COLOR_ARGB8888_BLACK)
-            , FrameColor(COLOR_ARGB8888_BLACK)
-            , SelectedFrameColor(COLOR_ARGB8888_BLACK)
             , switchState(false)
             , previousSwitchState(false)
             , onSwitchON()
@@ -84,8 +82,6 @@ namespace grvl {
             , ActiveSwitchColor(COLOR_ARGB8888_LIGHTBLUE)
             , TextColor(COLOR_ARGB8888_BLACK)
             , ActiveTextColor(COLOR_ARGB8888_BLACK)
-            , FrameColor(COLOR_ARGB8888_BLACK)
-            , SelectedFrameColor(COLOR_ARGB8888_BLACK)
             , switchState(false)
             , previousSwitchState(false)
             , onSwitchON()
@@ -105,16 +101,12 @@ namespace grvl {
         void SetActiveSwitchColor(uint32_t color);
         void SetTextColor(uint32_t color);
         void SetActiveTextColor(uint32_t color);
-        void SetFrameColor(uint32_t color);
-        void SetSelectedFrameColor(uint32_t color);
         void SetSwitchState(bool state);
 
         uint32_t GetSwitchColor() const;
         uint32_t GetActiveSwitchColor() const;
         uint32_t GetTextColor() const;
         uint32_t GetActiveTextColor() const;
-        uint32_t GetFrameColor() const;
-        uint32_t GetSelectedFrameColor() const;
         bool GetSwitchState() const;
 
         void SetOnSwitchONEvent(const Event& event);
@@ -129,7 +121,7 @@ namespace grvl {
         GENERATE_DUK_BOOLEAN_GETTER(SwitchButton, SwitchState, GetSwitchState)
 
     protected:
-        uint32_t SwitchColor, ActiveSwitchColor, TextColor, ActiveTextColor, FrameColor, SelectedFrameColor;
+        uint32_t SwitchColor, ActiveSwitchColor, TextColor, ActiveTextColor;
         bool switchState, previousSwitchState;
         Event onSwitchON, onSwitchOFF;
         int32_t TextWidth;

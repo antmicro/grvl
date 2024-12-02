@@ -59,7 +59,12 @@ namespace grvl {
         if(BackgroundImage) {
             BackgroundImage->Draw(painter, X + ParentRenderX, Y + ParentRenderY);
         } else {
-            painter.FillRectangle(X + ParentRenderX, Y + ParentRenderY, Width, Height, BackgroundColor);
+            if (BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
+                painter.FillRoundRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor, BorderArcRadius);
+            } else {
+                painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor);
+            }
+            DrawBorderIfNecessary(painter, X + ParentRenderX, Y + ParentRenderY, Width, Height);
             painter.AddBackgroundBlock(Y + ParentRenderY, Height, BackgroundColor);
         }
 

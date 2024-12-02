@@ -149,6 +149,26 @@ namespace grvl {
         return ActiveForegroundColor;
     }
 
+    void Component::SetBorderColor(uint32_t color)
+    {
+        BorderColor = color;
+    }
+
+    void Component::SetActiveBorderColor(uint32_t color)
+    {
+        ActiveBorderColor = color;
+    }
+
+    void Component::SetBorderType(BorderTypeBits type)
+    {
+        BorderType = type;
+    }
+
+    void Component::SetBorderArcRadius(uint32_t radius)
+    {
+        BorderArcRadius = radius;
+    }
+
     void Component::SetVisible(bool state)
     {
         Visible = state;
@@ -431,11 +451,17 @@ namespace grvl {
         this->SetVisible(XMLSupport::GetAttributeOrDefault(xmlElement, "visible", true));
 
         this->SetBackgroundColor(XMLSupport::ParseColor(xmlElement, "backgroundColor", "0"));
-
-        this->SetActiveBackgroundColor(
-            XMLSupport::GetAttributeOrDefault(
-                xmlElement, "activeBackgroundColor", (uint32_t)this->GetBackgroundColor()));
+        this->SetActiveBackgroundColor(XMLSupport::ParseColor(xmlElement, "activeBackgroundColor", GetBackgroundColor()));
         this->SetForegroundColor(XMLSupport::GetAttributeOrDefault(xmlElement, "textColor", defaultForeground));
+        this->SetActiveForegroundColor(XMLSupport::ParseColor(xmlElement, "activeForegroundColor", GetForegroundColor()));
+
+        static const char* defaultBorderColor = "0x00000000"; /*transparent*/
+        static const char* defaultBorderType = "none";
+        static unsigned int defaultBorderArcRadius = 0;
+        SetBorderColor(XMLSupport::ParseColor(xmlElement, "borderColor", GetBackgroundColor()));
+        SetActiveBorderColor(XMLSupport::ParseColor(xmlElement, "activeBorderColor", GetActiveBackgroundColor()));
+        SetBorderType(Border::ParseBorderTypeFromString(XMLSupport::GetAttributeOrDefault(xmlElement, "borderType", "none")));
+        SetBorderArcRadius(XMLSupport::GetAttributeOrDefault(xmlElement, "borderArcRadius", 0u));
 
         this->SetOnClickEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onClick"))));
         this->SetOnReleaseEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onRelease"))));
@@ -468,6 +494,8 @@ namespace grvl {
         jsObjectBuilder.AddProperty("activeForegroundColor", Component::JSGetActiveForegroundColorWrapper, Component::JSSetActiveForegroundColorWrapper);
         jsObjectBuilder.AddProperty("backgroundColor", Component::JSGetBackgroundColorWrapper, Component::JSSetBackgroundColorWrapper);
         jsObjectBuilder.AddProperty("activeBackgroundColor", Component::JSGetActiveBackgroundColorWrapper, Component::JSSetActiveBackgroundColorWrapper);
+        jsObjectBuilder.AddProperty("borderColor", Component::JSGetBorderColorWrapper, Component::JSSetBorderColorWrapper);
+        jsObjectBuilder.AddProperty("activeBorderColor", Component::JSGetActiveBorderColorWrapper, Component::JSSetActiveBorderColorWrapper);
         jsObjectBuilder.AddProperty("visibility", Component::JSGetVisibleWrapper, Component::JSSetVisibleWrapper);
         jsObjectBuilder.AttachMemberFunction("AddMetadata", Component::JSAddMetadataWrapper, 2);
         jsObjectBuilder.AttachMemberFunction("GetMetadata", Component::JSGetMetadataWrapper, 1);
@@ -502,6 +530,54 @@ namespace grvl {
         duk_push_string(ctx, component->GetMetadata(keyName));
 
         return 1;
+    }
+
+    void Component::DrawBorderIfNecessary(Painter& painter, int32_t StartX, int32_t StartY, int32_t BorderWidth, int32_t BorderHeight)
+    {
+        uint32_t tempBorderColor;
+
+        if(State == On || State == Pressed || State == OnAndSelected) {
+            tempBorderColor = ActiveBorderColor;
+        } else if(State == Off || State == Released || State == OffAndSelected) {
+            tempBorderColor = BorderColor;
+        }
+
+        switch (BorderType) {
+            case BorderTypeBits::BOX:
+            {
+                if (BorderArcRadius > 0)
+                {
+                    painter.DrawRoundRectangle(StartX, StartY, BorderWidth, BorderHeight, tempBorderColor, BorderArcRadius);
+                }
+                else
+                {
+                    painter.DrawRectangle(StartX, StartY, BorderWidth, BorderHeight, tempBorderColor);
+                }
+                break;
+            }
+            case BorderTypeBits::TOP:
+            {
+                painter.DrawHLine(StartX, StartY, BorderWidth, tempBorderColor);
+                break;
+            }
+            case BorderTypeBits::RIGHT:
+            {
+                painter.DrawVLine(StartX + BorderWidth, StartY, BorderHeight, tempBorderColor);
+                break;
+            }
+            case BorderTypeBits::BOTTOM:
+            {
+                painter.DrawHLine(StartX, StartY + BorderHeight, BorderWidth, tempBorderColor);
+                break;
+            }
+            case BorderTypeBits::LEFT:
+            {
+                painter.DrawVLine(StartX, StartY, BorderHeight, tempBorderColor);
+                break;
+            }
+            default:
+                break;
+        }
     }
 
 } /* namespace grvl */

@@ -54,16 +54,6 @@ namespace grvl {
         IcoChar = -1;
     }
 
-    void Button::SetSelectedFrameColor(uint32_t color)
-    {
-        SelectedFrameColor = color;
-    }
-
-    uint32_t Button::GetSelectedFrameColor() const
-    {
-        return SelectedFrameColor;
-    }
-
     Button* Button::BuildFromXML(XMLElement* xmlElement)
     {
         Manager* man = &Manager::GetInstance();
@@ -78,8 +68,6 @@ namespace grvl {
         result->SetActiveTextColor(XMLSupport::ParseColor(xmlElement, "activeTextColor", result->GetTextColor()));
         result->SetIcoColor(XMLSupport::ParseColor(xmlElement, "icoColor", result->GetTextColor()));
         result->SetActiveIcoColor(XMLSupport::ParseColor(xmlElement, "activeIcoColor", result->GetIcoColor()));
-        result->SetFrameColor(XMLSupport::ParseColor(xmlElement, "frameColor", (uint32_t)COLOR_ARGB8888_TRANSPARENT));
-        result->SetSelectedFrameColor(XMLSupport::GetAttributeOrDefault(xmlElement, "selectedFrameColor", (uint32_t)result->GetFrameColor()));
 
         result->SetTextTopOffset(XMLSupport::GetAttributeOrDefault(xmlElement, "text_top_offset", (uint32_t)0));
 
@@ -114,39 +102,27 @@ namespace grvl {
 
         uint32_t TempBackgroundColor = COLOR_ARGB8888_TRANSPARENT;
         uint32_t TempTextColor = COLOR_ARGB8888_TRANSPARENT;
-        uint32_t TempFrameColor = COLOR_ARGB8888_TRANSPARENT;
         uint32_t TempIcoColor = COLOR_ARGB8888_TRANSPARENT;
 
         if(State == On || State == Pressed || State == OnAndSelected) {
             TempBackgroundColor = ActiveBackgroundColor;
             TempTextColor = ActiveForegroundColor;
             TempIcoColor = ActiveIcoColor;
-
-            if(State == OnAndSelected) {
-                TempFrameColor = SelectedFrameColor;
-            } else {
-                TempFrameColor = FrameColor;
-            }
         } else if(State == Off || State == Released || State == OffAndSelected) {
             TempBackgroundColor = BackgroundColor;
             TempTextColor = ForegroundColor;
             TempIcoColor = IcoColor;
-
-            if(State == OffAndSelected) {
-                TempFrameColor = SelectedFrameColor;
-            } else {
-                TempFrameColor = FrameColor;
-            }
         }
 
-        // If button pressed
         if(Width > 0 && Height > 0) {
-            if(TempBackgroundColor > 0) {
-                painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, TempBackgroundColor);
+            if(TempBackgroundColor > 0 && TempBackgroundColor & 0xFF000000) {
+                if (BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
+                    painter.FillRoundRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, TempBackgroundColor, BorderArcRadius);
+                } else {
+                    painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, TempBackgroundColor);
+                }
             }
-            if(TempFrameColor > 0) {
-                painter.DrawRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, TempFrameColor);
-            }
+            DrawBorderIfNecessary(painter, ParentRenderX + X, ParentRenderY + Y, Width, Height);
         }
 
         if(!ButtonImage.IsEmpty()) {
@@ -199,11 +175,6 @@ namespace grvl {
         ActiveForegroundColor = color;
     }
 
-    void Button::SetFrameColor(uint32_t color)
-    {
-        FrameColor = color;
-    }
-
     void Button::SetImagePosition(int32_t x, int32_t y)
     {
         if(!ButtonImage.IsEmpty()) {
@@ -224,11 +195,6 @@ namespace grvl {
     uint32_t Button::GetActiveTextColor()
     {
         return ActiveForegroundColor;
-    }
-
-    uint32_t Button::GetFrameColor()  const
-    {
-        return FrameColor;
     }
 
     void Button::SetIcoColor(uint32_t color)
@@ -272,8 +238,6 @@ namespace grvl {
         AbstractButton::PopulateJavaScriptObject(jsObjectBuilder);
         jsObjectBuilder.AddProperty("icoColor", Button::JSGetIcoColorWrapper, Button::JSSetIcoColorWrapper);
         jsObjectBuilder.AddProperty("activeIcoColor", Button::JSGetActiveIcoColorWrapper, Button::JSSetActiveIcoColorWrapper);
-        jsObjectBuilder.AddProperty("frameColor", Button::JSGetFrameColorWrapper, Button::JSSetFrameColorWrapper);
-        jsObjectBuilder.AddProperty("selectedFrameColor", Button::JSGetSelectedFrameColorWrapper, Button::JSSetSelectedFrameColorWrapper);
     }
 
 } /* namespace grvl */

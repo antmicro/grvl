@@ -37,19 +37,9 @@ namespace grvl {
         HorizontalAlignment = alignment;
     }
 
-    void Label::SetFrameColor(uint32_t color)
-    {
-        FrameColor = color;
-    }
-
     Label::TextHorizontalAlignment Label::GetMode()
     {
         return HorizontalAlignment;
-    }
-
-    uint32_t Label::GetFrameColor() const
-    {
-        return FrameColor;
     }
 
     Label* Label::BuildFromXML(XMLElement* xmlElement)
@@ -66,8 +56,6 @@ namespace grvl {
             grvl::Log("[WARNING] Setting invalid label font %s, the label isn't going to be drawn", fontName);
         }
         result->SetTextFont(font);
-
-        result->SetFrameColor(XMLSupport::ParseColor(xmlElement, "frameColor", (uint32_t)COLOR_ARGB8888_TRANSPARENT));
 
         result->SetHorizontalAlignment(
             XMLSupport::ParseAlignmentOrDefault(xmlElement, "alignment", Label::Center));
@@ -108,9 +96,7 @@ namespace grvl {
 
         painter.DisplayAntialiasedString(TextFont, RenderX + BeginX, RenderY + BeginY, Text.c_str(), ForegroundColor);
 
-        if(FrameColor & alpha) {
-            painter.DrawRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, FrameColor);
-        }
+        DrawBorderIfNecessary(painter, ParentRenderX + X, ParentRenderY + Y, Width, Height);
     }
 
     void Label::SetTextFont(Font const* font)
@@ -128,7 +114,6 @@ namespace grvl {
         if(this != &Obj) {
             Component::operator=(Obj);
             Text = Obj.Text;
-            FrameColor = Obj.FrameColor;
             HorizontalAlignment = Obj.HorizontalAlignment;
             TextFont = Obj.TextFont;
         }

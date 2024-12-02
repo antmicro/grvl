@@ -57,7 +57,6 @@ namespace grvl {
 
     protected:
         string Text;
-        uint32_t FrameColor;
         TextHorizontalAlignment HorizontalAlignment;
         Font const* TextFont;
 
@@ -65,7 +64,6 @@ namespace grvl {
         Label()
             : Component()
             , Text("")
-            , FrameColor(COLOR_ARGB8888_TRANSPARENT)
             , HorizontalAlignment(Left)
             , TextFont(NULL)
         {
@@ -74,7 +72,6 @@ namespace grvl {
         Label(int32_t x, int32_t y, int32_t width, int32_t height)
             : Component(x, y, width, height)
             , Text("")
-            , FrameColor(COLOR_ARGB8888_TRANSPARENT)
             , HorizontalAlignment(Left)
             , TextFont(NULL)
         {
@@ -83,7 +80,6 @@ namespace grvl {
         Label(int32_t x, int32_t y, int32_t width, int32_t height, const char* text, TextHorizontalAlignment alignment)
             : Component(x, y, width, height)
             , Text(text)
-            , FrameColor(COLOR_ARGB8888_TRANSPARENT)
             , HorizontalAlignment(alignment)
             , TextFont(NULL)
         {
@@ -92,7 +88,6 @@ namespace grvl {
         Label(const Label& Obj)
             : Component(Obj)
             , Text(Obj.Text)
-            , FrameColor(Obj.FrameColor)
             , HorizontalAlignment(Obj.HorizontalAlignment)
             , TextFont(Obj.TextFont)
         {
@@ -104,14 +99,12 @@ namespace grvl {
 
         void SetText(const char* text);
         void SetHorizontalAlignment(TextHorizontalAlignment alignment);
-        void SetFrameColor(uint32_t color);
         void SetTextFont(Font const* font);
 
         /// @return Label's text.
         const char* GetText();
 
         TextHorizontalAlignment GetMode();
-        uint32_t GetFrameColor() const;
         Font const* GetTextFont();
 
         static Label* BuildFromXML(XMLElement* xmlElement);

@@ -73,8 +73,6 @@ namespace grvl {
             : AbstractButton()
             , IcoColor(COLOR_ARGB8888_BLACK)
             , ActiveIcoColor(COLOR_ARGB8888_BLACK)
-            , FrameColor(COLOR_ARGB8888_BLACK)
-            , SelectedFrameColor(COLOR_ARGB8888_BLACK)
             , IcoChar(-1)
             , TextTopOffset(0)
             , IcoFont(NULL)
@@ -87,8 +85,6 @@ namespace grvl {
             : AbstractButton(x, y, width, height)
             , IcoColor(COLOR_ARGB8888_BLACK)
             , ActiveIcoColor(COLOR_ARGB8888_BLACK)
-            , FrameColor(COLOR_ARGB8888_BLACK)
-            , SelectedFrameColor(COLOR_ARGB8888_BLACK)
             , IcoChar(-1)
             , TextTopOffset(0)
             , IcoFont(NULL)
@@ -103,8 +99,6 @@ namespace grvl {
         void SetIcoColor(uint32_t color);
         void SetActiveTextColor(uint32_t color);
         void SetActiveIcoColor(uint32_t color);
-        void SetFrameColor(uint32_t color);
-        void SetSelectedFrameColor(uint32_t color);
         void SetIcoFont(Font const* font);
         void SetIcoChar(int16_t textIco);
         void SetImagePosition(int32_t x, int32_t y);
@@ -119,8 +113,6 @@ namespace grvl {
         uint32_t GetIcoColor() const;
         uint32_t GetActiveTextColor();
         uint32_t GetActiveIcoColor() const;
-        uint32_t GetFrameColor() const;
-        uint32_t GetSelectedFrameColor() const;
         Font const* GetIcoFont();
 
         static Button* BuildFromXML(XMLElement* xmlElement);
@@ -135,14 +127,8 @@ namespace grvl {
         GENERATE_DUK_UNSIGNED_INT_GETTER(Button, ActiveIcoColor, GetActiveIcoColor)
         GENERATE_DUK_UNSIGNED_INT_SETTER(Button, ActiveIcoColor, SetActiveIcoColor)
         
-        GENERATE_DUK_UNSIGNED_INT_GETTER(Button, FrameColor, GetFrameColor)
-        GENERATE_DUK_UNSIGNED_INT_SETTER(Button, FrameColor, SetFrameColor)
-        
-        GENERATE_DUK_UNSIGNED_INT_GETTER(Button, SelectedFrameColor, GetSelectedFrameColor)
-        GENERATE_DUK_UNSIGNED_INT_SETTER(Button, SelectedFrameColor, SetSelectedFrameColor)
-
     protected:
-        uint32_t IcoColor, ActiveIcoColor, FrameColor, SelectedFrameColor;
+        uint32_t IcoColor, ActiveIcoColor;
         int16_t IcoChar;
         int32_t TextTopOffset;
         Font const* IcoFont;

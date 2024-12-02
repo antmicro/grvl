@@ -95,6 +95,8 @@ namespace grvl {
         if(BackgroundColor) { // Do not draw when background is transparent
             painter.FillArc(ParentX + X, ParentY + Y, middleAngle, EndAngle, Radius, Thickness, BackgroundColor, BackgroundColor);
         }
+
+        DrawBorderIfNecessary(painter, ParentX + X, ParentY + Y, Width, Height);
     }
 
     void CircleProgressBar::SetStartAngle(float angle)

@@ -317,9 +317,15 @@
         <xs:attribute name="height" type="xs:integer" />
         <xs:attribute name="visible" type="xs:boolean" />
         <xs:attribute name="backgroundColor" type="colorType" />
+        <xs:attribute name="activeBackgroundColor" type="colorType" />
+        <xs:attribute name="foregroundColor" type="colorType" />
+        <xs:attribute name="activeForegroundColor" type="colorType" />
         <xs:attribute name="textColor" type="colorType" />
         <xs:attribute name="onClick" type="functionType" />
         <xs:attribute name="onPress" type="functionType" />
+        <xs:attribute name="borderType" type="xs:string" />
+        <xs:attribute name="borderColor" type="colorType" />
+        <xs:attribute name="borderArcRadius" type="xs:float" />
     </xs:complexType>
 
     <!-- Simple types -->

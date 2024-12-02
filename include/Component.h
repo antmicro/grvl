@@ -28,6 +28,7 @@
 #include <stdint.h>
 #include "JSObject.h"
 #include "JSObjectBuilder.h"
+#include "Border.h"
 
 #include <unordered_map>
 
@@ -147,6 +148,22 @@ namespace grvl {
         /// @param color Desired color in ARGB8888 format.
         virtual void SetBackgroundColor(uint32_t color);
         virtual void SetForegroundColor(uint32_t color);
+
+        /// Sets component's border color.
+        ///
+        /// @param color Desired color in ARGB8888 format.
+        virtual void SetBorderColor(uint32_t color);
+        virtual void SetActiveBorderColor(uint32_t color);
+
+        uint32_t GetBorderColor() const { return BorderColor; }
+        uint32_t GetActiveBorderColor() const { return ActiveBorderColor; }
+
+        virtual void SetBorderType(BorderTypeBits type);
+        BorderTypeBits GetBorderType() const { return BorderType; }
+
+        virtual void SetBorderArcRadius(uint32_t radius);
+        uint32_t GetBorderArcRadius() const { return BorderArcRadius; }
+
         /// Sets component's background color when pressed.
         ///
         /// @param color Desired color in ARGB8888 format.
@@ -229,6 +246,12 @@ namespace grvl {
         GENERATE_DUK_UNSIGNED_INT_GETTER(Component, ActiveBackgroundColor, GetActiveBackgroundColor)
         GENERATE_DUK_UNSIGNED_INT_SETTER(Component, ActiveBackgroundColor, SetActiveBackgroundColor)
 
+        GENERATE_DUK_UNSIGNED_INT_GETTER(Component, BorderColor, GetBorderColor)
+        GENERATE_DUK_UNSIGNED_INT_SETTER(Component, BorderColor, SetBorderColor)
+
+        GENERATE_DUK_UNSIGNED_INT_GETTER(Component, ActiveBorderColor, GetActiveBorderColor)
+        GENERATE_DUK_UNSIGNED_INT_SETTER(Component, ActiveBorderColor, SetActiveBorderColor)
+
         GENERATE_DUK_BOOLEAN_GETTER(Component, Visible, IsVisible)
         GENERATE_DUK_BOOLEAN_SETTER(Component, Visible, SetVisible)
 
@@ -270,6 +293,13 @@ namespace grvl {
         bool Visible{true};
 
         std::unordered_map<std::string, std::string> metadata;
+
+        virtual void DrawBorderIfNecessary(Painter& painter, int32_t StartX, int32_t StartY, int32_t BorderWidth, int32_t BorderHeight);
+
+        uint32_t BorderColor{COLOR_ARGB8888_TRANSPARENT};
+        uint32_t ActiveBorderColor{COLOR_ARGB8888_TRANSPARENT};
+        BorderTypeBits BorderType{BorderTypeBits::NONE};
+        uint32_t BorderArcRadius{0};
 
         virtual Touch::TouchResponse ProcessMove(int32_t StartX, int32_t StartY, int32_t DeltaX, int32_t DeltaY);
         Touch::TouchResponse OnMoveCase(const Touch& tp, int32_t ParentX, int32_t ParentY);

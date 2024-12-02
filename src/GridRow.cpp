@@ -142,11 +142,17 @@ namespace grvl {
             return;
         }
 
-        painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor);
+        if (BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
+            painter.FillRoundRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor, BorderArcRadius);
+        } else {
+            painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor);
+        }
 
         for(uint32_t i = 0; i < Elements.size(); i++) {
             Elements[i]->Draw(painter, ParentRenderX + X, ParentRenderY + Y);
         }
+
+        DrawBorderIfNecessary(painter, ParentRenderX + X, ParentRenderY + Y, Width, Height);
     }
 
     void GridRow::SetElementWidth(int32_t elementWidth)

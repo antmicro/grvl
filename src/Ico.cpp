@@ -62,11 +62,18 @@ namespace grvl {
         }
 
         if(IcoChar != -1 && IcoFont != NULL) {
-            painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor);
+            if (BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
+                painter.FillRoundRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor, BorderArcRadius);
+            } else {
+                painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor);
+            }
+
             uint16_t BeginX = X + (Width / 2) - (IcoFont->GetCharWidth((uint32_t)IcoChar) / 2);
             uint16_t BeginY = Y + (Height / 2) - (IcoFont->GetFontHeight() / 2);
 
             painter.DisplayAntialiasedChar(IcoFont, BeginX + ParentRenderX, BeginY + ParentRenderY, IcoChar, ForegroundColor);
+
+            DrawBorderIfNecessary(painter, ParentRenderX + X, ParentRenderY + Y, Width, Height);
         }
     }
 
