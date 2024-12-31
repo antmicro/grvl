@@ -78,7 +78,7 @@ namespace grvl {
         GridView(const GridView& other) = default;
         GridView& operator=(const GridView& other) = default;
 
-        void SetGridParameters(uint32_t width, uint32_t height, uint32_t verticalOffset);
+        void SetGridParameters(uint32_t width, uint32_t height, uint32_t horizontalOffset, uint32_t verticalOffset);
         void AddElement(Component* item);
         Component* Clone() const override;
 
@@ -92,6 +92,7 @@ namespace grvl {
     protected:
         uint32_t ElementWidth{0};
         uint32_t ElementHeight{0};
+        uint32_t HorizontalOffset{0};
         uint32_t VerticalOffset{0};
     };
 

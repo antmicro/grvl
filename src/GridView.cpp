@@ -15,6 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "GridView.h"
+
+#include <cassert>
+
 #include "Key.h"
 #include "Manager.h"
 #include "XMLSupport.h"
@@ -28,59 +31,59 @@ namespace grvl {
 
     GridView* GridView::BuildFromXML(XMLElement* xmlElement)
     {
-        GridView* parent = new GridView();
+        GridView* gridView = new GridView();
 
-        parent->InitFromXML(xmlElement);
+        gridView->InitFromXML(xmlElement);
 
-        parent->SetScrolling(XMLSupport::GetAttributeOrDefault(xmlElement, "scrollingEnabled", false));
-        parent->SetOverscrollBarColor(
-            XMLSupport::ParseColor(xmlElement, "overscrollColor", (uint32_t)COLOR_ARGB8888_LIGHTGRAY));
-        parent->SetScrollIndicatorColor(
-            XMLSupport::ParseColor(
-                xmlElement, "scrollIndicatorColor", (uint32_t)COLOR_ARGB8888_TRANSPARENT));
+        gridView->SetScrolling(XMLSupport::GetAttributeOrDefault(xmlElement, "scrollingEnabled", false));
+        gridView->SetOverscrollBarColor(XMLSupport::ParseColor(xmlElement, "overscrollColor", (uint32_t)COLOR_ARGB8888_LIGHTGRAY));
+        gridView->SetScrollIndicatorColor(XMLSupport::ParseColor(xmlElement, "scrollIndicatorColor", (uint32_t)COLOR_ARGB8888_TRANSPARENT));
 
-        int32_t elementWidth;
-        int32_t elementHeight;
-        int32_t verticalOffset;
-        elementWidth = XMLSupport::GetAttributeOrDefault(xmlElement, "elementWidth", (uint32_t)0);
-        elementHeight = XMLSupport::GetAttributeOrDefault(xmlElement, "elementHeight", (uint32_t)0);
-        verticalOffset = XMLSupport::GetAttributeOrDefault(xmlElement, "verticalOffset", (uint32_t)0);
-        parent->SetGridParameters(elementWidth, elementHeight, verticalOffset);
+        int32_t elementWidth = XMLSupport::GetAttributeOrDefault(xmlElement, "elementWidth", (uint32_t)0);
+        int32_t elementHeight = XMLSupport::GetAttributeOrDefault(xmlElement, "elementHeight", (uint32_t)0);
+        int32_t horizontalOffset = XMLSupport::GetAttributeOrDefault(xmlElement, "horizontalOffset", (uint32_t)0);
+        int32_t verticalOffset = XMLSupport::GetAttributeOrDefault(xmlElement, "verticalOffset", (uint32_t)0);
+        gridView->SetGridParameters(elementWidth, elementHeight, horizontalOffset, verticalOffset);
 
         XMLElement* child = xmlElement->FirstChildElement();
         for(; child != NULL; child = child->NextSiblingElement()) {
-            // TODO: we should verify correct class
-            Component* element = create_component(child->Name(), (void*)child);
-            if(element)
-                parent->AddElement(element);
+            Component* component = create_component(child->Name(), (void*)child);
+            gridView->AddElement(component);
         }
 
-        return parent;
+        return gridView;
     }
 
-    void GridView::SetGridParameters(uint32_t width, uint32_t height, uint32_t verticalOffset)
+    void GridView::SetGridParameters(uint32_t width, uint32_t height, uint32_t horizontalOffset, uint32_t verticalOffset)
     {
         ElementWidth = width;
         ElementHeight = height;
+        HorizontalOffset = horizontalOffset;
         VerticalOffset = verticalOffset;
     }
 
-    void GridView::AddElement(Component* item)
+    void GridView::AddElement(Component* component)
     {
-        ((GridRow*)item)->SetPosition(0, itemsHeight + VerticalOffset); // Position at the end of the list
-        ((GridRow*)item)->SetSize(Width, ElementHeight);
-        ((GridRow*)item)->SetElementWidth(ElementWidth);
-        ((GridRow*)item)->SetBackgroundColor(BackgroundColor);
+        GridRow* gridRow = dynamic_cast<GridRow*>(component);
+        assert(gridRow && "Child components of GridView must be/inherit GridRow class");
 
-        itemsHeight += ElementHeight + VerticalOffset;
+        unsigned int currentRowVerticalGap = Elements.empty() ? 0 : VerticalOffset;
+
+        gridRow->SetPosition(0, itemsHeight + currentRowVerticalGap); // Position at the end of the list
+        gridRow->SetSize(Width, ElementHeight);
+        gridRow->SetElementWidth(ElementWidth);
+        gridRow->SetHorizontalOffset(HorizontalOffset);
+        gridRow->SetBackgroundColor(BackgroundColor);
+
+        itemsHeight += ElementHeight + currentRowVerticalGap;
         if(Height < itemsHeight) {
             ScrollMax = itemsHeight - Height;
         } else {
             ScrollMax = 0;
         }
 
-        ((GridRow*)item)->SetAsSelection(IsSelection());
-        Container::AddElement(item);
+        gridRow->SetAsSelection(IsSelection());
+        Container::AddElement(component);
     }
 
     void GridView::SetBackgroundColor(uint32_t color)
