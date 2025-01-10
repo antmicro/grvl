@@ -54,6 +54,7 @@
 // #include "Touch.h"
 // #include "Event.h"
 // #include "ContentManager.h"
+#include "Division.h"
 
 using namespace tinyxml2;
 namespace grvl {

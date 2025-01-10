@@ -101,6 +101,7 @@
     <xs:element name="panel" type="containerType" />
     <xs:element name="footer" type="containerType" />
     <xs:element name="prefab" type="containerType" />
+    <xs:element name="div" type="containerType" />
 
     <!--  NOTE: GridRow, although clearly a container type, interprets only those attributes in code: -->
     <!-- id, backgroundColor -->
