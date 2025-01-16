@@ -59,6 +59,7 @@ namespace grvl {
         string Text;
         TextHorizontalAlignment HorizontalAlignment;
         Font const* TextFont;
+        uint32_t TextColor{0};
 
     public:
         Label()
@@ -97,6 +98,7 @@ namespace grvl {
 
         Label& operator=(const Label& Obj);
 
+        void SetTextColor(uint32_t color);
         void SetText(const char* text);
         void SetHorizontalAlignment(TextHorizontalAlignment alignment);
         void SetTextFont(Font const* font);

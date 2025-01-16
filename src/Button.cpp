@@ -106,11 +106,11 @@ namespace grvl {
 
         if(State == On || State == Pressed || State == OnAndSelected || isFocused) {
             TempBackgroundColor = ActiveBackgroundColor;
-            TempTextColor = ActiveForegroundColor;
+            TempTextColor = ActiveTextColor;
             TempIcoColor = ActiveIcoColor;
         } else if(State == Off || State == Released || State == OffAndSelected) {
             TempBackgroundColor = BackgroundColor;
-            TempTextColor = ForegroundColor;
+            TempTextColor = TextColor;
             TempIcoColor = IcoColor;
         }
 
@@ -167,12 +167,12 @@ namespace grvl {
 
     void Button::SetTextColor(uint32_t color)
     {
-        ForegroundColor = color;
+        TextColor = color;
     }
 
     void Button::SetActiveTextColor(uint32_t color)
     {
-        ActiveForegroundColor = color;
+        ActiveTextColor = color;
     }
 
     void Button::SetImagePosition(int32_t x, int32_t y)

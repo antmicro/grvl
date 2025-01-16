@@ -509,13 +509,10 @@ namespace grvl {
         static constexpr uint32_t defaultForeground = 0xFFFFFFFF; /*white*/
         this->SetVisible(XMLSupport::GetAttributeOrDefault(xmlElement, "visible", true));
 
-        this->SetBackgroundColor(XMLSupport::ParseColor(xmlElement, "backgroundColor", "0"));
-
-        this->SetActiveBackgroundColor(
-            XMLSupport::GetAttributeOrDefault(
-                xmlElement, "activeBackgroundColor", (uint32_t)this->GetBackgroundColor()));
-        this->SetForegroundColor(XMLSupport::GetAttributeOrDefault(xmlElement, "textColor", defaultForeground));
-        this->SetActiveForegroundColor(XMLSupport::ParseColor(xmlElement, "activeForegroundColor", GetForegroundColor()));
+        SetBackgroundColor(XMLSupport::ParseColor(xmlElement, "backgroundColor", "0"));
+        SetActiveBackgroundColor(XMLSupport::ParseColor(xmlElement, "activeBackgroundColor", GetBackgroundColor()));
+        SetForegroundColor(XMLSupport::ParseColor(xmlElement, "foregroundColor", defaultForeground));
+        SetActiveForegroundColor(XMLSupport::ParseColor(xmlElement, "activeForegroundColor", GetForegroundColor()));
 
         static const char* defaultBorderColor = "0x00000000"; /*transparent*/
         static const char* defaultBorderType = "none";

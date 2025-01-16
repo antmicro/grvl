@@ -27,6 +27,11 @@ namespace grvl {
     {
     }
 
+    void Label::SetTextColor(uint32_t color)
+    {
+        TextColor = color;
+    }
+
     void Label::SetText(const char* text)
     {
         Text = string(text);
@@ -47,6 +52,9 @@ namespace grvl {
         Manager* man = &Manager::GetInstance();
         Label* result = new Label();
         result->InitFromXML(xmlElement);
+
+        static const char* defaultTextColor = "0xFFFFFFFF";
+        result->SetTextColor(XMLSupport::ParseColor(xmlElement, "textColor", defaultTextColor));
 
         result->SetText(XMLSupport::GetAttributeOrDefault(xmlElement, "text", ""));
 
@@ -94,7 +102,7 @@ namespace grvl {
                 break;
         }
 
-        painter.DisplayAntialiasedString(TextFont, RenderX + BeginX, RenderY + BeginY, Text.c_str(), ForegroundColor);
+        painter.DisplayAntialiasedString(TextFont, RenderX + BeginX, RenderY + BeginY, Text.c_str(), TextColor);
 
         DrawBorderIfNecessary(painter, ParentRenderX + X, ParentRenderY + Y, Width, Height);
     }

@@ -96,8 +96,8 @@ namespace grvl {
         virtual ~Button();
 
         void SetTextColor(uint32_t color);
-        void SetIcoColor(uint32_t color);
         void SetActiveTextColor(uint32_t color);
+        void SetIcoColor(uint32_t color);
         void SetActiveIcoColor(uint32_t color);
         void SetIcoFont(Font const* font);
         void SetIcoChar(int16_t textIco);
@@ -128,7 +128,10 @@ namespace grvl {
         GENERATE_DUK_UNSIGNED_INT_SETTER(Button, ActiveIcoColor, SetActiveIcoColor)
         
     protected:
-        uint32_t IcoColor, ActiveIcoColor;
+        uint32_t TextColor;
+        uint32_t ActiveTextColor;
+        uint32_t IcoColor;
+        uint32_t ActiveIcoColor;
         int16_t IcoChar;
         int32_t TextTopOffset;
         Font const* IcoFont;
