@@ -30,6 +30,8 @@ namespace grvl {
         parent->SetOverscrollBarColor(XMLSupport::ParseColor(xmlElement, "overscrollColor", (uint32_t)COLOR_ARGB8888_LIGHTGRAY));
         parent->SetScrollIndicatorColor(XMLSupport::ParseColor(xmlElement, "scrollIndicatorColor", (uint32_t)COLOR_ARGB8888_DARKGRAY));
 
+        parent->SetVerticalGap(XMLSupport::GetAttributeOrDefault(xmlElement, "verticalGap", 0));
+
         parent->InitFromXML(xmlElement);
 
         XMLElement* child = xmlElement->FirstChildElement();
@@ -43,12 +45,18 @@ namespace grvl {
         return parent;
     }
 
+    void ListView::SetVerticalGap(float value)
+    {
+        verticalGap = value;
+        Refresh();
+    }
+
     void ListView::AddElement(Component* component)
     {
         component->SetPosition(0, itemsHeight); // Position at the end of the list
         component->SetSize(Width, component->GetHeight());
 
-        itemsHeight += component->GetHeight();
+        itemsHeight += component->GetHeight() + verticalGap;
         if(Height < itemsHeight) {
             ScrollMax = itemsHeight - Height;
         } else {

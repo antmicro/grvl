@@ -129,6 +129,7 @@
                     <xs:attribute name="splitLineColor" type="colorType" />
                     <xs:attribute name="overscrollColor" type="colorType" />
                     <xs:attribute name="scrollIndicatorColor" type="colorType" />
+                    <xs:attribute name="verticalGap" type="xs:integer" />
                 </xs:extension>
             </xs:complexContent>
         </xs:complexType>

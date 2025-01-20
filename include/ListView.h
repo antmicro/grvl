@@ -74,6 +74,8 @@ namespace grvl {
         void AddElement(Component* component) override;
         void RemoveElement(const char* elementId) override;
 
+        void SetVerticalGap(float value);
+
         void Refresh();
 
         // XML operations
@@ -81,6 +83,9 @@ namespace grvl {
         bool AddToList(Manager* man, string& listContent);
 
         static ListView* BuildFromXML(XMLElement* xmlElement);
+
+    private:
+        uint32_t verticalGap{0};
     };
 
 } /* namespace grvl */
