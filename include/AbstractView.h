@@ -29,13 +29,10 @@
 namespace grvl {
 
     /// Represents base class for all screens.
-    class AbstractView : public Component {
+    class AbstractView : public Container {
     public:
         AbstractView()
-            : Component()
-            , BackgroundImage()
-            , activeChild(NULL)
-            , childDropped(false)
+            : Container()
             , globalPanelVisible(false)
             , header(NULL)
             , onSlideToLeft()
@@ -51,11 +48,8 @@ namespace grvl {
         }
 
         AbstractView(const AbstractView& Obj)
-            : Component(Obj)
-            , BackgroundImage(Obj.BackgroundImage)
-            , activeChild(Obj.activeChild)
-            , childDropped(Obj.childDropped)
-            , globalPanelVisible(Obj.activeChild)
+            : Container(Obj)
+            , globalPanelVisible(Obj.lastActiveChild)
             , header(NULL)
             , onSlideToLeft()
             , onLongPress()
@@ -69,10 +63,7 @@ namespace grvl {
         }
 
         AbstractView(int32_t x, int32_t y, int32_t width, int32_t height)
-            : Component(x, y, width, height)
-            , BackgroundImage()
-            , activeChild(NULL)
-            , childDropped(false)
+            : Container(x, y, width, height)
             , globalPanelVisible(false)
             , header(NULL)
             , onSlideToLeft()
@@ -91,11 +82,8 @@ namespace grvl {
 
         AbstractView& operator=(const AbstractView& Obj);
 
-        void SetBackgroundImage(const Image& image);
         void SetGlobalPanelVisibility(bool visible);
         bool GetGlobalPanelVisibility() const;
-        virtual Component* GetElement(uint32_t index) = 0;
-        virtual Component* GetElement(const char* id) = 0;
         virtual Component* GetLastElement() = 0;
 
         uint32_t GetCollectionSize() const;
@@ -109,8 +97,6 @@ namespace grvl {
 
         void SetHeader(Panel* headerPtr);
         Panel* GetHeader();
-
-        virtual void AddElement(Component* element) {};
 
         virtual void OnPress();
         virtual void OnRelease();
@@ -132,9 +118,7 @@ namespace grvl {
         virtual void ClearTouch();
 
     protected:
-        Image BackgroundImage;
-        Component* activeChild;
-        bool childDropped, globalPanelVisible;
+        bool globalPanelVisible;
         Panel* header;
         Event onSlideToLeft, onSlideToRight;
         Event onLongPress, onLongPressRepeat;

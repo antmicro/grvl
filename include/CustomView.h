@@ -36,8 +36,6 @@ namespace grvl {
         {
         }
 
-        virtual ~CustomView();
-
         static CustomView* BuildFromXML(XMLElement* xmlElement);
 
         void AddElement(Component* element);
@@ -57,9 +55,6 @@ namespace grvl {
 
         virtual void PrepareToOpen();
         virtual void PrepareToClose();
-
-    protected:
-        vector<Component*> Elements;
     };
 
 } /* namespace grvl */

@@ -132,6 +132,9 @@ namespace grvl {
         {
         }
 
+        Component(const Component& other);
+        Component& operator=(const Component& other);
+
         virtual ~Component() = default;
 
         void SetID(const char* id);
@@ -203,8 +206,10 @@ namespace grvl {
         void SetOnLongPressEvent(const Event& event);
         void SetOnLongPressRepeatEvent(const Event& event);
 
-        virtual Touch::TouchResponse ProcessTouch(const Touch& tp, int32_t ParentX, int32_t ParentY,
-                                                  int32_t modificator = 0);
+        virtual void SetIsFocused(bool value) { isFocused = value; }
+        bool IsFocused() const { return isFocused; }
+
+        virtual Touch::TouchResponse ProcessTouch(const Touch& tp, int32_t ParentX, int32_t ParentY, int32_t modificator = 0);
         virtual bool IsTouchPointInObject(int32_t x, int32_t y, int32_t modificator = 0);
 
         virtual void CheckPlacement();

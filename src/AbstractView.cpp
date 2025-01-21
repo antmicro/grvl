@@ -25,11 +25,6 @@ namespace grvl {
         delete header;
     }
 
-    void AbstractView::SetBackgroundImage(const Image& image)
-    {
-        BackgroundImage = image;
-    }
-
     AbstractView& AbstractView::operator=(
         const AbstractView& Obj)
     {
@@ -142,10 +137,10 @@ namespace grvl {
 
     void AbstractView::ClearTouch()
     {
-        if(touchActive && activeChild) {
-            activeChild->ClearTouch();
+        if(touchActive && lastActiveChild) {
+            lastActiveChild->ClearTouch();
             childDropped = false;
-            activeChild = NULL;
+            lastActiveChild = NULL;
         }
     }
 
@@ -176,7 +171,7 @@ namespace grvl {
 
     void AbstractView::InitFromXML(XMLElement* xmlElement)
     {
-        Component::InitFromXML(xmlElement);
+        Container::InitFromXML(xmlElement);
         Manager* man = &Manager::GetInstance();
         this->SetOnSlideToLeftEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onSlideToLeft"))));
         this->SetOnSlideToRightEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onSlideToRight"))));

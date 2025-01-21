@@ -17,7 +17,7 @@
 #ifndef GRVL_GRIDROW_H_
 #define GRVL_GRIDROW_H_
 
-#include "AbstractButton.h"
+#include "Container.h"
 #include "Painter.h"
 #include "stl.h"
 #include "tinyxml2.h"
@@ -26,48 +26,42 @@ namespace grvl {
 
     /// Widget representing single row of a grid displayed by GridRow.
     /// The widget can contain buttons only.
-    class GridRow : public AbstractButton {
+    class GridRow : public Container {
     public:
         GridRow()
-            : AbstractButton()
+            : Container()
             , ElementWidth(0)
             , childDropped(false)
             , ignoreTouchModificator(false)
-            , activeChild(NULL)
+            , lastActiveChild(NULL)
         {
         }
 
         GridRow(int32_t x, int32_t y, int32_t width, int32_t height)
-            : AbstractButton(x, y, width, height)
+            : Container(x, y, width, height)
             , ElementWidth(0)
             , childDropped(false)
             , ignoreTouchModificator(false)
-            , activeChild(NULL)
+            , lastActiveChild(NULL)
         {
         }
 
-        virtual ~GridRow();
-
-        virtual void AddElement(Component* item);
+        void AddElement(Component* item) override;
 
         virtual void SetSize(int32_t width, int32_t height);
 
-        virtual Component* GetElement(const char* id);
-        virtual Touch::TouchResponse ProcessTouch(const Touch& tp, int32_t ParentX, int32_t ParentY, int32_t modificator = 0);
-
-        virtual void CheckPlacement();
-
-        void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
+        virtual void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY);
 
         static GridRow* BuildFromXML(XMLElement* xmlElement);
 
         void SetElementWidth(int32_t elementWidth);
+        void SetHorizontalOffset(int32_t horizontalOffset);
 
     protected:
-        vector<Component*> Elements;
         int32_t ElementWidth;
+        int32_t HorizontalOffset{0};
         bool childDropped, ignoreTouchModificator;
-        Component* activeChild;
+        Component* lastActiveChild;
 
         void ReorderElements();
     };

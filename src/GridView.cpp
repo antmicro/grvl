@@ -21,15 +21,6 @@
 
 namespace grvl {
 
-    GridView::~GridView()
-    {
-        Elements_vec::iterator it;
-        for(it = Elements.begin(); it != Elements.end();) {
-            delete *it;
-            it = Elements.erase(it);
-        }
-    }
-
     GridView* GridView::BuildFromXML(XMLElement* xmlElement)
     {
         GridView* parent = new GridView();
@@ -83,7 +74,8 @@ namespace grvl {
             ScrollMax = 0;
         }
 
-        Elements.push_back((GridRow*)item);
+        ((GridRow*)item)->SetAsSelection(IsSelection());
+        Container::AddElement(item);
     }
 
     void GridView::SetBackgroundColor(uint32_t color)

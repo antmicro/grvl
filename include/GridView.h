@@ -84,8 +84,6 @@ namespace grvl {
         {
         }
 
-        virtual ~GridView();
-
         void SetGridParameters(uint32_t width, uint32_t height, uint32_t verticalOffset);
         void AddElement(Component* item);
 

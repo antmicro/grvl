@@ -62,19 +62,78 @@ namespace grvl {
         return NULL;
     }
 
+    uint64_t Component::AssignUniqueID()
+    {
+        return firstAvailableUniqueID++;
+    }
+
+    Component::Component(const Component& other)
+        : uniqueID{AssignUniqueID()}, ID{other.ID}, X{other.X}, Y{other.Y}, Height{other.Height}, Width{other.Width},
+        ForegroundColor{other.ForegroundColor}, ActiveForegroundColor{other.ActiveForegroundColor},
+        BackgroundColor{other.BackgroundColor}, ActiveBackgroundColor{other.ActiveBackgroundColor},
+        onPress{other.onPress}, onRelease{other.onRelease}, onClick{other.onClick},
+        TouchActivatedTimestamp{other.TouchActivatedTimestamp}, longTouchActive{other.longTouchActive},
+        onLongPress{other.onLongPress}, onLongPressRepeat{other.onLongPressRepeat},
+        touchActive{other.touchActive}, childDroppedTouch{other.childDroppedTouch},
+        previousResponse{other.previousResponse}, Visible{other.Visible}, BorderColor{other.BorderColor},
+        BorderType{other.BorderType}, BorderArcRadius{other.BorderArcRadius}
+    {
+        onPress.SetSenderPointer(this);
+        onRelease.SetSenderPointer(this);
+        onClick.SetSenderPointer(this);
+        onLongPress.SetSenderPointer(this);
+        onLongPressRepeat.SetSenderPointer(this);
+    }
+
+    Component& Component::operator=(const Component& other)
+    {
+        uniqueID = AssignUniqueID();
+        ID = other.ID;
+        X = other.X;
+        Y = other.Y;
+        Height = other.Height;
+        Width = other.Width;
+        ForegroundColor = other.ForegroundColor;
+        ActiveForegroundColor = other.ActiveForegroundColor;
+        BackgroundColor = other.BackgroundColor;
+        ActiveBackgroundColor = other.ActiveBackgroundColor;
+        onPress = other.onPress;
+        onRelease = other.onRelease;
+        onClick = other.onClick;
+        touchActive = other.touchActive;
+        childDroppedTouch = other.childDroppedTouch;
+        previousResponse = other.previousResponse;
+        Visible = other.Visible;
+        BorderColor = other.BorderColor;
+        BorderType = other.BorderType;
+        BorderArcRadius = other.BorderArcRadius;
+        TouchActivatedTimestamp = other.TouchActivatedTimestamp;
+        longTouchActive = other.longTouchActive;
+        onLongPress = other.onLongPress;
+        onLongPressRepeat = other.onLongPressRepeat;
+
+        onPress.SetSenderPointer(this);
+        onRelease.SetSenderPointer(this);
+        onClick.SetSenderPointer(this);
+        onLongPress.SetSenderPointer(this);
+        onLongPressRepeat.SetSenderPointer(this);
+
+        return *this;
+    }
+
     void Component::SetID(const char* id)
     {
         ID = string(id);
     }
 
+    void Component::SetParentID(const char* id)
+    {
+        parentID = std::string(id);
+    }
+
     const char* Component::GetID()
     {
         return ID.c_str();
-    }
-
-    void Component::SetParentID(const char* id)
-    {
-        parentID = string(id);
     }
 
     const char* Component::GetParentID()
@@ -451,7 +510,10 @@ namespace grvl {
         this->SetVisible(XMLSupport::GetAttributeOrDefault(xmlElement, "visible", true));
 
         this->SetBackgroundColor(XMLSupport::ParseColor(xmlElement, "backgroundColor", "0"));
-        this->SetActiveBackgroundColor(XMLSupport::ParseColor(xmlElement, "activeBackgroundColor", GetBackgroundColor()));
+
+        this->SetActiveBackgroundColor(
+            XMLSupport::GetAttributeOrDefault(
+                xmlElement, "activeBackgroundColor", (uint32_t)this->GetBackgroundColor()));
         this->SetForegroundColor(XMLSupport::GetAttributeOrDefault(xmlElement, "textColor", defaultForeground));
         this->SetActiveForegroundColor(XMLSupport::ParseColor(xmlElement, "activeForegroundColor", GetForegroundColor()));
 

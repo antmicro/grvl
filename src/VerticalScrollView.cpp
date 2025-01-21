@@ -23,30 +23,46 @@
 //NOLINTEND
 namespace grvl {
 
-    VerticalScrollView::~VerticalScrollView()
+    void VerticalScrollView::AddElement(Component* item)
     {
-        Elements_vec::iterator it;
-        for(it = Elements.begin(); it != Elements.end();) {
-            delete *it;
-            it = Elements.erase(it);
-        }
-        grvl::Callbacks()->mutex_destroy(ClearWhileDrawMutex);
-        grvl::Callbacks()->mutex_destroy(ClearWhileTouchMutex);
+        AdjustScrollViewHeight(item);
+        item->SetParentID(GetID());
+        Elements.push_back(item);
     }
 
-    void VerticalScrollView::AddElement(AbstractButton* item)
+    void VerticalScrollView::AdjustScrollViewHeight(Component* child)
     {
-        // TODO: This requires some improvement on height calculation
-        static constexpr auto heightIncrement = 80;
-        itemsHeight += heightIncrement;
+        itemsHeight += child->GetHeight();
         if(Height < itemsHeight) {
             ScrollMax = itemsHeight - Height;
         } else {
             ScrollMax = 0;
         }
-
-        Elements.push_back(item);
     }
+
+    void VerticalScrollView::RemoveElement(const char* elementId)
+    {
+        Component* foundComponent{nullptr};
+        for (int index = 0; index < Elements.size(); ++index) {
+            if (strcmp(Elements[index]->GetID(), elementId) == 0) {
+                foundComponent = Elements[index];
+                Elements.erase(Elements.begin() + index);
+                break;
+            }
+        }
+
+        if (!foundComponent) {
+            return;
+        }
+
+        itemsHeight -= foundComponent->GetHeight();
+        if(Height < itemsHeight) {
+            ScrollMax = itemsHeight - Height;
+        }
+
+        delete foundComponent;
+    }
+
     void VerticalScrollView::SetScrolling(bool enable)
     {
         scrollingEnabled = enable;
@@ -123,14 +139,25 @@ namespace grvl {
 
     Component* VerticalScrollView::GetElement(const char* id)
     {
-        Component* Element = NULL;
-        for(uint32_t i = 0; i < Elements.size(); i++) {
-            if(strcmp(Elements[i]->GetID(), id) == 0) {
-                Element = Elements[i];
-                break;
+        for(auto& CurrentElement : Elements) {
+            if(Component* component = TryToGetElementFromChildContainer(CurrentElement, id)) {
+                return component;
+            }
+
+            if(strcmp(CurrentElement->GetID(), id) == 0) {
+                return CurrentElement;
             }
         }
-        return Element;
+        return nullptr;
+    }
+
+    Component* VerticalScrollView::TryToGetElementFromChildContainer(Component* possible_container, const char* searched_component_id)
+    {
+        if (Container* container = dynamic_cast<Container*>(possible_container)) {
+            return container->GetElement(searched_component_id);
+        }
+
+        return nullptr;
     }
 
     Component* VerticalScrollView::GetLastElement()
@@ -208,7 +235,7 @@ namespace grvl {
             // Element to low - not visible
             else if(Elements[i]->GetY() > tempScroll + Height) {
                 if(Elements[i]->GetY() > tempScroll + Height + abs(tempScrollChange) * ScrollChangeMultiplicator) {
-                    break; // No need to check more elements
+                    continue; // No need to check more elements
                 }
 
                 // Request new images - scrolling down
@@ -374,7 +401,7 @@ namespace grvl {
                 prevDeltaX = 0;
                 animation = 0;
                 dSpeed = 0;
-                activeChild = NULL;
+                ClearSelection();
                 currentOverscrollBarSize = 0;
 
                 bool ownCheck = IsTouchPointInObject(tp.GetCurrentX() - ParentRenderX, tp.GetCurrentY() - ParentRenderY);
@@ -385,7 +412,7 @@ namespace grvl {
                     for(uint32_t i = 0; i < Elements.size(); i++) {
                         Touch::TouchResponse touch = Elements[i]->ProcessTouch(tp, ParentRenderX + X, ParentRenderY + Y - Scroll);
                         if(Touch::TouchHandled == touch || Touch::LongTouchHandled == touch) {
-                            activeChild = Elements[i];
+                            SetCurrentlySelectedComponent(Elements[i]);
                             grvl::Callbacks()->mutex_unlock(ClearWhileTouchMutex);
                             return Touch::TouchHandled; // Child took control
                         }
@@ -405,9 +432,9 @@ namespace grvl {
             return Touch::TouchNotApplicable;
         }
 
-        if(activeChild && !childDropped) { // push data to the child
+        if(lastActiveChild && !childDropped) { // push data to the child
 
-            Touch::TouchResponse res = activeChild->ProcessTouch(tp, ParentRenderX + X, ParentRenderY + Y - Scroll);
+            Touch::TouchResponse res = lastActiveChild->ProcessTouch(tp, ParentRenderX + X, ParentRenderY + Y - Scroll);
 
             if(res == Touch::TouchReleased || res == Touch::TouchNotApplicable) {
                 childDropped = true;
@@ -566,6 +593,38 @@ namespace grvl {
         this->SetVisible(XMLSupport::GetAttributeOrDefault(xmlElement, "visible", true));
 
         AbstractView::InitFromXML(xmlElement);
+    }
+
+    void VerticalScrollView::Refresh()
+    {
+        itemsHeight = 0;
+        for (auto& child : Elements) {
+            if (child->IsVisible()) {
+                AdjustScrollViewHeight(child);
+            }
+        }
+        ScrollMax = max(itemsHeight - Height, 0);
+    }
+
+    void VerticalScrollView::PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder)
+    {
+        AbstractView::PopulateJavaScriptObject(jsObjectBuilder);
+        jsObjectBuilder.AttachMemberFunction("Refresh", VerticalScrollView::JSRefreshWrapper, 0);
+        jsObjectBuilder.AddProperty("scroll", VerticalScrollView::JSGetScrollWrapper, VerticalScrollView::JSSetScrollWrapper);
+    }
+
+    duk_ret_t VerticalScrollView::JSRefreshWrapper(duk_context* ctx)
+    {
+        duk_push_this(ctx);
+        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
+        VerticalScrollView* verticalScrollView = static_cast<VerticalScrollView*>(duk_to_pointer(ctx, -1));
+        if (!verticalScrollView) {
+            return 0;
+        }
+
+        verticalScrollView->Refresh();
+
+        return 0;
     }
 
 } /* namespace grvl */

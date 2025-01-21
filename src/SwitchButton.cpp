@@ -24,9 +24,9 @@ namespace grvl {
     {
     }
 
-    void SwitchButton::Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY)
+    void SwitchButton::Draw(Painter& painter, int32_t ParentX, int32_t ParentY)
     {
-        if(!Visible || Width <= 0 || Height <= 0) {
+        if(!Visible) {
             return;
         }
 
@@ -43,7 +43,7 @@ namespace grvl {
             // If button pressed
             if(!ButtonImage.IsEmpty()) {
                 ButtonImage.SetActiveFrame(1);
-                ButtonImage.Draw(painter, ParentRenderX + X, ParentRenderY + Y);
+                ButtonImage.Draw(painter, ParentX + X, ParentY + Y);
             } else {
                 if(Text != "ON") {
                     Text = "ON";
@@ -52,14 +52,14 @@ namespace grvl {
 
                 if(Width > 0 && Height > 0) {
                     if (BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
-                        painter.FillRoundRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor, BorderArcRadius);
+                        painter.FillRoundRectangle(ParentX + X, ParentY + Y, Width, Height, BackgroundColor, BorderArcRadius);
                     } else {
-                        painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor);
+                        painter.FillRectangle(ParentX + X, ParentY + Y, Width, Height, BackgroundColor);
                     }
-                    DrawBorderIfNecessary(painter, X + ParentRenderX, Y + ParentRenderY, Width, Height);
+                    DrawBorderIfNecessary(painter, X + ParentX, Y + ParentY, Width, Height);
 
                     painter.FillRectangle(
-                        ParentRenderX + X + ((uint32_t)Width * widthMultiplier), ParentRenderY + Y + 1, ((uint32_t)Width * (1.0 - widthMultiplier)), Height - 1,
+                        ParentX + X + ((uint32_t)Width * widthMultiplier), ParentY + Y + 1, ((uint32_t)Width * (1.0 - widthMultiplier)), Height - 1,
                         ActiveSwitchColor);
                 }
 
@@ -67,14 +67,14 @@ namespace grvl {
                     uint16_t BeginX = X + Width - (TextWidth) - (Height / 2);
                     uint16_t BeginY = Y + (Height / 2) - (ButtonFont->GetHeight() / 2);
                     painter.DisplayAntialiasedString(
-                        ButtonFont, ParentRenderX + BeginX, ParentRenderY + BeginY, Text.c_str(), ActiveTextColor);
+                        ButtonFont, ParentX + BeginX, ParentY + BeginY, Text.c_str(), ActiveTextColor);
                 }
             }
         } else {
             // If button released
             if(!ButtonImage.IsEmpty()) {
                 ButtonImage.SetActiveFrame(0);
-                ButtonImage.Draw(painter, ParentRenderX + X, ParentRenderY + Y);
+                ButtonImage.Draw(painter, ParentX + X, ParentY + Y);
             } else {
                 if(Text != "OFF") {
                     Text = "OFF";
@@ -83,19 +83,19 @@ namespace grvl {
 
                 if(Height > 0 && Width > 0) {
                     if (BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
-                        painter.FillRoundRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor, BorderArcRadius);
+                        painter.FillRoundRectangle(ParentX + X, ParentY + Y, Width, Height, BackgroundColor, BorderArcRadius);
                     } else {
-                        painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor);
+                        painter.FillRectangle(ParentX + X, ParentY + Y, Width, Height, BackgroundColor);
                     }
-                    DrawBorderIfNecessary(painter, X + ParentRenderX, Y + ParentRenderY, Width, Height);
-                    painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, ((uint32_t)Width * (1.0 - widthMultiplier)), Height, SwitchColor);
+                    DrawBorderIfNecessary(painter, X + ParentX, Y + ParentY, Width, Height);
+                    painter.FillRectangle(ParentX + X, ParentY + Y, ((uint32_t)Width * (1.0 - widthMultiplier)), Height, SwitchColor);
                 }
 
                 if(!Text.empty()) {
                     uint16_t BeginX = X + (Height / 2);
                     uint16_t BeginY = Y + (Height / 2) - (ButtonFont->GetHeight() / 2);
                     painter.DisplayAntialiasedString(
-                        ButtonFont, ParentRenderX + BeginX, ParentRenderY + BeginY, Text.c_str(), TextColor);
+                        ButtonFont, ParentX + BeginX, ParentY + BeginY, Text.c_str(), TextColor);
                 }
             }
         }

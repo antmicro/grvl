@@ -71,9 +71,8 @@ namespace grvl {
             overscrollBarEnabled = true;
         }
 
-        virtual ~ListView();
-
-        virtual void AddElement(Component* citem);
+        void AddElement(Component* component) override;
+        void RemoveElement(const char* elementId) override;
 
         void Refresh();
 

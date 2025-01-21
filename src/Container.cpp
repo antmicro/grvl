@@ -18,28 +18,50 @@
 #include "Manager.h"
 #include "XMLSupport.h"
 #include "JSEngine.h"
+#include <cassert>
 
 namespace grvl {
 
     Container::~Container()
     {
-        vector<Component*>::iterator it;
+        std::vector<Component*>::iterator it;
         for(it = Elements.begin(); it != Elements.end();) {
             delete *it;
             it = Elements.erase(it);
         }
     }
 
+    Container::Container(const Container& other)
+        : Component(other)
+        , childDropped(false)
+        , BackgroundImage(other.BackgroundImage)
+        , lastActiveChild(NULL)
+        , isSelection{other.isSelection}
+    {
+        ID = ID.append(std::to_string(uniqueID));
+        copyComponents(other.Elements);
+    }
+
     Container& Container::operator=(const Container& Obj)
     {
         if(this != &Obj) {
             Component::operator=(Obj);
-            Elements = Obj.Elements;
+            ID = ID.append(std::to_string(uniqueID));
             childDropped = Obj.childDropped;
             BackgroundImage = Obj.BackgroundImage;
-            activeChild = Obj.activeChild;
+            lastActiveChild = Obj.lastActiveChild;
+            isSelection = Obj.isSelection;
+            deleteContainerComponents();
+            copyComponents(Obj.Elements);
         }
         return *this;
+    }
+
+    void Container::copyComponents(const std::vector<Component*>& other)
+    {
+        for (auto& component : other) {
+            AddElement(component);
+        }
     }
 
     void Container::SetBackgroundImage(Image* image)
@@ -47,9 +69,80 @@ namespace grvl {
         BackgroundImage = image;
     }
 
+    void Container::SetAsSelection(bool value)
+    {
+        isSelection = value;
+    }
+
+    bool Container::SetCurrentlySelectedItem(const char* elementId)
+    {
+        for(auto& currentElement : Elements) {
+            if(Container* container = dynamic_cast<Container*>(currentElement)) {
+                if(container->SetCurrentlySelectedItem(elementId)) {
+                    SetCurrentlySelectedComponent(currentElement);
+                    return true;
+                }
+            }
+
+            if(strcmp(currentElement->GetID(), elementId) == 0) {
+                SetCurrentlySelectedComponent(currentElement);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    void Container::SetCurrentlySelectedComponent(Component* component)
+    {
+        if (component == lastActiveChild) {
+            return;
+        }
+
+        if (IsSelection())
+        {
+            ClearSelection();
+            component->SetIsFocused(true);
+        }
+        lastActiveChild = component;
+    }
+
+    void Container::ClearSelection()
+    {
+        if (isSelection && lastActiveChild) {
+            lastActiveChild->SetIsFocused(false);
+            lastActiveChild = nullptr;
+        }
+    }
+
+    void Container::SetIsFocused(bool value)
+    {
+        Component::SetIsFocused(value);
+
+        if (!IsFocused())
+        {
+            ClearSelection();
+        }
+    }
+
     void Container::AddElement(Component* el)
     {
-        Elements.push_back(el);
+        assert(el && "Cannot pass null object");
+        el->SetParentID(GetID());
+        Elements.emplace_back(el);
+    }
+
+    void Container::RemoveElement(const char* elementId)
+    {
+        Component* foundComponent{nullptr};
+        for (int index = 0; index < Elements.size(); ++index) {
+            if (strcmp(Elements[index]->GetID(), elementId) == 0) {
+                foundComponent = Elements[index];
+                Elements.erase(Elements.begin() + index);
+                delete foundComponent;
+                return;
+            }
+        }
     }
 
     vector<Component*>& Container::GetElements()
@@ -72,7 +165,28 @@ namespace grvl {
                 return screen->GetElement(id);
             }
         }
-        return NULL;
+        return nullptr;
+    }
+
+    Component* Container::GetElementByIndex(int index)
+    {
+        assert(index < Elements.size());
+
+        return Elements[index];
+    }
+
+    Component* Container::TryToGetElementFromChildContainer(Component* possible_container, const char* searched_component_id)
+    {
+        if (Container* container = dynamic_cast<Container*>(possible_container)) {
+            return container->GetElement(searched_component_id);
+        }
+
+        return nullptr;
+    }
+
+    bool Container::HasElement(const char* ComponentID)
+    {
+        return GetElement(ComponentID) != nullptr;
     }
 
     void Container::CheckPlacement()
@@ -99,21 +213,22 @@ namespace grvl {
     void Container::InitFromXML(tinyxml2::XMLElement* xmlElement)
     {
         Component::InitFromXML(xmlElement);
+
+        SetAsSelection(XMLSupport::GetAttributeOrDefault(xmlElement, "selection", false));
     }
 
     Touch::TouchResponse Container::ProcessTouch(const Touch& tp, int32_t ParentX, int32_t ParentY, int32_t modificator)
     {
         if(tp.GetState() == Touch::Pressed) { // init state, find child
+            ClearSelection();
             touchActive = false;
             childDropped = false;
 
-            bool ownCheck = IsTouchPointInObject(tp.GetCurrentX() - ParentX, tp.GetCurrentY() - ParentY);
-
-            if(ownCheck) { // Container selected
-                touchActive = true;
+            if(IsTouchPointInObject(tp.GetCurrentX() - ParentX, tp.GetCurrentY() - ParentY)) { // Container selected
                 for(int32_t i = Elements.size() - 1; i >= 0; i--) {
-                    if(Touch::TouchHandled == Elements[i]->ProcessTouch(tp, ParentX + X, ParentY + Y, modificator)) { // Trigger onPress
-                        activeChild = Elements[i];
+                    if(Elements[i]->IsVisible() && Touch::TouchHandled == Elements[i]->ProcessTouch(tp, ParentX + X, ParentY + Y, modificator)) { // Trigger onPress
+                        SetCurrentlySelectedComponent(Elements[i]);
+                        touchActive = true;
                         break;
                     }
                 }
@@ -123,30 +238,38 @@ namespace grvl {
         }
 
         if(touchActive) {
-            if(childDropped || activeChild == NULL) { // Process data
+            if(childDropped || lastActiveChild == NULL) { // Process data
                 if(tp.GetState() == Touch::Released) {
-                    return Touch::TouchReleased;
                     touchActive = false;
+                    return Touch::TouchReleased;
                 }
+
                 return Touch::TouchHandled;
             }  // Push data
+
             if(tp.GetState() != Touch::Pressed) { // Not to trigger onPress twice.
-                Touch::TouchResponse childResponse = activeChild->ProcessTouch(tp, ParentX + X, ParentY + Y, modificator);
-                if(childResponse == Touch::TouchReleased || childResponse == Touch::TouchNotApplicable) { // Drop
-                    childDropped = true;
-                    activeChild = NULL;
-                }
+                return lastActiveChild->ProcessTouch(tp, ParentX + X, ParentY + Y, modificator);
             }
+
+            if (tp.GetState() == Touch::Moving) {
+                return Touch::LongTouchHandled;
+            }
+
             return Touch::TouchHandled;
         }
         return Touch::TouchNotApplicable;
-        ;
     }
 
     void Container::PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder)
     {
         Component::PopulateJavaScriptObject(jsObjectBuilder);
-        jsObjectBuilder.AttachMemberFunction("GetElementById", Panel::JSGetElementByIdWrapper, 1);
+        jsObjectBuilder.AttachMemberFunction("GetElementById", Container::JSGetElementByIdWrapper, 1);
+        jsObjectBuilder.AttachMemberFunction("GetElementByIndex", Container::JSGetElementByIndexWrapper, 1);
+        jsObjectBuilder.AttachMemberFunction("HasElement", Container::JSHasElementWrapper, 1);
+        jsObjectBuilder.AttachMemberFunction("AddElement", Container::JSAddElementWrapper, 1);
+        jsObjectBuilder.AttachMemberFunction("RemoveElement", Container::JSRemoveElementWrapper, 1);
+        jsObjectBuilder.AttachMemberFunction("SetCurrentlySelectedItem", Container::JSSetCurrentlySelectedItemWrapper, 1);
+        jsObjectBuilder.AttachMemberFunction("GetNumberOfComponents", Container::JSGetNumberOfComponentsWrapper, 0);
     }
 
     duk_ret_t Container::JSGetElementByIdWrapper(duk_context* ctx)
@@ -165,6 +288,96 @@ namespace grvl {
         }
 
         return 0;
+    }
+
+    duk_ret_t Container::JSGetElementByIndexWrapper(duk_context* ctx)
+    {
+        duk_push_this(ctx);
+        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
+        Container* container = static_cast<Container*>(duk_to_pointer(ctx, -1));
+        if (!container) {
+            return 0;
+        }
+
+        int index = duk_to_int(ctx, 0);
+        JSEngine::PushComponentAsJSObjectOntoStack(container->GetElementByIndex(index));
+        return 1;
+    }
+
+    duk_ret_t Container::JSHasElementWrapper(duk_context* ctx)
+    {
+        duk_push_this(ctx);
+        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
+        Container* container = static_cast<Container*>(duk_to_pointer(ctx, -1));
+        if (!container) {
+            return 0;
+        }
+
+        const char* componentName = duk_to_string(ctx, 0);
+        duk_push_boolean(ctx, container->HasElement(componentName));
+
+        return 1;
+    }
+
+    duk_ret_t Container::JSAddElementWrapper(duk_context* ctx)
+    {
+        duk_get_prop_string(ctx, 0, JSObject::C_OBJECT_POINTER_KEY);
+        Component* componentToAdd = static_cast<Component*>(duk_to_pointer(ctx, -1));
+
+        duk_push_this(ctx);
+        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
+        Container* container = static_cast<Container*>(duk_to_pointer(ctx, -1));
+        if (!container || !componentToAdd) {
+            return 0;
+        }
+
+        container->AddElement(componentToAdd);
+
+        return 0;
+    }
+
+    duk_ret_t Container::JSRemoveElementWrapper(duk_context* ctx)
+    {
+        duk_push_this(ctx);
+        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
+        AbstractView* container = static_cast<AbstractView*>(duk_to_pointer(ctx, -1));
+        if (!container) {
+            return 0;
+        }
+
+        const char* componentName = duk_to_string(ctx, 0);
+        container->RemoveElement(componentName);
+
+        return 0;
+    }
+
+    duk_ret_t Container::JSSetCurrentlySelectedItemWrapper(duk_context* ctx)
+    {
+        duk_push_this(ctx);
+        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
+        AbstractView* container = static_cast<AbstractView*>(duk_to_pointer(ctx, -1));
+        if (!container) {
+            return 0;
+        }
+
+        const char* componentName = duk_to_string(ctx, 0);
+        container->SetCurrentlySelectedItem(componentName);
+
+        return 0;
+    }
+
+    duk_ret_t Container::JSGetNumberOfComponentsWrapper(duk_context* ctx)
+    {
+        duk_push_this(ctx);
+        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
+        Container* container = static_cast<Container*>(duk_to_pointer(ctx, -1));
+        if (!container) {
+            return 0;
+        }
+
+        duk_push_int(ctx, container->GetElements().size());
+
+        return 1;
     }
 
 } /* namespace grvl */

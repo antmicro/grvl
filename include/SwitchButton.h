@@ -114,7 +114,7 @@ namespace grvl {
 
         static SwitchButton* BuildFromXML(XMLElement* xmlElement);
 
-        void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
+        virtual void Draw(Painter& painter, int32_t ParentX, int32_t ParentY);
 
         void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder) override;
 

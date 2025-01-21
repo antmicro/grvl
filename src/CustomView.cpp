@@ -19,15 +19,6 @@
 #include "XMLSupport.h"
 namespace grvl {
 
-    CustomView::~CustomView()
-    {
-        vector<Component*>::iterator it;
-        for(it = Elements.begin(); it != Elements.end();) {
-            delete *it;
-            it = Elements.erase(it);
-        }
-    }
-
     CustomView* CustomView::BuildFromXML(XMLElement* xmlElement)
     {
         CustomView* parent = new CustomView();
@@ -127,10 +118,8 @@ namespace grvl {
             return;
         }
 
-        painter.PushDrawingBoundsStackElement(ParentRenderX, ParentRenderY, ParentRenderX + Width, ParentRenderY + Height);
-
-        if(!BackgroundImage.IsEmpty()) {
-            BackgroundImage.Draw(painter, X + ParentRenderX, Y + ParentRenderY);
+        if(BackgroundImage && !BackgroundImage->IsEmpty()) {
+            BackgroundImage->Draw(painter, X + ParentRenderX, Y + ParentRenderY);
         } else {
             painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor);
             painter.AddBackgroundBlock(ParentRenderY + Y, Height, BackgroundColor);
@@ -160,7 +149,7 @@ namespace grvl {
                 for(int32_t i = Elements.size() - 1; i >= 0; i--) {
                     Touch::TouchResponse touch = Elements[i]->ProcessTouch(tp, ParentX + X, ParentY + Y, modificator); // Trigger onPress
                     if(Touch::TouchHandled == touch || Touch::LongTouchHandled == touch) {
-                        activeChild = Elements[i];
+                        lastActiveChild = Elements[i];
                         break;
                     }
                 }
@@ -189,7 +178,7 @@ namespace grvl {
         }
 
         if(touchActive) {
-            if(childDropped || activeChild == NULL) { // Process data by screen - sliders.
+            if(childDropped || lastActiveChild == NULL) { // Process data by screen - sliders.
                 static constexpr auto deltaOffsetScale = 10;
                 if(tp.GetState() != Touch::Released && abs(tp.GetDeltaY()) < Height / deltaOffsetScale
                    && abs(tp.GetDeltaX()) > Width / deltaOffsetScale) {
@@ -206,10 +195,10 @@ namespace grvl {
                 }
             } else { // Push data
                 if(tp.GetState() != Touch::Pressed) { // Not to trigger onPress twice.
-                    Touch::TouchResponse childResponse = activeChild->ProcessTouch(tp, ParentX + X, ParentY + Y, modificator);
+                    Touch::TouchResponse childResponse = lastActiveChild->ProcessTouch(tp, ParentX + X, ParentY + Y, modificator);
                     if(childResponse != Touch::TouchHandled && childResponse != Touch::LongTouchHandled) { // Drop
                         childDropped = true;
-                        activeChild = NULL;
+                        lastActiveChild = NULL;
                     }
                 }
                 return Touch::TouchHandled;

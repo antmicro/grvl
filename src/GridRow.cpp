@@ -21,26 +21,6 @@
 
 namespace grvl {
 
-    GridRow::~GridRow()
-    {
-        vector<Component*>::iterator it;
-        for(it = Elements.begin(); it != Elements.end();) {
-            delete *it;
-            it = Elements.erase(it);
-        }
-    }
-
-    Component* GridRow::GetElement(const char* id)
-    {
-        Component* Element = NULL;
-        for(uint32_t i = 0; i < Elements.size(); i++) {
-            if(strcmp(Elements[i]->GetID(), id) == 0) {
-                Element = Elements[i];
-            }
-        }
-        return Element;
-    }
-
     void GridRow::SetSize(int32_t width, int32_t height)
     {
         Width = width;
@@ -58,82 +38,20 @@ namespace grvl {
         }
 
         // The first algorithm
-        int32_t distance = Width - (Elements.size() * ElementWidth);
+        int32_t distance = Width - Elements.size() * ElementWidth - (Elements.size() - 1) * HorizontalOffset;
 
-        if(distance >= 0) {
-            ignoreTouchModificator = false; // Distance between buttons allow to use touch area modificator
-            distance /= Elements.size() + 1;
+        ignoreTouchModificator = distance < 0; // Distance between buttons allow to use touch area modificator
 
-            int32_t offset = 0;
-            for(uint32_t i = 0; i < Elements.size(); i++) {
-                offset += distance + ElementWidth * (i > 0);
-                Elements[i]->SetPosition(offset, 0);
-            }
-        } else {
-            // The second one
-            ignoreTouchModificator = true; // Distance between buttons too small
-            int32_t distance = Width / (Elements.size() + 1);
-
-            for(uint32_t i = 0; i < Elements.size(); i++) {
-                int32_t offset = distance * (i + 1);
-                Elements[i]->SetPosition(offset - (Elements[i]->GetWidth() / 2), 0);
-            }
+        for(uint32_t i = 0; i < Elements.size(); ++i) {
+            int32_t XOffset = (ElementWidth + HorizontalOffset) * i;
+            Elements[i]->SetPosition(XOffset, 0);
         }
     }
 
-    void GridRow::AddElement(Component* gitem)
+    void GridRow::AddElement(Component* item)
     {
-        AbstractButton* item = (AbstractButton*)gitem;
-        if(item) {
-            Elements.push_back(item);
-        }
+        Container::AddElement(item);
         ReorderElements();
-    }
-
-    Touch::TouchResponse GridRow::ProcessTouch(const Touch& tp, int32_t ParentRenderX, int32_t ParentRenderY, int32_t modificator)
-    {
-        if(tp.GetState() == Touch::Pressed) { // init state, find child
-            touchActive = false;
-            childDropped = false;
-
-            bool ownCheck = IsTouchPointInObject(tp.GetCurrentX() - ParentRenderX, tp.GetCurrentY() - ParentRenderY);
-
-            if(ownCheck) { // Container selected
-                touchActive = true;
-                for(int32_t i = Elements.size() - 1; i >= 0; i--) {
-                    if(Touch::TouchHandled == Elements[i]->ProcessTouch(tp, ParentRenderX + X, ParentRenderY + Y, modificator)) { // Trigger onPress
-                        activeChild = Elements[i];
-                        break;
-                    }
-                }
-            } else {
-                return Touch::TouchNotApplicable;
-            }
-        }
-
-        if(touchActive) {
-            if(childDropped || activeChild == NULL) { // Process data by screen - sliders.
-                Touch::TouchResponse touch = Component::ProcessMove(tp.GetStartX() - ParentRenderX - X, tp.GetStartY() - ParentRenderY - Y, tp.GetDeltaX(), tp.GetDeltaY());
-                if(touch == Touch::TouchReleased) {
-                    touchActive = false;
-                }
-                return touch;
-            } // Push data
-            if(tp.GetState() != Touch::Pressed) { // Not to trigger onPress twice.
-                Touch::TouchResponse childResponse = activeChild->ProcessTouch(
-                    tp, ParentRenderX + X, ParentRenderY + Y, ignoreTouchModificator ? 0 : modificator);
-                if(childResponse == Touch::TouchReleased || childResponse == Touch::TouchNotApplicable) { // Drop
-                    childDropped = true;
-                    activeChild = NULL;
-                }
-            }
-            return Touch::TouchHandled;
-        }
-        return Touch::TouchNotApplicable;
-    }
-
-    void GridRow::CheckPlacement()
-    {
     }
 
     void GridRow::Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY)
@@ -142,17 +60,18 @@ namespace grvl {
             return;
         }
 
-        if (BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
-            painter.FillRoundRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor, BorderArcRadius);
-        } else {
-            painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor);
-        }
+        int32_t RenderX = ParentRenderX + X;
+        int32_t RenderY = ParentRenderY + Y;
+
+        painter.PushDrawingBoundsStackElement(RenderX, RenderY, RenderX + Width, RenderY + Height);
+
+        painter.FillRectangle(RenderX, RenderY, Width, Height, BackgroundColor);
 
         for(uint32_t i = 0; i < Elements.size(); i++) {
-            Elements[i]->Draw(painter, ParentRenderX + X, ParentRenderY + Y);
+            Elements[i]->Draw(painter, RenderX, RenderY);
         }
 
-        DrawBorderIfNecessary(painter, ParentRenderX + X, ParentRenderY + Y, Width, Height);
+        painter.PopDrawingBoundsStackElement();
     }
 
     void GridRow::SetElementWidth(int32_t elementWidth)
@@ -161,6 +80,12 @@ namespace grvl {
         for(uint32_t i = 0; i < Elements.size(); i++) {
             Elements[i]->SetSize(ElementWidth, Height);
         }
+        ReorderElements();
+    }
+
+    void GridRow::SetHorizontalOffset(int32_t horizontalOffset)
+    {
+        HorizontalOffset = horizontalOffset;
         ReorderElements();
     }
 
@@ -175,9 +100,6 @@ namespace grvl {
             if(element)
                 parent->AddElement(element);
         }
-        parent->SetBackgroundColor(
-            XMLSupport::ParseColor(
-                xmlElement, "backgroundColor", (uint32_t)COLOR_ARGB8888_TRANSPARENT));
 
         return parent;
     }

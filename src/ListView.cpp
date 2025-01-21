@@ -20,15 +20,6 @@
 
 namespace grvl {
 
-    ListView::~ListView()
-    {
-        Elements_vec::iterator it;
-        for(it = Elements.begin(); it != Elements.end();) {
-            delete *it;
-            it = Elements.erase(it);
-        }
-    }
-
     ListView* ListView::BuildFromXML(XMLElement* xmlElement)
     {
         ListView* parent = new ListView();
@@ -52,14 +43,12 @@ namespace grvl {
         return parent;
     }
 
-    void ListView::AddElement(Component* citem)
+    void ListView::AddElement(Component* component)
     {
-        ListItem* item = (ListItem*)citem;
-        item->SetPosition(0, itemsHeight); // Position at the end of the list
-        item->SetSize(Width, item->GetHeight());
-        item->SetParent(this);
+        component->SetPosition(0, itemsHeight); // Position at the end of the list
+        component->SetSize(Width, component->GetHeight());
 
-        itemsHeight += item->GetHeight();
+        itemsHeight += component->GetHeight();
         if(Height < itemsHeight) {
             ScrollMax = itemsHeight - Height;
         } else {
@@ -86,14 +75,52 @@ namespace grvl {
             scrollIndicatorImage = new ImageContent(ImageContent::FromRAW(imgContent, sWidth, sHeight, 1, COLOR_FORMAT_ARGB8888));
         }
 
-        Elements.push_back(item);
+        Elements.push_back(component);
+    }
+
+    void ListView::RemoveElement(const char* elementId)
+    {
+        int elementsSize = Elements.size();
+        Component* foundComponent{nullptr};
+        int index = 0;
+        for (; index < Elements.size(); ++index) {
+            if (strcmp(Elements[index]->GetID(), elementId) == 0) {
+                foundComponent = Elements[index];
+                Elements.erase(Elements.begin() + index);
+                break;
+            }
+        }
+
+        if (!foundComponent) {
+            return;
+        }
+
+        if (index < elementsSize - 1) {
+
+            int y = 0;
+            if (index > 0) {
+                y = Elements[index - 1]->GetY() + Elements[index - 1]->GetHeight();
+            }
+
+            for (; index < Elements.size(); ++index) {
+                Elements[index]->SetY(y);
+                y += Elements[index]->GetHeight();
+            }
+        }
+
+        itemsHeight -= foundComponent->GetHeight();
+        if(Height < itemsHeight) {
+            ScrollMax = itemsHeight - Height;
+        }
+
+        delete foundComponent;
     }
 
     void ListView::ClearList()
     {
         grvl::Callbacks()->mutex_lock(ClearWhileTouchMutex);
         grvl::Callbacks()->mutex_lock(ClearWhileDrawMutex);
-        Elements_vec::iterator it;
+        std::vector<Component*>::iterator it;
         for(it = Elements.begin(); it != Elements.end();) {
             delete *it;
             it = Elements.erase(it);
@@ -106,7 +133,7 @@ namespace grvl {
 
     void ListView::Refresh()
     {
-        Elements_vec::iterator it;
+        std::vector<Component*>::iterator it;
         ScrollMax = 0;
         itemsHeight = 0;
 

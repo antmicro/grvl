@@ -104,7 +104,7 @@ namespace grvl {
         uint32_t TempTextColor = COLOR_ARGB8888_TRANSPARENT;
         uint32_t TempIcoColor = COLOR_ARGB8888_TRANSPARENT;
 
-        if(State == On || State == Pressed || State == OnAndSelected) {
+        if(State == On || State == Pressed || State == OnAndSelected || isFocused) {
             TempBackgroundColor = ActiveBackgroundColor;
             TempTextColor = ActiveForegroundColor;
             TempIcoColor = ActiveIcoColor;

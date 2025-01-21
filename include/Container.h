@@ -29,53 +29,60 @@ namespace grvl {
     /// Represents base container class for panel and pop-up window.
     class Container : public Component {
     public:
-        Container()
-            : Component()
-            , childDropped(false)
-            , BackgroundImage(NULL)
-            , activeChild(NULL)
-        {
-        }
+        Container() = default;
 
         Container(int32_t x, int32_t y, int32_t width, int32_t height)
             : Component(x, y, width, height)
-            , childDropped(false)
-            , BackgroundImage(NULL)
-            , activeChild(NULL)
         {
         }
 
-        Container(const Container& Obj)
-            : Component(Obj)
-            , childDropped(false)
-            , BackgroundImage(Obj.BackgroundImage)
-            , activeChild(NULL)
-        {
-        }
+        Container(const Container& other);
+        Container& operator=(const Container& other);
 
         virtual ~Container();
 
-        Container& operator=(const Container& Obj);
-
         virtual void CheckPlacement();
-        vector<Component*>& GetElements();
-        Component* GetElement(const char* id);
-        virtual void AddElement(Component* el);
         void SetBackgroundImage(Image* image);
 
-        virtual Touch::TouchResponse ProcessTouch(const Touch& tp, int32_t ParentX, int32_t ParentY,
-                                                  int32_t modificator = 0);
+        vector<Component*>& GetElements();
+        Component* GetElement(const char* id);
+        Component* GetElementByIndex(int index);
+        bool HasElement(const char* ComponentID);
+        virtual void AddElement(Component* el);
+        virtual void RemoveElement(const char* elementId);
 
-        virtual void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder);
+        void SetIsFocused(bool value) override;
+        bool IsSelection() const { return isSelection; }
+        virtual void SetAsSelection(bool value);
+        virtual bool SetCurrentlySelectedItem(const char* elementId);
+        virtual void SetCurrentlySelectedComponent(Component* component);
+        virtual void ClearSelection();
+
+        Touch::TouchResponse ProcessTouch(const Touch& tp, int32_t ParentX, int32_t ParentY, int32_t modificator = 0) override;
+
+        void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder) override;
         static duk_ret_t JSGetElementByIdWrapper(duk_context* ctx);
+        static duk_ret_t JSGetElementByIndexWrapper(duk_context* ctx);
+        static duk_ret_t JSHasElementWrapper(duk_context* ctx);
+        static duk_ret_t JSAddElementWrapper(duk_context* ctx);
+        static duk_ret_t JSRemoveElementWrapper(duk_context* ctx);
+        static duk_ret_t JSSetCurrentlySelectedItemWrapper(duk_context* ctx);
+        static duk_ret_t JSGetNumberOfComponentsWrapper(duk_context* ctx);
 
     protected:
-        vector<Component*> Elements;
-        bool childDropped;
+        std::vector<Component*> Elements;
         Image* BackgroundImage;
-        Component* activeChild;
+        Component* lastActiveChild;
+        bool childDropped;
+
+        bool isSelection{false};
 
         virtual void InitFromXML(XMLElement* xmlElement);
+
+        virtual Component* TryToGetElementFromChildContainer(Component* possible_container, const char* searched_component_id);
+
+        virtual void copyComponents(const std::vector<Component*>& other);
+        virtual void deleteContainerComponents();
     };
 
 } /* namespace grvl */

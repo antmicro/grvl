@@ -86,9 +86,8 @@ namespace grvl {
             ClearWhileTouchMutex = grvl::Callbacks()->mutex_create();
         }
 
-        virtual ~VerticalScrollView();
-
-        virtual void AddElement(AbstractButton* item);
+        void AddElement(Component* component) override;
+        void RemoveElement(const char* elementId) override;
 
         void SetScrollingValue(int32_t scrollVal);
         void SetSplitLineColor(uint32_t color);
@@ -123,13 +122,19 @@ namespace grvl {
 
         void SetScrollIndicatorColor(uint32_t color);
 
+        void Refresh();
+
+        void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder) override;
+        static duk_ret_t JSRefreshWrapper(duk_context* ctx);
+
+        GENERATE_DUK_INT_GETTER(VerticalScrollView, Scroll, GetScrollingValue)
+        GENERATE_DUK_INT_SETTER(VerticalScrollView, Scroll, SetScrollingValue)
+
     protected:
         int32_t Scroll, ScrollMax, ScrollChange, prevDeltaY, prevDeltaX, itemsHeight;
         int8_t animation;
         float dSpeed;
         uint32_t ElementColor, SplitLineColor;
-        typedef vector<AbstractButton*> Elements_vec;
-        Elements_vec Elements;
         uint64_t scrollingTimestamp;
         bool scrollingEnabled, overscrollBarEnabled, scrollingByFinger;
         int32_t overscrollBarSize, currentOverscrollBarSize;
@@ -143,7 +148,11 @@ namespace grvl {
         void* ClearWhileDrawMutex;
         void* ClearWhileTouchMutex;
 
+        virtual void AdjustScrollViewHeight(Component* child);
+
         void InitFromXML(XMLElement* xmlElement);
+
+        virtual Component* TryToGetElementFromChildContainer(Component* possible_container, const char* searched_component_id);
     };
 
 } /* namespace grvl */
