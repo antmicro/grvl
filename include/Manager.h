@@ -55,6 +55,9 @@
 #include "Checkbox.h"
 #include "Graph.h"
 #include "GridCanvas.h"
+#include "Keyboard.h"
+#include "KeyboardKey.h"
+#include "TextInput.h"
 
 using namespace tinyxml2;
 namespace grvl {
@@ -199,6 +202,12 @@ namespace grvl {
         void ShowPopup(const char* Style, const char* Message);
         void ShowPopup(const char* Style, uint32_t milliseconds);
         void ShowPopup(const char* Style, const char* Message, uint32_t milliseconds);
+
+        /// Displays keyboard pop-up window if defined.
+        void ShowKeyboard(TextInput* destinationInput);
+
+        /// Switches keyboard pop-up keys.
+        void SwitchKeyboardKeys();
 
         /// Closes last pop-up window.
         void ClosePopup();
@@ -356,6 +365,7 @@ namespace grvl {
 
         std::vector<Division*> Prefabs;
 
+        Keyboard* keyboard{nullptr};
         vector<Popup*> PopupsContainer;
         Panel* TopPanel;
         Panel* BottomPanel;

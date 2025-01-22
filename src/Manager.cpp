@@ -17,6 +17,8 @@
 #include "Manager.h"
 #include "ParsingUtils.h"
 
+#include <cassert>
+
 #include <JSEngine.h>
 
 #ifdef __ZEPHYR__
@@ -60,6 +62,8 @@ namespace grvl {
     WIDGET(Checkbox);
     WIDGET(Graph);
     WIDGET(GridCanvas);
+    WIDGET(KeyboardKey);
+    WIDGET(TextInput);
 
     static inline float MotionFunc(float x)
     {
@@ -76,6 +80,34 @@ namespace grvl {
     {
         Manager* man = &Manager::GetInstance();
         man->ShowPopup(Args[0].c_str());
+    }
+
+    static void ShowKeyboardCallback(void* sender, const Event::ArgVector& Args)
+    {
+        Manager* man = &Manager::GetInstance();
+        man->ShowKeyboard(static_cast<TextInput*>(sender));
+    }
+
+    static void KeyboardAddFromKeyCallback(void* sender, const Event::ArgVector& Args)
+    {
+        KeyboardKey* keyboardKey = static_cast<KeyboardKey*>(sender);
+        Keyboard* parentKeyboard = keyboardKey->GetParentKeyboard();
+        TextInput* textInput = parentKeyboard->GetCurrentInputDestination();
+        textInput->Append(keyboardKey->GetCurrentValue());
+    }
+
+    static void KeyboardRemoveLastCharacterCallback(void* sender, const Event::ArgVector& Args)
+    {
+        KeyboardKey* keyboardKey = static_cast<KeyboardKey*>(sender);
+        Keyboard* parentKeyboard = keyboardKey->GetParentKeyboard();
+        TextInput* textInput = parentKeyboard->GetCurrentInputDestination();
+        textInput->RemoveLastCharacter();
+    }
+
+    static void SwitchKeyboardKeysCallback(void* sender, const Event::ArgVector& Args)
+    {
+        Manager* man = &Manager::GetInstance();
+        man->SwitchKeyboardKeys();
     }
 
     static void ChangeScreenCallback(void* sender, const Event::ArgVector& Args)
@@ -168,6 +200,10 @@ namespace grvl {
 
         AddCallbackToContainer("ChangeScreen", ChangeScreenCallback);
         AddCallbackToContainer("ClosePopup", ClosePopupCallback);
+        AddCallbackToContainer("ShowKeyboard", ShowKeyboardCallback);
+        AddCallbackToContainer("AppendFromKeyboardKey", KeyboardAddFromKeyCallback);
+        AddCallbackToContainer("RemoveLastCharacterFromCurrentInput", KeyboardRemoveLastCharacterCallback);
+        AddCallbackToContainer("SwitchKeyboardKeys", SwitchKeyboardKeysCallback);
         AddCallbackToContainer("ShowPopup", ShowPopupCallback);
     }
 
@@ -630,6 +666,27 @@ namespace grvl {
             CurrentPopup->SetMessage(Message);
             ShowPopup();
         }
+    }
+
+    void Manager::ShowKeyboard(TextInput* destinationInput)
+    {
+        assert(keyboard && "Keyboard must be defined to show it");
+        assert(destinationInput && "Destination input must be valid");
+
+        if(CurrentPopup != nullptr) {
+            return; // TODO: implement popup queue
+        }
+
+        CurrentPopup = keyboard;
+        keyboard->SetCurrentInputDestination(destinationInput);
+        ShowPopup();
+    }
+
+    void Manager::SwitchKeyboardKeys()
+    {
+        assert(CurrentPopup == keyboard && "SwitchKeyboardKeys shouldn't be called if keyboard isn't shown");
+
+        keyboard->SwitchKeys();
     }
 
     Manager& Manager::KeepPopupVisible(uint32_t milliseconds)
@@ -1298,6 +1355,11 @@ namespace grvl {
                 nextElement = Root->FirstChildElement("keypadMapping");
                 if(nextElement) {
                     ParseKeypadMapping(nextElement);
+                }
+
+                nextElement = Root->FirstChildElement("keyboard");
+                if(nextElement) {
+                    keyboard = Keyboard::BuildFromXML(nextElement);
                 }
 
                 nextElement = Root->FirstChildElement("header");

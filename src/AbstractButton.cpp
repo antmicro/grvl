@@ -68,6 +68,11 @@ namespace grvl {
         ButtonFont = 0;
     }
 
+    bool AbstractButton::IsEmpty() const
+    {
+        return Text.empty() && ButtonImage.IsEmpty();
+    }
+
     const char* AbstractButton::GetText()
     {
         return Text.c_str();

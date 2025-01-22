@@ -39,6 +39,9 @@ namespace grvl {
         AbstractButton(const AbstractButton& Obj);
         AbstractButton& operator=(const AbstractButton& Obj);
 
+
+        bool IsEmpty() const;
+
         void SetText(const char* text);
         void SetImage(const Image& image);
         void SetTextFont(Font const* font);

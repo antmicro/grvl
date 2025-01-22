@@ -123,23 +123,26 @@ namespace grvl {
 
         void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
 
-        virtual void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder);
+        void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder) override;
 
         GENERATE_DUK_UNSIGNED_INT_GETTER(Button, IcoColor, GetIcoColor)
         GENERATE_DUK_UNSIGNED_INT_SETTER(Button, IcoColor, SetIcoColor)
 
         GENERATE_DUK_UNSIGNED_INT_GETTER(Button, ActiveIcoColor, GetActiveIcoColor)
         GENERATE_DUK_UNSIGNED_INT_SETTER(Button, ActiveIcoColor, SetActiveIcoColor)
-        
+
     protected:
-        uint32_t TextColor;
-        uint32_t ActiveTextColor;
-        uint32_t IcoColor;
-        uint32_t ActiveIcoColor;
-        int32_t TextTopOffset;
+        uint32_t TextColor{COLOR_ARGB8888_TRANSPARENT};
+        uint32_t ActiveTextColor{COLOR_ARGB8888_TRANSPARENT};
+        uint32_t IcoColor{COLOR_ARGB8888_TRANSPARENT};
+        uint32_t ActiveIcoColor{COLOR_ARGB8888_TRANSPARENT};
+        int32_t TextTopOffset{0};
         int16_t IcoChar;
         Font const* IcoFont;
         bool imageCentered;
+
+        virtual void DrawBackgroundItems(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight);
+        virtual void DrawText(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight);
     };
 
 } /* namespace grvl */

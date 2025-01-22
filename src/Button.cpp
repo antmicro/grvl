@@ -116,11 +116,12 @@ namespace grvl {
 
         if(State == On || State == Pressed || State == OnAndSelected || isFocused) {
             TempBackgroundColor = ActiveBackgroundColor;
-            TempTextColor = ActiveTextColor;
             TempIcoColor = ActiveIcoColor;
         } else if(State == Off || State == Released || State == OffAndSelected) {
             TempBackgroundColor = BackgroundColor;
-            TempTextColor = TextColor;
+            TempIcoColor = ActiveIcoColor;
+        } else if(State == Off || State == Released || State == OffAndSelected) {
+            TempBackgroundColor = BackgroundColor;
             TempIcoColor = IcoColor;
         }
 
@@ -136,6 +137,20 @@ namespace grvl {
 
         if(!ButtonImage.IsEmpty()) {
             ButtonImage.Draw(painter, RenderX, RenderY);
+        }
+    }
+
+    void Button::DrawText(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY, int32_t RenderWidth, int32_t RenderHeight)
+    {
+        uint32_t TempTextColor = COLOR_ARGB8888_TRANSPARENT;
+        uint32_t TempIcoColor = COLOR_ARGB8888_TRANSPARENT;
+
+        if(State == On || State == Pressed || State == OnAndSelected || isFocused) {
+            TempTextColor = ActiveTextColor;
+            TempIcoColor = ActiveIcoColor;
+        } else if(State == Off || State == Released || State == OffAndSelected) {
+            TempTextColor = TextColor;
+            TempIcoColor = IcoColor;
         }
 
         uint32_t TextLen = Text.length();
@@ -204,6 +219,11 @@ namespace grvl {
     uint32_t Button::GetActiveTextColor()
     {
         return ActiveForegroundColor;
+    }
+
+    int32_t Button::GetTextTopOffset() const
+    {
+        return TextTopOffset;
     }
 
     void Button::SetIcoColor(uint32_t color)
