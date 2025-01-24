@@ -127,6 +127,7 @@ namespace grvl {
     {
         Component::PopulateJavaScriptObject(jsObjectBuilder);
         jsObjectBuilder.AddProperty("text", Label::JSGetTextWrapper, Label::JSSetTextWrapper);
+        jsObjectBuilder.AddProperty("textColor", Label::JSGetTextColorWrapper, Label::JSSetTextColorWrapper);
     }
 
 } /* namespace grvl */

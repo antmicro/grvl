@@ -101,8 +101,17 @@ namespace grvl {
             return;
         }
 
+        int32_t RenderX = ParentRenderX + X;
+        int32_t RenderY = ParentRenderY + Y;
+
+        DrawBackgroundItems(painter, RenderX, RenderY, Width, Height);
+        DrawText(painter, RenderX, RenderY, Width, Height);
+
+    }
+
+    void Button::DrawBackgroundItems(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight)
+    {
         uint32_t TempBackgroundColor = COLOR_ARGB8888_TRANSPARENT;
-        uint32_t TempTextColor = COLOR_ARGB8888_TRANSPARENT;
         uint32_t TempIcoColor = COLOR_ARGB8888_TRANSPARENT;
 
         if(State == On || State == Pressed || State == OnAndSelected || isFocused) {
@@ -115,19 +124,18 @@ namespace grvl {
             TempIcoColor = IcoColor;
         }
 
-        if(Width > 0 && Height > 0) {
-            if(TempBackgroundColor > 0 && TempBackgroundColor & 0xFF000000) {
-                if (BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
-                    painter.FillRoundRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, TempBackgroundColor, BorderArcRadius);
-                } else {
-                    painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, TempBackgroundColor);
-                }
+        if(TempBackgroundColor > 0 && TempBackgroundColor & 0xFF000000) {
+            if (BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
+                painter.FillRoundRectangle(RenderX, RenderY, RenderWidth, RenderHeight, TempBackgroundColor, BorderArcRadius);
+            } else {
+                painter.FillRectangle(RenderX, RenderY, RenderWidth, RenderHeight, TempBackgroundColor);
             }
-            DrawBorderIfNecessary(painter, ParentRenderX + X, ParentRenderY + Y, Width, Height);
         }
 
+        DrawBorderIfNecessary(painter, RenderX, RenderY, RenderWidth, RenderHeight);
+
         if(!ButtonImage.IsEmpty()) {
-            ButtonImage.Draw(painter, ParentRenderX + X, ParentRenderY + Y);
+            ButtonImage.Draw(painter, RenderX, RenderY);
         }
 
         uint32_t TextLen = Text.length();

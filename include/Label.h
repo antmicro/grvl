@@ -89,6 +89,8 @@ namespace grvl {
         /// @return Label's text.
         const char* GetText();
 
+        uint32_t GetTextColor() const { return TextColor; }
+
         TextHorizontalAlignment GetMode();
         Font const* GetTextFont();
 
@@ -100,6 +102,9 @@ namespace grvl {
 
         GENERATE_DUK_STRING_GETTER(Label, Text, GetText)
         GENERATE_DUK_STRING_SETTER(Label, Text, SetText)
+
+        GENERATE_DUK_UNSIGNED_INT_GETTER(Label, TextColor, GetTextColor)
+        GENERATE_DUK_UNSIGNED_INT_SETTER(Label, TextColor, SetTextColor)
     };
 
 } /* namespace grvl */
