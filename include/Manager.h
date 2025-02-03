@@ -51,11 +51,8 @@
 #include "SwitchButton.h"
 #include "ScrollPanel.h"
 #include "Separator.h"
-// #include "Ico.h"
-// #include "Touch.h"
-// #include "Event.h"
-// #include "ContentManager.h"
 #include "Division.h"
+#include "Checkbox.h"
 
 using namespace tinyxml2;
 namespace grvl {
