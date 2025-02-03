@@ -442,6 +442,20 @@ namespace grvl {
         this->SetOnPressEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onPress"))));
     }
 
+    void Component::AddMetadata(std::string key, std::string value)
+    {
+        metadata.emplace(std::move(key), std::move(value));
+    }
+
+    const char* Component::GetMetadata(const char* key)
+    {
+        if (metadata.count(key) == 0) {
+            return "";
+        }
+
+        return metadata.at(key).c_str();
+    }
+
     void Component::PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder)
     {
         jsObjectBuilder.AddProperty("name", Component::JSGetIDWrapper);
@@ -455,6 +469,39 @@ namespace grvl {
         jsObjectBuilder.AddProperty("backgroundColor", Component::JSGetBackgroundColorWrapper, Component::JSSetBackgroundColorWrapper);
         jsObjectBuilder.AddProperty("activeBackgroundColor", Component::JSGetActiveBackgroundColorWrapper, Component::JSSetActiveBackgroundColorWrapper);
         jsObjectBuilder.AddProperty("visibility", Component::JSGetVisibleWrapper, Component::JSSetVisibleWrapper);
+        jsObjectBuilder.AttachMemberFunction("AddMetadata", Component::JSAddMetadataWrapper, 2);
+        jsObjectBuilder.AttachMemberFunction("GetMetadata", Component::JSGetMetadataWrapper, 1);
+    }
+
+    duk_ret_t Component::JSAddMetadataWrapper(duk_context* ctx)
+    {
+        duk_push_this(ctx);
+        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
+        Component* component = static_cast<Component*>(duk_to_pointer(ctx, -1));
+        if (!component) {
+            return 0;
+        }
+
+        const char* keyName = duk_to_string(ctx, 0);
+        const char* valueName = duk_to_string(ctx, 1);
+        component->AddMetadata(keyName, valueName);
+
+        return 0;
+    }
+
+    duk_ret_t Component::JSGetMetadataWrapper(duk_context* ctx)
+    {
+        duk_push_this(ctx);
+        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
+        Component* component = static_cast<Component*>(duk_to_pointer(ctx, -1));
+        if (!component) {
+            return 0;
+        }
+
+        const char* keyName = duk_to_string(ctx, 0);
+        duk_push_string(ctx, component->GetMetadata(keyName));
+
+        return 1;
     }
 
 } /* namespace grvl */

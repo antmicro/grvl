@@ -29,6 +29,8 @@
 #include "JSObject.h"
 #include "JSObjectBuilder.h"
 
+#include <unordered_map>
+
 namespace grvl {
 
 #define WIDGET2(id, name)                                                                                                    \
@@ -193,6 +195,9 @@ namespace grvl {
 
         virtual void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) = 0;
 
+        void AddMetadata(std::string key, std::string value);
+        const char* GetMetadata(const char* key);
+
         bool CheckSizeValidity(Component* child) const;
 
         virtual void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder);
@@ -227,6 +232,9 @@ namespace grvl {
         GENERATE_DUK_BOOLEAN_GETTER(Component, Visible, IsVisible)
         GENERATE_DUK_BOOLEAN_SETTER(Component, Visible, SetVisible)
 
+        static duk_ret_t JSAddMetadataWrapper(duk_context* ctx);
+        static duk_ret_t JSGetMetadataWrapper(duk_context* ctx);
+
     protected:
         uint64_t AssignUniqueID();
 
@@ -260,6 +268,8 @@ namespace grvl {
         Event onLongPressRepeat{};
 
         bool Visible{true};
+
+        std::unordered_map<std::string, std::string> metadata;
 
         virtual Touch::TouchResponse ProcessMove(int32_t StartX, int32_t StartY, int32_t DeltaX, int32_t DeltaY);
         Touch::TouchResponse OnMoveCase(const Touch& tp, int32_t ParentX, int32_t ParentY);
