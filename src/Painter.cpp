@@ -427,39 +427,53 @@ namespace grvl {
         }
     }
 
+    constexpr float Painter::ToRadians(float eulerAngles) const
+    {
+        return eulerAngles * 3.14159f / 180.0f;
+    }
+
     void Painter::FillCircle(int16_t Xpos, int16_t Ypos, int16_t Radius, uint32_t color) const
     {
         if(Radius == 0) {
             return;
         }
-        int32_t D; /* Decision Variable */
-        uint32_t CurX; /* Current X Value */
-        uint32_t CurY; /* Current Y Value */
 
-        D = 3 - (Radius << 1);
+        float middleX = Xpos + Radius;
+        float middleY = Ypos + Radius;
 
-        CurX = 0;
-        CurY = Radius;
-        while(CurX <= CurY) {
-            if(CurY > 0) {
-                DrawHLine(Xpos - CurY, Ypos + CurX, 2 * CurY, color);
-                DrawHLine(Xpos - CurY, Ypos - CurX, 2 * CurY, color);
-            }
+        float radiusWithOffset = Radius;
+        const int numOfSteps = Radius * 2;
+        float angleDiff = ToRadians(90.0f / numOfSteps);
+        float currentAngle = ToRadians(90.0f);
+        float currentX = 0;
+        float currentY = 0;
 
-            if(CurX > 0) {
-                DrawHLine(Xpos - CurX, Ypos - CurY, 2 * CurX, color);
-                DrawHLine(Xpos - CurX, Ypos + CurY, 2 * CurX, color);
-            }
+        do {
+            //TODO: maybe try with some lookup table with 90 angle values
+            float currentXOffset = radiusWithOffset * std::cos(currentAngle);
+            float currentYOffset = radiusWithOffset * std::sin(currentAngle);
 
-            if(D < 0) {
-                D += (CurX << 2) + 6;
-            } else {
-                D += ((CurX - CurY) << 2) + 10;
-                CurY--;
-            }
-            CurX++;
-        }
-        DrawCircle(Xpos, Ypos, Radius, color);
+            currentX = middleX - currentXOffset;
+            currentY = middleY - currentYOffset;
+            DrawAntialiasedPixel(currentX, currentY, color);
+
+            currentX = middleX + currentXOffset - 1;
+            currentY = middleY - currentYOffset;
+            DrawAntialiasedPixel(currentX, currentY, color);
+
+            currentX = middleX + currentXOffset - 1;
+            currentY = middleY + currentYOffset - 1;
+            DrawAntialiasedPixel(currentX, currentY, color);
+
+            currentX = middleX - currentXOffset;
+            currentY = middleY + currentYOffset - 1;
+            DrawAntialiasedPixel(currentX, currentY, color);
+
+            DrawVLine(std::ceil(middleX - currentXOffset), std::ceil(middleY - currentYOffset), std::floor(currentYOffset * 2), color);
+            DrawVLine(std::floor(max(0, middleX + currentXOffset - 1)), std::ceil(middleY - currentYOffset), std::floor(currentYOffset * 2), color);
+
+            currentAngle -= angleDiff;
+        } while (currentAngle > 0);
     }
 
     void Painter::DrawCircle(int16_t Xpos, int16_t Ypos, int16_t Radius, uint32_t color) const
@@ -467,31 +481,40 @@ namespace grvl {
         if(Radius == 0) {
             return;
         }
-        int32_t D; /* Decision Variable */
-        uint32_t CurX; /* Current X Value */
-        uint32_t CurY; /* Current Y Value */
 
-        D = 3 - (Radius << 1);
-        CurX = 0;
-        CurY = Radius;
-        while(CurX <= CurY) {
-            DrawPixel((Xpos + CurX), (Ypos - CurY), color);
-            DrawPixel((Xpos - CurX), (Ypos - CurY), color);
-            DrawPixel((Xpos + CurY), (Ypos - CurX), color);
-            DrawPixel((Xpos - CurY), (Ypos - CurX), color);
-            DrawPixel((Xpos + CurX), (Ypos + CurY), color);
-            DrawPixel((Xpos - CurX), (Ypos + CurY), color);
-            DrawPixel((Xpos + CurY), (Ypos + CurX), color);
-            DrawPixel((Xpos - CurY), (Ypos + CurX), color);
+        float middleX = Xpos + Radius;
+        float middleY = Ypos + Radius;
 
-            if(D < 0) {
-                D += (CurX << 2) + 6;
-            } else {
-                D += ((CurX - CurY) << 2) + 10;
-                CurY--;
-            }
-            CurX++;
-        }
+        float radiusWithOffset = Radius;
+        const int numOfSteps = Radius * 2;
+        float angleDiff = ToRadians(90.0f / numOfSteps);
+        float currentAngle = ToRadians(90.0f);
+        float currentX = 0;
+        float currentY = 0;
+
+        do {
+            //TODO: maybe try with some lookup table with 90 angle values
+            float currentXOffset = radiusWithOffset * std::cos(currentAngle);
+            float currentYOffset = radiusWithOffset * std::sin(currentAngle);
+
+            currentX = middleX - currentXOffset;
+            currentY = middleY - currentYOffset;
+            DrawAntialiasedPixel(currentX, currentY, color);
+
+            currentX = middleX + currentXOffset - 1;
+            currentY = middleY - currentYOffset;
+            DrawAntialiasedPixel(currentX, currentY, color);
+
+            currentX = middleX + currentXOffset - 1;
+            currentY = middleY + currentYOffset - 1;
+            DrawAntialiasedPixel(currentX, currentY, color);
+
+            currentX = middleX - currentXOffset;
+            currentY = middleY + currentYOffset - 1;
+            DrawAntialiasedPixel(currentX, currentY, color);
+
+            currentAngle -= angleDiff;
+        } while (currentAngle > 0);
     }
 
     // Source: http://joshbeam.com/articles/triangle_rasterization/
@@ -787,6 +810,66 @@ namespace grvl {
         int32_t y;
     };
 
+    void Painter::DrawAntialiasedArc(int16_t Xpos, int16_t Ypos, int16_t Radius, float startAngle, float endAngle, int granularity, uint32_t color) const
+    {
+        if(Radius == 0) {
+            return;
+        }
+
+        float middleX = Xpos + Radius;
+        float middleY = Ypos + Radius;
+
+        float radiusWithOffset = Radius;
+        float angleDiffInRadians = ToRadians((endAngle - startAngle) / granularity);
+        float currentAngleInRadians = ToRadians(startAngle);
+        float endAngleInRadians = ToRadians(endAngle);
+        float currentX = 0;
+        float currentY = 0;
+
+        do {
+            //TODO: maybe try with some lookup table with 90 angle values
+            float currentXOffset = radiusWithOffset * std::cos(currentAngleInRadians);
+            float currentYOffset = radiusWithOffset * std::sin(currentAngleInRadians);
+
+            currentX = middleX - currentXOffset;
+            currentY = middleY - currentYOffset;
+            DrawAntialiasedPixel(currentX, currentY, color);
+
+            currentAngleInRadians += angleDiffInRadians;
+        } while (currentAngleInRadians < endAngleInRadians);
+    }
+
+    void Painter::FillAntialiasedQuarterCircle(int16_t Xpos, int16_t Ypos, int16_t Radius, CircleQuarter circleQuarter, int granularity, uint32_t color) const
+    {
+        if(Radius == 0) {
+            return;
+        }
+
+        float middleX = Xpos + Radius;
+        float middleY = Ypos + Radius;
+
+        unsigned int quarterIndex = static_cast<unsigned int>(circleQuarter);
+        float radiusWithOffset = Radius;
+        float angleDiffInRadians = ToRadians(90.0f / granularity);
+        float currentAngleInRadians = ToRadians(quarterIndex * 90.0f);
+        float endAngleInRadians = ToRadians((quarterIndex + 1) * 90.0f);
+        float currentX = 0;
+        float currentY = 0;
+
+        do {
+            //TODO: maybe try with some lookup table with 90 angle values
+            float currentXOffset = radiusWithOffset * std::cos(currentAngleInRadians);
+            float currentYOffset = radiusWithOffset * std::sin(currentAngleInRadians);
+
+            currentX = middleX - currentXOffset;
+            currentY = middleY - currentYOffset;
+            DrawAntialiasedPixel(currentX, currentY, color);
+            DrawVLine(std::round(currentX), std::min(currentY, middleY) + 1, std::abs(currentYOffset), color);
+
+            currentAngleInRadians += angleDiffInRadians;
+        } while (currentAngleInRadians < endAngleInRadians);
+    }
+
     void Painter::FillArc(int32_t Xpos, int32_t Ypos, int32_t startAngle, int32_t endAngle, int32_t radius, int32_t width,
                           uint32_t startColor, uint32_t endColor) const
     {
@@ -948,6 +1031,32 @@ namespace grvl {
         }
     }
 
+    void Painter::FillRoundRectangle(int32_t Xpos, int32_t Ypos, int32_t Width, int32_t Height, uint32_t text_color, float BorderArcRadius) const
+    {
+        if (BorderArcRadius > Width / 2.0f || BorderArcRadius > Height / 2.0f) {
+            return;
+        }
+
+        if (Xpos >= CurrentDrawingBoundsEndX() || Ypos >= CurrentDrawingBoundsEndY()) {
+            return;
+        }
+
+        if(Width <= 0 || Height <= 0) {
+            return;
+        }
+
+        float DoubleBorderArcRadius = BorderArcRadius * 2;
+
+        const int granularity = BorderArcRadius * 4;
+        FillAntialiasedQuarterCircle(Xpos + Width - DoubleBorderArcRadius - 1, Ypos, BorderArcRadius, CircleQuarter::TOP_RIGHT, granularity, text_color);
+        FillAntialiasedQuarterCircle(Xpos + Width - DoubleBorderArcRadius - 1, Ypos + Height - DoubleBorderArcRadius - 1, BorderArcRadius, CircleQuarter::BOTTOM_RIGHT, granularity, text_color);
+        FillAntialiasedQuarterCircle(Xpos, Ypos + Height - DoubleBorderArcRadius - 1, BorderArcRadius, CircleQuarter::BOTTOM_LEFT, granularity, text_color);
+        FillAntialiasedQuarterCircle(Xpos, Ypos, BorderArcRadius, CircleQuarter::TOP_LEFT, granularity, text_color);
+
+        FillRectangle(Xpos + BorderArcRadius, Ypos, Width - DoubleBorderArcRadius, Height, text_color);
+        FillRectangle(Xpos, Ypos + BorderArcRadius, Width, Height - DoubleBorderArcRadius, text_color);
+    }
+
     void Painter::FillMemory(uintptr_t memory, int32_t width, int32_t height, uint32_t text_color, uint32_t colorFormat)
     {
         if(width <= 0 || height <= 0) {
@@ -979,6 +1088,34 @@ namespace grvl {
         DrawHLine(Xpos, (Ypos + Height - 1), Width - 1, text_color);
         DrawVLine(Xpos, Ypos, Height, text_color);
         DrawVLine((Xpos + Width - 1), Ypos, Height, text_color);
+    }
+
+    void Painter::DrawRoundRectangle(int32_t Xpos, int32_t Ypos, int32_t Width, int32_t Height, uint32_t text_color, float BorderArcRadius) const
+    {
+        if (BorderArcRadius > Width / 2.0f || BorderArcRadius > Height / 2.0f) {
+            return;
+        }
+
+        if (Xpos >= CurrentDrawingBoundsEndX() || Ypos >= CurrentDrawingBoundsEndY()) {
+            return;
+        }
+
+        if(Width <= 0 || Height <= 0) {
+            return;
+        }
+
+        float DoubleBorderArcRadius = BorderArcRadius * 2;
+
+        DrawHLine(Xpos + BorderArcRadius, Ypos, Width - DoubleBorderArcRadius, text_color);
+        DrawHLine(Xpos + BorderArcRadius, Ypos + Height - 1, Width - DoubleBorderArcRadius, text_color);
+        DrawVLine(Xpos, Ypos + BorderArcRadius, Height - DoubleBorderArcRadius, text_color);
+        DrawVLine((Xpos + Width - 1), Ypos + BorderArcRadius, Height - DoubleBorderArcRadius, text_color);
+
+        const int granularity = BorderArcRadius * 4;
+        DrawAntialiasedArc(Xpos + Width - DoubleBorderArcRadius - 1, Ypos, BorderArcRadius, 90.0f, 180.0f, granularity, text_color);
+        DrawAntialiasedArc(Xpos + Width - DoubleBorderArcRadius - 1, Ypos + Height - DoubleBorderArcRadius - 1, BorderArcRadius, 180.0f, 270.0f, granularity, text_color);
+        DrawAntialiasedArc(Xpos, Ypos + Height - DoubleBorderArcRadius - 1, BorderArcRadius, 270.0f, 360.0f, granularity, text_color);
+        DrawAntialiasedArc(Xpos, Ypos, BorderArcRadius, 0.0f, 90.0f, granularity, text_color);
     }
 
     void Painter::DmaOperation(uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem, uint32_t PixelsPerLine,

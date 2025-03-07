@@ -126,9 +126,19 @@ namespace grvl {
         void FlipBuffers();
         void FlipSynchronizeBuffers();
 
+        enum class CircleQuarter : unsigned int
+        {
+            TOP_LEFT = 0,
+            TOP_RIGHT = 1,
+            BOTTOM_RIGHT = 2,
+            BOTTOM_LEFT = 3
+        };
+
         void FillCircle(int16_t Xpos, int16_t Ypos, int16_t Radius, uint32_t color) const;
         void DrawCircle(int16_t Xpos, int16_t Ypos, int16_t Radius, uint32_t color) const;
 
+        void DrawAntialiasedArc(int16_t Xpos, int16_t Ypos, int16_t Radius, float startAngle, float endAngle, int granularity, uint32_t color) const;
+        void FillAntialiasedQuarterCircle(int16_t Xpos, int16_t Ypos, int16_t Radius, CircleQuarter circleQuarter, int granularity, uint32_t color) const;
         void FillArc(int32_t Xpos, int32_t Ypos, int32_t startAngle, int32_t endAngle, int32_t radius, int32_t width,
                      uint32_t startColor, uint32_t endColor) const;
 
@@ -202,7 +212,9 @@ namespace grvl {
         int32_t GetDisplayHeight() const;
         uint32_t GetBackgroundColor() const;
         void FillRectangle(int32_t Xpos, int32_t Ypos, int32_t Width, int32_t Height, uint32_t text_color) const;
+        void FillRoundRectangle(int32_t Xpos, int32_t Ypos, int32_t Width, int32_t Height, uint32_t text_color, float BorderArcRadius) const;
         void DrawRectangle(int32_t Xpos, int32_t Ypos, int32_t Width, int32_t Height, uint32_t text_color) const;
+        void DrawRoundRectangle(int32_t Xpos, int32_t Ypos, int32_t Width, int32_t Height, uint32_t text_color, float BorderArcRadius) const;
 
         void FillMemory(uintptr_t memory, int32_t width, int32_t height, uint32_t text_color, uint32_t colorFormat = COLOR_FORMAT_ARGB8888);
 
@@ -227,6 +239,8 @@ namespace grvl {
         ImageContent* shadowImage;
         void DrawSpansBetweenEdges(const Edge& e1, const Edge& e2) const;
         void DrawSpan(int x1, int x2, uint32_t color, int y) const;
+
+        constexpr float ToRadians(float eulerAngles) const;
 
     private:
         void InnerDisplayAntialiasedString(const Font* Font, int16_t Xpos, int16_t Ypos, const char* Text, uint32_t text_color, bool bounded, int16_t ParentX,
