@@ -55,10 +55,10 @@ namespace grvl {
             return;
 
         if(BackgroundImage) {
-            BackgroundImage->Draw(painter, ParentX, ParentY, ParentWidth, ParentHeight); // TODO: Needs verification
+            BackgroundImage->Draw(painter, X + ParentX, Y + ParentY, Width, Height); // TODO: Needs verification
         } else {
-            painter.FillRectangle(X + ParentX, Y + ParentY, ParentWidth, ParentHeight, BackgroundColor);
-            painter.AddBackgroundBlock(Y + ParentY, ParentHeight, BackgroundColor);
+            painter.FillRectangle(X + ParentX, Y + ParentY, Width, Height, BackgroundColor);
+            painter.AddBackgroundBlock(Y + ParentY, Height, BackgroundColor);
         }
 
         for(uint32_t i = 0; i < Elements.size(); i++) {
