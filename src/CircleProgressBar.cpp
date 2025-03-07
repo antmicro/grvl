@@ -53,8 +53,7 @@ namespace grvl {
         return result;
     }
 
-    void CircleProgressBar::Draw(Painter& painter, int32_t ParentX, int32_t ParentY, int32_t ParentWidth,
-                                 int32_t ParentHeight)
+    void CircleProgressBar::Draw(Painter& painter, int32_t ParentX, int32_t ParentY)
     {
         if(!Visible) {
             return;
@@ -92,9 +91,9 @@ namespace grvl {
             endColor = EndColor;
         }
 
-        painter.FillArc(X, Y, StartAngle, middleAngle, Radius, Thickness, StartColor, endColor);
+        painter.FillArc(ParentX + X, ParentY + Y, StartAngle, middleAngle, Radius, Thickness, StartColor, endColor);
         if(BackgroundColor) { // Do not draw when background is transparent
-            painter.FillArc(X, Y, middleAngle, EndAngle, Radius, Thickness, BackgroundColor, BackgroundColor);
+            painter.FillArc(ParentX + X, ParentY + Y, middleAngle, EndAngle, Radius, Thickness, BackgroundColor, BackgroundColor);
         }
     }
 

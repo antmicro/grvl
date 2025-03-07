@@ -29,33 +29,15 @@ namespace grvl {
     static constexpr auto listItemBeginOffsetBig = 40;
     static constexpr auto listItemWidthOffset = 30;
 
-    void ListItem::Draw(Painter& painter, int32_t ParentX, int32_t ParentY, int32_t ParentWidth, int32_t ParentHeight)
+    void ListItem::Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY)
     {
-        if(!Visible) {
+        if(!Visible || Width <= 0 || Height <= 0) {
             return;
         }
 
         int32_t TextWidth;
         int32_t BeginX;
         int32_t BeginY;
-        int32_t HeightClamped;
-        bool CutTop = false;
-        int32_t OffsetY = 0;
-
-        if(ParentHeight < 0) {
-            CutTop = true;
-            OffsetY = -ParentHeight;
-        }
-
-        if(!CutTop) {
-            HeightClamped = Clamp(Height, 0, ParentHeight);
-        } else { // If negative height
-            HeightClamped = Clamp(Height, 0, Height - OffsetY);
-        }
-
-        if(HeightClamped <= 0) {
-            return;
-        }
 
         BeginX = X;
         BeginY = Y;
@@ -80,33 +62,20 @@ namespace grvl {
             roundingImage.SetActiveFrame(State == Off ? 0 : 1);
 
             roundingImage.SetPosition(0, 0);
-            roundingImage.Draw(painter, ParentX + X, ParentY + Y, Width, ParentHeight);
+            roundingImage.Draw(painter, ParentRenderX + X, ParentRenderY + Y);
 
             roundingImage.SetPosition(Width - roundingImage.GetWidth(), 0);
-            roundingImage.Draw(painter, ParentX + X, ParentY + Y, Width, ParentHeight);
+            roundingImage.Draw(painter, ParentRenderX + X, ParentRenderY + Y);
 
             roundingImage.SetPosition(0, Height - roundingImage.GetHeight());
-            roundingImage.Draw(painter, ParentX + X, ParentY + Y, Width, ParentHeight);
+            roundingImage.Draw(painter, ParentRenderX + X, ParentRenderY + Y);
 
             roundingImage.SetPosition(Width - roundingImage.GetWidth(), Height - roundingImage.GetHeight());
-            roundingImage.Draw(painter, ParentX + X, ParentY + Y, Width, ParentHeight);
+            roundingImage.Draw(painter, ParentRenderX + X, ParentRenderY + Y);
 
-            int topPartHeight = CutTop ? max(0, min(roundingImage.GetHeight() / 2 - OffsetY, roundingImage.GetHeight() / 2)) : min(HeightClamped, roundingImage.GetHeight() / 2);
-            int bottomPartHeight = CutTop ? min(HeightClamped, roundingImage.GetHeight() / 2) : max(0, min((roundingImage.GetHeight() / 2) - Height + HeightClamped, roundingImage.GetHeight() / 2));
-
-            if(topPartHeight > 0) {
-                painter.FillRectangle(ParentX + X + roundingImage.GetWidth() / 2, OffsetY + ParentY + Y, Width - roundingImage.GetWidth(), topPartHeight, BackColor);
-            }
-
-            if(HeightClamped - bottomPartHeight - topPartHeight > 0) {
-                painter.FillRectangle(ParentX + X, OffsetY + ParentY + Y + topPartHeight, Width, HeightClamped - topPartHeight - bottomPartHeight, BackColor);
-            }
-
-            if(bottomPartHeight > 0) {
-                painter.FillRectangle(ParentX + X + roundingImage.GetWidth() / 2, OffsetY + ParentY + Y + HeightClamped - bottomPartHeight, Width - roundingImage.GetWidth(), bottomPartHeight, BackColor);
-            }
+            painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackColor);
         } else {
-            painter.FillRectangle(ParentX + X, OffsetY + ParentY + Y, Width, HeightClamped, BackColor);
+            painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackColor);
         }
 
         if(ButtonFont == NULL) {
@@ -121,14 +90,14 @@ namespace grvl {
         if(!ButtonImage.IsEmpty()) {
             static constexpr auto listButtonPosX = 10;
             ButtonImage.SetPosition(listButtonPosX, Height / 2 - ButtonImage.GetHeight() / 2); // TODO: move to "add image"
-            ButtonImage.Draw(painter, ParentX + X, ParentY + Y, Width, ParentHeight);
+            ButtonImage.Draw(painter, ParentRenderX + X, ParentRenderY + Y);
             BeginX += ButtonImage.GetWidth() + listItemBeginOffset;
         }
 
         if(!AdditionalImge.IsEmpty()) {
             static constexpr auto additionalImageOffset = 22;
             AdditionalImge.SetPosition(Width - AdditionalImge.GetWidth() - additionalImageOffset, Height / 2 - AdditionalImge.GetHeight() / 2);
-            AdditionalImge.Draw(painter, ParentX + X, ParentY + Y, Width, ParentHeight);
+            AdditionalImge.Draw(painter, ParentRenderX + X, ParentRenderY + Y);
         }
 
         if(Description.empty()) {
@@ -139,7 +108,7 @@ namespace grvl {
             }
             BeginY = BeginY + (Height / 2) - ButtonFont->GetHeight() / 2;
             painter.DisplayBoundedAntialiasedString(
-                ButtonFont, ParentX + BeginX, ParentY + BeginY, ParentX + X, ParentY + Y, ParentWidth, ParentHeight,
+                ButtonFont, ParentRenderX + BeginX, ParentRenderY + BeginY, ParentRenderX + X, ParentRenderY + Y, Width, Height,
                 Text.c_str(), ForeColor);
         } else {
             int YOffset = (Type == DoubleImageField) ? ButtonFont->GetHeight() / 2 : 0;
@@ -148,36 +117,36 @@ namespace grvl {
                 BeginX = BeginX + listItemBeginOffsetBig;
                 BeginY = BeginY + (Height / 2) - ButtonFont->GetHeight() / 2;
                 painter.DisplayBoundedAntialiasedString(
-                    ButtonFont, ParentX + BeginX, ParentY + BeginY, ParentX + X, ParentY + Y, ParentWidth, ParentHeight,
+                    ButtonFont, ParentRenderX + BeginX, ParentRenderY + BeginY, ParentRenderX + X, ParentRenderY + Y, Width, Height,
                     Text.c_str(), ForeColor);
                 painter.DisplayBoundedAntialiasedString(
-                    DescriptionFont, ParentX + BeginX + ButtonFont->GetWidth(Text.c_str()) + listItemBeginOffset,
-                    ParentY + BeginY + (ButtonFont->GetHeight() - DescriptionFont->GetHeight()), ParentX + X, ParentY + Y,
-                    ParentWidth, ParentHeight, Description.c_str(), DescColor);
+                    DescriptionFont, ParentRenderX + BeginX + ButtonFont->GetWidth(Text.c_str()) + listItemBeginOffset,
+                    ParentRenderY + BeginY + (ButtonFont->GetHeight() - DescriptionFont->GetHeight()), ParentRenderX + X, ParentRenderY + Y,
+                    Width, Height, Description.c_str(), DescColor);
             } else if(ButtonFont && DescriptionFont){
                 BeginX = BeginX + listItemBeginOffsetSmall;
                 BeginY = BeginY + Height / 2 - (ButtonFont->GetHeight() + DescriptionFont->GetHeight() / 2) + YOffset;
                 painter.DisplayBoundedAntialiasedString(
-                    ButtonFont, ParentX + BeginX, ParentY + BeginY, ParentX + X, ParentY + Y, ParentWidth, ParentHeight,
+                    ButtonFont, ParentRenderX + BeginX, ParentRenderY + BeginY, ParentRenderX + X, ParentRenderY + Y, Width, Height,
                     Text.c_str(), ForeColor);
                 painter.DisplayBoundedAntialiasedString(
-                    DescriptionFont, ParentX + BeginX, ParentY + BeginY + ButtonFont->GetHeight(), ParentX + X, ParentY + Y,
-                    ParentWidth, ParentHeight, Description.c_str(), DescColor);
+                    DescriptionFont, ParentRenderX + BeginX, ParentRenderY + BeginY + ButtonFont->GetHeight(), ParentRenderX + X, ParentRenderY + Y,
+                    Width, Height, Description.c_str(), DescColor);
             }
         }
 
         if(Type == LeftArrowField) {
             painter.DisplayBoundedAntialiasedString(
-                ButtonFont, ParentX + listItemBeginOffset, ParentY + BeginY, ParentX + X, ParentY + Y, ParentWidth, ParentHeight, "<",
+                ButtonFont, ParentRenderX + listItemBeginOffset, ParentRenderY + BeginY, ParentRenderX + X, ParentRenderY + Y, Width, Height, "<",
                 ForeColor);
         } else if(Type == RightArrowField) {
             painter.DisplayBoundedAntialiasedString(
-                ButtonFont, ParentX + Width - listItemWidthOffset, ParentY + BeginY, ParentX + X, ParentY + Y, ParentWidth, ParentHeight,
+                ButtonFont, ParentRenderX + Width - listItemWidthOffset, ParentRenderY + BeginY, ParentRenderX + X, ParentRenderY + Y, Width, Height,
                 ">", ForeColor);
         } else if(Type == Dots) {
             painter.DisplayBoundedAntialiasedString(
-                ButtonFont, ParentX + Width - ButtonFont->GetHeight(), ParentY + BeginY, ParentX + X, ParentY + Y,
-                ParentWidth, ParentHeight, "...", ForeColor);
+                ButtonFont, ParentRenderX + Width - ButtonFont->GetHeight(), ParentRenderY + BeginY, ParentRenderX + X, ParentRenderY + Y,
+                Width, Height, "...", ForeColor);
         }
     }
 

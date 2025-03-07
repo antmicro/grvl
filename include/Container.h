@@ -66,10 +66,6 @@ namespace grvl {
         virtual Touch::TouchResponse ProcessTouch(const Touch& tp, int32_t ParentX, int32_t ParentY,
                                                   int32_t modificator = 0);
 
-        virtual void Draw(Painter& painter, int32_t ParentX, int32_t ParentY, int32_t ParentWidth,
-                          int32_t ParentHeight)
-            = 0;
-
         virtual void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder);
         static duk_ret_t JSGetElementByIdWrapper(duk_context* ctx);
 

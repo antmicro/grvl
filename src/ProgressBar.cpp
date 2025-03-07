@@ -50,16 +50,16 @@ namespace grvl {
         return result;
     }
 
-    void ProgressBar::Draw(Painter& painter, int32_t ParentX, int32_t ParentY, int32_t ParentWidth, int32_t ParentHeight)
+    void ProgressBar::Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY)
     {
-        if(!Visible) {
+        if(!Visible || Width <= 0 || Height <= 0) {
             return;
         }
 
-        painter.FillRectangle(ParentX + X, ParentY + Y, Width, Height, BackgroundColor);
+        painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor);
         int barWidth = (Width) * ((ProgressValue) / 100.0);
         if(barWidth > 0) {
-            painter.FillRectangle(ParentX + X, ParentY + Y, barWidth, Height, ForegroundColor);
+            painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, barWidth, Height, ForegroundColor);
         }
     }
 

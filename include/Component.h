@@ -187,9 +187,7 @@ namespace grvl {
         virtual void CheckPlacement();
         virtual void ClearTouch();
 
-        virtual void Draw(Painter& painter, int32_t ParentX, int32_t ParentY, int32_t ParentWidth,
-                          int32_t ParentHeight)
-            = 0;
+        virtual void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) = 0;
 
         bool CheckSizeValidity(Component* child) const;
 

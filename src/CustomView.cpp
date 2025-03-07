@@ -121,17 +121,19 @@ namespace grvl {
         AbstractView::OnRelease();
     }
 
-    void CustomView::Draw(Painter& painter, int32_t ParentX, int32_t ParentY, int32_t ParentWidth, int32_t ParentHeight)
+    void CustomView::Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY)
     {
-        if(!Visible) {
+        if(!Visible || Width <= 0 || Height <= 0) {
             return;
         }
 
+        painter.PushDrawingBoundsStackElement(ParentRenderX, ParentRenderY, ParentRenderX + Width, ParentRenderY + Height);
+
         if(!BackgroundImage.IsEmpty()) {
-            BackgroundImage.Draw(painter, X + ParentX, Y + ParentY, Width, Height);
+            BackgroundImage.Draw(painter, X + ParentRenderX, Y + ParentRenderY);
         } else {
-            painter.FillRectangle(ParentX + X, ParentY + Y, Width, Height, BackgroundColor);
-            painter.AddBackgroundBlock(ParentY + Y, ParentHeight, BackgroundColor);
+            painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor);
+            painter.AddBackgroundBlock(ParentRenderY + Y, Height, BackgroundColor);
         }
 
         uint32_t i;
@@ -139,8 +141,10 @@ namespace grvl {
 
         size = Elements.size();
         for(i = 0; i < size; i++) {
-            Elements[i]->Draw(painter, ParentX + X, ParentY + Y, Width, Height);
+            Elements[i]->Draw(painter, ParentRenderX + X, ParentRenderY + Y);
         }
+
+        painter.PopDrawingBoundsStackElement();
     }
 
     Touch::TouchResponse CustomView::ProcessTouch(const Touch& tp, int32_t ParentX, int32_t ParentY, int32_t modificator)

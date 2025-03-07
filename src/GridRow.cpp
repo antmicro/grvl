@@ -90,18 +90,18 @@ namespace grvl {
         ReorderElements();
     }
 
-    Touch::TouchResponse GridRow::ProcessTouch(const Touch& tp, int32_t ParentX, int32_t ParentY, int32_t modificator)
+    Touch::TouchResponse GridRow::ProcessTouch(const Touch& tp, int32_t ParentRenderX, int32_t ParentRenderY, int32_t modificator)
     {
         if(tp.GetState() == Touch::Pressed) { // init state, find child
             touchActive = false;
             childDropped = false;
 
-            bool ownCheck = IsTouchPointInObject(tp.GetCurrentX() - ParentX, tp.GetCurrentY() - ParentY);
+            bool ownCheck = IsTouchPointInObject(tp.GetCurrentX() - ParentRenderX, tp.GetCurrentY() - ParentRenderY);
 
             if(ownCheck) { // Container selected
                 touchActive = true;
                 for(int32_t i = Elements.size() - 1; i >= 0; i--) {
-                    if(Touch::TouchHandled == Elements[i]->ProcessTouch(tp, ParentX + X, ParentY + Y, modificator)) { // Trigger onPress
+                    if(Touch::TouchHandled == Elements[i]->ProcessTouch(tp, ParentRenderX + X, ParentRenderY + Y, modificator)) { // Trigger onPress
                         activeChild = Elements[i];
                         break;
                     }
@@ -113,7 +113,7 @@ namespace grvl {
 
         if(touchActive) {
             if(childDropped || activeChild == NULL) { // Process data by screen - sliders.
-                Touch::TouchResponse touch = Component::ProcessMove(tp.GetStartX() - ParentX - X, tp.GetStartY() - ParentY - Y, tp.GetDeltaX(), tp.GetDeltaY());
+                Touch::TouchResponse touch = Component::ProcessMove(tp.GetStartX() - ParentRenderX - X, tp.GetStartY() - ParentRenderY - Y, tp.GetDeltaX(), tp.GetDeltaY());
                 if(touch == Touch::TouchReleased) {
                     touchActive = false;
                 }
@@ -121,7 +121,7 @@ namespace grvl {
             } // Push data
             if(tp.GetState() != Touch::Pressed) { // Not to trigger onPress twice.
                 Touch::TouchResponse childResponse = activeChild->ProcessTouch(
-                    tp, ParentX + X, ParentY + Y, ignoreTouchModificator ? 0 : modificator);
+                    tp, ParentRenderX + X, ParentRenderY + Y, ignoreTouchModificator ? 0 : modificator);
                 if(childResponse == Touch::TouchReleased || childResponse == Touch::TouchNotApplicable) { // Drop
                     childDropped = true;
                     activeChild = NULL;
@@ -136,35 +136,16 @@ namespace grvl {
     {
     }
 
-    void GridRow::Draw(Painter& painter, int32_t ParentX, int32_t ParentY, int32_t ParentWidth, int32_t ParentHeight)
+    void GridRow::Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY)
     {
-        if(!Visible) {
+        if(!Visible || Width <= 0 || Height <= 0) {
             return;
         }
 
-        int32_t HeightClamped;
-        bool CutTop = false;
-        int32_t OffsetY = 0;
-
-        if(ParentHeight < 0) {
-            CutTop = true;
-            OffsetY = -ParentHeight;
-        }
-
-        if(!CutTop) {
-            HeightClamped = Clamp(Height, 0, ParentHeight);
-        } else { // If negative height
-            HeightClamped = Clamp(Height, 0, Height - OffsetY);
-        }
-
-        if(HeightClamped == 0) {
-            return;
-        }
-
-        painter.FillRectangle(ParentX + X, OffsetY + ParentY + Y, ParentWidth, HeightClamped, BackgroundColor);
+        painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor);
 
         for(uint32_t i = 0; i < Elements.size(); i++) {
-            Elements[i]->Draw(painter, ParentX + X, ParentY + Y, ParentWidth, ParentHeight);
+            Elements[i]->Draw(painter, ParentRenderX + X, ParentRenderY + Y);
         }
     }
 

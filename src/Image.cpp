@@ -56,9 +56,9 @@ namespace grvl {
         return result;
     }
 
-    void Image::Draw(Painter& painter, int32_t ParentX, int32_t ParentY, int32_t ParentWidth, int32_t ParentHeight)
+    void Image::Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY)
     {
-        if(!Visible)
+        if(!Visible || Width <= 0 || Height <= 0)
             return;
 
         if(!Content || Content->IsEmpty()) {
@@ -67,8 +67,6 @@ namespace grvl {
             }
             return;
         }
-        int32_t TopOffset = 0;
-        int32_t BottomOffset = 0;
         uint8_t PixelFormat = painter.GetActiveBufferPixelFormat();
 
         uintptr_t Address = (uintptr_t)Content->GetData();
@@ -77,28 +75,13 @@ namespace grvl {
         uint32_t Lines = Content->GetNumberOfLines();
         uint32_t PixelPerLine = Content->GetPixelsPerLine();
 
-        if(ParentHeight == 0)
-            return;
+        int32_t RenderX = ParentRenderX + X;
+        int32_t RenderY = ParentRenderY + Y;
 
-        if(ParentHeight < 0) { // Top offset
-            TopOffset = -ParentHeight;
-            TopOffset = Y - TopOffset;
-            if(TopOffset > 0) {
-                TopOffset = 0;
-            } else {
-                TopOffset = -TopOffset;
-            }
-        } else if(ParentHeight <= Y + Height) { // Bottom offset
-            BottomOffset = Height - (ParentHeight - Y);
-        }
-
-        if(Height != 0 && Width != 0 && Address != 0 && (TopOffset + BottomOffset) < Height) {
-            int32_t imgX = 0; // Left offset
-            int32_t imgY = TopOffset;
-
+        if(Address != 0) {
             painter.DmaMoveImage(
-                Address, painter.GetActiveBuffer(), imgX, imgY, ParentX + X, ParentY + Y + TopOffset, Width,
-                Height - (BottomOffset + TopOffset), PixelPerLine, Lines, ActiveFrame, Frames, ColorFormat, PixelFormat,
+                Address, painter.GetActiveBuffer(), 0, 0, RenderX, RenderY, Width,
+                Height, PixelPerLine, Lines, ActiveFrame, Frames, ColorFormat, PixelFormat,
                 GetContentAlpha(), Content ? Content->GetPLTE() : 0);
         }
     }

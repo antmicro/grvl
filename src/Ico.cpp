@@ -55,18 +55,18 @@ namespace grvl {
         }
     }
 
-    void Ico::Draw(Painter& painter, int32_t ParentX, int32_t ParentY, int32_t ParentWidth, int32_t ParentHeight)
+    void Ico::Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY)
     {
         if(!Visible) {
             return;
         }
 
         if(IcoChar != -1 && IcoFont != NULL) {
-            painter.FillRectangle(ParentX + X, ParentY + Y, Width, Height, BackgroundColor);
+            painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor);
             uint16_t BeginX = X + (Width / 2) - (IcoFont->GetCharWidth((uint32_t)IcoChar) / 2);
             uint16_t BeginY = Y + (Height / 2) - (IcoFont->GetFontHeight() / 2);
 
-            painter.DisplayAntialiasedChar(IcoFont, BeginX + ParentX, BeginY + ParentY, IcoChar, ForegroundColor);
+            painter.DisplayAntialiasedChar(IcoFont, BeginX + ParentRenderX, BeginY + ParentRenderY, IcoChar, ForegroundColor);
         }
     }
 

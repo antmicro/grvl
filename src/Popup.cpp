@@ -71,24 +71,32 @@ namespace grvl {
         return parent;
     }
 
-    void Popup::Draw(Painter& painter, int32_t ParentX, int32_t ParentY, int32_t ParentWidth, int32_t ParentHeight)
+    void Popup::Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY)
     {
-        if(!Visible || Height <= 0 || Width <= 0)
+        if(!Visible || Width <= 0 || Height <= 0) {
             return;
+        }
+
+        int32_t renderX = ParentRenderX + X;
+        int32_t renderY = ParentRenderY + Y;
+
+        painter.PushDrawingBoundsStackElement(renderX, renderY, renderX + Width, renderY + Height);
 
         if(BackgroundImage) {
-            BackgroundImage->Draw(painter, ParentX + X, ParentY + Y, Width, Height); // TODO: Needs some verification
+            BackgroundImage->Draw(painter, renderX, renderY);
         } else {
-            painter.FillRectangle(X + ParentX, Y + ParentY, Width, Height, BackgroundColor);
+            painter.FillRectangle(renderX, renderY, Width, Height, BackgroundColor);
         }
 
         for(uint32_t i = 0; i < Elements.size(); i++) {
-            Elements[i]->Draw(painter, ParentX + X, ParentY + Y, Width, Height);
+            Elements[i]->Draw(painter, renderX, renderY);
         }
 
         if(Message) {
-            Message->Draw(painter, ParentX + X, ParentY + Y, Width, Height);
+            Message->Draw(painter, renderX, renderY);
         }
+
+        painter.PopDrawingBoundsStackElement();
     }
 
     void Popup::SetMessagePointer(Label* message)

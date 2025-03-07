@@ -78,10 +78,9 @@ namespace grvl {
         return result;
     }
 
-    void Clock::Draw(Painter& painter, int32_t ParentX, int32_t ParentY, int32_t ParentWidth, int32_t ParentHeight)
+    void Clock::Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY)
     {
-
-        if(!Visible) {
+        if(!Visible || Width <= 0 || Height <= 0) {
             return;
         }
 
@@ -95,7 +94,7 @@ namespace grvl {
                 lastCurrentTime = current_time;
             }
         }
-        Label::Draw(painter, ParentX, ParentY, ParentWidth, ParentHeight);
+        Label::Draw(painter, ParentRenderX, ParentRenderY);
     }
 
     Clock& Clock::operator=(const Clock& Obj)

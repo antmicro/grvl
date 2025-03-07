@@ -106,28 +106,11 @@ namespace grvl {
         return result;
     }
 
-    void Button::Draw(Painter& painter, int32_t ParentX, int32_t ParentY, int32_t ParentWidth, int32_t ParentHeight)
+    void Button::Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY)
     {
-        int32_t HeightClamped;
-        bool CutTop = false;
-        int32_t OffsetY = 0;
-
-        if(!Visible)
+        if(!Visible || Width <= 0 || Height <= 0) {
             return;
-
-        if(ParentHeight < 0) {
-            CutTop = true;
-            OffsetY = -ParentHeight;
         }
-
-        if(!CutTop) {
-            HeightClamped = Clamp(Height, 0, ParentHeight);
-        } else { // If negative height
-            HeightClamped = Clamp(Height, 0, Height - OffsetY);
-        }
-
-        if(HeightClamped <= 0)
-            return;
 
         uint32_t TempBackgroundColor = COLOR_ARGB8888_TRANSPARENT;
         uint32_t TempTextColor = COLOR_ARGB8888_TRANSPARENT;
@@ -159,49 +142,49 @@ namespace grvl {
         // If button pressed
         if(Width > 0 && Height > 0) {
             if(TempBackgroundColor > 0) {
-                painter.FillRectangle(ParentX + X, OffsetY + ParentY + Y, Width, HeightClamped, TempBackgroundColor);
+                painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, TempBackgroundColor);
             }
             if(TempFrameColor > 0) {
-                painter.DrawRectangle(ParentX + X, OffsetY + ParentY + Y, Width, HeightClamped, TempFrameColor);
+                painter.DrawRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, TempFrameColor);
             }
         }
 
         if(!ButtonImage.IsEmpty()) {
-            ButtonImage.Draw(painter, ParentX + X, ParentY + Y, Width, ParentHeight);
+            ButtonImage.Draw(painter, ParentRenderX + X, ParentRenderY + Y);
         }
 
         uint32_t TextLen = Text.length();
         if(TextLen > 0 && ButtonFont != 0) {
             uint16_t TextSize = ButtonFont->GetWidth(Text.c_str());
-            uint16_t BeginX = X + (Width / 2) - (TextSize / 2);
-            uint16_t BeginY = Y + (Height / 2) - (ButtonFont->GetHeight() / 2) + TextTopOffset;
+            uint16_t BeginX = (Width / 2) - (TextSize / 2);
+            uint16_t BeginY = (Height / 2) - (ButtonFont->GetHeight() / 2) + TextTopOffset;
 
             if(IcoChar != -1 && IcoFont != 0) {
                 BeginY += Height / 3;
             }
 
-            painter.DisplayBoundedAntialiasedString(ButtonFont, ParentX + BeginX,
-                                                    ParentY + BeginY,
-                                                    ParentX, ParentY,
-                                                    ParentWidth,
-                                                    ParentHeight,
+            painter.DisplayBoundedAntialiasedString(ButtonFont, ParentRenderX + BeginX,
+                                                    ParentRenderY + BeginY,
+                                                    ParentRenderX, ParentRenderY,
+                                                    Width,
+                                                    Height,
                                                     Text.c_str(), TempTextColor);
         }
 
         if(IcoChar != -1 && IcoFont != 0) {
             static constexpr auto charPositionOffsetScale = 5;
-            uint16_t BeginX = X + (Width / 2) - (IcoFont->GetCharWidth((uint32_t)IcoChar) / 2);
-            uint16_t BeginY = Y + (Height / 2) - (IcoFont->GetHeight() / 2);
+            uint16_t BeginX = (Width / 2) - (IcoFont->GetCharWidth((uint32_t)IcoChar) / 2);
+            uint16_t BeginY = (Height / 2) - (IcoFont->GetHeight() / 2);
 
             if(TextLen > 0 && ButtonFont != 0) {
                 BeginY -= Height / charPositionOffsetScale;
             }
 
-            painter.DisplayAntialiasedCharInBound(IcoFont, BeginX + ParentX,
-                                                  BeginY + ParentY,
-                                                  ParentX, ParentY,
-                                                  ParentWidth,
-                                                  ParentHeight,
+            painter.DisplayAntialiasedCharInBound(IcoFont, BeginX + ParentRenderX,
+                                                  BeginY + ParentRenderY,
+                                                  ParentRenderX, ParentRenderY,
+                                                  Width,
+                                                  Height,
                                                   IcoChar, TempIcoColor);
         }
     }

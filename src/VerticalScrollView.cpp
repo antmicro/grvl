@@ -146,14 +146,16 @@ namespace grvl {
         return Elements.size();
     }
 
-    void VerticalScrollView::Draw(Painter& painter, int32_t ParentX, int32_t ParentY, int32_t ParentWidth,
-                                  int32_t ParentHeight)
+    void VerticalScrollView::Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY)
     {
-        if(!Visible) {
+        if(!Visible || Width <= 0 || Height <= 0) {
             return;
         }
+
+        painter.PushDrawingBoundsStackElement(ParentRenderX + X, ParentRenderY + Y, ParentRenderX + X + Width, ParentRenderY + Y + Height);
+
         static constexpr auto speedMultipler = 30;
-        static constexpr auto speedScale= 1000;
+        static constexpr auto speedScale = 1000;
         if(animation < 0) {
             dSpeed += speedMultipler * ((float)(grvl::Callbacks()->get_timestamp() - scrollingTimestamp) / speedScale);
             if(dSpeed > 0 || Scroll == 0) {
@@ -233,7 +235,7 @@ namespace grvl {
                     DrawHLine = true;
                     int realButtonHeight = Elements[i]->GetHeight() + ButtonHeight;
                     painter.AddBackgroundBlock(
-                        ParentY + Y - tempScroll + Elements[i]->GetY() + Elements[i]->GetHeight() - realButtonHeight,
+                        ParentRenderY + Y - tempScroll + Elements[i]->GetY() + Elements[i]->GetHeight() - realButtonHeight,
                         realButtonHeight, Elements[i]->GetCurrentBackgroundColor());
                 }
 
@@ -243,7 +245,7 @@ namespace grvl {
                         - (Elements[i]->GetY() + Elements[i]->GetHeight() - (tempScroll + Height));
                     DrawHLine = false;
                     painter.AddBackgroundBlock(
-                        ParentY + Y - tempScroll + Elements[i]->GetY(), ButtonHeight,
+                        ParentRenderY + Y - tempScroll + Elements[i]->GetY(), ButtonHeight,
                         Elements[i]->GetCurrentBackgroundColor());
                 }
 
@@ -252,11 +254,11 @@ namespace grvl {
                     ButtonHeight = Elements[i]->GetHeight();
                     DrawHLine = true;
                     painter.AddBackgroundBlock(
-                        ParentY + Y - tempScroll + Elements[i]->GetY(), Elements[i]->GetHeight(),
+                        ParentRenderY + Y - tempScroll + Elements[i]->GetY(), Elements[i]->GetHeight(),
                         Elements[i]->GetCurrentBackgroundColor());
                 }
 
-                Elements[i]->Draw(painter, ParentX + X, ParentY + Y - tempScroll, Width, ButtonHeight);
+                Elements[i]->Draw(painter, ParentRenderX + X, ParentRenderY + Y - tempScroll);
 
                 if(i == Elements.size() - 1) {
                     DrawHLine = false;
@@ -264,7 +266,7 @@ namespace grvl {
 
                 if(DrawHLine && SplitLineColor > 0) {
                     painter.DrawHLine(
-                        ParentX + X, ParentY + Y + Elements[i]->GetY() + Elements[i]->GetHeight() - tempScroll - 1,
+                        ParentRenderX + X, ParentRenderY + Y + Elements[i]->GetY() + Elements[i]->GetHeight() - tempScroll - 1,
                         Width, SplitLineColor);
                 }
             }
@@ -272,12 +274,12 @@ namespace grvl {
         grvl::Callbacks()->mutex_unlock(ClearWhileDrawMutex);
         if(overscrollBarEnabled && tempCurrentOverscrollSize > 0 && tempScroll - tempCurrentOverscrollSize == ScrollMax) {
             painter.FillRectangle(
-                ParentX + X, ParentY + Y + Height - tempCurrentOverscrollSize, Width, tempCurrentOverscrollSize, overscrollBarColor);
+                ParentRenderX + X, ParentRenderY + Y + Height - tempCurrentOverscrollSize, Width, tempCurrentOverscrollSize, overscrollBarColor);
             painter.AddBackgroundBlock(
-                ParentY + Y + Height - tempCurrentOverscrollSize, tempCurrentOverscrollSize, overscrollBarColor);
+                ParentRenderY + Y + Height - tempCurrentOverscrollSize, tempCurrentOverscrollSize, overscrollBarColor);
         } else if(overscrollBarEnabled && tempCurrentOverscrollSize < 0 && tempScroll - tempCurrentOverscrollSize == 0) {
-            painter.FillRectangle(ParentX + X, ParentY + Y, Width, -tempCurrentOverscrollSize, overscrollBarColor);
-            painter.AddBackgroundBlock(ParentY + Y, -tempCurrentOverscrollSize, overscrollBarColor);
+            painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, -tempCurrentOverscrollSize, overscrollBarColor);
+            painter.AddBackgroundBlock(ParentRenderY + Y, -tempCurrentOverscrollSize, overscrollBarColor);
         }
 
         // Scroll bar
@@ -296,8 +298,8 @@ namespace grvl {
                 // fade out
                 uint32_t tempColor = (scrollIndicatorColor & 0x00FFFFFF) | (scrollIndicatorOpacity << 24); //NOLINT
                 static constexpr auto scrollXOffset = 16;
-                int scrollX = ParentX + X + Width - scrollXOffset;
-                int scrollY = ParentY + Y + scrollIndicatorY;
+                int scrollX = ParentRenderX + X + Width - scrollXOffset;
+                int scrollY = ParentRenderY + Y + scrollIndicatorY;
 
                 // Fill allocated space
                 painter.FillMemory((uintptr_t)scrollIndicatorImage->GetData(),
@@ -334,9 +336,11 @@ namespace grvl {
 
         // Clear empty space over a list.
         if(ScrollMax == 0 && itemsHeight < Height) {
-            painter.FillRectangle(ParentX + X, ParentY + Y + itemsHeight, Width, Height - itemsHeight, BackgroundColor);
-            painter.AddBackgroundBlock(ParentY + Y + itemsHeight, Height - itemsHeight, BackgroundColor);
+            painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y + itemsHeight, Width, Height - itemsHeight, BackgroundColor);
+            painter.AddBackgroundBlock(ParentRenderY + Y + itemsHeight, Height - itemsHeight, BackgroundColor);
         }
+
+        painter.PopDrawingBoundsStackElement();
     }
 
     void VerticalScrollView::PrepareToOpen()
@@ -359,7 +363,7 @@ namespace grvl {
         SplitLineColor = color;
     }
 
-    Touch::TouchResponse VerticalScrollView::ProcessTouch(const Touch& tp, int32_t ParentX, int32_t ParentY,
+    Touch::TouchResponse VerticalScrollView::ProcessTouch(const Touch& tp, int32_t ParentRenderX, int32_t ParentRenderY,
                                                           int32_t modificator)
     {
         if(tp.GetState() == Touch::Pressed) {
@@ -373,13 +377,13 @@ namespace grvl {
                 activeChild = NULL;
                 currentOverscrollBarSize = 0;
 
-                bool ownCheck = IsTouchPointInObject(tp.GetCurrentX() - ParentX, tp.GetCurrentY() - ParentY);
+                bool ownCheck = IsTouchPointInObject(tp.GetCurrentX() - ParentRenderX, tp.GetCurrentY() - ParentRenderY);
 
                 if(ownCheck) { // Container selected
                     touchActive = true;
                     grvl::Callbacks()->mutex_lock(ClearWhileTouchMutex);
                     for(uint32_t i = 0; i < Elements.size(); i++) {
-                        Touch::TouchResponse touch = Elements[i]->ProcessTouch(tp, ParentX + X, ParentY + Y - Scroll);
+                        Touch::TouchResponse touch = Elements[i]->ProcessTouch(tp, ParentRenderX + X, ParentRenderY + Y - Scroll);
                         if(Touch::TouchHandled == touch || Touch::LongTouchHandled == touch) {
                             activeChild = Elements[i];
                             grvl::Callbacks()->mutex_unlock(ClearWhileTouchMutex);
@@ -403,7 +407,7 @@ namespace grvl {
 
         if(activeChild && !childDropped) { // push data to the child
 
-            Touch::TouchResponse res = activeChild->ProcessTouch(tp, ParentX + X, ParentY + Y - Scroll);
+            Touch::TouchResponse res = activeChild->ProcessTouch(tp, ParentRenderX + X, ParentRenderY + Y - Scroll);
 
             if(res == Touch::TouchReleased || res == Touch::TouchNotApplicable) {
                 childDropped = true;

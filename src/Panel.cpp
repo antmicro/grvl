@@ -45,25 +45,29 @@ namespace grvl {
                 parent->AddElement(element);
         }
 
-
         return parent;
     }
 
-    void Panel::Draw(Painter& painter, int32_t ParentX, int32_t ParentY, int32_t ParentWidth, int32_t ParentHeight)
+    void Panel::Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY)
     {
-        if(!Visible || Height <= 0 || Width <= 0)
+        if(!Visible || Width <= 0 || Height <= 0) {
             return;
+        }
+
+        painter.PushDrawingBoundsStackElement(ParentRenderX, ParentRenderY, ParentRenderX + Width, ParentRenderY + Height);
 
         if(BackgroundImage) {
-            BackgroundImage->Draw(painter, X + ParentX, Y + ParentY, Width, Height); // TODO: Needs verification
+            BackgroundImage->Draw(painter, X + ParentRenderX, Y + ParentRenderY);
         } else {
-            painter.FillRectangle(X + ParentX, Y + ParentY, Width, Height, BackgroundColor);
-            painter.AddBackgroundBlock(Y + ParentY, Height, BackgroundColor);
+            painter.FillRectangle(X + ParentRenderX, Y + ParentRenderY, Width, Height, BackgroundColor);
+            painter.AddBackgroundBlock(Y + ParentRenderY, Height, BackgroundColor);
         }
 
         for(uint32_t i = 0; i < Elements.size(); i++) {
-            Elements[i]->Draw(painter, ParentX + X, ParentY + Y, Width, Height);
+            Elements[i]->Draw(painter, ParentRenderX + X, ParentRenderY + Y);
         }
+
+        painter.PopDrawingBoundsStackElement();
     }
 
 } /* namespace grvl */

@@ -337,13 +337,11 @@ namespace grvl {
 
         painter.SetActiveBuffer((direction == 1) ? 1 : 0);
         startScreen->Draw(
-            painter, 0, startHeadersHeight, width,
-            height - GetBottomPanelHeight() - startHeadersHeight);
+            painter, 0, startHeadersHeight);
 
         painter.SetActiveBuffer((direction == 1) ? 0 : 1);
         targetScreen->Draw(
-            painter, 0, targetHeadersHeight, width,
-            height - GetBottomPanelHeight() - targetHeadersHeight);
+            painter, 0, targetHeadersHeight);
 
         if(targetHeadersHeight) { // Fill space under header
             painter.FillRectangle(0, (uint32_t)GetTopPanelHeight(), (uint32_t)targetScreen->GetWidth(),
@@ -391,9 +389,9 @@ namespace grvl {
                 uint32_t activeFrame = (grvl::Callbacks()->get_timestamp() % freqTwicePerSecond) / ceil((double)freqTwicePerSecond / frames);
                 LoadingImage.SetActiveFrame(activeFrame);
             }
-            LoadingImage.Draw(painter, 0, 0, width, height);
+            LoadingImage.Draw(painter, 0, 0);
             if(!LogoImage.IsEmpty()) {
-                LogoImage.Draw(painter, 0, 0, width, height);
+                LogoImage.Draw(painter, 0, 0);
             }
         }
     }
@@ -757,6 +755,8 @@ namespace grvl {
             return;
         }
 
+        painter.ResetDrawingBounds();
+
         switch(ManagerState) {
             case Loading: {
                 painter.SetActiveBuffer(painter.GetSwapperValue() ? 2 : 3);
@@ -853,8 +853,7 @@ namespace grvl {
                     // printf("Drawing the active screen! (%d %d)\n", width, height - GetTotalHeadersHeight() - GetBottomPanelHeight());
 
                     ActiveScreen->SetSize(width, height - GetTotalHeadersHeight() - GetBottomPanelHeight());
-                    ActiveScreen->Draw(painter, 0, GetTotalHeadersHeight(), width,
-                                       height - GetTotalHeadersHeight() - GetBottomPanelHeight());
+                    ActiveScreen->Draw(painter, 0, GetTotalHeadersHeight());
                 }
                 break;
             }
@@ -867,16 +866,15 @@ namespace grvl {
         painter.SetActiveBuffer(0);
 
         if(TopPanel && TopPanel->IsVisible() && GetGlobalTopPanelVisibility()) {
-            TopPanel->Draw(painter, 0, 0, width, GetTopPanelHeight());
+            TopPanel->Draw(painter, 0, 0);
         }
 
         if(ActiveScreen && ActiveScreen->GetHeader() && ActiveScreen->GetHeader()->IsVisible()) {
-            ActiveScreen->GetHeader()->Draw(painter, 0, GetTopPanelHeight(), width,
-                                            ActiveScreen->GetHeader()->GetHeight());
+            ActiveScreen->GetHeader()->Draw(painter, 0, GetTopPanelHeight());
         }
 
         if(BottomPanel && BottomPanel->IsVisible()) {
-            BottomPanel->Draw(painter, 0, height - GetBottomPanelHeight(), width, GetBottomPanelHeight());
+            BottomPanel->Draw(painter, 0, height - GetBottomPanelHeight());
         }
 
         if(ManagerState == Refreshing) { // Use unified background handling
@@ -900,7 +898,7 @@ namespace grvl {
             painter.SetActiveBuffer(painter.GetSwapperValue() ? 2 : 3);
             static constexpr auto semiTransparent = 0x7F000000;
             painter.ShadowBuffer(painter.GetSwapperValue() ? 2 : 3, semiTransparent); // note: originally caused segfault
-            CurrentPopup->Draw(painter, 0, 0, width, height);
+            CurrentPopup->Draw(painter, 0, 0);
         }
 
         ApplyTransparency();
@@ -969,7 +967,7 @@ namespace grvl {
                     painter.FillCircle(pos, dotYPos, dotRadius, dotColor);
                 } else {
                     CollectionImage.SetActiveFrame(0);
-                    CollectionImage.Draw(painter, pos, dotYPos - CollectionImage.GetHeight() / 2, CollectionImage.GetWidth(), CollectionImage.GetHeight());
+                    CollectionImage.Draw(painter, pos, dotYPos - CollectionImage.GetHeight() / 2);
                 }
             }
             // Filled dot
@@ -978,7 +976,7 @@ namespace grvl {
                     painter.FillCircle(pos, dotYPos, dotRadius, dotActiveColor);
                 } else {
                     CollectionImage.SetActiveFrame(1);
-                    CollectionImage.Draw(painter, pos, dotYPos - CollectionImage.GetHeight() / 2, CollectionImage.GetWidth(), CollectionImage.GetHeight());
+                    CollectionImage.Draw(painter, pos, dotYPos - CollectionImage.GetHeight() / 2);
                 }
             }
         }

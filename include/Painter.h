@@ -21,6 +21,7 @@
 #include "Font.h"
 #include "stl.h"
 #include <stdint.h>
+#include <array>
 
 namespace grvl {
     class Image;
@@ -97,6 +98,25 @@ namespace grvl {
         uint32_t GetYSize() const;
         uint8_t GetSwapperValue() const; // temporary
 
+        struct DrawingBounds {
+            int32_t startX{0};
+            int32_t startY{0};
+            int32_t endX{0};
+            int32_t endY{0};
+        };
+
+        void ResetDrawingBounds();
+        void PushDrawingBoundsStackElement(const DrawingBounds& drawing_bounds);
+        void PushDrawingBoundsStackElement(int32_t startX, int32_t startY, int32_t endX, int32_t endY);
+        void PopDrawingBoundsStackElement();
+
+        int32_t CurrentDrawingBoundsStartX() const { return drawingBoundsStack[drawingBoundsStackIndex].startX; }
+        int32_t CurrentDrawingBoundsStartY() const { return drawingBoundsStack[drawingBoundsStackIndex].startY; }
+        int32_t CurrentDrawingBoundsEndX() const { return drawingBoundsStack[drawingBoundsStackIndex].endX; }
+        int32_t CurrentDrawingBoundsEndY() const { return drawingBoundsStack[drawingBoundsStackIndex].endY; }
+        int32_t CurrentDrawingBoundsWidth() const { return drawingBoundsStack[drawingBoundsStackIndex].endX - drawingBoundsStack[drawingBoundsStackIndex].startX; }
+        int32_t CurrentDrawingBoundsHeight() const { return drawingBoundsStack[drawingBoundsStackIndex].endY - drawingBoundsStack[drawingBoundsStackIndex].startY; }
+
         uintptr_t GetBuffer(int id) const;
         uintptr_t GetVisibleBuffer() const;
         uintptr_t GetActiveBuffer() const;
@@ -119,7 +139,7 @@ namespace grvl {
 
         void DrawLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint32_t color) const;
         void DrawAntialiasedLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint32_t color) const;
-        void DrawVLine(int32_t Xpos, int32_t Ypos, uint16_t Length, uint32_t text_color) const;
+        void DrawVLine(int32_t Xpos, int32_t Ypos, int32_t Length, uint32_t text_color) const;
         void DrawPixel(uint32_t Xpos, uint32_t Ypos, uint32_t RGB_Code) const;
         void BlendPixel(uint32_t Xpos, uint32_t Ypos, uint32_t RGB_Code) const;
         uint32_t ReadPixel(uint32_t Xpos, uint32_t Ypos) const;
@@ -154,7 +174,7 @@ namespace grvl {
 
         bool IsRotated() const;
 
-        void DrawHLine(int32_t Xpos, int32_t Ypos, uint16_t Length, uint32_t text_color) const;
+        void DrawHLine(int32_t Xpos, int32_t Ypos, int32_t Length, uint32_t text_color) const;
 
         void DisplayAntialiasedString(const Font* Font, int16_t Xpos, int16_t Ypos, const char* Text,
                                       uint32_t text_color) const;
@@ -179,10 +199,10 @@ namespace grvl {
         int32_t GetDisplayWidth() const;
         int32_t GetDisplayHeight() const;
         uint32_t GetBackgroundColor() const;
-        void FillRectangle(uint32_t Xpos, uint32_t Ypos, uint32_t Width, uint32_t Height, uint32_t text_color) const;
-        void DrawRectangle(uint32_t Xpos, uint32_t Ypos, uint32_t Width, uint32_t Height, uint32_t text_color) const;
+        void FillRectangle(int32_t Xpos, int32_t Ypos, int32_t Width, int32_t Height, uint32_t text_color) const;
+        void DrawRectangle(int32_t Xpos, int32_t Ypos, int32_t Width, int32_t Height, uint32_t text_color) const;
 
-        void FillMemory(uintptr_t memory, uint32_t width, uint32_t height, uint32_t text_color, uint32_t colorFormat = COLOR_FORMAT_ARGB8888);
+        void FillMemory(uintptr_t memory, int32_t width, int32_t height, uint32_t text_color, uint32_t colorFormat = COLOR_FORMAT_ARGB8888);
 
         // Background blocks
         typedef vector<background_block> background_block_vector;
@@ -196,6 +216,8 @@ namespace grvl {
         layer_t backLayerPointers[4];
         uint32_t backgroundColor;
         uint32_t XSize, YSize;
+        std::array<DrawingBounds, 16> drawingBoundsStack{};
+        std::size_t drawingBoundsStackIndex{0};
         uint8_t VisibleBuffer, ActiveBuffer;
         Image* BackgroundImage;
         ContentManager* contentManager;

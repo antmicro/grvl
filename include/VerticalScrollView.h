@@ -113,7 +113,8 @@ namespace grvl {
         void SetOverscrollBar(bool enable);
         void SetOverscrollBarSize(int32_t size);
 
-        virtual void Draw(Painter& painter, int32_t ParentX, int32_t ParentY, int32_t ParentWidth, int32_t ParentHeight);
+        void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
+
         virtual void SetSize(int32_t width, int32_t height);
         virtual void PrepareToOpen();
         virtual void PrepareToClose();

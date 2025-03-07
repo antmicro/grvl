@@ -212,44 +212,44 @@ namespace grvl {
         return GetFriction(val);
     }
 
-    void Slider::Draw(Painter& painter, int32_t ParentX, int32_t ParentY, int32_t ParentWidth, int32_t ParentHeight)
+    void Slider::Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY)
     {
-        if(!Visible) {
+        if(!Visible || Width <= 0 || Height <= 0) {
             return;
         }
 
         if(discrete == 0) {
-            painter.FillRectangle(ParentX + X, ParentY + Y, Width, Height, BarColor);
+            painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BarColor);
 
             if(ScrollImage.IsEmpty()) {
 
                 if(Width > Height) {
                     painter.FillRectangle(
-                        ParentX + X + (Width - ScrollLength) * Position, ParentY + Y, Width * (1.0 - Position), Height,
+                        ParentRenderX + X + (Width - ScrollLength) * Position, ParentRenderY + Y, Width * (1.0 - Position), Height,
                         BarColor);
-                    painter.FillRectangle(ParentX + X, ParentY + Y, Width * Position, Height, ActiveBarColor);
+                    painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width * Position, Height, ActiveBarColor);
 
                     ScrollLength = (uint32_t)(Width / 10);
                     painter.FillRectangle(
-                        ParentX + X + ((Width - ScrollLength) * Position), ParentY + Y, ScrollLength, Height, ScrollColor);
+                        ParentRenderX + X + ((Width - ScrollLength) * Position), ParentRenderY + Y, ScrollLength, Height, ScrollColor);
                 } else {
                     painter.FillRectangle(
-                        ParentX + X, ParentY + Y + Height * (1.0 - Position), Width, ceil(Height * Position),
+                        ParentRenderX + X, ParentRenderY + Y + Height * (1.0 - Position), Width, ceil(Height * Position),
                         ActiveBarColor);
-                    painter.FillRectangle(ParentX + X, ParentY + Y, Width, Height * (1.0 - Position), BarColor);
+                    painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height * (1.0 - Position), BarColor);
 
                     ScrollLength = (uint32_t)(Height / 10);
                     painter.FillRectangle(
-                        ParentX + X, ParentY + Y + ((Height - ScrollLength) * (1.0 - Position)), Width, ScrollLength,
+                        ParentRenderX + X, ParentRenderY + Y + ((Height - ScrollLength) * (1.0 - Position)), Width, ScrollLength,
                         ScrollColor);
                 }
                 // Frame
-                painter.DrawRectangle(ParentX + X, ParentY + Y, Width, Height, FrameColor);
+                painter.DrawRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, FrameColor);
             } else { // With scroll ico
                 if(Width > Height) {
-                    painter.FillRectangle(ParentX + X + (Width * Position), ParentY + Y, Width * (1.0 - Position), Height,
+                    painter.FillRectangle(ParentRenderX + X + (Width * Position), ParentRenderY + Y, Width * (1.0 - Position), Height,
                                           BarColor);
-                    painter.FillRectangle(ParentX + X, ParentY + Y, Width * Position, Height, ActiveBarColor);
+                    painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width * Position, Height, ActiveBarColor);
 
                     if(KeepBoundaries) { // image limited to scroll size
                         ScrollImage.SetPosition(
@@ -260,9 +260,9 @@ namespace grvl {
                     }
                 } else {
                     painter.FillRectangle(
-                        ParentX + X, ParentY + Y + Height * (1.0 - Position), Width, ceil(Height * Position),
+                        ParentRenderX + X, ParentRenderY + Y + Height * (1.0 - Position), Width, ceil(Height * Position),
                         ActiveBarColor);
-                    painter.FillRectangle(ParentX + X, ParentY + Y, Width, Height * (1.0 - Position), BarColor);
+                    painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height * (1.0 - Position), BarColor);
 
                     if(KeepBoundaries) { // image limited to scroll size
                         ScrollImage.SetPosition(
@@ -275,15 +275,14 @@ namespace grvl {
                     }
                 }
 
-                ScrollImage.Draw(
-                    painter, ParentX + X, ParentY + Y, ScrollImage.GetWidth() + Width, ScrollImage.GetHeight() + Height);
+                ScrollImage.Draw(painter, ParentRenderX + X, ParentRenderY + Y);
             }
         } else if(discrete == 1) {
             uint8_t j = 0;
             for(uint32_t i = MinValue; i <= MaxValue; i = i + step) {
-                uint16_t x = ParentX + X + j * (Width / division);
-                uint16_t y = ParentY + Y;
-                painter.DrawLine(x, ParentY + Y, x, y + Height, 0xFFFFFFFF);
+                uint16_t x = ParentRenderX + X + j * (Width / division);
+                uint16_t y = ParentRenderY + Y;
+                painter.DrawLine(x, ParentRenderY + Y, x, y + Height, 0xFFFFFFFF);
                 char buffer[4];
                 snprintf(buffer, sizeof(buffer), "%d", j * step);
                 painter.DisplayAntialiasedString(SliderFont, x - 3, y - 35, buffer, 0xFFFFFFFF);
@@ -298,11 +297,10 @@ namespace grvl {
                     Width * Position - ScrollImage.GetWidth() / 2, (Height / 2) - (ScrollImage.GetWidth() / 2));
             }
 
-            ScrollImage.Draw(
-                painter, ParentX + X, ParentY + Y, ScrollImage.GetWidth() + Width, ScrollImage.GetHeight() + Height);
+            ScrollImage.Draw(painter, ParentRenderX + X, ParentRenderY + Y);
         } else if(discrete == 2) {
             for(uint16_t i = MinValue; i <= MaxValue; i++) {
-                float x = ParentX + X + (float)i * (float)Width / (float)MaxValue;
+                float x = ParentRenderX + X + (float)i * (float)Width / (float)MaxValue;
                 painter.DrawLine(x, Y, x, Y + Height, 0xFFFFFFFF);
                 // char buffer[10];
                 string buff;
@@ -329,8 +327,7 @@ namespace grvl {
                     Width * Position - ScrollImage.GetWidth() / 2, (Height / 2) - (ScrollImage.GetWidth() / 2));
             }
 
-            ScrollImage.Draw(
-                painter, ParentX + X, ParentY + Y, ScrollImage.GetWidth() + Width, ScrollImage.GetHeight() + Height);
+            ScrollImage.Draw(painter, ParentRenderX + X, ParentRenderY + Y);
         }
     }
 

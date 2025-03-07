@@ -75,40 +75,41 @@ namespace grvl {
         return result;
     }
 
-    void Label::Draw(Painter& painter, int32_t ParentX, int32_t ParentY, int32_t ParentWidth, int32_t ParentHeight)
+    void Label::Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY)
     {
         static constexpr auto alpha = 0xff000000;
 
-        if(!Visible) {
+        if (!Visible || Width <= 0 || Height <= 0) {
             return;
         }
 
-        // Background
-        if(BackgroundColor && alpha > 0) { // TODO: probably "&" was intended?
-            painter.FillRectangle(ParentX + X, ParentY + Y, Width, Height, BackgroundColor);
+        int32_t RenderX = ParentRenderX + X;
+        int32_t RenderY = ParentRenderY + Y;
+
+        if(BackgroundColor & alpha) {
+            painter.FillRectangle(RenderX, RenderY, Width, Height, BackgroundColor);
         }
         if(!TextFont) return;
         int32_t TextWidth = TextFont->GetWidth(Text.c_str());
         uint16_t BeginX = 0;
-        uint16_t BeginY = Y + (Height / 2) - (TextFont->GetHeight() / 2);
+        uint16_t BeginY = (Height / 2) - (TextFont->GetHeight() / 2);
         switch(HorizontalAlignment) {
             case Left:
-                BeginX = X + 3;
+                BeginX = 3;
                 break;
             case Right:
-                BeginX = X + Width - TextWidth - 3;
+                BeginX = Width - TextWidth - 3;
                 break;
             case Center:
             default:
-                BeginX = X + (Width / 2) - (TextWidth / 2);
+                BeginX = (Width / 2) - (TextWidth / 2);
                 break;
         }
 
-        painter.DisplayAntialiasedString(TextFont, ParentX + BeginX, ParentY + BeginY, Text.c_str(), ForegroundColor);
+        painter.DisplayAntialiasedString(TextFont, RenderX + BeginX, RenderY + BeginY, Text.c_str(), ForegroundColor);
 
-        // Frame
-        if(FrameColor && alpha > 0) {
-            painter.DrawRectangle(ParentX + X, ParentY + Y, Width, Height, FrameColor);
+        if(FrameColor & alpha) {
+            painter.DrawRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, FrameColor);
         }
     }
 

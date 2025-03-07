@@ -116,7 +116,7 @@ namespace grvl {
 
         static Label* BuildFromXML(XMLElement* xmlElement);
 
-        virtual void Draw(Painter& painter, int32_t ParentX, int32_t ParentY, int32_t ParentWidth, int32_t ParentHeight);
+        void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
 
         void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder) override;
 
