@@ -22,6 +22,7 @@
 #include "Misc.h"
 #include "stl.h"
 
+#include <cmath>
 #include <cassert>
 
 // NOLINTBEGIN
@@ -350,6 +351,57 @@ namespace grvl {
             uint16_t col = ConvertColor(RGB_Code, COLOR_FORMAT_ARGB8888, GetActiveBufferPixelFormat()) & 0xFFFF;
             pixels[Ypos * GetXSize() + Xpos] = col;
         }
+    }
+
+    void Painter::DrawAntialiasedPixel(float Xpos, float Ypos, uint32_t RGB_Code) const
+    {
+        if(Xpos >= CurrentDrawingBoundsEndX() || Xpos < CurrentDrawingBoundsStartX() || Ypos >= CurrentDrawingBoundsEndY() || Ypos < CurrentDrawingBoundsStartY()) {
+            return;
+        }
+
+        float EndX = Clamp(Xpos + 1.0f, 0.0f, static_cast<float>(GetXSize()));
+        float EndY = Clamp(Ypos + 1.0f, 0.0f, static_cast<float>(GetYSize()));
+
+        uint32_t startingXPos = static_cast<uint32_t>(std::floor(Xpos));
+        uint32_t startingYPos = static_cast<uint32_t>(std::floor(Ypos));
+        uint32_t endingXPos = static_cast<uint32_t>(std::floor(EndX));
+        uint32_t endingYPos = static_cast<uint32_t>(std::floor(EndY));
+
+        uint32_t pixelRGB = ReadPixel(startingXPos, startingYPos);
+        float XPart = 1.0f - (Xpos - static_cast<float>(startingXPos));
+        float YPart = 1.0f - (Ypos - static_cast<float>(startingYPos));
+        DrawPixel(startingXPos, startingYPos, InterpolateColors(pixelRGB, RGB_Code, XPart * YPart));
+
+        pixelRGB = ReadPixel(startingXPos, endingYPos);
+        XPart = 1.0f - (Xpos - static_cast<float>(startingXPos));
+        YPart = 1.0f - (endingYPos - static_cast<float>(Ypos));
+        DrawPixel(startingXPos, endingYPos, InterpolateColors(pixelRGB, RGB_Code, XPart * YPart));
+
+        pixelRGB = ReadPixel(endingXPos, startingYPos);
+        XPart = 1.0f - (endingXPos - static_cast<float>(Xpos));
+        YPart = 1.0f - (Ypos - static_cast<float>(startingYPos));
+        DrawPixel(endingXPos, startingYPos, InterpolateColors(pixelRGB, RGB_Code, XPart * YPart));
+
+        pixelRGB = ReadPixel(endingXPos, endingYPos);
+        XPart = 1.0f - (endingXPos - static_cast<float>(Xpos));
+        YPart = 1.0f - (endingYPos - static_cast<float>(Ypos));
+        DrawPixel(endingXPos, endingYPos, InterpolateColors(pixelRGB, RGB_Code, XPart * YPart));
+    }
+
+    constexpr uint32_t Painter::InterpolateColors(uint32_t first, uint32_t second, float t) const
+    {
+        uint32_t interpolatedAlpha = ((0xFF000000 & second) >> 24) * t + ((0xFF000000 & first) >> 24) * (1.0f - t);
+        uint32_t interpolatedRed = ((0xFF0000 & second) >> 16) * t + ((0xFF0000 & first) >> 16) * (1.0f - t);
+        uint32_t interpolatedGreen = ((0xFF00 & second) >> 8) * t + ((0xFF00 & first) >> 8) * (1.0f - t);
+        uint32_t interpolatedBlue = (0xFF & second) * t + (0xFF & first) * (1.0f - t);
+
+        uint32_t interpolatedColor{0};
+        interpolatedColor |= interpolatedAlpha << 24;
+        interpolatedColor |= interpolatedRed << 16;
+        interpolatedColor |= interpolatedGreen << 8;
+        interpolatedColor |= interpolatedBlue;
+
+        return interpolatedColor;
     }
 
     void Painter::BlendPixel(uint32_t Xpos, uint32_t Ypos, uint32_t RGB_Code) const

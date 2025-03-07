@@ -141,6 +141,8 @@ namespace grvl {
         void DrawAntialiasedLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint32_t color) const;
         void DrawVLine(int32_t Xpos, int32_t Ypos, int32_t Length, uint32_t text_color) const;
         void DrawPixel(uint32_t Xpos, uint32_t Ypos, uint32_t RGB_Code) const;
+        void DrawAntialiasedPixel(float Xpos, float Ypos, uint32_t RGB_Code) const;
+        constexpr uint32_t InterpolateColors(uint32_t first, uint32_t second, float t) const;
         void BlendPixel(uint32_t Xpos, uint32_t Ypos, uint32_t RGB_Code) const;
         uint32_t ReadPixel(uint32_t Xpos, uint32_t Ypos) const;
 
