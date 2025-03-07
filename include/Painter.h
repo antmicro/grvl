@@ -150,9 +150,10 @@ namespace grvl {
         void DrawLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint32_t color) const;
         void DrawAntialiasedLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint32_t color) const;
         void DrawVLine(int32_t Xpos, int32_t Ypos, int32_t Length, uint32_t text_color) const;
+        void DrawGradientVLine(int16_t x1, int16_t y1, int16_t y2, uint32_t startingColor, uint32_t endingColor, float startingValue) const;
         void DrawPixel(uint32_t Xpos, uint32_t Ypos, uint32_t RGB_Code) const;
         void DrawAntialiasedPixel(float Xpos, float Ypos, uint32_t RGB_Code) const;
-        constexpr uint32_t InterpolateColors(uint32_t first, uint32_t second, float t) const;
+        static constexpr uint32_t InterpolateColors(uint32_t first, uint32_t second, float t);
         void BlendPixel(uint32_t Xpos, uint32_t Ypos, uint32_t RGB_Code) const;
         uint32_t ReadPixel(uint32_t Xpos, uint32_t Ypos) const;
 
@@ -225,6 +226,8 @@ namespace grvl {
         void DmaTransferToFramebuffer(int32_t y_position, int32_t height, bool with_background, bool inPlace = false);
         void MergeBuffers(bool inPlace = false);
         void ShadowBuffer(uint8_t number, uint32_t color);
+
+        static bool IsColorTransparent(uint32_t color);
 
     protected:
         layer_t backLayerPointers[4];

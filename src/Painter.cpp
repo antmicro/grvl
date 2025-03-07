@@ -189,6 +189,11 @@ namespace grvl {
         return 0;
     }
 
+    bool Painter::IsColorTransparent(uint32_t color)
+    {
+        return (color & 0xFF000000) == 0;
+    }
+
     static uint32_t ConvertPixel(unsigned char* data, uint32_t inputPixelFormat, uint32_t outputPixelFormat)
     {
         uint32_t color;
@@ -388,7 +393,7 @@ namespace grvl {
         DrawPixel(endingXPos, endingYPos, InterpolateColors(pixelRGB, RGB_Code, XPart * YPart));
     }
 
-    constexpr uint32_t Painter::InterpolateColors(uint32_t first, uint32_t second, float t) const
+    constexpr uint32_t Painter::InterpolateColors(uint32_t first, uint32_t second, float t)
     {
         uint32_t interpolatedAlpha = ((0xFF000000 & second) >> 24) * t + ((0xFF000000 & first) >> 24) * (1.0f - t);
         uint32_t interpolatedRed = ((0xFF0000 & second) >> 16) * t + ((0xFF0000 & first) >> 16) * (1.0f - t);
@@ -745,6 +750,33 @@ namespace grvl {
         }
     }
 
+    void Painter::DrawGradientVLine(int16_t x1, int16_t y1, int16_t y2, uint32_t startingColor, uint32_t endingColor, float startingValue) const
+    {
+        if (y1 >= YSize || x1 < 0 || x1 >= XSize) {
+            return;
+        }
+
+        auto finalEndingY = std::min(y2, static_cast<int16_t>(YSize));
+
+        int16_t length = finalEndingY - y1;
+        if (length <= 0) {
+            return;
+        }
+
+        uintptr_t ax = 0;
+        uintptr_t ptr = GetActiveBuffer();
+        uint32_t bytes = GetActiveBufferBytesPerPixel();
+        uint32_t pixelFormat = GetActiveBufferPixelFormat();
+
+        float currentGradientValue = startingValue;
+        float gradientDelta = (1.0f - currentGradientValue) / length;
+        for (int i = 0; i < length; ++i) {
+            uint32_t interpolatedColor = InterpolateColors(startingColor, endingColor, currentGradientValue);
+            DrawPixel(x1, y1 + i, interpolatedColor);
+            currentGradientValue = std::min(1.0f, currentGradientValue + gradientDelta);
+        }
+    }
+
     void Painter::DrawEllipse(int32_t Xpos, int32_t Ypos, int32_t XRadius, int32_t YRadius, uint32_t color) const
     {
         int x = 0, y = -YRadius, err = 2 - 2 * XRadius, e2;
@@ -988,6 +1020,10 @@ namespace grvl {
 
     void Painter::FillRectangle(int32_t Xpos, int32_t Ypos, int32_t Width, int32_t Height, uint32_t text_color) const
     {
+        if (IsColorTransparent(text_color)) {
+            return;
+        }
+
         if (Xpos >= CurrentDrawingBoundsEndX() || Ypos >= CurrentDrawingBoundsEndY()) {
             return;
         }
