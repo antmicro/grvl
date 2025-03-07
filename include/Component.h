@@ -115,10 +115,14 @@ namespace grvl {
         void* operator new(size_t size);
         void operator delete(void* ptr);
 
-        Component() = default;
+        Component()
+            : uniqueID{AssignUniqueID()}
+        {
+        }
 
         Component(int32_t x, int32_t y, int32_t width, int32_t height)
-            : X(x)
+            : uniqueID{AssignUniqueID()}
+            , X(x)
             , Y(y)
             , Height(height)
             , Width(width)
@@ -224,6 +228,11 @@ namespace grvl {
         GENERATE_DUK_BOOLEAN_SETTER(Component, Visible, SetVisible)
 
     protected:
+        uint64_t AssignUniqueID();
+
+        inline static uint64_t firstAvailableUniqueID{0};
+        uint64_t uniqueID{0};
+
         std::string ID{};
         std::string parentID{};
 
@@ -257,6 +266,7 @@ namespace grvl {
 
         virtual void InitFromXML(tinyxml2::XMLElement* xmlElement);
     };
+
 } /* namespace grvl */
 
 #endif /* GRVL_COMPONENT_H_ */
