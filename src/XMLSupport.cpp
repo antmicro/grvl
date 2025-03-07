@@ -62,6 +62,19 @@ namespace grvl {
         return defaultValue;
     }
 
+    int32_t XMLSupport::GetAttributeOrDefault(XMLElement* element, const char* attributeName, int32_t defaultValue)
+    {
+        const char* stylesheetValue;
+
+        if(element->QueryUnsignedAttribute(attributeName, (unsigned int*)&defaultValue) != XML_SUCCESS) {
+            if((stylesheetValue = GetAttributeFromStylesheet(element, attributeName))) {
+                XMLUtil::ToInt(stylesheetValue, &defaultValue);
+            }
+        }
+
+        return defaultValue;
+    }
+
     bool XMLSupport::GetAttributeOrDefault(XMLElement* element, const char* attributeName, bool defaultValue)
     {
         const char* stylesheetValue;

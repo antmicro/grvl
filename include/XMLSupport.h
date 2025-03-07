@@ -28,6 +28,7 @@ namespace grvl {
     class XMLSupport {
     public:
         static uint32_t GetAttributeOrDefault(XMLElement* element, const char* attributeName, uint32_t defaultValue);
+        static int32_t GetAttributeOrDefault(XMLElement* element, const char* attributeName, int32_t defaultValue);
         static bool GetAttributeOrDefault(XMLElement* element, const char* attributeName, bool defaultValue);
         static const char* GetAttributeOrDefault(XMLElement* element, const char* attributeName, const char* defaultValue);
         static CallbackDefinition ParseCallback(const char* callbackDefinition);
