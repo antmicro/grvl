@@ -237,7 +237,7 @@ namespace grvl {
         }
 
         if(!touchActive || childDroppedTouch) { // Touch not applicable
-            return Touch::TouchNA;
+            return Touch::TouchNotApplicable;
         }
 
         Touch::TouchResponse response = Touch::TouchHandled;

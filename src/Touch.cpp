@@ -18,10 +18,6 @@
 
 namespace grvl {
 
-    Touch::~Touch()
-    {
-    }
-
     int32_t Touch::GetDeltaX() const
     {
         return deltaX;

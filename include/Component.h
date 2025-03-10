@@ -131,7 +131,7 @@ namespace grvl {
             , onClick()
             , touchActive(false)
             , childDroppedTouch(false)
-            , previousResponse(Touch::TouchNA)
+            , previousResponse(Touch::TouchNotApplicable)
             , Visible(true)
         {
         }
@@ -152,7 +152,7 @@ namespace grvl {
             , onClick()
             , touchActive(false)
             , childDroppedTouch(false)
-            , previousResponse(Touch::TouchNA)
+            , previousResponse(Touch::TouchNotApplicable)
             , Visible(true)
         {
         }

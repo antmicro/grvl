@@ -390,7 +390,7 @@ namespace grvl {
                     childDropped = true;
                     return Touch::TouchHandled;
                 }
-                return Touch::TouchNA;
+                return Touch::TouchNotApplicable;
             }
             animation = 0;
             touchActive = true; // Continue scrolling
@@ -398,14 +398,14 @@ namespace grvl {
         }
 
         if(!touchActive) {
-            return Touch::TouchNA;
+            return Touch::TouchNotApplicable;
         }
 
         if(activeChild && !childDropped) { // push data to the child
 
             Touch::TouchResponse res = activeChild->ProcessTouch(tp, ParentX + X, ParentY + Y - Scroll);
 
-            if(res == Touch::TouchReleased || res == Touch::TouchNA) {
+            if(res == Touch::TouchReleased || res == Touch::TouchNotApplicable) {
                 childDropped = true;
 
                 // Skip already scrolled distance - avoid glitchy adjustment

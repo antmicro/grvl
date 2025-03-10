@@ -161,7 +161,7 @@ namespace grvl {
                     }
                 }
             } else {
-                return Touch::TouchNA;
+                return Touch::TouchNotApplicable;
             }
         }
         static constexpr auto longPressDelay = 1000;
@@ -211,7 +211,7 @@ namespace grvl {
                 return Touch::TouchHandled;
             }
         }
-        return Touch::TouchNA;
+        return Touch::TouchNotApplicable;
     }
 
     void CustomView::CheckPlacement()

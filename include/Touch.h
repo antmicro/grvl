@@ -25,7 +25,7 @@ namespace grvl {
     class Touch {
     public:
         enum TouchResponse {
-            TouchNA = 0,
+            TouchNotApplicable = 0,
             TouchHandled,
             LongTouchHandled,
             TouchReleased
@@ -38,24 +38,16 @@ namespace grvl {
             Moving
         };
 
-        Touch()
-            : state(Idle)
-            , startX(0)
-            , startY(0)
-            , deltaX(0)
-            , deltaY(0)
-        {
-        }
+        Touch() = default;
+
         Touch(TouchState initState, int32_t startX, int32_t startY)
             : state(initState)
             , startX(startX)
             , startY(startY)
-            , deltaX(0)
-            , deltaY(0)
         {
         }
 
-        virtual ~Touch();
+        virtual ~Touch() = default;
 
         void SetStartPosition(int32_t x, int32_t y);
         void SetCurrentPosition(int32_t x, int32_t y);
@@ -70,8 +62,11 @@ namespace grvl {
         TouchState GetState() const;
 
     private:
-        TouchState state;
-        int32_t startX, startY, deltaX, deltaY;
+        TouchState state{TouchState::Idle};
+        int32_t startX{0};
+        int32_t startY{0};
+        int32_t deltaX{0};
+        int32_t deltaY{0};
     };
 
 } /* namespace grvl */

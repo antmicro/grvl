@@ -118,7 +118,7 @@ namespace grvl {
                     }
                 }
             } else {
-                return Touch::TouchNA;
+                return Touch::TouchNotApplicable;
             }
         }
 
@@ -132,14 +132,14 @@ namespace grvl {
             }  // Push data
             if(tp.GetState() != Touch::Pressed) { // Not to trigger onPress twice.
                 Touch::TouchResponse childResponse = activeChild->ProcessTouch(tp, ParentX + X, ParentY + Y, modificator);
-                if(childResponse == Touch::TouchReleased || childResponse == Touch::TouchNA) { // Drop
+                if(childResponse == Touch::TouchReleased || childResponse == Touch::TouchNotApplicable) { // Drop
                     childDropped = true;
                     activeChild = NULL;
                 }
             }
             return Touch::TouchHandled;
         }
-        return Touch::TouchNA;
+        return Touch::TouchNotApplicable;
         ;
     }
 
