@@ -160,6 +160,7 @@ namespace grvl {
         virtual ~Component();
 
         void SetID(const char* id);
+        void SetParentID(const char* id);
         virtual void SetPosition(int32_t x, int32_t y);
         virtual void SetX(int32_t x);
         virtual void SetY(int32_t y);
@@ -181,6 +182,7 @@ namespace grvl {
         virtual void SetVisible(bool state);
 
         const char* GetID();
+        const char* GetParentID();
         int32_t GetX() const;
         int32_t GetY() const;
         int32_t GetWidth() const;
@@ -220,7 +222,8 @@ namespace grvl {
 
         virtual void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder);
 
-        GENERATE_DUK_STRING_GETTER(Component, Id, GetID)
+        GENERATE_DUK_STRING_GETTER(Component, ID, GetID)
+        GENERATE_DUK_STRING_GETTER(Component, ParentID, GetParentID)
 
         GENERATE_DUK_INT_GETTER(Component, X, GetX)
         GENERATE_DUK_INT_SETTER(Component, X, SetX)
@@ -251,6 +254,7 @@ namespace grvl {
 
     protected:
         string ID;
+        std::string parentID;
         int32_t X, Y, Height, Width;
         uint32_t ForegroundColor, ActiveForegroundColor, BackgroundColor, ActiveBackgroundColor;
         ComponentState State;

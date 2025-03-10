@@ -76,6 +76,16 @@ namespace grvl {
         return ID.c_str();
     }
 
+    void Component::SetParentID(const char* id)
+    {
+        parentID = string(id);
+    }
+
+    const char* Component::GetParentID()
+    {
+        return parentID.c_str();
+    }
+
     void Component::SetPosition(int32_t x, int32_t y)
     {
         if(X != x || Y != y) {
@@ -403,7 +413,8 @@ namespace grvl {
 
     void Component::PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder)
     {
-        jsObjectBuilder.AddProperty("name", Component::JSGetIdWrapper);
+        jsObjectBuilder.AddProperty("name", Component::JSGetIDWrapper);
+        jsObjectBuilder.AddProperty("parentName", Component::JSGetParentIDWrapper);
         jsObjectBuilder.AddProperty("x", Component::JSGetXWrapper, Component::JSSetXWrapper);
         jsObjectBuilder.AddProperty("y", Component::JSGetYWrapper, Component::JSSetYWrapper);
         jsObjectBuilder.AddProperty("width", Component::JSGetWidthWrapper, Component::JSSetWidthWrapper);
