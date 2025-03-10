@@ -62,7 +62,7 @@ namespace grvl {
         }                                                                                            \
                                                                                                      \
         return 0;                                                                                    \
-    }    
+    }
 
 #define GENERATE_DUK_STRING_GETTER(class, property_name, getter_func_name) GENERATE_DUK_GETTER(class, property_name, getter_func_name, duk_push_string)
 #define GENERATE_DUK_STRING_SETTER(class, property_name, setter_func_name) GENERATE_DUK_SETTER(class, property_name, setter_func_name, duk_to_string)
@@ -115,49 +115,17 @@ namespace grvl {
         void* operator new(size_t size);
         void operator delete(void* ptr);
 
-        Component()
-            : ID("")
-            , X(0)
-            , Y(0)
-            , Height(0)
-            , Width(0)
-            , ForegroundColor(COLOR_ARGB8888_GRAY)
-            , ActiveForegroundColor(COLOR_ARGB8888_GRAY)
-            , BackgroundColor(COLOR_ARGB8888_TRANSPARENT)
-            , ActiveBackgroundColor(COLOR_ARGB8888_TRANSPARENT)
-            , State(Off)
-            , onPress()
-            , onRelease()
-            , onClick()
-            , touchActive(false)
-            , childDroppedTouch(false)
-            , previousResponse(Touch::TouchNotApplicable)
-            , Visible(true)
-        {
-        }
+        Component() = default;
 
         Component(int32_t x, int32_t y, int32_t width, int32_t height)
-            : ID("")
-            , X(x)
+            : X(x)
             , Y(y)
             , Height(height)
             , Width(width)
-            , ForegroundColor(COLOR_ARGB8888_GRAY)
-            , ActiveForegroundColor(COLOR_ARGB8888_GRAY)
-            , BackgroundColor(COLOR_ARGB8888_TRANSPARENT)
-            , ActiveBackgroundColor(COLOR_ARGB8888_TRANSPARENT)
-            , State(Off)
-            , onPress()
-            , onRelease()
-            , onClick()
-            , touchActive(false)
-            , childDroppedTouch(false)
-            , previousResponse(Touch::TouchNotApplicable)
-            , Visible(true)
         {
         }
 
-        virtual ~Component();
+        virtual ~Component() = default;
 
         void SetID(const char* id);
         void SetParentID(const char* id);
@@ -199,6 +167,9 @@ namespace grvl {
         virtual void Hide();
         virtual void Show();
 
+        virtual void PrepareContent(ContentManager* contentManager) {}
+        virtual void CancelPreparingContent(ContentManager* contentManager) {}
+
         virtual void OnPress();
         virtual void OnRelease();
         virtual void OnClick();
@@ -206,6 +177,8 @@ namespace grvl {
         void SetOnPressEvent(const Event& event);
         void SetOnReleaseEvent(const Event& event);
         void SetOnClickEvent(const Event& event);
+        void SetOnLongPressEvent(const Event& event);
+        void SetOnLongPressRepeatEvent(const Event& event);
 
         virtual Touch::TouchResponse ProcessTouch(const Touch& tp, int32_t ParentX, int32_t ParentY,
                                                   int32_t modificator = 0);
@@ -253,15 +226,33 @@ namespace grvl {
         GENERATE_DUK_BOOLEAN_SETTER(Component, Visible, SetVisible)
 
     protected:
-        string ID;
-        std::string parentID;
-        int32_t X, Y, Height, Width;
-        uint32_t ForegroundColor, ActiveForegroundColor, BackgroundColor, ActiveBackgroundColor;
-        ComponentState State;
-        Event onPress, onRelease, onClick;
-        bool touchActive, childDroppedTouch;
-        Touch::TouchResponse previousResponse;
-        bool Visible;
+        std::string ID{};
+        std::string parentID{};
+
+        int32_t X{0};
+        int32_t Y{0};
+        int32_t Height{0};
+        int32_t Width{0};
+
+        uint32_t ForegroundColor{COLOR_ARGB8888_GRAY};
+        uint32_t ActiveForegroundColor{COLOR_ARGB8888_GRAY};
+        uint32_t BackgroundColor{COLOR_ARGB8888_TRANSPARENT};
+        uint32_t ActiveBackgroundColor{COLOR_ARGB8888_TRANSPARENT};
+
+        ComponentState State{ComponentState::Off};
+        bool isFocused{false};
+        Event onPress{};
+        Event onRelease{};
+        Event onClick{};
+        bool touchActive{false};
+        bool childDroppedTouch{false};
+        Touch::TouchResponse previousResponse{Touch::TouchNotApplicable};
+        uint64_t TouchActivatedTimestamp{0};
+        bool longTouchActive{false};
+        Event onLongPress{};
+        Event onLongPressRepeat{};
+
+        bool Visible{true};
 
         virtual Touch::TouchResponse ProcessMove(int32_t StartX, int32_t StartY, int32_t DeltaX, int32_t DeltaY);
         Touch::TouchResponse OnMoveCase(const Touch& tp, int32_t ParentX, int32_t ParentY);

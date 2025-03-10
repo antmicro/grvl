@@ -62,10 +62,6 @@ namespace grvl {
         return NULL;
     }
 
-    Component::~Component()
-    {
-    }
-
     void Component::SetID(const char* id)
     {
         ID = string(id);
@@ -291,17 +287,36 @@ namespace grvl {
         return response;
     }
 
-    Touch::TouchResponse Component::Component::ProcessMove(int32_t StartX,
-                                                           int32_t StartY, int32_t DeltaX, int32_t DeltaY)
+    Touch::TouchResponse Component::ProcessMove(int32_t StartX, int32_t StartY, int32_t DeltaX, int32_t DeltaY)
     {
         static constexpr auto moveScale = 10;
         if(DeltaX > ceil(Width / moveScale + 1)
            || DeltaX < -ceil(Width / moveScale + 1)
            || DeltaY > ceil(Height / moveScale + 1)
-           || DeltaY < -ceil(Height / moveScale + 1)) { // Drop button
+           || DeltaY < -ceil(Height / moveScale + 1)) {
             return Touch::TouchReleased;
         }
 
+        static constexpr auto longpressThreshold = 1000;
+        if(!longTouchActive && TouchActivatedTimestamp < (grvl::Callbacks()->get_timestamp() - longpressThreshold)) { // Long press
+            if(onLongPress.IsSet()) {
+                longTouchActive = true;
+                TouchActivatedTimestamp = grvl::Callbacks()->get_timestamp();
+                Manager::GetInstance().GetEventsQueueInstance().push(&onLongPress);
+            } else {
+                return Touch::TouchReleased;
+            }
+        }
+
+        static constexpr auto longpressRepeatOffset = 500;
+        if(longTouchActive && TouchActivatedTimestamp < (grvl::Callbacks()->get_timestamp() - longpressRepeatOffset)) { // Long press repeat
+            TouchActivatedTimestamp = grvl::Callbacks()->get_timestamp();
+            Manager::GetInstance().GetEventsQueueInstance().push(&onLongPressRepeat);
+        }
+
+        if(longTouchActive) {
+            return Touch::LongTouchHandled;
+        }
         return Touch::TouchHandled;
     }
 
@@ -318,12 +333,15 @@ namespace grvl {
     void Component::OnPress()
     {
         State = On;
+        TouchActivatedTimestamp = grvl::Callbacks()->get_timestamp();
         Manager::GetInstance().GetEventsQueueInstance().push(&onPress);
     }
 
     void Component::OnRelease()
     {
         State = Off;
+        TouchActivatedTimestamp = 0;
+        longTouchActive = false;
         Manager::GetInstance().GetEventsQueueInstance().push(&onRelease);
     }
 
@@ -348,6 +366,24 @@ namespace grvl {
     {
         onClick = event;
         onClick.SetSenderPointer(this);
+    }
+
+    void Component::SetOnLongPressEvent(const Event& event)
+    {
+        onLongPress = event;
+        onLongPress.SetSenderPointer(this);
+    }
+
+    void Component::SetOnLongPressRepeatEvent(const Event& event)
+    {
+        onLongPressRepeat = event;
+        onLongPressRepeat.SetSenderPointer(this);
+    }
+
+    void Component::ClearTouch()
+    {
+        longTouchActive = false;
+        OnRelease();
     }
 
     void* Component::operator new(size_t size)
@@ -376,11 +412,6 @@ namespace grvl {
             return false;
         }
         return true;
-    }
-
-    void Component::ClearTouch()
-    {
-        OnRelease();
     }
 
     void Component::InitFromXML(XMLElement* xmlElement)

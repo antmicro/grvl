@@ -20,10 +20,6 @@
 
 namespace grvl {
 
-    AbstractButton::~AbstractButton()
-    {
-    }
-
     void AbstractButton::SetText(const char* text)
     {
         Text = string(text);
@@ -31,7 +27,6 @@ namespace grvl {
 
     void AbstractButton::SetImage(const Image& image)
     {
-
         if(image.IsEmpty()) {
             return;
         }
@@ -53,49 +48,6 @@ namespace grvl {
         ButtonFont = 0;
     }
 
-    void AbstractButton::OnPress()
-    {
-        TouchActivatedTimestamp = grvl::Callbacks()->get_timestamp();
-        Component::OnPress();
-    }
-
-    void AbstractButton::OnRelease()
-    {
-        TouchActivatedTimestamp = 0;
-        longTouchActive = false;
-        Component::OnRelease();
-    }
-
-    void AbstractButton::OnClick()
-    {
-        Component::OnClick();
-    }
-
-    AbstractButton& AbstractButton::operator=(const AbstractButton& Obj)
-    {
-        if(this != &Obj) {
-            Component::operator=(Obj);
-            Text = Obj.Text;
-            ButtonImage = Obj.ButtonImage;
-            ButtonFont = Obj.ButtonFont;
-            TouchActivatedTimestamp = 0;
-            longTouchActive = Obj.longTouchActive;
-        }
-        return *this;
-    }
-
-    void AbstractButton::SetOnLongPressEvent(const Event& event)
-    {
-        onLongPress = event;
-        onLongPress.SetSenderPointer(this);
-    }
-
-    void AbstractButton::SetOnLongPressRepeatEvent(const Event& event)
-    {
-        onLongPressRepeat = event;
-        onLongPressRepeat.SetSenderPointer(this);
-    }
-
     const char* AbstractButton::GetText()
     {
         return Text.c_str();
@@ -104,44 +56,6 @@ namespace grvl {
     Image* AbstractButton::GetImagePointer()
     {
         return &ButtonImage;
-    }
-
-    Touch::TouchResponse AbstractButton::ProcessMove(int32_t StartX, int32_t StartY, int32_t DeltaX, int32_t DeltaY)
-    {
-        Touch::TouchResponse res;
-        res = Component::ProcessMove(StartX, StartY, DeltaX, DeltaY); // Generic part
-
-        if(res != Touch::TouchHandled) {
-            return res;
-        }
-
-        static constexpr auto longpressThreshold = 1000;
-        if(!longTouchActive && TouchActivatedTimestamp < (grvl::Callbacks()->get_timestamp() - longpressThreshold)) { // Long press
-            if(onLongPress.IsSet()) {
-                longTouchActive = true;
-                TouchActivatedTimestamp = grvl::Callbacks()->get_timestamp();
-                Manager::GetInstance().GetEventsQueueInstance().push(&onLongPress);
-            } else {
-                return Touch::TouchReleased;
-            }
-        }
-
-        static constexpr auto longpressRepeatOffset = 500;
-        if(longTouchActive && TouchActivatedTimestamp < (grvl::Callbacks()->get_timestamp() - longpressRepeatOffset)) { // Long press repeat
-            TouchActivatedTimestamp = grvl::Callbacks()->get_timestamp();
-            Manager::GetInstance().GetEventsQueueInstance().push(&onLongPressRepeat);
-        }
-
-        if(longTouchActive) {
-            return Touch::LongTouchHandled;
-        }
-        return Touch::TouchHandled;
-    }
-
-    void AbstractButton::ClearTouch()
-    {
-        Component::ClearTouch();
-        longTouchActive = false;
     }
 
     void AbstractButton::InitFromXML(XMLElement* xmlElement)

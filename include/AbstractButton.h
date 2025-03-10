@@ -29,27 +29,10 @@ namespace grvl {
     /// Represents base class for all buttons.
     class AbstractButton : public Component {
     public:
-        AbstractButton()
-            : Component()
-            , Text("")
-            , ButtonImage()
-            , ButtonFont(NULL)
-            , TouchActivatedTimestamp(0)
-            , longTouchActive(false)
-            , onLongPress()
-            , onLongPressRepeat()
-        {
-        }
+        AbstractButton() = default;
 
         AbstractButton(int32_t x, int32_t y, int32_t width, int32_t height)
             : Component(x, y, width, height)
-            , Text("")
-            , ButtonImage()
-            , ButtonFont(NULL)
-            , TouchActivatedTimestamp(0)
-            , longTouchActive(false)
-            , onLongPress()
-            , onLongPressRepeat()
         {
         }
 
@@ -58,44 +41,20 @@ namespace grvl {
             , Text(Obj.Text)
             , ButtonImage(Obj.ButtonImage)
             , ButtonFont(Obj.ButtonFont)
-            , TouchActivatedTimestamp(0)
-            , longTouchActive(false)
-            , onLongPress()
-            , onLongPressRepeat()
         {
         }
-
-        virtual ~AbstractButton();
 
         AbstractButton& operator=(const AbstractButton& Obj);
 
         void SetText(const char* text);
         void SetImage(const Image& image);
         void SetTextFont(Font const* font);
-        void SetOnLongPressEvent(const Event& event);
-        void SetOnLongPressRepeatEvent(const Event& event);
 
         void ClearButtonFont();
-
-        virtual void OnPress();
-        virtual void OnRelease();
-        virtual void OnClick();
-
-        virtual void PrepareContent(ContentManager* contentManager)
-        {
-        }
-
-        virtual void CancelPreparingContent(ContentManager* contentManager)
-        {
-        }
-
-        Touch::TouchResponse ProcessMove(int32_t StartX, int32_t StartY, int32_t DeltaX, int32_t DeltaY);
 
         const char* GetText();
         Font const* GetButtonFont();
         Image* GetImagePointer();
-
-        virtual void ClearTouch();
 
         void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder) override;
 
@@ -103,14 +62,9 @@ namespace grvl {
         GENERATE_DUK_STRING_SETTER(AbstractButton, Text, SetText)
 
     protected:
-        string Text;
-        Image ButtonImage;
-        Font const* ButtonFont;
-        uint64_t TouchActivatedTimestamp;
-
-        // Long touch support
-        bool longTouchActive;
-        Event onLongPress, onLongPressRepeat;
+        std::string Text{};
+        Image ButtonImage{};
+        Font const* ButtonFont{nullptr};
 
         virtual void InitFromXML(XMLElement* xmlElement);
     };
