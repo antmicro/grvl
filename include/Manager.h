@@ -53,6 +53,7 @@
 #include "Separator.h"
 #include "Division.h"
 #include "Checkbox.h"
+#include "Graph.h"
 
 using namespace tinyxml2;
 namespace grvl {
