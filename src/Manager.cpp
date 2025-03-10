@@ -60,6 +60,7 @@ namespace grvl {
     WIDGET(Division);
     WIDGET(Checkbox);
     WIDGET(Graph);
+    WIDGET(GridCanvas);
 
     static inline float MotionFunc(float x)
     {

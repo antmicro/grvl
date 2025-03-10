@@ -54,6 +54,7 @@
 #include "Division.h"
 #include "Checkbox.h"
 #include "Graph.h"
+#include "GridCanvas.h"
 
 using namespace tinyxml2;
 namespace grvl {
