@@ -25,8 +25,9 @@
 
 namespace grvl {
 
-    Button::~Button()
+    Component* Button::Clone() const
     {
+        return new Button(*this);
     }
 
     void Button::SetIcoFont(Font const* font)

@@ -20,10 +20,6 @@
 
 namespace grvl {
 
-    Clock::~Clock()
-    {
-    }
-
     void Clock::Start()
     {
         isRunning = true;
@@ -97,16 +93,6 @@ namespace grvl {
         Label::Draw(painter, ParentRenderX, ParentRenderY);
     }
 
-    Clock& Clock::operator=(const Clock& Obj)
-    {
-        if(this != &Obj) {
-            Label::operator=(Obj);
-            isRunning = Obj.isRunning;
-            lastCurrentTime = Obj.lastCurrentTime;
-        }
-        return *this;
-    }
-    
     void Clock::PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder)
     {
         Label::PopulateJavaScriptObject(jsObjectBuilder);

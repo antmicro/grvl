@@ -21,6 +21,28 @@
 
 namespace grvl {
 
+    GridRow& GridRow::operator=(const GridRow& other)
+    {
+        if (this == &other) {
+            return *this;
+        }
+
+        Container::operator=(other);
+        ElementWidth = other.ElementWidth;
+        HorizontalOffset = other.HorizontalOffset;
+
+        childDropped = false;
+        ignoreTouchModificator = false;
+        lastActiveChild = nullptr;
+
+        return *this;
+    }
+
+    Component* GridRow::Clone() const
+    {
+        return new GridRow(*this);
+    }
+
     void GridRow::SetSize(int32_t width, int32_t height)
     {
         Width = width;

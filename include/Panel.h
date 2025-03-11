@@ -50,22 +50,17 @@ namespace grvl {
     class Panel : public Container {
 
     public:
-        Panel()
-            : Container()
-        {
-        }
+        Panel() = default;
 
         Panel(int32_t x, int32_t y, int32_t width, int32_t height)
             : Container(x, y, width, height)
         {
         }
 
-        Panel(const Panel& Obj)
-            : Container(Obj)
-        {
-        }
+        Panel(const Panel& other) = default;
+        Panel& operator=(const Panel& other) = default;
 
-        virtual ~Panel();
+        Component* Clone() const override;
 
         static Panel* BuildFromXML(XMLElement* xmlElement);
 

@@ -21,10 +21,8 @@
 
 namespace grvl {
 
-    ProgressBar::~ProgressBar()
-    {
-    }
     static constexpr auto progressMax = 100;
+
     void ProgressBar::SetProgressValue(float value)
     {
         if(value < 0) {

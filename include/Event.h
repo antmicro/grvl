@@ -58,8 +58,6 @@ namespace grvl {
         Event(CallbackFunction eventCallback)
             : eventCallback{std::move(eventCallback)} {}
 
-        virtual ~Event();
-
         Event& operator=(const Event& Obj);
 
         void Trigger();

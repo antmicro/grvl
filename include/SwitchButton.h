@@ -53,23 +53,20 @@ namespace grvl {
     public:
         SwitchButton()
             : AbstractButton()
-            , switchState(false)
-            , previousSwitchState(false)
-            , onSwitchON()
-            , onSwitchOFF()
         {
             BackgroundColor = COLOR_ARGB8888_LIGHTGRAY;
         }
 
         SwitchButton(int32_t x, int32_t y, int32_t width, int32_t height)
             : AbstractButton(x, y, width, height)
-            , switchState(false)
-            , previousSwitchState(false)
-            , onSwitchON()
-            , onSwitchOFF()
         {
             BackgroundColor = COLOR_ARGB8888_LIGHTGRAY;
         }
+
+        SwitchButton(const SwitchButton& other);
+        SwitchButton& operator=(const SwitchButton& other);
+
+        Component* Clone() const override;
 
         virtual void OnPress();
         virtual void OnRelease();

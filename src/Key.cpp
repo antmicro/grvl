@@ -19,10 +19,6 @@
 
 namespace grvl {
 
-    Key::~Key()
-    {
-    }
-
     void Key::SetID(const char* id)
     {
         ID = string(id);

@@ -25,10 +25,6 @@ namespace grvl {
         }
     }
 
-    Ico::~Ico()
-    {
-    }
-
     int32_t Ico::GetIcoChar() const
     {
         return IcoChar;

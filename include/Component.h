@@ -137,6 +137,8 @@ namespace grvl {
 
         virtual ~Component() = default;
 
+        virtual Component* Clone() const;
+
         void SetID(const char* id);
         void SetParentID(const char* id);
         virtual void SetPosition(int32_t x, int32_t y);
@@ -260,6 +262,7 @@ namespace grvl {
         GENERATE_DUK_BOOLEAN_GETTER(Component, Visible, IsVisible)
         GENERATE_DUK_BOOLEAN_SETTER(Component, Visible, SetVisible)
 
+        static duk_ret_t JSCloneWrapper(duk_context* ctx);
         static duk_ret_t JSAddMetadataWrapper(duk_context* ctx);
         static duk_ret_t JSGetMetadataWrapper(duk_context* ctx);
 

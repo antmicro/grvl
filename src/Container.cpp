@@ -24,7 +24,12 @@ namespace grvl {
 
     Container::~Container()
     {
-        std::vector<Component*>::iterator it;
+        deleteContainerComponents();
+    }
+
+    void Container::deleteContainerComponents()
+    {
+        vector<Component*>::iterator it;
         for(it = Elements.begin(); it != Elements.end();) {
             delete *it;
             it = Elements.erase(it);
@@ -59,8 +64,8 @@ namespace grvl {
 
     void Container::copyComponents(const std::vector<Component*>& other)
     {
-        for (auto& component : other) {
-            AddElement(component);
+        for (std::size_t index = 0; index < other.size(); ++index) {
+            AddElement(other[index]->Clone());
         }
     }
 
@@ -150,19 +155,15 @@ namespace grvl {
         return Elements;
     }
 
-    Component* Container::GetElement(const char* id)
+    Component* Container::GetElement(const char* SearchedComponentID)
     {
-        for(uint32_t i = 0; i < Elements.size(); i++) {
-            if(strcmp(Elements[i]->GetID(), id) == 0) {
-                return Elements[i];
+        for(auto& CurrentElement : Elements) {
+            if(Component* component = TryToGetElementFromChildContainer(CurrentElement, SearchedComponentID)) {
+                return component;
             }
 
-            if(CustomView* screen = dynamic_cast<CustomView*>(Elements[i])) {
-                return screen->GetElement(id);
-            }
-
-            if(VerticalScrollView* screen = dynamic_cast<VerticalScrollView*>(Elements[i])) {
-                return screen->GetElement(id);
+            if(strcmp(CurrentElement->GetID(), SearchedComponentID) == 0) {
+                return CurrentElement;
             }
         }
         return nullptr;

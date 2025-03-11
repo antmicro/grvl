@@ -45,7 +45,7 @@ namespace grvl {
             KeyPressed
         };
 
-        virtual ~Key();
+        virtual ~Key() = default;
 
         Key()
             : ID("")

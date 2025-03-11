@@ -19,10 +19,6 @@
 
 namespace grvl {
 
-    ContentManager::~ContentManager()
-    {
-    }
-
     void ContentManager::UpdateContent(string& name, ImageContent* ic)
     {
         BindingsToRemove bindingsToErase;

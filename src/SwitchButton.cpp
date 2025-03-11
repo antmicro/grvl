@@ -20,6 +20,47 @@
 
 namespace grvl {
 
+    SwitchButton::SwitchButton(const SwitchButton& other)
+        : AbstractButton(other)
+        , switchState{other.switchState}
+        , previousSwitchState{other.previousSwitchState}
+        , onSwitchON{other.onSwitchON}
+        , onSwitchOFF{other.onSwitchOFF}
+        , stateIndicatorWidth{other.stateIndicatorWidth}
+        , stateIndicatorHeight{other.stateIndicatorHeight}
+        , stateIndicatorArcRadius{other.stateIndicatorArcRadius}
+    {
+        onSwitchON.SetSenderPointer(this);
+        onSwitchOFF.SetSenderPointer(this);
+    }
+
+    SwitchButton& SwitchButton::operator=(const SwitchButton& other)
+    {
+        if (this == &other) {
+            return *this;
+        }
+
+        AbstractButton::operator=(other);
+
+        switchState = other.switchState;
+        previousSwitchState = other.previousSwitchState;
+        onSwitchON = other.onSwitchON;
+        onSwitchOFF = other.onSwitchOFF;
+        stateIndicatorWidth = other.stateIndicatorWidth;
+        stateIndicatorHeight = other.stateIndicatorHeight;
+        stateIndicatorArcRadius = other.stateIndicatorArcRadius;
+
+        onSwitchON.SetSenderPointer(this);
+        onSwitchOFF.SetSenderPointer(this);
+
+        return *this;
+    }
+
+    Component* SwitchButton::Clone() const
+    {
+        return new SwitchButton(*this);
+    }
+
     void SwitchButton::Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY)
     {
         if(!Visible || Width <= 0 || Height <= 0) {

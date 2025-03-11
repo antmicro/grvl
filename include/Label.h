@@ -57,24 +57,15 @@ namespace grvl {
 
     protected:
         string Text;
-        TextHorizontalAlignment HorizontalAlignment;
-        Font const* TextFont;
+        TextHorizontalAlignment HorizontalAlignment{TextHorizontalAlignment::Center};
+        Font const* TextFont{nullptr};
         uint32_t TextColor{0};
 
     public:
-        Label()
-            : Component()
-            , Text("")
-            , HorizontalAlignment(Left)
-            , TextFont(NULL)
-        {
-        }
+        Label() = default;
 
         Label(int32_t x, int32_t y, int32_t width, int32_t height)
             : Component(x, y, width, height)
-            , Text("")
-            , HorizontalAlignment(Left)
-            , TextFont(NULL)
         {
         }
 
@@ -82,21 +73,13 @@ namespace grvl {
             : Component(x, y, width, height)
             , Text(text)
             , HorizontalAlignment(alignment)
-            , TextFont(NULL)
         {
         }
 
-        Label(const Label& Obj)
-            : Component(Obj)
-            , Text(Obj.Text)
-            , HorizontalAlignment(Obj.HorizontalAlignment)
-            , TextFont(Obj.TextFont)
-        {
-        }
+        Label(const Label& other) = default;
+        Label& operator=(const Label& Obj) = default;
 
-        virtual ~Label();
-
-        Label& operator=(const Label& Obj);
+        Component* Clone() const override;
 
         void SetTextColor(uint32_t color);
         void SetText(const char* text);
@@ -118,6 +101,7 @@ namespace grvl {
         GENERATE_DUK_STRING_GETTER(Label, Text, GetText)
         GENERATE_DUK_STRING_SETTER(Label, Text, SetText)
     };
+
 } /* namespace grvl */
 
 #endif /* GRVL_LABEL_H_ */

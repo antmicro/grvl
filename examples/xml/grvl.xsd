@@ -14,6 +14,7 @@
                 <xs:element ref="header"/>
                 <xs:element ref="footer"/>
                 <xs:element ref="popup" />
+                <xs:element ref="prefab" />
                 <xs:element ref="customView" />
                 <xs:element ref="GridView" />
                 <xs:element ref="ListView" />
@@ -99,6 +100,7 @@
     <xs:element name="customView" type="screenType" />
     <xs:element name="panel" type="containerType" />
     <xs:element name="footer" type="containerType" />
+    <xs:element name="prefab" type="containerType" />
 
     <!--  NOTE: GridRow, although clearly a container type, interprets only those attributes in code: -->
     <!-- id, backgroundColor -->

@@ -350,6 +350,7 @@ namespace grvl {
         FontContainerMap FontContainer;
         KeyMappingMap KeyMappingContainer;
         vector<AbstractView*> Screens;
+
         vector<Popup*> PopupsContainer;
         Panel* TopPanel;
         Panel* BottomPanel;

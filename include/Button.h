@@ -93,7 +93,10 @@ namespace grvl {
             BackgroundColor = COLOR_ARGB8888_LIGHTGRAY;
         }
 
-        virtual ~Button();
+        Button(const Button& other) = default;
+        Button& operator=(const Button& other) = default;
+
+        Component* Clone() const override;
 
         void SetTextColor(uint32_t color);
         void SetActiveTextColor(uint32_t color);
@@ -110,6 +113,7 @@ namespace grvl {
         void ClearIcoChar();
 
         uint32_t GetTextColor();
+        int32_t GetTextTopOffset() const;
         uint32_t GetIcoColor() const;
         uint32_t GetActiveTextColor();
         uint32_t GetActiveIcoColor() const;
@@ -132,8 +136,8 @@ namespace grvl {
         uint32_t ActiveTextColor;
         uint32_t IcoColor;
         uint32_t ActiveIcoColor;
-        int16_t IcoChar;
         int32_t TextTopOffset;
+        int16_t IcoChar;
         Font const* IcoFont;
         bool imageCentered;
     };

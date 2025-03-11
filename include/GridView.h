@@ -68,24 +68,19 @@ namespace grvl {
     class GridView : public VerticalScrollView {
 
     public:
-        GridView()
-            : VerticalScrollView()
-            , ElementWidth(0)
-            , ElementHeight(0)
-            , VerticalOffset(0)
-        {
-        }
+        GridView() = default;
 
         GridView(int32_t x, int32_t y, int32_t width, int32_t height)
             : VerticalScrollView(x, y, width, height)
-            , ElementWidth(0)
-            , ElementHeight(0)
-            , VerticalOffset(0)
         {
         }
 
+        GridView(const GridView& other) = default;
+        GridView& operator=(const GridView& other) = default;
+
         void SetGridParameters(uint32_t width, uint32_t height, uint32_t verticalOffset);
         void AddElement(Component* item);
+        Component* Clone() const override;
 
         virtual void SetBackgroundColor(uint32_t color);
 
@@ -95,7 +90,9 @@ namespace grvl {
         static GridView* BuildFromXML(XMLElement* xmlElement);
 
     protected:
-        uint32_t ElementWidth, ElementHeight, VerticalOffset;
+        uint32_t ElementWidth{0};
+        uint32_t ElementHeight{0};
+        uint32_t VerticalOffset{0};
     };
 
 } /* namespace grvl */

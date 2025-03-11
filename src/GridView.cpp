@@ -21,6 +21,11 @@
 
 namespace grvl {
 
+    Component* GridView::Clone() const
+    {
+        return new GridView(*this);
+    }
+
     GridView* GridView::BuildFromXML(XMLElement* xmlElement)
     {
         GridView* parent = new GridView();

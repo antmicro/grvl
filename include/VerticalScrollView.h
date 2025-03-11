@@ -30,28 +30,6 @@ namespace grvl {
     public:
         VerticalScrollView()
             : AbstractView()
-            , Scroll(0)
-            , ScrollMax(0)
-            , ScrollChange(0)
-            , prevDeltaY(0)
-            , prevDeltaX(0)
-            , itemsHeight(0)
-            , animation(false)
-            , dSpeed(0)
-            , ElementColor(COLOR_ARGB8888_BROWN)
-            , SplitLineColor(COLOR_ARGB8888_TRANSPARENT)
-            , scrollingTimestamp(0)
-            , scrollingEnabled(true)
-            , overscrollBarEnabled(false)
-            , scrollingByFinger(false)
-            , overscrollBarSize(50)
-            , currentOverscrollBarSize(0)
-            , overscrollBarColor(COLOR_ARGB8888_LIGHTGRAY)
-            , currentSample(0)
-            , scrollIndicatorTimestamp(0)
-            , scrollIndicatorColor(0)
-            , scrollIndicatorOpacity(0)
-            , scrollIndicatorImage(NULL)
         {
             ClearWhileDrawMutex = grvl::Callbacks()->mutex_create();
             ClearWhileTouchMutex = grvl::Callbacks()->mutex_create();
@@ -59,28 +37,6 @@ namespace grvl {
 
         VerticalScrollView(int32_t x, int32_t y, int32_t width, int32_t height)
             : AbstractView(x, y, width, height)
-            , Scroll(0)
-            , ScrollMax(0)
-            , ScrollChange(0)
-            , prevDeltaY(0)
-            , prevDeltaX(0)
-            , itemsHeight(0)
-            , animation(false)
-            , dSpeed(0)
-            , ElementColor(COLOR_ARGB8888_BROWN)
-            , SplitLineColor(COLOR_ARGB8888_TRANSPARENT)
-            , scrollingTimestamp(0)
-            , scrollingEnabled(true)
-            , overscrollBarEnabled(false)
-            , scrollingByFinger(false)
-            , overscrollBarSize(50)
-            , currentOverscrollBarSize(0)
-            , overscrollBarColor(COLOR_ARGB8888_LIGHTGRAY)
-            , currentSample(0)
-            , scrollIndicatorTimestamp(0)
-            , scrollIndicatorColor(0)
-            , scrollIndicatorOpacity(0)
-            , scrollIndicatorImage(NULL)
         {
             ClearWhileDrawMutex = grvl::Callbacks()->mutex_create();
             ClearWhileTouchMutex = grvl::Callbacks()->mutex_create();
@@ -131,22 +87,31 @@ namespace grvl {
         GENERATE_DUK_INT_SETTER(VerticalScrollView, Scroll, SetScrollingValue)
 
     protected:
-        int32_t Scroll, ScrollMax, ScrollChange, prevDeltaY, prevDeltaX, itemsHeight;
-        int8_t animation;
-        float dSpeed;
-        uint32_t ElementColor, SplitLineColor;
-        uint64_t scrollingTimestamp;
-        bool scrollingEnabled, overscrollBarEnabled, scrollingByFinger;
-        int32_t overscrollBarSize, currentOverscrollBarSize;
-        uint32_t overscrollBarColor;
-        uint8_t currentSample;
+        int32_t Scroll{0};
+        int32_t ScrollMax{0};
+        int32_t ScrollChange{0};
+        int32_t prevDeltaY{0};
+        int32_t prevDeltaX{0};
+        int32_t itemsHeight{0};
+        int8_t animation{0};
+        float dSpeed{0};
+        uint32_t ElementColor{COLOR_ARGB8888_BROWN};
+        uint32_t SplitLineColor{COLOR_ARGB8888_TRANSPARENT};
+        uint64_t scrollingTimestamp{0};
+        bool scrollingEnabled{false};
+        bool overscrollBarEnabled{false};
+        bool scrollingByFinger{false};
+        int32_t overscrollBarSize{50};
+        int32_t currentOverscrollBarSize{0};
+        uint32_t overscrollBarColor{COLOR_ARGB8888_LIGHTGRAY};
+        uint8_t currentSample{0};
         int32_t speedSamples[3];
-        uint64_t scrollIndicatorTimestamp;
-        uint32_t scrollIndicatorColor;
-        uint8_t scrollIndicatorOpacity;
-        ImageContent* scrollIndicatorImage;
-        void* ClearWhileDrawMutex;
-        void* ClearWhileTouchMutex;
+        uint64_t scrollIndicatorTimestamp{0};
+        uint32_t scrollIndicatorColor{0};
+        uint8_t scrollIndicatorOpacity{0};
+        ImageContent* scrollIndicatorImage{nullptr};
+        void* ClearWhileDrawMutex{nullptr};
+        void* ClearWhileTouchMutex{nullptr};
 
         virtual void AdjustScrollViewHeight(Component* child);
 

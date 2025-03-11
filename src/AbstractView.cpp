@@ -31,6 +31,7 @@ namespace grvl {
         if(this != &Obj) { // TODO: Make it AbstractView-specific. Now it uses operator from Component.
             Component::operator=(Obj);
         }
+
         return *this;
     }
 

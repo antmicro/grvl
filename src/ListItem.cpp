@@ -20,10 +20,6 @@
 
 namespace grvl {
 
-    ListItem::~ListItem()
-    {
-    }
-
     static constexpr auto listItemBeginOffset = 20;
     static constexpr auto listItemBeginOffsetSmall = 10;
     static constexpr auto listItemBeginOffsetBig = 40;

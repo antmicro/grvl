@@ -348,22 +348,28 @@ namespace grvl {
 
     Slider& Slider::operator=(const Slider& Obj)
     {
-        if(this != &Obj) {
-            Component::operator=(Obj);
-            ScrollImage = Obj.ScrollImage;
-            BarColor = Obj.BarColor;
-            ScrollColor = Obj.ScrollColor;
-            ActiveScrollColor = Obj.ActiveScrollColor;
-            FrameColor = Obj.FrameColor;
-            SelectedFrameColor = Obj.SelectedFrameColor;
-            ScrollLength = Obj.ScrollLength;
-            MinValue = Obj.MinValue;
-            MaxValue = Obj.MaxValue;
-            Position = Obj.Position;
-            Value = Obj.Value;
-            onValueChange = Obj.onValueChange;
-            KeepBoundaries = Obj.KeepBoundaries;
+        if(this == &Obj) {
+            return *this;
         }
+
+        Component::operator=(Obj);
+
+        ScrollImage = Obj.ScrollImage;
+        BarColor = Obj.BarColor;
+        ScrollColor = Obj.ScrollColor;
+        ActiveScrollColor = Obj.ActiveScrollColor;
+        FrameColor = Obj.FrameColor;
+        SelectedFrameColor = Obj.SelectedFrameColor;
+        ScrollLength = Obj.ScrollLength;
+        MinValue = Obj.MinValue;
+        MaxValue = Obj.MaxValue;
+        Position = Obj.Position;
+        Value = Obj.Value;
+
+        onValueChange = Obj.onValueChange;
+        onValueChange.SetSenderPointer(this);
+
+        KeepBoundaries = Obj.KeepBoundaries;
 
         return *this;
     }

@@ -18,10 +18,6 @@
 
 namespace grvl {
 
-    Event::~Event()
-    {
-    }
-
     void Event::Trigger()
     {
         if(eventCallback == NULL) {

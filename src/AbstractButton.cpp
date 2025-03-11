@@ -20,6 +20,26 @@
 
 namespace grvl {
 
+    AbstractButton::AbstractButton(const AbstractButton& other)
+        : Component{other}, Text{other.Text}, ButtonImage{other.ButtonImage}, ButtonFont{other.ButtonFont}
+    {
+    }
+
+    AbstractButton& AbstractButton::operator=(const AbstractButton& other)
+    {
+        if (this == &other) {
+            return *this;
+        }
+
+        Component::operator=(other);
+
+        Text = other.Text;
+        ButtonImage = other.ButtonImage;
+        ButtonFont = other.ButtonFont;
+
+        return *this;
+    }
+
     void AbstractButton::SetText(const char* text)
     {
         Text = string(text);

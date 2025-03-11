@@ -26,16 +26,12 @@ namespace grvl {
     /// Represents single-character icon.
     class Ico : public Component {
     protected:
-        int32_t IcoChar;
-        Font const* IcoFont;
+        int32_t IcoChar{-1};
+        Font const* IcoFont{nullptr};
 
     public:
-        Ico()
-            : Component()
-            , IcoChar(-1)
-            , IcoFont(NULL)
-        {
-        }
+        Ico() = default;
+
         Ico(uint32_t width, uint32_t height, int32_t charCode, Font* IcoFont)
             : Component(0, 0, width, height)
             , IcoChar(charCode)
@@ -43,8 +39,6 @@ namespace grvl {
         {
         }
         Ico(int32_t charCode, Font* IcoFont);
-
-        virtual ~Ico();
 
         int32_t GetIcoChar() const;
         void SetIcoChar(int32_t icoChar);

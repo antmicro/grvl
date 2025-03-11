@@ -23,13 +23,14 @@
 
 namespace grvl {
 
-    Label::~Label()
-    {
-    }
-
     void Label::SetTextColor(uint32_t color)
     {
         TextColor = color;
+    }
+
+    Component* Label::Clone() const
+    {
+        return new Label(*this);
     }
 
     void Label::SetText(const char* text)
@@ -115,17 +116,6 @@ namespace grvl {
     Font const* Label::GetTextFont()
     {
         return TextFont;
-    }
-
-    Label& Label::operator=(const Label& Obj)
-    {
-        if(this != &Obj) {
-            Component::operator=(Obj);
-            Text = Obj.Text;
-            HorizontalAlignment = Obj.HorizontalAlignment;
-            TextFont = Obj.TextFont;
-        }
-        return *this;
     }
 
     const char* Label::GetText()

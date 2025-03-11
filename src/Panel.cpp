@@ -20,8 +20,9 @@
 
 namespace grvl {
 
-    Panel::~Panel()
+    Component* Panel::Clone() const
     {
+        return new Panel(*this);
     }
 
     Panel* Panel::BuildFromXML(XMLElement* xmlElement)

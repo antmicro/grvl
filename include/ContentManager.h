@@ -32,7 +32,7 @@ namespace grvl {
         {
         }
 
-        virtual ~ContentManager();
+        virtual ~ContentManager() = default;
 
         typedef map<string, ImageContent*> ImageContentMap;
         typedef map<Image*, string> ImageBindingMap;

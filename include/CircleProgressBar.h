@@ -71,8 +71,6 @@ namespace grvl {
         {
         }
 
-        virtual ~CircleProgressBar();
-
         void SetStartAngle(float angle);
         void SetEndAngle(float angle);
         void SetRadius(int32_t radius);

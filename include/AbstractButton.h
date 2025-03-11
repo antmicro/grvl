@@ -36,14 +36,7 @@ namespace grvl {
         {
         }
 
-        AbstractButton(const AbstractButton& Obj)
-            : Component(Obj)
-            , Text(Obj.Text)
-            , ButtonImage(Obj.ButtonImage)
-            , ButtonFont(Obj.ButtonFont)
-        {
-        }
-
+        AbstractButton(const AbstractButton& Obj);
         AbstractButton& operator=(const AbstractButton& Obj);
 
         void SetText(const char* text);

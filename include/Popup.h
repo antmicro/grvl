@@ -52,30 +52,22 @@ namespace grvl {
     /// * progressBar
     class Popup : public Container {
     public:
-        Popup()
-            : Container()
-            , Message(NULL)
-            , PopupTimestamp(0)
-        {
-        }
+        Popup() = default;
 
         Popup(int32_t x, int32_t y, int32_t width, int32_t height)
             : Container(x, y, width, height)
-            , Message(NULL)
-            , PopupTimestamp(0)
         {
         }
 
         Popup(const Popup& Obj)
             : Container(Obj)
-            , Message(Obj.Message)
-            , PopupTimestamp(0)
+            , Message(new Label(*Obj.Message))
         {
         }
 
-        virtual ~Popup();
-
         Popup& operator=(const Popup& Obj);
+
+        virtual ~Popup();
 
         void SetMessage(const char* message);
         void SetMessagePointer(Label* message);
@@ -89,8 +81,8 @@ namespace grvl {
         void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
 
     protected:
-        Label* Message;
-        uint64_t PopupTimestamp;
+        Label* Message{nullptr};
+        uint64_t PopupTimestamp{0};
     };
 
 } /* namespace grvl */

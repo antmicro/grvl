@@ -44,16 +44,13 @@ namespace grvl {
     public:
         ProgressBar()
             : Component()
-            , ProgressValue(0)
         {
         }
 
         ProgressBar(int32_t x, int32_t y, int32_t width, int32_t height)
             : Component(x, y, width, height)
-            , ProgressValue(0)
         {
         }
-        virtual ~ProgressBar();
 
         void SetProgressValue(float value);
         int32_t GetProgressValue() const;
@@ -68,7 +65,7 @@ namespace grvl {
         GENERATE_DUK_FLOAT_SETTER(ProgressBar, ProgressValue, SetProgressValue)
 
     protected:
-        float ProgressValue;
+        float ProgressValue{0.0f};
         virtual void InitFromXML(XMLElement* xmlElement);
     };
 

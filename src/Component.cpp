@@ -21,12 +21,13 @@
 #include "XMLSupport.h"
 #include "JSObjectBuilder.h"
 
+#include <cassert>
+
 namespace grvl {
 
     int ComponentCount = 0;
     component_list_item list[];
     static constexpr auto bufferSize = 80;
-
 
     void* register_widget_constructor(void* con, char* nm)
     {
@@ -68,7 +69,7 @@ namespace grvl {
     }
 
     Component::Component(const Component& other)
-        : uniqueID{AssignUniqueID()}, ID{other.ID}, X{other.X}, Y{other.Y}, Height{other.Height}, Width{other.Width},
+        : uniqueID{AssignUniqueID()}, parentID{other.parentID}, ID{other.ID}, X{other.X}, Y{other.Y}, Height{other.Height}, Width{other.Width},
         ForegroundColor{other.ForegroundColor}, ActiveForegroundColor{other.ActiveForegroundColor},
         BackgroundColor{other.BackgroundColor}, ActiveBackgroundColor{other.ActiveBackgroundColor},
         onPress{other.onPress}, onRelease{other.onRelease}, onClick{other.onClick},
@@ -87,7 +88,12 @@ namespace grvl {
 
     Component& Component::operator=(const Component& other)
     {
+        if (this == &other) {
+            return *this;
+        }
+
         uniqueID = AssignUniqueID();
+        parentID = other.parentID;
         ID = other.ID;
         X = other.X;
         Y = other.Y;
@@ -119,6 +125,12 @@ namespace grvl {
         onLongPressRepeat.SetSenderPointer(this);
 
         return *this;
+    }
+
+    Component* Component::Clone() const
+    {
+        assert(false && "Clone not implemented in derived class");
+        return nullptr;
     }
 
     void Component::SetID(const char* id)
@@ -556,9 +568,27 @@ namespace grvl {
         jsObjectBuilder.AddProperty("borderColor", Component::JSGetBorderColorWrapper, Component::JSSetBorderColorWrapper);
         jsObjectBuilder.AddProperty("activeBorderColor", Component::JSGetActiveBorderColorWrapper, Component::JSSetActiveBorderColorWrapper);
         jsObjectBuilder.AddProperty("visibility", Component::JSGetVisibleWrapper, Component::JSSetVisibleWrapper);
+        jsObjectBuilder.AttachMemberFunction("Clone", Component::JSCloneWrapper);
         jsObjectBuilder.AttachMemberFunction("AddMetadata", Component::JSAddMetadataWrapper, 2);
         jsObjectBuilder.AttachMemberFunction("GetMetadata", Component::JSGetMetadataWrapper, 1);
     }
+
+    duk_ret_t Component::JSCloneWrapper(duk_context* ctx)
+    {
+        duk_push_this(ctx);
+        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
+        Component* component = static_cast<Component*>(duk_to_pointer(ctx, -1));
+        if (component) {
+            Component* clonedComponent = component->Clone();
+            JSObjectBuilder jsObjectBuilder{ctx, clonedComponent};
+            clonedComponent->PopulateJavaScriptObject(jsObjectBuilder);
+
+            return 1;
+        }
+
+        return 0;
+    }
+
 
     duk_ret_t Component::JSAddMetadataWrapper(duk_context* ctx)
     {

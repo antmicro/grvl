@@ -21,10 +21,6 @@
 
 namespace grvl {
 
-    CircleProgressBar::~CircleProgressBar()
-    {
-    }
-
     CircleProgressBar* CircleProgressBar::BuildFromXML(XMLElement* xmlElement)
     {
         int32_t startAngle;

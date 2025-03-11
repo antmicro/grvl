@@ -31,26 +31,31 @@ namespace grvl {
         GridRow()
             : Container()
             , ElementWidth(0)
-            , childDropped(false)
             , ignoreTouchModificator(false)
-            , lastActiveChild(NULL)
         {
         }
 
         GridRow(int32_t x, int32_t y, int32_t width, int32_t height)
             : Container(x, y, width, height)
             , ElementWidth(0)
-            , childDropped(false)
             , ignoreTouchModificator(false)
-            , lastActiveChild(NULL)
         {
         }
 
+        GridRow(const GridRow& other)
+            : Container(other)
+            , ElementWidth{other.ElementWidth}
+            , HorizontalOffset{other.HorizontalOffset} {}
+
+        GridRow& operator=(const GridRow& other);
+
+        Component* Clone() const override;
+
         void AddElement(Component* item) override;
 
-        virtual void SetSize(int32_t width, int32_t height);
+        void SetSize(int32_t width, int32_t height) override;
 
-        virtual void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY);
+        void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
 
         static GridRow* BuildFromXML(XMLElement* xmlElement);
 
@@ -58,10 +63,9 @@ namespace grvl {
         void SetHorizontalOffset(int32_t horizontalOffset);
 
     protected:
-        int32_t ElementWidth;
+        int32_t ElementWidth{0};
         int32_t HorizontalOffset{0};
-        bool childDropped, ignoreTouchModificator;
-        Component* lastActiveChild;
+        bool ignoreTouchModificator{false};
 
         void ReorderElements();
     };

@@ -74,16 +74,8 @@ namespace grvl {
         {
         }
 
-        Clock(const Clock& Obj)
-            : Label(Obj)
-            , isRunning(Obj.isRunning)
-            , lastCurrentTime(Obj.lastCurrentTime)
-        {
-        }
-
-        Clock& operator=(const Clock& Obj);
-
-        virtual ~Clock();
+        Clock(const Clock& Obj) = default;
+        Clock& operator=(const Clock& Obj) = default;
 
         static Clock* BuildFromXML(XMLElement* xmlElement);
 

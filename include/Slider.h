@@ -60,66 +60,17 @@ namespace grvl {
     ///
     class Slider : public Component {
     public:
-        Slider()
-            : Component()
-            , BarColor(COLOR_ARGB8888_LIGHTGRAY)
-            , ActiveBarColor(COLOR_ARGB8888_GRAY)
-            , ScrollColor(COLOR_ARGB8888_LIGHTBLUE)
-            , ActiveScrollColor(COLOR_ARGB8888_BLUE)
-            , FrameColor(COLOR_ARGB8888_BLACK)
-            , SelectedFrameColor(COLOR_ARGB8888_BLACK)
-            , ScrollLength(0)
-            , MinValue(0)
-            , MaxValue(0)
-            , Position(0.0)
-            , Value(0)
-            , ReportedValue(0)
-            , ScrollImage()
-            , onValueChange()
-            , PreviousValueUpdateTimestamp(0)
-            , KeepBoundaries(false)
-        {
-        }
+        Slider() = default;
 
         Slider(int32_t x, int32_t y, int32_t width, int32_t height)
             : Component(x, y, width, height)
-            , BarColor(COLOR_ARGB8888_LIGHTGRAY)
-            , ActiveBarColor(COLOR_ARGB8888_GRAY)
-            , ScrollColor(COLOR_ARGB8888_LIGHTBLUE)
-            , ActiveScrollColor(COLOR_ARGB8888_BLUE)
-            , FrameColor(COLOR_ARGB8888_BLACK)
-            , SelectedFrameColor(COLOR_ARGB8888_BLACK)
-            , ScrollLength(0)
-            , MinValue(0)
-            , MaxValue(0)
-            , Position(0.0)
-            , Value(0)
-            , ReportedValue(0)
-            , ScrollImage()
-            , onValueChange()
-            , PreviousValueUpdateTimestamp(0)
-            , KeepBoundaries(false)
         {
         }
 
         Slider(int32_t x, int32_t y, int32_t width, int32_t height, int32_t min, int32_t max)
             : Component(x, y, width, height)
-            , BarColor(COLOR_ARGB8888_LIGHTGRAY)
-            , ActiveBarColor(COLOR_ARGB8888_GRAY)
-            , ScrollColor(COLOR_ARGB8888_LIGHTBLUE)
-            , ActiveScrollColor(COLOR_ARGB8888_BLUE)
-            , FrameColor(COLOR_ARGB8888_BLACK)
-            , SelectedFrameColor(COLOR_ARGB8888_BLACK)
-            , ScrollLength(0)
             , MinValue(min)
             , MaxValue(max)
-            , Position(0.0)
-            , Value(0)
-            , ReportedValue(0)
-            , ScrollImage()
-            , onValueChange()
-            , PreviousValueUpdateTimestamp(0)
-            , KeepBoundaries(false)
         {
         }
 
@@ -142,11 +93,12 @@ namespace grvl {
             , PreviousValueUpdateTimestamp(Obj.PreviousValueUpdateTimestamp)
             , KeepBoundaries(Obj.KeepBoundaries)
         {
+            onValueChange.SetSenderPointer(this);
         }
 
-        virtual ~Slider();
+        Slider& operator=(const Slider& other);
 
-        Slider& operator=(const Slider& Obj);
+        virtual ~Slider();
 
         void SetScrollImage(const Image& image);
         Image* GetScrollImagePointer();
@@ -194,15 +146,25 @@ namespace grvl {
         void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
 
     protected:
-        uint32_t BarColor, ActiveBarColor, ScrollColor, ActiveScrollColor, FrameColor, SelectedFrameColor, ScrollLength;
+        uint32_t BarColor{COLOR_ARGB8888_LIGHTGRAY};
+        uint32_t ActiveBarColor{COLOR_ARGB8888_GRAY};
+        uint32_t ScrollColor{COLOR_ARGB8888_LIGHTBLUE};
+        uint32_t ActiveScrollColor{COLOR_ARGB8888_BLUE};
+        uint32_t FrameColor{COLOR_ARGB8888_BLACK};
+        uint32_t SelectedFrameColor{COLOR_ARGB8888_BLACK};
+        uint32_t ScrollLength{0};
+        float MinValue{0};
+        float MaxValue{0};
+        float Position{0};
+        float Value{0};
+        float ReportedValue{0};
+        Image ScrollImage{};
+        Event onValueChange{};
+        uint64_t PreviousValueUpdateTimestamp{0};
+        bool KeepBoundaries{false};
+
         uint8_t discrete, division;
         uint32_t step;
-        float MinValue, MaxValue;
-        float Position, Value, ReportedValue;
-        Image ScrollImage;
-        Event onValueChange;
-        uint64_t PreviousValueUpdateTimestamp;
-        bool KeepBoundaries;
 
         Font const* SliderFont;
 

@@ -64,56 +64,23 @@ namespace grvl {
         ListItem()
             : AbstractButton()
             , Type(StdListField)
-            , Description("")
-            , DescriptionFont(NULL)
-            , DescriptionColor(COLOR_ARGB8888_LIGHTGRAY)
-            , ActiveDescriptionColor(COLOR_ARGB8888_BLACK)
-            , AdditionalImge()
-            , Parent(NULL)
-            , roundingImage()
         {
         }
 
         ListItem(int32_t x, int32_t y, int32_t width, int32_t height)
             : AbstractButton(x, y, width, height)
             , Type(StdListField)
-            , Description("")
-            , DescriptionFont(NULL)
-            , DescriptionColor(COLOR_ARGB8888_LIGHTGRAY)
-            , ActiveDescriptionColor(COLOR_ARGB8888_BLACK)
-            , AdditionalImge()
-            , Parent(NULL)
-            , roundingImage()
         {
         }
 
         ListItem(int32_t x, int32_t y, int32_t width, int32_t height, ItemType type)
             : AbstractButton(x, y, width, height)
             , Type(type)
-            , Description("")
-            , DescriptionFont(NULL)
-            , DescriptionColor(COLOR_ARGB8888_LIGHTGRAY)
-            , ActiveDescriptionColor(COLOR_ARGB8888_BLACK)
-            , AdditionalImge()
-            , Parent(NULL)
-            , roundingImage()
         {
         }
 
-        ListItem(const ListItem& Obj)
-            : AbstractButton(Obj)
-            , Type(Obj.Type)
-            , Description("")
-            , DescriptionFont(NULL)
-            , DescriptionColor(COLOR_ARGB8888_LIGHTGRAY)
-            , ActiveDescriptionColor(COLOR_ARGB8888_BLACK)
-            , AdditionalImge()
-            , Parent(NULL)
-            , roundingImage()
-        {
-        }
-
-        virtual ~ListItem();
+        ListItem(const ListItem& Obj) = default;
+        ListItem& operator=(const ListItem& Obj) = default;
 
         void SetDescription(const char* desc);
         void SetDescriptionFont(Font const* font);
@@ -150,14 +117,15 @@ namespace grvl {
         void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
 
     protected:
-        string Description;
-        Font const* DescriptionFont;
-        uint32_t DescriptionColor, ActiveDescriptionColor;
-        Image AdditionalImge;
-        Component* Parent;
+        std::string Description{};
+        Font const* DescriptionFont{nullptr};
+        uint32_t DescriptionColor{COLOR_ARGB8888_LIGHTGRAY};
+        uint32_t ActiveDescriptionColor{COLOR_ARGB8888_BLACK};
+        Image AdditionalImge{};
+        Component* Parent{nullptr};
 
         // This image is used to make rounding corners. It should be an antialiased circle.
-        Image roundingImage;
+        Image roundingImage{};
         static ItemType ParseListItemTypeOrDefault(const char* value, ItemType defaultValue);
     };
 

@@ -64,9 +64,8 @@ namespace grvl {
             }
         }
 
-        virtual ~Image()
-        {
-        }
+        Image(const Image& other) = default;
+        Image& operator=(const Image& other) = default;
 
         void SetActiveFrame(uint32_t activeFrame);
 

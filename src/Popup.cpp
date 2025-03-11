@@ -28,14 +28,19 @@ namespace grvl {
 
     Popup& Popup::operator=(const Popup& Obj)
     {
-        if(this != &Obj) {
-            Container::operator=(Obj);
-            if(Message != NULL) {
-                delete Message;
-            }
-            Message = new Label(*Obj.Message);
-            PopupTimestamp = Obj.PopupTimestamp;
+        if(this == &Obj) {
+            return *this;
         }
+
+        Container::operator=(Obj);
+
+        if(Message != NULL) {
+            delete Message;
+        }
+        Message = new Label(*Obj.Message);
+
+        PopupTimestamp = Obj.PopupTimestamp;
+
         return *this;
     }
 
