@@ -20,18 +20,14 @@
 
 namespace grvl {
 
-    SwitchButton::~SwitchButton()
+    void SwitchButton::Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY)
     {
-    }
-
-    void SwitchButton::Draw(Painter& painter, int32_t ParentX, int32_t ParentY)
-    {
-        if(!Visible) {
+        if(!Visible || Width <= 0 || Height <= 0) {
             return;
         }
 
-        uint32_t TempFrameColor = 0;
-        static constexpr auto widthMultiplier = 0.4;
+        int32_t RenderX = ParentRenderX + X;
+        int32_t RenderY = ParentRenderY + Y;
 
         // Late image assignment
         if(Height + Width <= 0 && !ButtonImage.IsEmpty()) {
@@ -40,105 +36,47 @@ namespace grvl {
         }
 
         if(switchState) {
-            // If button pressed
-            if(!ButtonImage.IsEmpty()) {
-                ButtonImage.SetActiveFrame(1);
-                ButtonImage.Draw(painter, ParentX + X, ParentY + Y);
-            } else {
-                if(Text != "ON") {
-                    Text = "ON";
-                    TextWidth = ButtonFont->GetWidth(Text.c_str());
-                }
-
-                if(Width > 0 && Height > 0) {
-                    if (BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
-                        painter.FillRoundRectangle(ParentX + X, ParentY + Y, Width, Height, BackgroundColor, BorderArcRadius);
-                    } else {
-                        painter.FillRectangle(ParentX + X, ParentY + Y, Width, Height, BackgroundColor);
-                    }
-                    DrawBorderIfNecessary(painter, X + ParentX, Y + ParentY, Width, Height);
-
-                    painter.FillRectangle(
-                        ParentX + X + ((uint32_t)Width * widthMultiplier), ParentY + Y + 1, ((uint32_t)Width * (1.0 - widthMultiplier)), Height - 1,
-                        ActiveSwitchColor);
-                }
-
-                if(!Text.empty()) {
-                    uint16_t BeginX = X + Width - (TextWidth) - (Height / 2);
-                    uint16_t BeginY = Y + (Height / 2) - (ButtonFont->GetHeight() / 2);
-                    painter.DisplayAntialiasedString(
-                        ButtonFont, ParentX + BeginX, ParentY + BeginY, Text.c_str(), ActiveTextColor);
-                }
-            }
+            DrawActiveState(painter, RenderX, RenderY, Width, Height);
         } else {
-            // If button released
-            if(!ButtonImage.IsEmpty()) {
-                ButtonImage.SetActiveFrame(0);
-                ButtonImage.Draw(painter, ParentX + X, ParentY + Y);
-            } else {
-                if(Text != "OFF") {
-                    Text = "OFF";
-                    TextWidth = ButtonFont->GetWidth(Text.c_str());
-                }
-
-                if(Height > 0 && Width > 0) {
-                    if (BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
-                        painter.FillRoundRectangle(ParentX + X, ParentY + Y, Width, Height, BackgroundColor, BorderArcRadius);
-                    } else {
-                        painter.FillRectangle(ParentX + X, ParentY + Y, Width, Height, BackgroundColor);
-                    }
-                    DrawBorderIfNecessary(painter, X + ParentX, Y + ParentY, Width, Height);
-                    painter.FillRectangle(ParentX + X, ParentY + Y, ((uint32_t)Width * (1.0 - widthMultiplier)), Height, SwitchColor);
-                }
-
-                if(!Text.empty()) {
-                    uint16_t BeginX = X + (Height / 2);
-                    uint16_t BeginY = Y + (Height / 2) - (ButtonFont->GetHeight() / 2);
-                    painter.DisplayAntialiasedString(
-                        ButtonFont, ParentX + BeginX, ParentY + BeginY, Text.c_str(), TextColor);
-                }
-            }
+            DrawInactiveState(painter, RenderX, RenderY, Width, Height);
         }
+
+        DrawBorderIfNecessary(painter, RenderX, RenderY, Width, Height);
     }
 
-    void SwitchButton::SetSwitchColor(uint32_t color)
+    void SwitchButton::DrawActiveState(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight)
     {
-        SwitchColor = color;
+        if(!ButtonImage.IsEmpty()) {
+            ButtonImage.SetActiveFrame(1);
+            ButtonImage.Draw(painter, RenderX, RenderY);
+        }
+
+        uint32_t padding = (RenderHeight - stateIndicatorHeight) / 2;
+        painter.FillRoundRectangle(RenderX, RenderY, RenderWidth, RenderHeight, ActiveBackgroundColor, BorderArcRadius);
+        painter.FillRoundRectangle(
+            RenderX + RenderWidth - stateIndicatorWidth - padding,
+            RenderY + padding,
+            stateIndicatorWidth,
+            stateIndicatorHeight,
+            ActiveForegroundColor, stateIndicatorArcRadius);
     }
 
-    void SwitchButton::SetActiveSwitchColor(uint32_t color)
+    void SwitchButton::DrawInactiveState(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight)
     {
-        ActiveSwitchColor = color;
-    }
+        if(!ButtonImage.IsEmpty()) {
+            ButtonImage.SetActiveFrame(0);
+            ButtonImage.Draw(painter, RenderX, RenderY);
+            return;
+        }
 
-    void SwitchButton::SetTextColor(uint32_t color)
-    {
-        TextColor = color;
-    }
-
-    void SwitchButton::SetActiveTextColor(uint32_t color)
-    {
-        ActiveTextColor = color;
-    }
-
-    uint32_t SwitchButton::GetSwitchColor() const
-    {
-        return SwitchColor;
-    }
-
-    uint32_t SwitchButton::GetActiveSwitchColor() const
-    {
-        return ActiveSwitchColor;
-    }
-
-    uint32_t SwitchButton::GetTextColor() const
-    {
-        return TextColor;
-    }
-
-    uint32_t SwitchButton::GetActiveTextColor() const
-    {
-        return ActiveTextColor;
+        uint32_t padding = (RenderHeight - stateIndicatorHeight) / 2;
+        painter.FillRoundRectangle(RenderX, RenderY, RenderWidth, RenderHeight, BackgroundColor, BorderArcRadius);
+        painter.FillRoundRectangle(
+            RenderX + padding,
+            RenderY + padding,
+            stateIndicatorWidth,
+            stateIndicatorHeight,
+            ForegroundColor, stateIndicatorArcRadius);
     }
 
     void SwitchButton::OnPress()
@@ -184,6 +122,21 @@ namespace grvl {
         return switchState;
     }
 
+    void SwitchButton::SetStateIndicatorWidth(uint32_t value)
+    {
+        stateIndicatorWidth = value;
+    }
+
+    void SwitchButton::SetStateIndicatorHeight(uint32_t value)
+    {
+        stateIndicatorHeight = value;
+    }
+
+    void SwitchButton::SetStateIndicatorArcRadius(uint32_t value)
+    {
+        stateIndicatorArcRadius = value;
+    }
+
     SwitchButton* SwitchButton::BuildFromXML(XMLElement* xmlElement)
     {
         Manager* man = &Manager::GetInstance();
@@ -191,10 +144,6 @@ namespace grvl {
 
         result->InitFromXML(xmlElement);
         static constexpr auto defaultTextColor = 0xFFFFFFFF;
-        result->SetTextColor(XMLSupport::ParseColor(xmlElement, "textColor", defaultTextColor));
-        result->SetActiveTextColor(XMLSupport::ParseColor(xmlElement, "activeTextColor", result->GetTextColor()));
-        result->SetSwitchColor(XMLSupport::ParseColor(xmlElement, "switchColor", (uint32_t)COLOR_ARGB8888_TRANSPARENT));
-        result->SetActiveSwitchColor(XMLSupport::ParseColor(xmlElement, "activeSwitchColor", (uint32_t)result->GetSwitchColor()));
 
         const char* tempChar = xmlElement->Attribute("image");
         if(tempChar) {
@@ -210,13 +159,15 @@ namespace grvl {
         result->SetOnSwitchOFFEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onSwitchOFF"))));
         result->SetOnLongPressEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPress"))));
         result->SetOnLongPressRepeatEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPressRepeat"))));
+        result->SetStateIndicatorWidth(XMLSupport::GetAttributeOrDefault(xmlElement, "stateIndicatorWidth", result->GetHeight()));
+        result->SetStateIndicatorHeight(XMLSupport::GetAttributeOrDefault(xmlElement, "stateIndicatorHeight", result->GetHeight()));
+        result->SetStateIndicatorArcRadius(XMLSupport::GetAttributeOrDefault(xmlElement, "stateIndicatorArcRadius", result->GetBorderArcRadius()));
 
         return result;
     }
 
     Touch::TouchResponse SwitchButton::ProcessMove(int32_t StartX, int32_t StartY, int32_t DeltaX, int32_t DeltaY)
     {
-
         Touch::TouchResponse res = Touch::TouchHandled;
 
         if(!previousSwitchState) {

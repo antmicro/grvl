@@ -39,16 +39,6 @@ namespace grvl {
     /// * height                  - widget height in pixels
     /// * visible                 - indicates if the widget is visible
     ///
-    /// * font                    - caption text (default: none)
-    /// * textColor               - caption text color (default: black)
-    /// * activeTextColor         - caption text color when pressed (default: textColor)
-    /// * backgroundColor         - background color (default: transparent)
-    /// * frameColor              - widget frame color (default: transparent)
-    /// * selectedFrameColor      - widget frame color when pressed (default: frameColor)
-    /// * switchColor             - switching element color (default: transparent)
-    /// * activeSwitchColor       - switching element color when pressed (default: switchColor)
-    /// * image                   - identifier of image content to use instead of switching element
-    ///
     /// XML events:
     /// * onClick                 - event invoked when touch is released, but only when it has not left the boundaries
     ///                             of widget since pressing and long press was not reported
@@ -63,68 +53,57 @@ namespace grvl {
     public:
         SwitchButton()
             : AbstractButton()
-            , SwitchColor(COLOR_ARGB8888_GRAY)
-            , ActiveSwitchColor(COLOR_ARGB8888_LIGHTBLUE)
-            , TextColor(COLOR_ARGB8888_BLACK)
-            , ActiveTextColor(COLOR_ARGB8888_BLACK)
             , switchState(false)
             , previousSwitchState(false)
             , onSwitchON()
             , onSwitchOFF()
-            , TextWidth(0)
         {
             BackgroundColor = COLOR_ARGB8888_LIGHTGRAY;
         }
 
         SwitchButton(int32_t x, int32_t y, int32_t width, int32_t height)
             : AbstractButton(x, y, width, height)
-            , SwitchColor(COLOR_ARGB8888_GRAY)
-            , ActiveSwitchColor(COLOR_ARGB8888_LIGHTBLUE)
-            , TextColor(COLOR_ARGB8888_BLACK)
-            , ActiveTextColor(COLOR_ARGB8888_BLACK)
             , switchState(false)
             , previousSwitchState(false)
             , onSwitchON()
             , onSwitchOFF()
-            , TextWidth(0)
         {
             BackgroundColor = COLOR_ARGB8888_LIGHTGRAY;
         }
-
-        virtual ~SwitchButton();
 
         virtual void OnPress();
         virtual void OnRelease();
         virtual void OnClick();
 
-        void SetSwitchColor(uint32_t color);
-        void SetActiveSwitchColor(uint32_t color);
-        void SetTextColor(uint32_t color);
-        void SetActiveTextColor(uint32_t color);
         void SetSwitchState(bool state);
-
-        uint32_t GetSwitchColor() const;
-        uint32_t GetActiveSwitchColor() const;
-        uint32_t GetTextColor() const;
-        uint32_t GetActiveTextColor() const;
         bool GetSwitchState() const;
 
         void SetOnSwitchONEvent(const Event& event);
         void SetOnSwitchOFFEvent(const Event& event);
+        void SetStateIndicatorWidth(uint32_t value);
+        void SetStateIndicatorHeight(uint32_t value);
+        void SetStateIndicatorArcRadius(uint32_t value);
 
         static SwitchButton* BuildFromXML(XMLElement* xmlElement);
 
-        virtual void Draw(Painter& painter, int32_t ParentX, int32_t ParentY);
+        void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
 
         void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder) override;
 
         GENERATE_DUK_BOOLEAN_GETTER(SwitchButton, SwitchState, GetSwitchState)
 
     protected:
-        uint32_t SwitchColor, ActiveSwitchColor, TextColor, ActiveTextColor;
-        bool switchState, previousSwitchState;
-        Event onSwitchON, onSwitchOFF;
-        int32_t TextWidth;
+        virtual void DrawActiveState(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY, int32_t RenderWidth, int32_t RenderHeight);
+        virtual void DrawInactiveState(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY, int32_t RenderWidth, int32_t RenderHeight);
+
+        bool switchState{false};
+        bool previousSwitchState{false};
+        Event onSwitchON{};
+        Event onSwitchOFF{};
+
+        uint32_t stateIndicatorWidth{0};
+        uint32_t stateIndicatorHeight{0};
+        uint32_t stateIndicatorArcRadius{0};
 
         virtual Touch::TouchResponse ProcessMove(int32_t StartX, int32_t StartY, int32_t DeltaX, int32_t DeltaY);
     };
