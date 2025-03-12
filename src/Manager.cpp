@@ -1316,6 +1316,15 @@ namespace grvl {
                     nextElement = nextElement->NextSiblingElement("popup");
                 }
 
+                nextElement = Root->FirstChildElement("prefab");
+                while(nextElement) {
+                    Division* prefab = Division::BuildFromXML(nextElement);
+                    if(prefab) {
+                        Prefabs.emplace_back(prefab);
+                    }
+                    nextElement = nextElement->NextSiblingElement("prefab");
+                }
+
                 nextElement = Root->FirstChildElement("customView");
                 while(nextElement) {
                     AbstractView* Screen = CustomView::BuildFromXML(nextElement);
@@ -1381,6 +1390,19 @@ namespace grvl {
             return Event(callbackPtr, argVec);
         }
         return Event();
+    }
+
+    Division* Manager::GetPrefabByID(const char* PrefabID)
+    {
+        Division* found{nullptr};
+        for (auto& prefab : Prefabs) {
+            if (strcmp(prefab->GetID(), PrefabID) == 0) {
+                found = prefab;
+                break;
+            }
+        }
+
+        return found;
     }
 
     Manager& Manager::SetLogoImage(const Image& logo)

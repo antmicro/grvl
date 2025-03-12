@@ -273,6 +273,8 @@ namespace grvl {
         Event GetOrCreateCallback(const string& callbackFunctionName, const Event::ArgVector& callbackArgs);
         Event GetOrCreateCallback(const CallbackDefinition& callbackDefinition);
 
+        Division* GetPrefabByID(const char* id);
+
         /// Register font in content manager.
         ///
         /// The font will be accessible for other
@@ -351,6 +353,8 @@ namespace grvl {
         FontContainerMap FontContainer;
         KeyMappingMap KeyMappingContainer;
         vector<AbstractView*> Screens;
+
+        std::vector<Division*> Prefabs;
 
         vector<Popup*> PopupsContainer;
         Panel* TopPanel;

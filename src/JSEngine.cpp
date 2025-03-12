@@ -50,6 +50,7 @@ namespace grvl {
         AddGlobalFunction("SetActiveScreen", JSEngine::SetActiveScreen, 2);
         AddGlobalFunction("GetTopPanel", JSEngine::GetTopPanel, 0);
         AddGlobalFunction("GetBottomPanel", JSEngine::GetBottomPanel, 0);
+        AddGlobalFunction("GetPrefabById", JSEngine::GetPrefabById, 1);
     }
 
     void JSEngine::AddGlobalFunction(const char* functionName, duk_c_function func, duk_idx_t nargs) 
@@ -234,6 +235,17 @@ namespace grvl {
         Panel* bottomPanel = managerInstance.GetBottomPanel();
         PushComponentAsJSObjectOntoStack(bottomPanel);
     
+        return RETURN_VALUE_PRESENT;
+    }
+
+    duk_ret_t JSEngine::GetPrefabById(duk_context* ctx)
+    {
+        const char* prefabId = duk_to_string(ctx, 0);
+
+        Manager& managerInstance = Manager::GetInstance();
+        Component* prefab = managerInstance.GetPrefabByID(prefabId);
+        PushComponentAsJSObjectOntoStack(prefab);
+
         return RETURN_VALUE_PRESENT;
     }
 
