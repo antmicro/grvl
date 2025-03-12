@@ -55,6 +55,7 @@ namespace grvl {
     WIDGET(ProgressBar);
     WIDGET(Slider);
     WIDGET(SwitchButton);
+    WIDGET(ScrollPanel);
 
     static inline float MotionFunc(float x)
     {
