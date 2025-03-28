@@ -1,6 +1,5 @@
 #define PNG_DEBUG 3
 #include <png.h>
-#include <pngstruct.h>
 #include <setjmp.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -135,7 +134,6 @@ void GetPngData(unsigned char* destination, unsigned char* data, int len, int al
     }
 
     png_set_interlace_handling(png_ptr);
-    png_read_update_info(png_ptr, info_ptr);
 
     int row_bytes = png_get_rowbytes(png_ptr, info_ptr);
 
