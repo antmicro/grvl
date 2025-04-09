@@ -1,6 +1,6 @@
 # grvl - Graphics Rendering Visual Library
 
-Copyright (c) 2015 - 2024 [Antmicro](https://www.antmicro.com)
+Copyright (c) 2015 - 2025 [Antmicro](https://www.antmicro.com)
 
 <picture>
   <!-- User prefers light mode: -->
