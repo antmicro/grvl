@@ -1,0 +1,47 @@
+image: debian:stable
+stages:
+  - build
+
+variables:
+  SCALENODE_CPU: 2
+  SCALENODE_RAM: 4096
+  SCALENODE_DISK: 10
+  CMAKE_BUILD_TYPE: Release
+  DEBIAN_FRONTEND: noninteractive
+
+
+.build:
+  stage: build
+  before_script:
+    - apt update -qqy
+    - apt install -qqy file git gcc g++ cmake libz-dev libjpeg-dev libpng-dev libtinyxml2-dev duktape-dev
+  script:
+    - cmake -S. -Bbuild -DGRVL_STATIC=${GRVL_STATIC} -DGRVL_SHARED=${GRVL_SHARED} -DUSE_SYSTEM_LIBRARIES=${USE_SYSTEM_LIBRARIES}
+    - cmake --build build
+    - ls -lh build/libgrvl*
+    - file build/libgrvl*
+
+
+# Build with provided dependencies
+build_vendored:
+  extends: .build
+  variables:
+    GRVL_STATIC: Y
+    GRVL_SHARED: N
+
+
+# Build with libraries from debian stable
+build_stable:
+  extends: .build
+  variables:
+    GRVL_STATIC: N
+    GRVL_SHARED: Y
+    USE_SYSTEM_LIBRARIES: Y
+
+
+# Build with new libraries from archlinux
+build_latest:
+  extends: build_stable
+  image: archlinux:base
+  before_script:
+    - pacman -Syu --noconfirm git gcc make cmake zlib libjpeg-turbo libpng tinyxml2 duktape
