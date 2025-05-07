@@ -25,6 +25,7 @@ typedef struct {
     unsigned int color_type;
     uintptr_t plte;
     unsigned int plte_length;
+    bool has_alpha;
 } png_info_t;
 
 void GetPngInfo(png_info_t* info, unsigned char* data, int len, bool plteSupport);

@@ -71,6 +71,7 @@ void GetPngInfo(png_info_t* info, unsigned char* data, int len, bool plteSupport
     info->row_bytes = png_get_rowbytes(png_ptr, info_ptr);
     info->bytes_per_pixel = info->row_bytes / info->width;
     info->color_type = png_get_color_type(png_ptr, info_ptr);
+    info->has_alpha = png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS);
     if(info->color_type == 3 && plteSupport) { // With palette
         png_colorp palette;
         int num_palette;

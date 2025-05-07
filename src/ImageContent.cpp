@@ -55,7 +55,7 @@ namespace grvl {
             static constexpr auto CT_ARGB = 6;
             static constexpr auto CT_AL = 4;
             static constexpr auto CT_RGB = 2;
-            static constexpr auto CT_OTHER = 3;
+            static constexpr auto CT_INDEXED = 3;
 
             switch(pngInfo.color_type) {
                 case CT_ARGB:
@@ -70,7 +70,8 @@ namespace grvl {
                     colorFormat = COLOR_FORMAT_RGB888;
                     alpha = false;
                     break;
-                case CT_OTHER: {
+                case CT_INDEXED: {
+                    alpha = pngInfo.has_alpha;
                     if(cltSupport) { // if PLTE supported
                         colorFormat = COLOR_FORMAT_L8; // PLTE
                         this->PLTELength = pngInfo.plte_length;
@@ -85,9 +86,8 @@ namespace grvl {
                             plteout[i * 3 + 2] = pltein[i * 3 + 0];
                         }
                     } else {
-                        colorFormat = COLOR_FORMAT_RGB888;
+                        colorFormat = alpha ? COLOR_FORMAT_ARGB8888 : COLOR_FORMAT_RGB888;
                     }
-                    alpha = false;
                     break;
                 }
                 default:
