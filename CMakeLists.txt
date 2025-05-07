@@ -9,6 +9,7 @@ project(
 include(StandardProjectSettings)
 include(Tools)
 include(Dependencies)
+include(Zephyr)
 include(Docs)
 
 file(

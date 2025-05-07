@@ -2,11 +2,13 @@
 option(GRVL_STATIC "Build static library" ON)
 option(GRVL_SHARED "Build shared library" OFF)
 
+option(GRVL_ZEPHYR "Enable ZephyrRTOS support" OFF)
+
 option(BUILD_DOCS "Build documentation" OFF)
 option(USE_SYSTEM_LIBRARIES "Use system provided libraries" OFF)
 
 # Set default build type if none provided
-if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES AND NOT GRVL_ZEPHYR)
   message(
     STATUS "Setting build type to 'RelWithDebInfo' as none was specified.")
   set(CMAKE_BUILD_TYPE
@@ -36,10 +38,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Interface target for compile options
 add_library(grvl_options INTERFACE)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
-  target_compile_options(grvl_options INTERFACE -fcolor-diagnostics)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  target_compile_options(grvl_options INTERFACE -fdiagnostics-color=always)
+if(NOT GRVL_ZEPHYR)
+  if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
+    target_compile_options(grvl_options INTERFACE -fcolor-diagnostics)
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(grvl_options INTERFACE -fdiagnostics-color=always)
+  endif()
 endif()
 
 if(GRVL_STATIC AND GRVL_SHARED)

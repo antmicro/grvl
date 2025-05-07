@@ -26,11 +26,14 @@ CPMAddPackage(
   GIT_SHALLOW TRUE
   GIT_TAG 2.0.6
   EXCLUDE_FROM_ALL TRUE
+  DOWNLOAD_ONLY ${GRVL_ZEPHYR}
   OPTIONS
     "ZLIB_COMPAT ON"
     "ZLIB_ENABLE_TESTS OFF")
 
-add_library(ZLIB ALIAS zlib)
+if(NOT GRVL_ZEPHYR)
+  add_library(ZLIB ALIAS zlib)
+endif()
 
 # libjpeg
 if(GRVL_STATIC OR NOT BUILD_SHARED_LIBS)
@@ -50,17 +53,20 @@ CPMAddPackage(
   GIT_SHALLOW TRUE
   GIT_TAG 2.1.5
   EXCLUDE_FROM_ALL TRUE
+  DOWNLOAD_ONLY ${GRVL_ZEPHYR}
   OPTIONS
     "WITH_TURBOJPEG OFF"
     ${LIBJPEG_OPTIONS})
 
-add_library(JPEG INTERFACE)
-target_include_directories(JPEG INTERFACE ${JPEG_SOURCE_DIR} ${JPEG_BINARY_DIR})
+if(NOT GRVL_ZEPHYR)
+  add_library(JPEG INTERFACE)
+  target_include_directories(JPEG INTERFACE ${JPEG_SOURCE_DIR} ${JPEG_BINARY_DIR})
 
-if(GRVL_STATIC OR NOT BUILD_SHARED_LIBS)
-  target_link_libraries(JPEG INTERFACE jpeg-static)
-else()
-  target_link_libraries(JPEG INTERFACE jpeg)
+  if(GRVL_STATIC OR NOT BUILD_SHARED_LIBS)
+    target_link_libraries(JPEG INTERFACE jpeg-static)
+  else()
+    target_link_libraries(JPEG INTERFACE jpeg)
+  endif()
 endif()
 
 # libpng
@@ -87,19 +93,22 @@ CPMAddPackage(
   URL https://sourceforge.net/projects/libpng/files/libpng16/1.6.39/libpng-1.6.39.tar.xz
   URL_HASH SHA256=1f4696ce70b4ee5f85f1e1623dc1229b210029fa4b7aee573df3e2ba7b036937
   EXCLUDE_FROM_ALL TRUE
+  DOWNLOAD_ONLY ${GRVL_ZEPHYR}
   OPTIONS
     "SKIP_INSTALL_EXPORT ON"
     "PNG_EXECUTABLES OFF"
     "PNG_TESTS OFF"
     ${LIBPNG_OPTIONS})
 
-add_library(PNG INTERFACE)
-target_include_directories(JPEG INTERFACE ${PNG_SOURCE_DIR} ${PNG_BINARY_DIR})
+if(NOT GRVL_ZEPHYR)
+  add_library(PNG INTERFACE)
+  target_include_directories(JPEG INTERFACE ${PNG_SOURCE_DIR} ${PNG_BINARY_DIR})
 
-if(GRVL_STATIC OR NOT BUILD_SHARED_LIBS)
-  target_link_libraries(PNG INTERFACE png_static)
-else()
-  target_link_libraries(PNG INTERFACE png)
+  if(GRVL_STATIC OR NOT BUILD_SHARED_LIBS)
+    target_link_libraries(PNG INTERFACE png_static)
+  else()
+    target_link_libraries(PNG INTERFACE png)
+  endif()
 endif()
 
 # tinyxml2
@@ -111,6 +120,7 @@ CPMAddPackage(
   GIT_SHALLOW TRUE
   GIT_TAG 9.0.0
   EXCLUDE_FROM_ALL TRUE
+  DOWNLOAD_ONLY ${GRVL_ZEPHYR}
   OPTIONS
     "tinyxml2_BUILD_TESTING OFF")
 
@@ -123,12 +133,14 @@ CPMAddPackage(
   DOWNLOAD_ONLY TRUE
   EXCLUDE_FROM_ALL TRUE)
 
-add_library(duktape INTERFACE)
+if(NOT GRVL_ZEPHYR)
+  add_library(duktape)
 
-file(
-  GLOB_RECURSE duktape_sources "${duktape_SOURCE_DIR}/src/*.c"
-                               "${duktape_SOURCE_DIR}/src/*.h")
+  file(
+    GLOB_RECURSE duktape_sources "${duktape_SOURCE_DIR}/src/*.c"
+                                 "${duktape_SOURCE_DIR}/src/*.h")
 
-target_sources(duktape INTERFACE "${duktape_sources}")
-target_include_directories(duktape INTERFACE "${duktape_SOURCE_DIR}/src")
+  target_sources(duktape PRIVATE "${duktape_sources}")
+  target_include_directories(duktape PUBLIC "${duktape_SOURCE_DIR}/src")
+endif()
 

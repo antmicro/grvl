@@ -1,0 +1,8 @@
+config GRVL
+    bool "Grvl support"
+    default y
+    select CPP
+    help
+        Graphics Rendering Visual Library (grvl) is an open source library
+        for creating rich, modern, animated graphical user interfaces,
+        developed for use on constrained devices like MCUs.
