@@ -19,6 +19,7 @@
 #include <iomanip>
 #include <sstream>
 #include <cassert>
+#include <cmath>
 
 #include "Manager.h"
 
