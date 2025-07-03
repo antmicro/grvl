@@ -273,7 +273,7 @@ namespace grvl {
         /// @param name Identifier of an event that should invoke the callback.
         /// @param Callback Callback that should be called on event.
         Manager& AddCallbackToContainer(const string& name, Event::CallbackPointer Callback);
-        
+
         /// Tries to search if there is callback defined with C/C++ code (added by AddCallbackToContainer), if not
         /// then it creates new one that will call JavaScript code with provided constant args.
         ///

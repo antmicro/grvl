@@ -504,7 +504,7 @@ namespace grvl {
         }
         return NULL;
     }
-    
+
     Event Manager::GetOrCreateCallback(const std::string& callbackFunctionName, const Event::ArgVector& callbackArgs)
     {
         if (Event::CallbackPointer foundCallback = GetCallbackFromContainer(callbackFunctionName)) {

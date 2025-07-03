@@ -71,7 +71,7 @@ namespace grvl {
     {
         Component::InitFromXML(xmlElement);
     }
-    
+
     void ProgressBar::PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder)
     {
         Component::PopulateJavaScriptObject(jsObjectBuilder);

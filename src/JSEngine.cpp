@@ -26,7 +26,7 @@
 
 namespace grvl {
 
-    void JSEngine::Initialize(gui_callbacks_t* n_callbacks) 
+    void JSEngine::Initialize(gui_callbacks_t* n_callbacks)
     {
         InitializeDukContext(n_callbacks);
         RegisterBasicAPIFunctions();
@@ -53,13 +53,13 @@ namespace grvl {
         AddGlobalFunction("GetPrefabById", JSEngine::GetPrefabById, 1);
     }
 
-    void JSEngine::AddGlobalFunction(const char* functionName, duk_c_function func, duk_idx_t nargs) 
+    void JSEngine::AddGlobalFunction(const char* functionName, duk_c_function func, duk_idx_t nargs)
     {
         duk_push_c_function(ctx, func, nargs);
         duk_put_global_string(ctx, functionName);
     }
 
-    void JSEngine::Destroy() 
+    void JSEngine::Destroy()
     {
         duk_destroy_heap(ctx);
     }
@@ -85,7 +85,7 @@ namespace grvl {
     {
         File javaScriptCodeFile{filePath};
         std::vector<char> source(javaScriptCodeFile.GetSize());
-        
+
         if (File::noFS) {
             uint8_t* buffer;
             javaScriptCodeFile.ReadToBuffer(buffer);
@@ -104,13 +104,13 @@ namespace grvl {
     {
         duk_push_lstring(ctx, code, static_cast<duk_size_t>(codeSize));
 
-        if (duk_peval(ctx) != 0) 
+        if (duk_peval(ctx) != 0)
         {
             grvl::Log("Error occurred while parsing JavaScript code: %s", duk_safe_to_string(ctx, -1));
             duk_pop(ctx);
             return false;
         }
-    
+
         return true;
     }
 
@@ -200,7 +200,7 @@ namespace grvl {
 
         return NO_RETURN_VALUE;
     }
-    
+
     duk_ret_t JSEngine::ClosePopup(duk_context* ctx)
     {
         Manager& managerInstance = Manager::GetInstance();
@@ -216,7 +216,7 @@ namespace grvl {
 
         Manager& managerInstance = Manager::GetInstance();
         managerInstance.SetActiveScreen(screenName, animationDirection);
-    
+
         return NO_RETURN_VALUE;
     }
 
@@ -225,7 +225,7 @@ namespace grvl {
         Manager& managerInstance = Manager::GetInstance();
         Panel* topPanel = managerInstance.GetTopPanel();
         PushComponentAsJSObjectOntoStack(topPanel);
-    
+
         return RETURN_VALUE_PRESENT;
     }
 
@@ -234,7 +234,7 @@ namespace grvl {
         Manager& managerInstance = Manager::GetInstance();
         Panel* bottomPanel = managerInstance.GetBottomPanel();
         PushComponentAsJSObjectOntoStack(bottomPanel);
-    
+
         return RETURN_VALUE_PRESENT;
     }
 

@@ -2,7 +2,7 @@
 
 ## XML validity
 
-A [schema](../../xml/grvl.xsd) is available in grvl along with an example that it validates. 
+A [schema](../../xml/grvl.xsd) is available in grvl along with an example that it validates.
 To check the validity, use an external tool, for example `xmllint`.
 
 ```sh

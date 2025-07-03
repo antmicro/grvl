@@ -58,7 +58,7 @@ namespace grvl {
         return *this;
     }
 
-    JSObjectBuilder& JSObjectBuilder::AttachMemberFunction(const char* functionName, duk_c_function func, duk_idx_t nargs) 
+    JSObjectBuilder& JSObjectBuilder::AttachMemberFunction(const char* functionName, duk_c_function func, duk_idx_t nargs)
     {
         duk_push_string(ctx, functionName);
         duk_push_c_function(ctx, func, nargs);

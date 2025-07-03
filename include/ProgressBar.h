@@ -58,7 +58,7 @@ namespace grvl {
         static ProgressBar* BuildFromXML(XMLElement* xmlElement);
 
         void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
-        
+
         void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder) override;
 
         GENERATE_DUK_FLOAT_GETTER(ProgressBar, ProgressValue, GetProgressValue)
