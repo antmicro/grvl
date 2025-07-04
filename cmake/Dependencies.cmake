@@ -45,13 +45,15 @@ else()
     "ENABLE_SHARED ON")
 endif()
 
+add_compile_definitions(ENTROPY_OPT_SUPPORTED)
+
 CPMAddPackage(
   NAME JPEG
-  VERSION 2.1.5
+  VERSION 2.0.2
   GITHUB_REPOSITORY libjpeg-turbo/libjpeg-turbo
   GIT_PROGRESS TRUE
   GIT_SHALLOW TRUE
-  GIT_TAG 2.1.5
+  GIT_TAG 2.0.2
   EXCLUDE_FROM_ALL TRUE
   DOWNLOAD_ONLY ${GRVL_ZEPHYR}
   OPTIONS

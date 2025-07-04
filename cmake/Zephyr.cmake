@@ -38,7 +38,7 @@ set(jpeg_sources ${simd_sources}
 list(TRANSFORM jpeg_sources PREPEND ${JPEG_SOURCE_DIR}/)
 
 set(JPEG_LIB_VERSION 62)
-set(VERSION 2.1.5)
+set(VERSION 2.0.2)
 set(LIBJPEG_TURBO_VERSION_NUMBER 8)
 set(C_ARITH_CODING_SUPPORTED 0)
 set(D_ARITH_CODING_SUPPORTED 0)
@@ -59,7 +59,6 @@ endif()
 
 configure_file(${JPEG_SOURCE_DIR}/jconfig.h.in ${JPEG_BINARY_DIR}/jconfig.h)
 configure_file(${JPEG_SOURCE_DIR}/jconfigint.h.in ${JPEG_BINARY_DIR}/jconfigint.h)
-configure_file(${JPEG_SOURCE_DIR}/jversion.h.in ${JPEG_BINARY_DIR}/jversion.h)
 
 zephyr_library_sources(${jpeg_sources})
 zephyr_include_directories(

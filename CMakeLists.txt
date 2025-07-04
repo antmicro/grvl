@@ -4,7 +4,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 project(
   grvl
-  LANGUAGES C CXX)
+  LANGUAGES C CXX ASM)
 
 include(StandardProjectSettings)
 include(Tools)
@@ -38,7 +38,7 @@ target_include_directories(
   grvl PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
               $<INSTALL_INTERFACE:include/grvl>)
 
-if(USE_SYSTEM_LIBRARIES)
+if(USE_SYSTEM_LIBRARIES AND NOT GRVL_ZEPHYR)
   include(GNUInstallDirs)
   include(CMakePackageConfigHelpers)
 

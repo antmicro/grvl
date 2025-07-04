@@ -14,7 +14,7 @@ variables:
   stage: build
   before_script:
     - apt update -qqy
-    - apt install -qqy file git gcc g++ cmake libz-dev libjpeg-dev libpng-dev libtinyxml2-dev duktape-dev
+    - apt install -qqy file git gcc g++ nasm cmake libz-dev libjpeg-dev libpng-dev libtinyxml2-dev duktape-dev
   script:
     - cmake -S. -Bbuild -DGRVL_STATIC=${GRVL_STATIC} -DGRVL_SHARED=${GRVL_SHARED} -DUSE_SYSTEM_LIBRARIES=${USE_SYSTEM_LIBRARIES}
     - cmake --build build
