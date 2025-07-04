@@ -393,7 +393,7 @@ namespace grvl {
         DrawPixel(endingXPos, endingYPos, InterpolateColors(pixelRGB, RGB_Code, XPart * YPart));
     }
 
-    constexpr uint32_t Painter::InterpolateColors(uint32_t first, uint32_t second, float t)
+    uint32_t Painter::InterpolateColors(uint32_t first, uint32_t second, float t)
     {
         uint32_t interpolatedAlpha = ((0xFF000000 & second) >> 24) * t + ((0xFF000000 & first) >> 24) * (1.0f - t);
         uint32_t interpolatedRed = ((0xFF0000 & second) >> 16) * t + ((0xFF0000 & first) >> 16) * (1.0f - t);

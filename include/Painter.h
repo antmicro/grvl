@@ -153,7 +153,7 @@ namespace grvl {
         void DrawGradientVLine(int16_t x1, int16_t y1, int16_t y2, uint32_t startingColor, uint32_t endingColor, float startingValue) const;
         void DrawPixel(uint32_t Xpos, uint32_t Ypos, uint32_t RGB_Code) const;
         void DrawAntialiasedPixel(float Xpos, float Ypos, uint32_t RGB_Code) const;
-        static constexpr uint32_t InterpolateColors(uint32_t first, uint32_t second, float t);
+        static uint32_t InterpolateColors(uint32_t first, uint32_t second, float t);
         void BlendPixel(uint32_t Xpos, uint32_t Ypos, uint32_t RGB_Code) const;
         uint32_t ReadPixel(uint32_t Xpos, uint32_t Ypos) const;
 
