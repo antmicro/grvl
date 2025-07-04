@@ -65,7 +65,6 @@
                     <xs:attribute name="font" type="xs:string"/>
                     <xs:attribute name="alignment" type="alignmentType"/>
                     <xs:attribute name="onRelease" type="functionType"/>
-                    <xs:attribute name="foregroundColor" type="colorType" />
                     <xs:attribute name="seconds" type="xs:boolean" />
                 </xs:extension>
             </xs:complexContent>
