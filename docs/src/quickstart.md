@@ -7,16 +7,16 @@
 Pull grvl and link it in your project:
 
 ```cmake
-    add_subdirectory(GRVL_SOURCE_DIR)
-    target_link_libraries(app PRIVATE grvl)
+add_subdirectory(GRVL_SOURCE_DIR)
+target_link_libraries(app PRIVATE grvl)
 ```
 
 ### Zephyr
 
 ```cmake
-    set(GRVL_ZEPHYR ON)
-    add_subdirectory(GRVL_SOURCE_DIR)
-    target_link_libraries(app PRIVATE grvl)
+set(GRVL_ZEPHYR ON)
+add_subdirectory(GRVL_SOURCE_DIR)
+target_link_libraries(app PRIVATE grvl)
 ```
 
 ## Minimal example
@@ -56,7 +56,6 @@ int main(){
         .BuildFromXML(XML_PATH)
         .InitializationFinished();
 
-
     while(running){
         // update gui
         Manager::GetInstance().MainLoopIteration();
@@ -71,8 +70,6 @@ int main(){
         // handle events
         Manager::GetInstance().ProcessTouchPoint(state, x, y);
     }
-
-
 }
 ```
 

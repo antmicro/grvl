@@ -1,7 +1,7 @@
 // example JavaScript callbacks
 
 function ButtonCallback(caller) {
-    var button_id = caller.name
+    const button_id = caller.name
 	Print("Button clicked! (" + button_id + ")")
 }
 

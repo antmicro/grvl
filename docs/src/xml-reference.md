@@ -23,7 +23,7 @@ Then include the screens/special components in the document.
 
 ## Generic component/container attributes
 
-Each component/container has the following attributes:
+Each component has the following attributes:
 
 * id
 * x (absolute, in pixels)
@@ -31,9 +31,19 @@ Each component/container has the following attributes:
 * width
 * height
 * visible (true/false)
+* foregroundColor
+* activeForegroundColor
 * backgroundColor
+* activeBackgroundColor
+* borderColor
+* activeBorderColor
+* borderType (one of: none, box, top, right, bottom, left)
+* borderArcRadius
 * onClick (callback)
 * onPress (callback)
+* onRelease (callback)
+
+Containers can also be specified as `selection`, which makes it a single-choice container, meaning that only one child component can be active and will remain active until another component from that container is activated.
 
 ## Generic screen attributes
 
@@ -64,6 +74,10 @@ Uses the `#aarrggbb` format color.
 
 One of: `Center`, `Left`, `Right`.
 
+### Border type
+
+One of: `none`, `box`, `top`, `right`, `bottom`, `left`.
+
 ## List of components/containers
 
 ### Label
@@ -72,7 +86,7 @@ One of: `Center`, `Left`, `Right`.
 
 * text
 * font
-* color
+* textColor
 * alignment
 
 #### Example
@@ -88,10 +102,13 @@ One of: `Center`, `Left`, `Right`.
 * text
 * font
 * image
+* textColor
 * activeTextColor
+* icoChar
 * icoFont
 * icoColor
-*
+* onLongPress
+* onLongPressRepeat
 
 #### Example
 
@@ -198,22 +215,29 @@ One of: `Center`, `Left`, `Right`.
 
 #### Attributes
 
-* text
-* font
-* frameColor
-* selectedFrameColor
-* switchColor
-* activeSwitchColor
-* onSwitchON
-* onSwitchOFF
-* onLongPress
-* onLongPressRepeat
-* image
+Derives all attributes from `Button` with the addition of:
+
+* onSwitchON - callback executed when switching to active state
+* onSwitchOFF - callback executed when switching to inactive state
+* stateIndicatorWidth/stateIndicatorHeight - size dimensions of state indicator
+* stateIndicatorArcRadius - arc radius of state indicator
 
 #### Example
 
 ```xml
-<SwitchButton id="test_switch" x="0" y="60" width="80" height="50" textColor="#ffff00ff" backgroundColor="#ffffffff" switchColor="#fffcba03" font="roboto-medium" onSwitchON="SwitchCallback" onSwitchOFF="SwitchCallback" />
+<SwitchButton id="test_switch" x="0" y="60" width="80" height="50" stateIndicatorArcRadius="5" stateIndicatorWidth="20" stateIndicatorHeight="20" foregroundColor="#fffcba03" backgroundColor="#ffffffff" font="roboto" onSwitchON="SwitchCallback" onSwitchOFF="SwitchCallback" />
+```
+
+### Checkbox
+
+#### Attributes
+
+Derives all attributes from [SwitchButton](#SwitchButon), but renders its state indicator from width and height size dimensions, instead of state indicator parameters.
+
+#### Example
+
+```xml
+<Checkbox id="active" x="0" y="0" width="18" height="18" backgroundColor="#FFAAAAAA" activeBackgroundColor="#FFFFFFFF" onClick="NotifyAboutStateChange" />
 ```
 
 ### Image
@@ -239,9 +263,35 @@ One of: `Center`, `Left`, `Right`.
 </GridRow>
 ```
 
+### Division
+
+Component designed to be used as a container for other components, with the purpose of making XML layout clean and well-organized. It has a similar purpose to HTML's `div`.
+
+#### Example
+
+```xml
+<Division x="0" y="0" width="128" height="32" backgroundColor="#FF0E0F10" >
+    <Button id="first" text="First" x="0" y="0" width="32" height="32" font="roboto" backgroundColor="#FF0E0F10" textColor="#FF9EA2A6" />
+    <Button id="second" text="Second" x="42" y="0" width="32" height="32" font="roboto" backgroundColor="#FF0E0F10" textColor="#FF9EA2A6" />
+    <Button id="third" text="Third" x="86" y="0" width="32" height="32" font="roboto" backgroundColor="#FF0E0F10" textColor="#FF9EA2A6" />
+</Division>
+```
+
+### Separator
+
+Used for horizontal separation of content.
+
+#### Example
+
+```xml
+<Separator id="separator" x="0" y="20" width="128" foregroundColor="#FF2E2E2E" />
+```
+
 ## List of screens
 
 ### GridView
+
+Arranges its chilren elements in a grid layout.
 
 #### Attributes
 
@@ -255,7 +305,33 @@ One of: `Center`, `Left`, `Right`.
 
 #### Example
 
+```xml
+<GridView id="grid" x="0" y="0" width="140" height="140" backgroundColor="#FF0A0A0A" elementWidth="40" elementHeight="40" horizontalOffset="5" verticalOffset="5" selection="true" >
+
+    <GridRow id="monthdays1" >
+        <button id="0" text="0" font="mona14" backgroundColor="#FF0A0A0A" activeBackgroundColor="#FF0059EC" textColor="#FFECEDEE" onClick="SomeCallback" />
+        <button id="1" text="1" font="mona14" backgroundColor="#FF0A0A0A" activeBackgroundColor="#FF0059EC" textColor="#FFECEDEE" onClick="SomeCallback" />
+        <button id="2" text="2" font="mona14" backgroundColor="#FF0A0A0A" activeBackgroundColor="#FF0059EC" textColor="#FFECEDEE" onClick="SomeCallback" />
+    </GridRow>
+
+    <GridRow id="monthdays2" >
+        <button id="3" text="3" font="mona14" backgroundColor="#FF0A0A0A" activeBackgroundColor="#FF0059EC" textColor="#FFECEDEE" onClick="SomeCallback" />
+        <button id="4" text="4" font="mona14" backgroundColor="#FF0A0A0A" activeBackgroundColor="#FF0059EC" textColor="#FFECEDEE" onClick="SomeCallback" />
+        <button id="5" text="5" font="mona14" backgroundColor="#FF0A0A0A" activeBackgroundColor="#FF0059EC" textColor="#FFECEDEE" onClick="SomeCallback" />
+    </GridRow>
+
+    <GridRow id="monthdays3" >
+        <button id="6" text="6" font="mona14" backgroundColor="#FF0A0A0A" activeBackgroundColor="#FF0059EC" textColor="#FFECEDEE" onClick="SomeCallback" />
+        <button id="7" text="7" font="mona14" backgroundColor="#FF0A0A0A" activeBackgroundColor="#FF0059EC" textColor="#FFECEDEE" onClick="SomeCallback" />
+        <button id="8" text="8" font="mona14" backgroundColor="#FF0A0A0A" activeBackgroundColor="#FF0059EC" textColor="#FFECEDEE" onClick="SomeCallback" />
+    </GridRow>
+
+</GridView>
+```
+
 ### ListView
+
+Arranges its chilren elements into a list.
 
 #### Attributes
 
@@ -266,6 +342,40 @@ One of: `Center`, `Left`, `Right`.
 * scrollIndicatorColor
 
 #### Example
+
+```xml
+<ListView id="list" x="0" y="0" width="200" height="200">
+
+    <ListItem backgroundColor="#ffff0000" id="item1" height="50" type="StdListField" text="first" textColor="#ffffffff" font="mona12" />
+    <ListItem backgroundColor="#ff00ff00" id="item2" height="50" type="StdListField" text="second" textColor="#ffffffff" font="mona12" />
+    <ListItem backgroundColor="#ff0000ff" id="item3" height="50" type="StdListField" text="third" textColor="#ffffffff" font="mona12" />
+
+</ListView>
+```
+
+### ScrollPanel
+
+Allows to arrange its children elements inside the container in a custom way, defined by each component's `x` and `y`.
+
+#### Attributes
+
+* overscrollEnabled
+* overscrollHeight
+* splitLineColor
+* overscrollColor
+* scrollIndicatorColor
+
+#### Example
+
+```xml
+<ScrollPanel id="scroll" x="0" y="0" width="100" height="100" overscrollBarColor="#FF0E0F10" >
+
+    <Button id="add" text="Add" font="mona12" x="5" y="5" width="40" height="40" textColor="#FFFF575E" onClick="SomeCallback" />
+    <Button id="new" text="New" font="mona12" x="55" y="5" width="40" height="40" textColor="#FFFF575E" onClick="SomeCallback" />
+    <Button id="cancel" text="Cancel" font="mona12" x="5" y="50" width="90" height="40" textColor="#FFFF575E" onClick="SomeCallback" />
+
+</ScrollPanel>
+```
 
 ### Other screens
 

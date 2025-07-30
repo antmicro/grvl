@@ -16,6 +16,10 @@ progressBar->SetProgressValue((SDL_GetTicks() / 100) % 100);
 
 ## Callbacks
 
+There are two ways to add callbacks to GUI components. You can write them in either C++ or JavaScript.
+
+### C++
+
 Create the callbacks:
 
 ```cpp
@@ -34,15 +38,53 @@ void SwitchCallback(SwitchButton *Sender, const Event::ArgVector& Args) {
 }
 ```
 
-Add them:
+Add them to the callbacks container:
 
 ```cpp
 displayManager->AddCallbackToContainer("ButtonCallback", (grvl::Event::CallbackPointer)ButtonCallback);
 displayManager->AddCallbackToContainer("SwitchCallback", (grvl::Event::CallbackPointer)SwitchCallback);
-                                      /*^^^^ choose an ID */
+                                      /*^^^^ choose a callback name */
 ```
 
-Then bind them in XML referencing the chosen ID:
+### JavaScript
+
+Create a file with JavaScript callbacks, e.g.:
+
+```javascript
+// callbacks.js
+
+function ButtonCallback(caller) {
+    const buttonId = caller.name
+    Print("Button clicked! (" + buttonId + ")")
+}
+
+function SwitchCallback(caller) {
+    const callerName = caller.name
+    if (caller.switchState) {
+        Print("Switch is ON! (" + callerName + ")")
+    } else {
+        Print("Switch is OFF! (" + callerName + ")")
+    }
+}
+```
+
+Then include it in your application's XML layout:
+
+```xml
+<script src="callbacks.js"></script>
+```
+
+You can specify a non-default working directory for JavaScript files with:
+
+```cpp
+JSEngine::SetSourceCodeWorkingDirectory("Scripts/JavaScript/");
+```
+
+See [JavaScript documentation](js-reference) for further reference.
+
+### Binding callbacks
+
+Bind callbacks to GUI components in XML by referencing the callback name:
 
 ```xml
 <Button id="test_button" x="0" y="0" width="100" height="100" onClick="ButtonCallback" text="TEST" />
