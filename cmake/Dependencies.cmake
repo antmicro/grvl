@@ -45,8 +45,6 @@ else()
     "ENABLE_SHARED ON")
 endif()
 
-add_compile_definitions(ENTROPY_OPT_SUPPORTED)
-
 CPMAddPackage(
   NAME JPEG
   VERSION 2.0.2

@@ -61,6 +61,7 @@ configure_file(${JPEG_SOURCE_DIR}/jconfig.h.in ${JPEG_BINARY_DIR}/jconfig.h)
 configure_file(${JPEG_SOURCE_DIR}/jconfigint.h.in ${JPEG_BINARY_DIR}/jconfigint.h)
 
 zephyr_library_sources(${jpeg_sources})
+zephyr_library_compile_options(-Wno-implicit-function-declaration)
 zephyr_include_directories(
   ${JPEG_BINARY_DIR}
   ${JPEG_SOURCE_DIR})
