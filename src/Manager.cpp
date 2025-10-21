@@ -1347,8 +1347,7 @@ namespace grvl {
                     ParseStylesheet(nextElement);
                 }
 
-                nextElement = Root->FirstChildElement("script");
-                if(nextElement) {
+                for(nextElement = Root->FirstChildElement("script"); nextElement != nullptr; nextElement = nextElement->NextSiblingElement("script")) {
                     ParseScripts(nextElement);
                 }
 
