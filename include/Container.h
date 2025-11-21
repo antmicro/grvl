@@ -72,7 +72,7 @@ namespace grvl {
     protected:
         std::vector<Component*> Elements;
         Image* BackgroundImage;
-        Component* lastActiveChild;
+        Component* lastActiveChild{nullptr};
         bool childDropped;
 
         bool isSelection{false};
