@@ -52,3 +52,7 @@ add_subdirectory(<grvl_path>)
     ...
 target_link_libraries(app PRIVATE grvl)
 ```
+
+## Sample
+
+Sample application using grvl with Zephyr is available [here](https://github.com/antmicro/grvl-zephyr-calendar-demo).
