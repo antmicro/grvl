@@ -1,5 +1,7 @@
 image: debian:stable
 stages:
+  - docs-build
+  - docs-deploy
   - build
 
 variables:
@@ -45,3 +47,45 @@ build_latest:
   image: archlinux:base
   before_script:
     - pacman -Syu --noconfirm git gcc make cmake zlib libjpeg-turbo libpng tinyxml2 duktape
+
+.docs-build:
+  stage: docs-build
+  before_get_sources:
+    - apt update -qqy
+    - apt install -qqy cmake make git gcc g++ nasm libz-dev libjpeg-dev libpng-dev libtinyxml2-dev duktape-dev python3 python3-venv doxygen graphviz latexmk texlive-latex-extra texlive-fonts-recommended texlive-fonts-extra --no-install-recommends
+
+docs-build:
+  extends: .docs-build
+  before_script:
+    - python3 -m venv docs/.venv
+    - source docs/.venv/bin/activate
+    - pip3 install -r docs/requirements.txt
+  script:
+    - source docs/.venv/bin/activate
+    - cmake -S. -Bbuild -DBUILD_DOCS=Y
+    - cmake --build build --target Sphinx_HTML Sphinx_PDF
+    - cp build/sphinx/pdf/latex/*.pdf build/sphinx/html/
+    - tar cf $CI_DOCS_ARCHIVE -C build/sphinx/html/ .
+  artifacts:
+    paths:
+      - build/sphinx
+      - $CI_DOCS_ARCHIVE
+    when: always
+  only:
+    - main
+    - merge_requests
+
+docs-deploy:
+  variables:
+    GIT_STRATEGY: none
+  dependencies:
+    - docs-build
+  stage: docs-deploy
+  tags: ['docs']
+  script: echo 'Deploying docs'
+  artifacts:
+    paths:
+      - $CI_DOCS_ARCHIVE
+  only:
+    - main
+    - merge_requests
