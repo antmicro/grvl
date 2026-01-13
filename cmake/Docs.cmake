@@ -2,13 +2,12 @@ if(BUILD_DOCS)
   find_package(Doxygen)
   find_package(Sphinx)
 
-  set(SPHINX_SOURCE ${CMAKE_CURRENT_LIST_DIR}/docs/src)
-  set(SPHINX_BUILD ${CMAKE_CURRENT_LIST_DIR}/build/sphinx)
+  set(SPHINX_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/docs/src)
+  set(SPHINX_BUILD ${CMAKE_CURRENT_SOURCE_DIR}/build/sphinx)
   set(SPHINX_TARGETS html tex)
 
-  set(DOXYGEN_INDEX_FILE
-      ${CMAKE_CURRENT_LIST_DIR}/docs/doxydocs/html/index.html)
-  set(DOXYGEN_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/build/doxydocs)
+  set(DOXYGEN_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build/doxydocs)
+  set(DOXYGEN_INDEX_FILE ${DOXYGEN_OUTPUT_DIRECTORY}/html/index.html)
 
   add_custom_command(
     OUTPUT ${DOXYGEN_INDEX_FILE}
