@@ -2,7 +2,7 @@
 
 ## XML validity
 
-A [schema](../../xml/grvl.xsd) is available in grvl along with an example that it validates.
+A [schema](../../examples/xml/grvl.xsd) is available in grvl along with an example that it validates.
 To check the validity, use an external tool, for example `xmllint`.
 
 ```sh
@@ -21,6 +21,7 @@ First define the root of the document.
 
 Then include the screens/special components in the document.
 
+(generic-component-container-attributes)=
 ## Generic component/container attributes
 
 Each component has the following attributes:
@@ -47,7 +48,7 @@ Containers can also be specified as `selection`, which makes it a single-choice 
 
 ## Generic screen attributes
 
-Each screen is a container, so it has all of the attributes from the [previous section](#generic-componentcontainer-attributes) as well as:
+Each screen is a container, so it has all of the attributes from the [previous section](#generic-component-container-attributes) as well as:
 
 * onSlideToLeft (callback)
 * onSlideToRight (callback)
@@ -211,7 +212,8 @@ One of: `none`, `box`, `top`, `right`, `bottom`, `left`.
 <CircleProgressBar id="circle_progress_bar" x="175" y="120" width="50" height="50" radius="20" thickness="5" startColor="#fffcba03" endColor="#ffa903fc" />
 ```
 
-### SwitchButon
+(switch-button)=
+### SwitchButton
 
 #### Attributes
 
@@ -232,7 +234,7 @@ Derives all attributes from `Button` with the addition of:
 
 #### Attributes
 
-Derives all attributes from [SwitchButton](#SwitchButon), but renders its state indicator from width and height size dimensions, instead of state indicator parameters.
+Derives all attributes from [SwitchButton](#switch-button), but renders its state indicator from width and height size dimensions, instead of state indicator parameters.
 
 #### Example
 
