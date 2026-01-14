@@ -1,0 +1,57 @@
+name: Generate and publish docs
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install documentation dependencies
+        run: |
+          sudo apt update && sudo apt install -qqy doxygen graphviz latexmk texlive texlive-latex-recommended texlive-latex-extra texlive-fonts-extra --no-install-recommends
+          python3 -m venv docs/.venv
+          source docs/.venv/bin/activate
+          pip3 install -r docs/requirements.txt
+
+      - name: Build grvl documentation
+        run: |
+          source docs/.venv/bin/activate
+          mkdir -p build/{html,doxydocs}
+          doxygen docs/Doxyfile
+          sphinx-build -b html docs/src/ build/html/ -Dbreathe_projects.grvl=$(pwd)/build/doxydocs/xml
+          sphinx-build -M latexpdf docs/src/ build/ -Dbreathe_projects.grvl=$(pwd)/build/doxydocs/xml
+
+      - name: "Upload artifact: Sphinx HTML and PDF"
+        uses: actions/upload-artifact@v4
+        with:
+          name: Documentation
+          path: build/
+
+      - name: Deploy
+        if: github.ref == 'refs/heads/main'
+        run: |
+          sudo chown -R $(whoami) build
+          cp build/latex/*.pdf build/html/
+          cd build/html
+          touch .nojekyll
+          git init
+          cp ../../.git/config ./.git/config
+          git add .
+          git config --local user.email "push@gha"
+          git config --local user.name "GHA"
+          git commit -am "update ${{ github.sha }}"
+          git push -u origin +HEAD:gh-pages
+          rm -rf .git
