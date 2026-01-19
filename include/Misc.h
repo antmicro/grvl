@@ -50,12 +50,26 @@ namespace grvl {
         }
     }
 
+    static inline bool PixelFormatIsCLT(uint32_t pf)
+    {
+        switch(pf)
+        {
+            case COLOR_FORMAT_L8:
+            case COLOR_FORMAT_AL44:
+            case COLOR_FORMAT_AL88:
+                return true;
+            default:
+                return false;
+        }
+    }
+
     int32_t Clamp(int32_t val, int32_t left, int32_t right);
 
     float ConstrainAngle(float angle);
 
     float AngleDiff(float angle1, float angle2);
 
+    extern const uint8_t greyscaleCltPalette[3 * 0x100];
 } /* namespace grvl */
 
 #endif /* GRVL_MISC_H_ */

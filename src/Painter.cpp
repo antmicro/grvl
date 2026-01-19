@@ -69,57 +69,6 @@ namespace grvl {
                 }
                 break;
 
-            case COLOR_FORMAT_AL88:
-                switch(outputPixelFormat) {
-                    case COLOR_FORMAT_ARGB4444: // AL88 to ARGB4444
-                        color1 = (color & 0xff) >> 4;
-                        color2 = color1;
-                        color3 = color1;
-                        alpha = (color & 0xff00) >> 12;
-                        return ((alpha << 12) | (color1 << 8) | (color2 << 4) | (color3));
-
-                    case COLOR_FORMAT_RGB565: // AL88 to RGB565
-                        color1 = (color & 0xff) >> 3;
-                        color2 = (color & 0xff) >> 2;
-                        color3 = (color & 0xff) >> 3;
-                        return ((color1 << 8) | (color2 << 4) | (color3));
-
-                    case COLOR_FORMAT_RGB888: // AL88 to RGB888
-                        color1 = color & 0xff;
-                        color2 = color1;
-                        color3 = color1;
-                        return ((color1 << 16) | (color2 << 8) | (color3));
-
-                    case COLOR_FORMAT_ARGB8888: // AL88 to ARGB8888
-                        color1 = color & 0xff;
-                        alpha = (color & 0xff00) >> 8;
-                        return ((alpha << 24) | (color1 << 16) | (color1 << 8) | (color1));
-                }
-                break;
-
-            case COLOR_FORMAT_L8:
-                switch(outputPixelFormat) {
-                    case COLOR_FORMAT_ARGB4444: // L8 to ARGB4444
-                        color1 = (color & 0xff) >> 4;
-                        alpha = 0xf;
-                        return ((alpha << 12) | (color1 << 8) | (color1 << 4) | (color1));
-
-                    case COLOR_FORMAT_RGB565: // L8 to RGB565
-                        color1 = (color & 0xff) >> 3;
-                        color2 = (color & 0xff) >> 2;
-                        return ((color1 << 8) | (color2 << 4) | (color1));
-
-                    case COLOR_FORMAT_RGB888: // L8 to RGB888
-                        color1 = color & 0xff;
-                        return ((color1 << 16) | (color1 << 8) | (color1));
-
-                    case COLOR_FORMAT_ARGB8888: // L8 to ARGB8888
-                        color1 = color & 0xff;
-                        alpha = 0xff;
-                        return ((alpha << 24) | (color1 << 16) | (color1 << 8) | (color1));
-                }
-                break;
-
             case COLOR_FORMAT_RGB888:
                 switch(outputPixelFormat) {
                     case COLOR_FORMAT_ARGB4444: // RGB888 to ARGB4444
@@ -229,27 +178,50 @@ namespace grvl {
         return result;
     }
 
+    static uint32_t LookupClt(uint8_t* mem, uint32_t format, uint8_t* clt)
+    {
+        uint32_t color = 0;
+        uint16_t cltOffset;
+        if(format == COLOR_FORMAT_AL44) {
+            color |= ((mem[0] & 0xf0) * 0x11) << 24;
+            cltOffset = (mem[0] & 0x0f) * 0x11;
+        } else if(format == COLOR_FORMAT_AL88) {
+            // Little endian, so alpha is actually after luminance
+            color |= mem[1] << 24;
+            cltOffset = mem[0];
+        } else if(format == COLOR_FORMAT_L8) {
+            color |= 0xff000000;
+            cltOffset = mem[0];
+        } else {
+            // We make sure this function will only ever be called for CLT formats
+        }
+        // Do greyscale if no palette is passed
+        if(clt == nullptr) {
+            color |= cltOffset * 0x010101;
+        } else {
+            cltOffset *= 3;
+            color |= clt[cltOffset + 2] << 16 | clt[cltOffset + 1] << 8 | clt[cltOffset + 0];
+        }
+        return color;
+    }
+
     static void PixelFormatConvert(uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem,
                                    uint32_t inputPixelFormat, uint32_t backgroundPixelFormat, uint32_t outputPixelFormat, uint32_t fontColor, uintptr_t backCLT, uintptr_t frontCLT)
     {
         uint32_t inputColor, backgroundColor, outputColor;
 
-        if((inputPixelFormat == COLOR_FORMAT_A8) || (inputPixelFormat == COLOR_FORMAT_AXXX8888)) {
-            inputColor = ConvertPixel((unsigned char*)inputMem, inputPixelFormat, COLOR_FORMAT_ARGB8888);
-            inputColor = (inputColor & 0xff000000) | (fontColor & 0x00ffffff);
-        } else if(inputPixelFormat == COLOR_FORMAT_L8) {
-            uint8_t* inclr = (uint8_t*)frontCLT;
-            uint8_t imageData = *(uint8_t*)inputMem * 3;
-            inputColor = 0xFF000000 | inclr[imageData + 2] << 16 | inclr[imageData + 1] << 8 | inclr[imageData + 0];
+        if(PixelFormatIsCLT(inputPixelFormat)) {
+            inputColor = LookupClt((uint8_t*)inputMem, inputPixelFormat, (uint8_t*)frontCLT);
         } else {
             inputColor = ConvertPixel((unsigned char*)inputMem, inputPixelFormat, COLOR_FORMAT_ARGB8888);
+            if((inputPixelFormat == COLOR_FORMAT_A8) || (inputPixelFormat == COLOR_FORMAT_AXXX8888)) {
+                inputColor = (inputColor & 0xff000000) | (fontColor & 0x00ffffff);
+            }
         }
 
         if(backgroundMem != 0) {
-            if(backgroundPixelFormat == COLOR_FORMAT_L8) {
-                uint8_t* bckclr = (uint8_t*)backCLT;
-                uint8_t backgroundData = *(uint8_t*)backgroundMem * 3;
-                backgroundColor = 0xFF000000 | ((bckclr[backgroundData + 2] << 16) | (bckclr[backgroundData + 1] << 8) | (bckclr[backgroundData + 0]));
+            if(PixelFormatIsCLT(backgroundPixelFormat)) {
+                inputColor = LookupClt((uint8_t*)backgroundMem, backgroundPixelFormat, (uint8_t*)backCLT);
             } else {
                 backgroundColor = ConvertPixel((unsigned char*)backgroundMem, backgroundPixelFormat, COLOR_FORMAT_ARGB8888);
             }
@@ -1181,15 +1153,25 @@ namespace grvl {
             return;
         }
 
-        if(grvl::Callbacks()->dma_operation_clt) {
+        bool usesClt = PixelFormatIsCLT(inPixelFormat) || PixelFormatIsCLT(backgroundPixelFormat);
+
+        if(grvl::Callbacks()->dma_operation_clt && usesClt) {
+            // We use a null `backCLT`/`frontCLT` to indicate greyscale, but the user callback may not follow the same convention,
+            // so we explicitly specify a greyscale palette. The internal fallback operation supports null-as-greyscale
+            if(backCLT == 0) {
+                backCLT = (uintptr_t)greyscaleCltPalette;
+            }
+            if(frontCLT == 0){
+                frontCLT = (uintptr_t)greyscaleCltPalette;
+            }
             grvl::Callbacks()->dma_operation_clt(
                 inputMem, backgroundMem, outputMem, PixelsPerLine, NumberOfLines, inOffset, backgroundOffset, outOffset,
                 inPixelFormat, backgroundPixelFormat, outPixelFormat, 0, backCLT, frontCLT);
-        } else if(grvl::Callbacks()->dma_operation) {
+        } else if(grvl::Callbacks()->dma_operation && !usesClt) {
             grvl::Callbacks()->dma_operation(
                 inputMem, backgroundMem, outputMem, PixelsPerLine, NumberOfLines, inOffset, backgroundOffset, outOffset,
                 inPixelFormat, backgroundPixelFormat, outPixelFormat, 0);
-        } else { // TODO Add support for CLT to FallBackDMA
+        } else {
             FallbackDmaOperation(
                 inputMem, backgroundMem, outputMem, PixelsPerLine, NumberOfLines, inOffset, backgroundOffset, outOffset,
                 inPixelFormat, backgroundPixelFormat, outPixelFormat, 0, backCLT, frontCLT);
