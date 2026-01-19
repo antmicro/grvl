@@ -23,9 +23,9 @@
 #define COLOR_FORMAT_L8 ((uint32_t)0x00000005)
 #define COLOR_FORMAT_AL44 ((uint32_t)0x00000006)
 #define COLOR_FORMAT_AL88 ((uint32_t)0x00000007)
-#define COLOR_FORMAT_L4 ((uint32_t)0x00000008)
+// L4 0x8 - unsupported
 #define COLOR_FORMAT_A8 ((uint32_t)0x00000009)
-#define COLOR_FORMAT_A4 ((uint32_t)0x0000000A)
+// A4 0xa - unsupported
 #define COLOR_FORMAT_ARGB6666 ((uint32_t)0x0000000B)
 
 #define COLOR_FORMAT_AXXX8888 ((uint32_t)0x00000100)
