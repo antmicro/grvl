@@ -1,0 +1,1233 @@
+
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      <link rel="icon" href="">
+    
+    
+      
+        <title>Widget API Reference - Antmicro grvl</title>
+      
+    
+    
+      
+        
+        
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+        <link rel="stylesheet" type="text/css" href="_static/sphinx_immaterial_theme.c5589c0bd87d933a4.min.css?v=eeeb54bc" />
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="deep-orange">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="index.html" title="Antmicro grvl" class="md-header__button md-logo" aria-label="Antmicro grvl" data-md-component="logo">
+      <img src="_static/white.svg" alt="logo">
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Antmicro grvl
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Widget API Reference
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      <form class="md-header__option" data-md-component="palette">
+        
+          
+          
+          <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="deep-orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+          
+            <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_2" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5c-.84 0-1.65.15-2.39.42L12 2M3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29L3.34 7m.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14L3.36 17M20.65 7l-1.77 3.79a7.023 7.023 0 0 0-2.38-4.15l4.15.36m-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29L20.64 17M12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44L12 22Z"/></svg>
+            </label>
+          
+        
+          
+          
+          <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_2">
+          
+            <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3 3.19.09m3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95 2.06.05m-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31Z"/></svg>
+            </label>
+          
+        
+      </form>
+    
+    
+    
+      <div class="md-header__button">
+        <a href="grvl--user-guide.pdf" title="PDF - grvl--user-guide.pdf">
+          <div class="md-icon">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M64 0C28.7 0 0 28.7 0 64v384c0 35.3 28.7 64 64 64h256c35.3 0 64-28.7 64-64V160H256c-17.7 0-32-14.3-32-32V0H64zm192 0v128h128L256 0zM64 224h24c30.9 0 56 25.1 56 56s-25.1 56-56 56h-8v32c0 8.8-7.2 16-16 16s-16-7.2-16-16V240c0-8.8 7.2-16 16-16zm24 80c13.3 0 24-10.7 24-24s-10.7-24-24-24h-8v48h8zm72-64c0-8.8 7.2-16 16-16h24c26.5 0 48 21.5 48 48v64c0 26.5-21.5 48-48 48h-24c-8.8 0-16-7.2-16-16V240zm32 112h8c8.8 0 16-7.2 16-16v-64c0-8.8-7.2-16-16-16h-8v96zm96-128h48c8.8 0 16 7.2 16 16s-7.2 16-16 16h-32v32h32c8.8 0 16 7.2 16 16s-7.2 16-16 16h-32v48c0 8.8-7.2 16-16 16s-16-7.2-16-16V240c0-8.8 7.2-16 16-16z"/></svg>
+          </div>
+        </a>
+      </div>
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/antmicro/grvl" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    antmicro/grvl
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="index.html" title="Antmicro grvl" class="md-nav__button md-logo" aria-label="Antmicro grvl" data-md-component="logo">
+      <img src="_static/white.svg" alt="logo">
+    </a>
+    Antmicro grvl
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/antmicro/grvl" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    antmicro/grvl
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="introduction.html" class="md-nav__link">
+        <span class="md-ellipsis">What is grvl?</span>
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="quickstart.html" class="md-nav__link">
+        <span class="md-ellipsis">Quickstart</span>
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="examples.html" class="md-nav__link">
+        <span class="md-ellipsis">Examples</span>
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api-reference.html" class="md-nav__link">
+        <span class="md-ellipsis">General API reference</span>
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="xml-reference.html" class="md-nav__link">
+        <span class="md-ellipsis">XML reference</span>
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="js-reference.html" class="md-nav__link">
+        <span class="md-ellipsis">Java<wbr>Script reference</span>
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="prefabs-reference.html" class="md-nav__link">
+        <span class="md-ellipsis">Prefabs</span>
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="metadata.html" class="md-nav__link">
+        <span class="md-ellipsis">Metadata</span>
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="keyboard.html" class="md-nav__link">
+        <span class="md-ellipsis">On-<wbr>screen keyboard</span>
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          <span class="md-ellipsis">Widget API Reference</span>
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="#" class="md-nav__link md-nav__link--active">
+        <span class="md-ellipsis">Widget API Reference</span>
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_CPPv4N4grvl5LabelE" class="md-nav__link">
+    <span class="md-ellipsis">Label</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Label">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#breathe-section-title-public-functions" class="md-nav__link">
+    <span class="md-ellipsis">Public Functions</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_CPPv4N4grvl5Label7GetTextEv" class="md-nav__link">
+    <span class="md-ellipsis">Get<wbr>Text</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GetText">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_CPPv4N4grvl5Label7GetTextEv-returns" class="md-nav__link">
+    <span class="md-ellipsis">Returns</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_CPPv4N4grvl6ButtonE" class="md-nav__link">
+    <span class="md-ellipsis">Button</span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_CPPv4N4grvl5ClockE" class="md-nav__link">
+    <span class="md-ellipsis">Clock</span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_CPPv4N4grvl5ImageE" class="md-nav__link">
+    <span class="md-ellipsis">Image</span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_CPPv4N4grvl11ProgressBarE" class="md-nav__link">
+    <span class="md-ellipsis">Progress<wbr>Bar</span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_CPPv4N4grvl17CircleProgressBarE" class="md-nav__link">
+    <span class="md-ellipsis">Circle<wbr>Progress<wbr>Bar</span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_CPPv4N4grvl8GridViewE" class="md-nav__link">
+    <span class="md-ellipsis">Grid<wbr>View</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GridView">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#breathe-section-title-public-functions" class="md-nav__link">
+    <span class="md-ellipsis">Public Functions</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_CPPv4N4grvl8GridView18SetBackgroundColorE8uint32_t" class="md-nav__link">
+    <span class="md-ellipsis">Set<wbr>Background<wbr>Color</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SetBackgroundColor">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_CPPv4N4grvl8GridView18SetBackgroundColorE8uint32_t-parameters" class="md-nav__link">
+    <span class="md-ellipsis">Parameters</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_CPPv4N4grvl8GridView18SetBackgroundColorE8uint32_t-p-color" class="md-nav__link">
+    <span aria-label="C++ function parameter" class="objinfo-icon objinfo-icon__sub-data" title="C++ function parameter">p</span><span title="grvl::GridView::SetBackgroundColor::color (C++ function parameter) — Desired color in ARGB8888 format." class="md-ellipsis">color</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_CPPv4N4grvl7GridRowE" class="md-nav__link">
+    <span class="md-ellipsis">Grid<wbr>Row</span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_CPPv4N4grvl10CustomViewE" class="md-nav__link">
+    <span class="md-ellipsis">Custom<wbr>View</span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_CPPv4N4grvl8ListViewE" class="md-nav__link">
+    <span class="md-ellipsis">List<wbr>View</span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_CPPv4N4grvl8ListItemE" class="md-nav__link">
+    <span class="md-ellipsis">List<wbr>Item</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ListItem">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#breathe-section-title-public-functions" class="md-nav__link">
+    <span class="md-ellipsis">Public Functions</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_CPPv4N4grvl8ListItem7SetTypeE8ItemType" class="md-nav__link">
+    <span class="md-ellipsis">Set<wbr>Type</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="SetType">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_CPPv4N4grvl8ListItem7SetTypeE8ItemType-parameters" class="md-nav__link">
+    <span class="md-ellipsis">Parameters</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_CPPv4N4grvl8ListItem7SetTypeE8ItemType-p-type" class="md-nav__link">
+    <span aria-label="C++ function parameter" class="objinfo-icon objinfo-icon__sub-data" title="C++ function parameter">p</span><span title="grvl::ListItem::SetType::type (C++ function parameter) — New list item&#39;s type." class="md-ellipsis">type</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_CPPv4N4grvl8ListItem25GetAdditionalImagePointerEv" class="md-nav__link">
+    <span class="md-ellipsis">Get<wbr>Additional<wbr>Image<wbr>Pointer</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GetAdditionalImagePointer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_CPPv4N4grvl8ListItem25GetAdditionalImagePointerEv-returns" class="md-nav__link">
+    <span class="md-ellipsis">Returns</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_CPPv4N4grvl5PanelE" class="md-nav__link">
+    <span class="md-ellipsis">Panel</span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_CPPv4N4grvl12SwitchButtonE" class="md-nav__link">
+    <span class="md-ellipsis">Switch<wbr>Button</span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_CPPv4N4grvl6SliderE" class="md-nav__link">
+    <span class="md-ellipsis">Slider</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Slider">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#breathe-section-title-public-functions" class="md-nav__link">
+    <span class="md-ellipsis">Public Functions</span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_CPPv4NK4grvl6Slider8GetValueEv" class="md-nav__link">
+    <span class="md-ellipsis">Get<wbr>Value</span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GetValue">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_CPPv4NK4grvl6Slider8GetValueEv-returns" class="md-nav__link">
+    <span class="md-ellipsis">Returns</span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset" role="main">
+                  
+
+
+  <a href="https://github.com/antmicro/grvl/blob/main/docs/src/widget-api.rst" title="Edit this page" class="md-content__button md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+  </a>
+
+<h1 id="widget-api-reference">Widget API Reference<a class="headerlink" href="#widget-api-reference" title="Link to this heading">¶</a></h1>
+<dl class="cpp class objdesc">
+<dt class="sig sig-object highlight cpp" id="_CPPv4N4grvl5LabelE">
+<span id="_CPPv3N4grvl5LabelE"></span><span id="_CPPv2N4grvl5LabelE"></span><span id="grvl::Label"></span><span class="target" id="classgrvl_1_1Label"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Label</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">grvl</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Component</span></span><a class="headerlink" href="#_CPPv4N4grvl5LabelE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Widget displaying static text.</p>
+<p>XML parameters:<ul class="simple">
+<li><p>id - widget identifier</p></li>
+<li><p>x - widget position on x axis in pixels</p></li>
+<li><p>y - widget position on y axis in pixels</p></li>
+<li><p>width - widget width in pixels</p></li>
+<li><p>height - widget height in pixels</p></li>
+<li><p>visible - indicates if the widget is visible (default: true)</p></li>
+<li><p>text - text to display on the label (default: none)</p></li>
+<li><p>font - text font (default: normal)</p></li>
+<li><p>textColor - text color (default: black)</p></li>
+<li><p>backgroundColor - widget background color (default: transparent)</p></li>
+<li><p>frameColor - widget frame color (default: transparent)</p></li>
+<li><p>alignment - horizontal alignment of the text (default: center) </p></li>
+</ul>
+</p>
+<p>Subclassed by <a class="reference internal" href="#classgrvl_1_1Clock"><span class="std std-ref">grvl::Clock</span></a></p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions<a class="headerlink" href="#breathe-section-title-public-functions" title="Permalink to this headline">¶</a></p>
+<dl class="cpp function objdesc">
+<dt class="sig sig-object highlight cpp" id="_CPPv4N4grvl5Label7GetTextEv">
+<span id="_CPPv3N4grvl5Label7GetTextEv"></span><span id="_CPPv2N4grvl5Label7GetTextEv"></span><span id="grvl::Label::GetText"></span><span class="target" id="classgrvl_1_1Label_1ab9709af6220270210d560edbf2758f0a"></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">GetText</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4grvl5Label7GetTextEv" title="Link to this definition">¶</a><br /></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd" id="_CPPv4N4grvl5Label7GetTextEv-returns">Returns<span class="colon">:</span><a class="headerlink" href="#_CPPv4N4grvl5Label7GetTextEv-returns" title="Permalink to this headline">¶</a></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#classgrvl_1_1Label"><span class="std std-ref">Label</span></a>’s text. </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class objdesc">
+<dt class="sig sig-object highlight cpp" id="_CPPv4N4grvl6ButtonE">
+<span id="_CPPv3N4grvl6ButtonE"></span><span id="_CPPv2N4grvl6ButtonE"></span><span id="grvl::Button"></span><span class="target" id="classgrvl_1_1Button"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Button</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">grvl</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">AbstractButton</span></span><a class="headerlink" href="#_CPPv4N4grvl6ButtonE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Represents rectangle button.</p>
+<p>XML parameters:<ul class="simple">
+<li><p>id - widget identifier</p></li>
+<li><p>x - widget position on x axis in pixels</p></li>
+<li><p>y - widget position on y axis in pixels</p></li>
+<li><p>width - widget width in pixels</p></li>
+<li><p>height - widget height in pixels</p></li>
+<li><p>visible - indicates if the widget is visible</p></li>
+<li><p>text - caption text to display on the widget (default: “”)</p></li>
+<li><p>font - caption text font (default: “normal”)</p></li>
+<li><p>textColor - caption text color (default: black)</p></li>
+<li><p>activeTextColor - caption text color while pressed (default: textColor)</p></li>
+<li><p>icoChar - single-character icon for the button (default: none)</p></li>
+<li><p>icoFont - single-character icon font (default: “normal”)</p></li>
+<li><p>icoColor - single-character icon color (default: textColor)</p></li>
+<li><p>activeIcoColor - single-character icon color while pressed (default: textColor)</p></li>
+<li><p>backgroundColor - button background color (default: transparent)</p></li>
+<li><p>activeBackgroundColor - button background color while pressed (default: backgroundColor)</p></li>
+<li><p>frameColor - button frame color (default: transparent)</p></li>
+<li><p>text_top_offset - caption text top position offset</p></li>
+<li><p>image - identifier of image content to display</p></li>
+<li><p>image_x - image position on x axis in pixels (setting to -1 will center the image)</p></li>
+<li><p>image_y - image position on y axis in pixels (setting to -1 will center the image)</p></li>
+</ul>
+</p>
+<p>XML events:<ul class="simple">
+<li><p>onClick - event invoked when touch is released, but only when it has not left widget boundaries since pressing and long press was not reported</p></li>
+<li><p>onPress - event invoked when touch is detected within widget boundaries</p></li>
+<li><p>onRelease - event invoked when touch is released within widget boundaries or when it leaves the boundaries</p></li>
+<li><p>onLongPress - event invoked when the widget is pressed for longer than a second</p></li>
+<li><p>onLongPressRepeat - event invoked periodically (every half a second) while the widget is being pressed </p></li>
+</ul>
+</p>
+<p>Subclassed by grvl::KeyboardKey, grvl::TextInput</p>
+</dd></dl>
+
+<dl class="cpp class objdesc">
+<dt class="sig sig-object highlight cpp" id="_CPPv4N4grvl5ClockE">
+<span id="_CPPv3N4grvl5ClockE"></span><span id="_CPPv2N4grvl5ClockE"></span><span id="grvl::Clock"></span><span class="target" id="classgrvl_1_1Clock"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Clock</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">grvl</span></span><span class="p"><span class="pre">::</span></span><a class="desctype reference internal" href="#_CPPv4N4grvl5LabelE" title="grvl::Label (C++ class) — Widget displaying static text."><span class="n"><span class="pre">Label</span></span></a><a class="headerlink" href="#_CPPv4N4grvl5ClockE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Widget displaying current time.</p>
+<p>XML parameters:<ul class="simple">
+<li><p>id - widget identifier</p></li>
+<li><p>x - widget position on x axis in pixels</p></li>
+<li><p>y - widget position on y axis in pixels</p></li>
+<li><p>width - widget width in pixels</p></li>
+<li><p>height - widget height in pixels</p></li>
+<li><p>visible - indicates if the widget is visible</p></li>
+<li><p>foregroundColor - text color (default: black)</p></li>
+<li><p>backgroundColor - background color (default: transparent)</p></li>
+<li><p>font - text font (default: normal)</p></li>
+<li><p>alignment - horizontal text alignment (default: centered)</p></li>
+</ul>
+</p>
+<p>XML events:<ul class="simple">
+<li><p>onClick - event invoked when touch is released, but only when it has not left widget boundaries since pressing</p></li>
+<li><p>onPress - event invoked when touch is detected within widget boundaries</p></li>
+<li><p>onRelease - event invoked when touch is released within widget boundaries or when it leaves the boundaries </p></li>
+</ul>
+</p>
+</dd></dl>
+
+<dl class="cpp class objdesc">
+<dt class="sig sig-object highlight cpp" id="_CPPv4N4grvl5ImageE">
+<span id="_CPPv3N4grvl5ImageE"></span><span id="_CPPv2N4grvl5ImageE"></span><span id="grvl::Image"></span><span class="target" id="classgrvl_1_1Image"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Image</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">grvl</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Component</span></span><a class="headerlink" href="#_CPPv4N4grvl5ImageE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Widget displaying an image.</p>
+<p>XML parameters:<ul class="simple">
+<li><p>id - widget identifier</p></li>
+<li><p>x - widget position on x axis in pixels</p></li>
+<li><p>y - widget position on y axis in pixels</p></li>
+<li><p>visible - indicates if the widget is visible</p></li>
+<li><p>contentId - identifier of image content to display (default: none)</p></li>
+</ul>
+</p>
+<p><div class="remark admonition">
+<p class="admonition-title">Remark</p>
+<p>Width and height of a widget are deduced from image content. </p>
+</div>
+</p>
+</dd></dl>
+
+<dl class="cpp class objdesc">
+<dt class="sig sig-object highlight cpp" id="_CPPv4N4grvl11ProgressBarE">
+<span id="_CPPv3N4grvl11ProgressBarE"></span><span id="_CPPv2N4grvl11ProgressBarE"></span><span id="grvl::ProgressBar"></span><span class="target" id="classgrvl_1_1ProgressBar"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ProgressBar</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">grvl</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Component</span></span><a class="headerlink" href="#_CPPv4N4grvl11ProgressBarE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Rectangle progress bar widget.</p>
+<p>XML parameters:<ul class="simple">
+<li><p>id - widget identifier</p></li>
+<li><p>x - widget position on x axis in pixels</p></li>
+<li><p>y - widget position on y axis in pixels</p></li>
+<li><p>width - widget width in pixels</p></li>
+<li><p>height - widget height in pixels</p></li>
+<li><p>visible - indicates if the widget is visible</p></li>
+<li><p>progressBarColor - progress bar color (default: transparent)</p></li>
+<li><p>backgroundColor - background color (default: transparent) </p></li>
+</ul>
+</p>
+<p>Subclassed by <a class="reference internal" href="#classgrvl_1_1CircleProgressBar"><span class="std std-ref">grvl::CircleProgressBar</span></a></p>
+</dd></dl>
+
+<dl class="cpp class objdesc">
+<dt class="sig sig-object highlight cpp" id="_CPPv4N4grvl17CircleProgressBarE">
+<span id="_CPPv3N4grvl17CircleProgressBarE"></span><span id="_CPPv2N4grvl17CircleProgressBarE"></span><span id="grvl::CircleProgressBar"></span><span class="target" id="classgrvl_1_1CircleProgressBar"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">CircleProgressBar</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">grvl</span></span><span class="p"><span class="pre">::</span></span><a class="desctype reference internal" href="#_CPPv4N4grvl11ProgressBarE" title="grvl::ProgressBar (C++ class) — Rectangle progress bar widget."><span class="n"><span class="pre">ProgressBar</span></span></a><a class="headerlink" href="#_CPPv4N4grvl17CircleProgressBarE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Represents circular progress bar widget.</p>
+<p>XML parameters:<ul class="simple">
+<li><p>id - widget identifier</p></li>
+<li><p>x - widget position on x axis in pixels</p></li>
+<li><p>y - widget position on y axis in pixels</p></li>
+<li><p>width - widget width in pixels</p></li>
+<li><p>height - widget height in pixels</p></li>
+<li><p>visible - indicates if the widget is visible</p></li>
+<li><p>startAngle - angle at which the ring starts in degrees (default: 0)</p></li>
+<li><p>endAngle - angle at which the ring ends in degrees (default: 360)</p></li>
+<li><p>radius - outer rim of the ring radius in pixels (default: 0)</p></li>
+<li><p>thickness - ring thickness in pixels (default: 0)</p></li>
+<li><p>staticGradient - indicates if static gradient method should be used instead of proportional one (default: true)</p></li>
+<li><p>startColor - gradient color at the beginning of the ring in ARGB8888 format (default: transparent)</p></li>
+<li><p>endColor - gradient color at the end of the ring in ARGB8888 format (default: transparent)</p></li>
+<li><p>backgroundColor - ring background color </p></li>
+</ul>
+</p>
+</dd></dl>
+
+<dl class="cpp class objdesc">
+<dt class="sig sig-object highlight cpp" id="_CPPv4N4grvl8GridViewE">
+<span id="_CPPv3N4grvl8GridViewE"></span><span id="_CPPv2N4grvl8GridViewE"></span><span id="grvl::GridView"></span><span class="target" id="classgrvl_1_1GridView"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">GridView</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">grvl</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">VerticalScrollView</span></span><a class="headerlink" href="#_CPPv4N4grvl8GridViewE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Grid view widget.</p>
+<p>This is a layout widget which organizes the screen by displaying inner widgets on a grid.</p>
+<p>XML parameters:<ul class="simple">
+<li><p>id - widget identifier</p></li>
+<li><p>x - widget position on x axis in pixels</p></li>
+<li><p>y - widget position on y axis in pixels</p></li>
+<li><p>width - widget width in pixels</p></li>
+<li><p>height - widget height in pixels</p></li>
+<li><p>visible - indicates if the widget is visible</p></li>
+<li><p>scrollingEnabled - indicates if scrolling is enabled (default: false)</p></li>
+<li><p>overscrollEnabled - indicates if scrolling beyond top/bottom is possible (default: false)</p></li>
+<li><p>overscrollColor - overscrolled area color (default: light gray)</p></li>
+<li><p>overscrollHeight - overscrolled area height in pixels (default: 50)</p></li>
+<li><p>scrollIndicatorColor - scroll indicator color (default: transparent)</p></li>
+<li><p>elementWidth - grid element width in pixels (default: 0)</p></li>
+<li><p>elementHeight - grid element height in pixel (default: 0)</p></li>
+<li><p>verticalOffset - vertical offset of grid elements (default: 0)</p></li>
+<li><p>globalPanelVisible - indicates if global panel is visible (default: true)</p></li>
+<li><p>backgroundColor - widget background color (default: transparent)</p></li>
+<li><p>collection - collection of elements</p></li>
+</ul>
+</p>
+<p>XML events:<ul class="simple">
+<li><p>onSlideLeft - event invoked when widget is scrolled to the left</p></li>
+<li><p>onSlideRight - event invoked when widget is scrolled to the right</p></li>
+</ul>
+</p>
+<p><div class="remark admonition">
+<p class="admonition-title">Remark</p>
+<p>XML node describing this widget can contain child nodes with components of type:<ul class="simple">
+<li><p>gridRow</p></li>
+<li><p>panel (as a header) </p></li>
+</ul>
+</p>
+</div>
+</p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions<a class="headerlink" href="#breathe-section-title-public-functions" title="Permalink to this headline">¶</a></p>
+<dl class="cpp function objdesc">
+<dt class="sig sig-object highlight cpp" id="_CPPv4N4grvl8GridView18SetBackgroundColorE8uint32_t">
+<span id="_CPPv3N4grvl8GridView18SetBackgroundColorE8uint32_t"></span><span id="_CPPv2N4grvl8GridView18SetBackgroundColorE8uint32_t"></span><span id="grvl::GridView::SetBackgroundColor__uint32_t"></span><span class="target" id="classgrvl_1_1GridView_1adfcdf3945f89988ccb3674a2dc2e8463"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">SetBackgroundColor</span></span></span><span class="sig-paren">(</span><span class="sig-param-decl"><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><a class="n sig-param reference internal" href="#_CPPv4N4grvl8GridView18SetBackgroundColorE8uint32_t-p-color" title="grvl::GridView::SetBackgroundColor::color (C++ function parameter) — Desired color in ARGB8888 format."><span class="n sig-param"><span class="pre">color</span></span></a></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4grvl8GridView18SetBackgroundColorE8uint32_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Sets component’s background color.</p>
+<dl class="field-list simple">
+<dt class="field-odd" id="_CPPv4N4grvl8GridView18SetBackgroundColorE8uint32_t-parameters">Parameters<span class="colon">:</span><a class="headerlink" href="#_CPPv4N4grvl8GridView18SetBackgroundColorE8uint32_t-parameters" title="Permalink to this headline">¶</a></dt>
+<dd class="field-odd"><dl class="simple api-field highlight">
+<dt id="_CPPv4N4grvl8GridView18SetBackgroundColorE8uint32_t-p-color"><span class="n">uint32_t</span><span class="w"> </span><span class="n sig-param sig-name">color</span><a class="headerlink" href="#_CPPv4N4grvl8GridView18SetBackgroundColorE8uint32_t-p-color" title="Permalink to this definition">¶</a></dt><dd><p>Desired color in ARGB8888 format. </p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class objdesc">
+<dt class="sig sig-object highlight cpp" id="_CPPv4N4grvl7GridRowE">
+<span id="_CPPv3N4grvl7GridRowE"></span><span id="_CPPv2N4grvl7GridRowE"></span><span id="grvl::GridRow"></span><span class="target" id="classgrvl_1_1GridRow"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">GridRow</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">grvl</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Container</span></span><a class="headerlink" href="#_CPPv4N4grvl7GridRowE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Widget representing single row of a grid displayed by <a class="reference internal" href="#classgrvl_1_1GridRow"><span class="std std-ref">GridRow</span></a>. The widget can contain buttons only. </p>
+</dd></dl>
+
+<dl class="cpp class objdesc">
+<dt class="sig sig-object highlight cpp" id="_CPPv4N4grvl10CustomViewE">
+<span id="_CPPv3N4grvl10CustomViewE"></span><span id="_CPPv2N4grvl10CustomViewE"></span><span id="grvl::CustomView"></span><span class="target" id="classgrvl_1_1CustomView"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">CustomView</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">grvl</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">AbstractView</span></span><a class="headerlink" href="#_CPPv4N4grvl10CustomViewE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Represents a screen type supporting any element placement except for listItems and gridRows. </p>
+</dd></dl>
+
+<dl class="cpp class objdesc">
+<dt class="sig sig-object highlight cpp" id="_CPPv4N4grvl8ListViewE">
+<span id="_CPPv3N4grvl8ListViewE"></span><span id="_CPPv2N4grvl8ListViewE"></span><span id="grvl::ListView"></span><span class="target" id="classgrvl_1_1ListView"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ListView</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">grvl</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">VerticalScrollView</span></span><a class="headerlink" href="#_CPPv4N4grvl8ListViewE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Vertical list view widget.</p>
+<p>XML parameters:<ul class="simple">
+<li><p>id - widget identifier</p></li>
+<li><p>x - widget position on x axis in pixels</p></li>
+<li><p>y - widget position on y axis in pixels</p></li>
+<li><p>width - widget width in pixels</p></li>
+<li><p>height - widget height in pixels</p></li>
+<li><p>visible - indicates if the widget is visible</p></li>
+<li><p>overscrollEnabled - indicates if scrolling beyond top/bottom is possible (default: false)</p></li>
+<li><p>overscrollColor - overscrolled area color (default: light gray)</p></li>
+<li><p>overscrollHeight - overscrolled area height in pixels (default: 50)</p></li>
+<li><p>scrollIndicatorColor - scroll indicator color (default: transparent)</p></li>
+<li><p>splitLineColor - color of the line drawn between list elements (default: transparent)</p></li>
+<li><p>globalPanelVisible - indicates if global panel is visible (default: true)</p></li>
+<li><p>backgroundColor - widget background color (default: transparent)</p></li>
+<li><p>collection - collection of elements</p></li>
+</ul>
+</p>
+<p>XML events:<ul class="simple">
+<li><p>onSlideLeft - event invoked when widget is scrolled to the left</p></li>
+<li><p>onSlideRight - event invoked when widget is scrolled to the right</p></li>
+</ul>
+</p>
+<p><div class="remark admonition">
+<p class="admonition-title">Remark</p>
+<p>XML node describing this widget can contain child nodes with components of type:<ul class="simple">
+<li><p>listItem</p></li>
+<li><p>panel (as a header) </p></li>
+</ul>
+</p>
+</div>
+</p>
+</dd></dl>
+
+<dl class="cpp class objdesc">
+<dt class="sig sig-object highlight cpp" id="_CPPv4N4grvl8ListItemE">
+<span id="_CPPv3N4grvl8ListItemE"></span><span id="_CPPv2N4grvl8ListItemE"></span><span id="grvl::ListItem"></span><span class="target" id="classgrvl_1_1ListItem"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ListItem</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">grvl</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">AbstractButton</span></span><a class="headerlink" href="#_CPPv4N4grvl8ListItemE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Widget representing an element of a list displayed by <a class="reference internal" href="#classgrvl_1_1ListView"><span class="std std-ref">ListView</span></a>.</p>
+<p>XML events:<ul class="simple">
+<li><p>id - widget identifier</p></li>
+<li><p>height - widget height in pixels</p></li>
+<li><p>visible - indicates if the widget is visible</p></li>
+<li><p>type - list item type; available values: StdListField, LeftArrowListField, RightArrowListField, EmptyField, Dots, DoubleImageField</p></li>
+<li><p>text - caption text (default: none)</p></li>
+<li><p>description - description text (default: none)</p></li>
+<li><p>font - caption text font (default: “normal”)</p></li>
+<li><p>descriptionFont - description text font (default: “small”)</p></li>
+<li><p>textColor - caption text color (default: black)</p></li>
+<li><p>activeTextColor - caption text color when pressed (default: textColor)</p></li>
+<li><p>descriptionColor - description text color (default: black)</p></li>
+<li><p>activeDescriptionColor - description text color when pressed (default: descriptionColor)</p></li>
+<li><p>backgroundColor - background color (default: transparent)</p></li>
+<li><p>activeBackgroundColor - background color when pressed (default: backgroundColor)</p></li>
+<li><p>image - image content identifier</p></li>
+<li><p>additionalImage - second image content identifier </p></li>
+</ul>
+</p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions<a class="headerlink" href="#breathe-section-title-public-functions" title="Permalink to this headline">¶</a></p>
+<dl class="cpp function objdesc">
+<dt class="sig sig-object highlight cpp" id="_CPPv4N4grvl8ListItem7SetTypeE8ItemType">
+<span id="_CPPv3N4grvl8ListItem7SetTypeE8ItemType"></span><span id="_CPPv2N4grvl8ListItem7SetTypeE8ItemType"></span><span id="grvl::ListItem::SetType__ItemType"></span><span class="target" id="classgrvl_1_1ListItem_1acd5df8d4a307bc67462378bf681274a7"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">SetType</span></span></span><span class="sig-paren">(</span><span class="sig-param-decl"><span class="n"><span class="pre">ItemType</span></span><span class="w"> </span><a class="n sig-param reference internal" href="#_CPPv4N4grvl8ListItem7SetTypeE8ItemType-p-type" title="grvl::ListItem::SetType::type (C++ function parameter) — New list item's type."><span class="n sig-param"><span class="pre">type</span></span></a></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4grvl8ListItem7SetTypeE8ItemType" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Sets type of the list item.</p>
+<dl class="field-list simple">
+<dt class="field-odd" id="_CPPv4N4grvl8ListItem7SetTypeE8ItemType-parameters">Parameters<span class="colon">:</span><a class="headerlink" href="#_CPPv4N4grvl8ListItem7SetTypeE8ItemType-parameters" title="Permalink to this headline">¶</a></dt>
+<dd class="field-odd"><dl class="simple api-field highlight">
+<dt id="_CPPv4N4grvl8ListItem7SetTypeE8ItemType-p-type"><span class="n">ItemType</span><span class="w"> </span><span class="n sig-param sig-name">type</span><a class="headerlink" href="#_CPPv4N4grvl8ListItem7SetTypeE8ItemType-p-type" title="Permalink to this definition">¶</a></dt><dd><p>New list item’s type. </p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function objdesc">
+<dt class="sig sig-object highlight cpp" id="_CPPv4N4grvl8ListItem25GetAdditionalImagePointerEv">
+<span id="_CPPv3N4grvl8ListItem25GetAdditionalImagePointerEv"></span><span id="_CPPv2N4grvl8ListItem25GetAdditionalImagePointerEv"></span><span id="grvl::ListItem::GetAdditionalImagePointer"></span><span class="target" id="classgrvl_1_1ListItem_1ad4a0b89d323fc2595e13657993cf7e4e"></span><a class="desctype reference internal" href="#_CPPv4N4grvl5ImageE" title="grvl::Image (C++ class) — Widget displaying an image."><span class="n"><span class="pre">Image</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">GetAdditionalImagePointer</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4grvl8ListItem25GetAdditionalImagePointerEv" title="Link to this definition">¶</a><br /></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd" id="_CPPv4N4grvl8ListItem25GetAdditionalImagePointerEv-returns">Returns<span class="colon">:</span><a class="headerlink" href="#_CPPv4N4grvl8ListItem25GetAdditionalImagePointerEv-returns" title="Permalink to this headline">¶</a></dt>
+<dd class="field-odd"><p>Pointer to the second image set for this item or NULL. </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class objdesc">
+<dt class="sig sig-object highlight cpp" id="_CPPv4N4grvl5PanelE">
+<span id="_CPPv3N4grvl5PanelE"></span><span id="_CPPv2N4grvl5PanelE"></span><span id="grvl::Panel"></span><span class="target" id="classgrvl_1_1Panel"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Panel</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">grvl</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Container</span></span><a class="headerlink" href="#_CPPv4N4grvl5PanelE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Represents panel widget.</p>
+<p><a class="reference internal" href="#classgrvl_1_1Panel"><span class="std std-ref">Panel</span></a> is a fixed top part of a screen that displays widgets that should be always visible.</p>
+<p>XML parameters:<ul class="simple">
+<li><p>id - identifier of a widget</p></li>
+<li><p>height - widget height in pixels (default: 30)</p></li>
+<li><p>backgroundColor - background color (default: transparent)</p></li>
+</ul>
+</p>
+<p><div class="remark admonition">
+<p class="admonition-title">Remark</p>
+<p>XML node describing this widget can contain child nodes with components of type:<ul class="simple">
+<li><p>guiClock</p></li>
+<li><p>image</p></li>
+<li><p>textView</p></li>
+<li><p>button</p></li>
+<li><p>switch</p></li>
+<li><p>scrollBar</p></li>
+<li><p>listItem</p></li>
+<li><p>progressBar </p></li>
+</ul>
+</p>
+</div>
+</p>
+</dd></dl>
+
+<dl class="cpp class objdesc">
+<dt class="sig sig-object highlight cpp" id="_CPPv4N4grvl12SwitchButtonE">
+<span id="_CPPv3N4grvl12SwitchButtonE"></span><span id="_CPPv2N4grvl12SwitchButtonE"></span><span id="grvl::SwitchButton"></span><span class="target" id="classgrvl_1_1SwitchButton"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">SwitchButton</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">grvl</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">AbstractButton</span></span><a class="headerlink" href="#_CPPv4N4grvl12SwitchButtonE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Represents switch (flip-flop) button.</p>
+<p>XML parameters:<ul class="simple">
+<li><p>id - widget identifier</p></li>
+<li><p>x - widget position on x axis in pixels</p></li>
+<li><p>y - widget position on y axis in pixels</p></li>
+<li><p>width - widget width in pixels</p></li>
+<li><p>height - widget height in pixels</p></li>
+<li><p>visible - indicates if the widget is visible</p></li>
+</ul>
+</p>
+<p>XML events:<ul class="simple">
+<li><p>onClick - event invoked when touch is released, but only when it has not left the boundaries of widget since pressing and long press was not reported</p></li>
+<li><p>onPress - event invoked when touch is detected in the boundaries of the widget</p></li>
+<li><p>onRelease - event invoked when touch is released in the boundaries of the widget</p></li>
+<li><p>onLongPress - event invoked when the widget is pressed for longer than a second</p></li>
+<li><p>onLongPressRepeat - event invoked periodically (every half a second) while the widget is being pressed</p></li>
+<li><p>onSwitchON - event invoked when switch button is switched to ON mode</p></li>
+<li><p>onSwitchOFF - event invoked when switch button is switched to OFF mode </p></li>
+</ul>
+</p>
+<p>Subclassed by grvl::Checkbox</p>
+</dd></dl>
+
+<dl class="cpp class objdesc">
+<dt class="sig sig-object highlight cpp" id="_CPPv4N4grvl6SliderE">
+<span id="_CPPv3N4grvl6SliderE"></span><span id="_CPPv2N4grvl6SliderE"></span><span id="grvl::Slider"></span><span class="target" id="classgrvl_1_1Slider"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Slider</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">grvl</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Component</span></span><a class="headerlink" href="#_CPPv4N4grvl6SliderE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Horizontal scroll bar widget.</p>
+<p>XML parameters:<ul class="simple">
+<li><p>id - widget identifier</p></li>
+<li><p>x - widget position on x axis in pixels</p></li>
+<li><p>y - widget position on y axis in pixels</p></li>
+<li><p>width - widget width in pixels</p></li>
+<li><p>height - widget height in pixels</p></li>
+<li><p>visible - indicates if the widget is visible (default: true)</p></li>
+<li><p>backgroundColor - background color (default: transparent)</p></li>
+<li><p>activeBackgroundColor - background color when pressed (default: backgroundColor)</p></li>
+<li><p>frameColor - frame color (default: transparent)</p></li>
+<li><p>selectedFrameColor - frame color when pressed (default: frameColor)</p></li>
+<li><p>barColor - scroll bar background color (default: white)</p></li>
+<li><p>activeBarColor - scroll bar background color when pressed (default: barColor)</p></li>
+<li><p>scrollColor - scrolling element color (default: blue)</p></li>
+<li><p>activeScrollColor - scrolling element color when pressed (default: scrollColor)</p></li>
+<li><p>minValue - minimal value (the one on the left) (default: 0)</p></li>
+<li><p>maxValue - maximal value (the one on the right) (default: 100)</p></li>
+<li><p>image - identifier of image content replacing standard scrolling element</p></li>
+</ul>
+</p>
+<p>XML events:<ul class="simple">
+<li><p>onClick - event invoked when touch is released, but only when it has not left the boundaries of widget since pressing</p></li>
+<li><p>onPress - event invoked when touch is detected in the boundaries of the widget</p></li>
+<li><p>onRelease - event invoked when touch is released</p></li>
+<li><p>onValueChange - event invoked when the scrolling element is moved to another value </p></li>
+</ul>
+</p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions<a class="headerlink" href="#breathe-section-title-public-functions" title="Permalink to this headline">¶</a></p>
+<dl class="cpp function objdesc">
+<dt class="sig sig-object highlight cpp" id="_CPPv4NK4grvl6Slider8GetValueEv">
+<span id="_CPPv3NK4grvl6Slider8GetValueEv"></span><span id="_CPPv2NK4grvl6Slider8GetValueEv"></span><span id="grvl::Slider::GetValueC"></span><span class="target" id="classgrvl_1_1Slider_1a9ec63ff25f9ea2b1fa445ff87df4028b"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">GetValue</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4grvl6Slider8GetValueEv" title="Link to this definition">¶</a><br /></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd" id="_CPPv4NK4grvl6Slider8GetValueEv-returns">Returns<span class="colon">:</span><a class="headerlink" href="#_CPPv4NK4grvl6Slider8GetValueEv-returns" title="Permalink to this headline">¶</a></dt>
+<dd class="field-odd"><p>Scroll bar’s current position. </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+
+
+  <hr>
+<div class="md-source-file">
+  <small>
+    
+      Last update:
+      2026-01-26
+    
+  </small>
+</div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+    <nav class="md-footer__inner md-grid" aria-label="Footer" >
+      
+        
+        <a href="keyboard.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: On-screen keyboard" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              On-screen keyboard
+            </div>
+          </div>
+        </a>
+      
+      
+    </nav>
+  
+  
+  
+  <div class="md-footer-meta md-typeset">
+    
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-footer-copyright__highlight">
+        Copyright &#169; Antmicro, 2026.
+        
+    </div>
+  
+      <a href="https://github.com/antmicro/grvl/tree/4e4c3fc7299dce6dbef28f4dd8657c6f7bbbbcd9">4e4c3fc7</a>
+        @ <a href="https://github.com/antmicro/grvl/tree/main">main</a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+      
+      
+    
+    <a href="https://github.com/antmicro" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+    </a>
+  
+    
+    
+      
+      
+    
+    <a href="https://twitter.com/antmicro" target="_blank" rel="noopener" title="twitter.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+    
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": ".", "features": ["toc.integrate"], "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    
+      
+        <script src="_static/sphinx_immaterial_theme.f9d9eeeb247ace16c.min.js?v=8ec58cb5"></script>
+    
+  </body>
+</html>
