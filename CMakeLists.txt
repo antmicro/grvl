@@ -31,7 +31,11 @@ target_link_libraries(
          JPEG
          PNG
          tinyxml2
-         duktape)
+         duktape
+
+         $<$<BOOL:${GRVL_LINUX_DESKTOP}>:SDL2>
+         $<$<BOOL:${GRVL_LINUX_NATIVE}>:yavo>
+)
 
 
 target_include_directories(

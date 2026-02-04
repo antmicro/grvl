@@ -16,7 +16,7 @@ variables:
   stage: build
   before_script:
     - apt update -qqy
-    - apt install -qqy file git gcc g++ nasm cmake libz-dev libjpeg-dev libpng-dev libtinyxml2-dev duktape-dev
+    - apt install -qqy file git gcc g++ nasm cmake libz-dev libjpeg-dev libpng-dev libtinyxml2-dev duktape-dev libsdl2-dev
   script:
     - cmake -S. -Bbuild -DGRVL_STATIC=${GRVL_STATIC} -DGRVL_SHARED=${GRVL_SHARED} -DUSE_SYSTEM_LIBRARIES=${USE_SYSTEM_LIBRARIES}
     - cmake --build build
@@ -46,13 +46,13 @@ build_latest:
   extends: build_stable
   image: archlinux:base
   before_script:
-    - pacman -Syu --noconfirm git gcc make cmake zlib libjpeg-turbo libpng tinyxml2 duktape
+    - pacman -Syu --noconfirm git gcc make cmake zlib libjpeg-turbo libpng tinyxml2 duktape sdl2-compat
 
 .docs-build:
   stage: docs-build
   before_get_sources:
     - apt update -qqy
-    - apt install -qqy cmake make git gcc g++ nasm libz-dev libjpeg-dev libpng-dev libtinyxml2-dev duktape-dev python3 python3-venv doxygen graphviz latexmk texlive-latex-extra texlive-fonts-recommended texlive-fonts-extra --no-install-recommends
+    - apt install -qqy cmake make git gcc g++ nasm libz-dev libjpeg-dev libpng-dev libtinyxml2-dev duktape-dev python3 python3-venv doxygen graphviz latexmk texlive-latex-extra texlive-fonts-recommended texlive-fonts-extra libsdl2-dev --no-install-recommends
 
 docs-build:
   extends: .docs-build

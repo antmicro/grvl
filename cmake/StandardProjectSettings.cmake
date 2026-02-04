@@ -3,6 +3,8 @@ option(GRVL_STATIC "Build static library" ON)
 option(GRVL_SHARED "Build shared library" OFF)
 
 option(GRVL_ZEPHYR "Enable ZephyrRTOS support" OFF)
+option(GRVL_LINUX_NATIVE "Enable Native Linux support" OFF)
+option(GRVL_LINUX_DESKTOP "Enable X11/Wayland Linux Desktop support" OFF)
 
 option(BUILD_DOCS "Build documentation" OFF)
 option(USE_SYSTEM_LIBRARIES "Use system provided libraries" OFF)
@@ -50,9 +52,18 @@ if(GRVL_STATIC AND GRVL_SHARED)
   message(FATAL_ERROR "Building both shared and static library at the same time is not supported.")
 endif()
 
+if(GRVL_LINUX_NATIVE)
+  target_compile_definitions(grvl_options INTERFACE GRVL_LINUX_NATIVE_SUPPORT)
+  message(STATUS "GRVL Native Linux support ENABLED")
+endif()
+
+if(GRVL_LINUX_DESKTOP)
+  target_compile_definitions(grvl_options INTERFACE GRVL_LINUX_DESKTOP_SUPPORT)
+  message(STATUS "GRVL Desktop Linux support ENABLED")
+endif()
+
 if(GRVL_STATIC)
   set(BUILD_SHARED_LIBS OFF)
 elseif(GRVL_SHARED)
   set(BUILD_SHARED_LIBS ON)
 endif()
-

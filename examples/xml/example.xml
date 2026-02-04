@@ -37,9 +37,9 @@
         </GridView>
 
         <ListView id="list_view" x="10" y="240" width="200" height="200">
-            <ListItem backgroundColor="#ffff0000" id="item_1" height="50" type="StdListField" text="first" textColor="#ffffffff" font="roboto-medium" />
-            <ListItem backgroundColor="#ff00ff00" id="item_2" height="50" type="LeftArrowField" text="second" textColor="#ffffffff" font="roboto-medium" />
-            <ListItem backgroundColor="#ff0000ff" id="item_3" height="50" type="AlarmField" text="third" textColor="#ffffffff" font="roboto-medium" />
+            <ListItem backgroundColor="#ffff0000" id="item_1" height="50" type="StdListField" text="red" textColor="#ffffffff" font="roboto-medium" />
+            <ListItem backgroundColor="#ff00ff00" id="item_2" height="50" type="LeftArrowField" text="green" textColor="#ffffffff" font="roboto-medium" />
+            <ListItem backgroundColor="#ff0000ff" id="item_3" height="50" type="AlarmField" text="blue" textColor="#ffffffff" font="roboto-medium" />
         </ListView>
 
         <key id="space" onLongPress="doSomething('a','b',3, 2)"/>
