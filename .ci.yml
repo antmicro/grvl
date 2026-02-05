@@ -1,8 +1,8 @@
 image: debian:stable
 stages:
+  - build
   - docs-build
   - docs-deploy
-  - build
 
 variables:
   SCALENODE_CPU: 2
@@ -11,42 +11,42 @@ variables:
   CMAKE_BUILD_TYPE: Release
   DEBIAN_FRONTEND: noninteractive
 
-
 .build:
   stage: build
   before_script:
     - apt update -qqy
-    - apt install -qqy file git gcc g++ nasm cmake libz-dev libjpeg-dev libpng-dev libtinyxml2-dev duktape-dev libsdl2-dev
-  script:
-    - cmake -S. -Bbuild -DGRVL_STATIC=${GRVL_STATIC} -DGRVL_SHARED=${GRVL_SHARED} -DUSE_SYSTEM_LIBRARIES=${USE_SYSTEM_LIBRARIES}
-    - cmake --build build
-    - ls -lh build/libgrvl*
-    - file build/libgrvl*
-
+    - apt install -qqy file git gcc g++ nasm cmake libz-dev libjpeg-dev libpng-dev libtinyxml2-dev duktape-dev
 
 # Build with provided dependencies
 build_vendored:
   extends: .build
-  variables:
-    GRVL_STATIC: Y
-    GRVL_SHARED: N
-
+  script:
+    - cmake -B build -DGRVL_STATIC=Y -DGRVL_SHARED=N
+    - cmake --build build
+    - ls -lh build/libgrvl*
+    - file build/libgrvl*
 
 # Build with libraries from debian stable
 build_stable:
   extends: .build
-  variables:
-    GRVL_STATIC: N
-    GRVL_SHARED: Y
-    USE_SYSTEM_LIBRARIES: Y
-
+  script:
+    - apt install -qqy libdrm-dev pkg-config
+    - cmake -B build -DGRVL_STATIC=N -DGRVL_SHARED=Y -DGRVL_LINUX_NATIVE=Y -DUSE_SYSTEM_LIBRARIES=Y
+    - cmake --build build
+    - ls -lh build/libgrvl*
+    - file build/libgrvl*
 
 # Build with new libraries from archlinux
 build_latest:
-  extends: build_stable
+  extends: .build
   image: archlinux:base
   before_script:
-    - pacman -Syu --noconfirm git gcc make cmake zlib libjpeg-turbo libpng tinyxml2 duktape sdl2-compat
+    - pacman -Syu --noconfirm git gcc make cmake zlib libjpeg-turbo libpng tinyxml2 duktape libdrm pkgconf
+  script:
+    - cmake -B build -DGRVL_STATIC=N -DGRVL_SHARED=Y -DGRVL_LINUX_NATIVE=Y -DUSE_SYSTEM_LIBRARIES=Y
+    - cmake --build build
+    - ls -lh build/libgrvl*
+    - file build/libgrvl*
 
 .docs-build:
   stage: docs-build

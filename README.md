@@ -39,14 +39,14 @@ With its collection of built-in widgets, XML-based config and support for reconf
 
 Build using CMake:
 ```sh
-$ cmake -B build .
-$ cmake --build build/ --target grvl
+cmake -B build .
+cmake --build build/ --target grvl
 ```
 ### Zephyr
 
 Pull the source code (e.g. using `west`) and add the following in your `CMakeLists.txt` file:
 
-```
+```cmake
 set(GRVL_ZEPHYR ON)
 add_subdirectory(<grvl_path>)
     ...

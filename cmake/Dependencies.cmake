@@ -1,6 +1,8 @@
 
-set(CPM_YAV_URI "gh:antmicro/yav#f1e4b6c819f97bf72cbaf79c5c59751d826ef436")
-set(CPM_SDL_URI "gh:libsdl-org/SDL#release-2.0.0")
+# We only support dynamically linked SDL
+if (GRVL_LINUX_DESKTOP)
+  find_package(SDL2 REQUIRED)
+endif()
 
 if(USE_SYSTEM_LIBRARIES)
   find_package(ZLIB REQUIRED)
@@ -9,20 +11,18 @@ if(USE_SYSTEM_LIBRARIES)
   find_package(tinyxml2 REQUIRED)
   find_package(duktape REQUIRED)
 
-  if (GRVL_LINUX_DESKTOP)
-    find_package(SDL2 REQUIRED)
+  if (GRVL_LINUX_NATIVE)
+    include(CPM)
+    CPMAddPackage(
+      NAME yav
+      GITHUB_REPOSITORY antmicro/yav
+      GIT_TAG b7a6f53935226dce33129a25a7c30a5bfe7861ec
+      OPTIONS "CMAKE_POSITION_INDEPENDENT_CODE ON")
   endif()
 
   add_library(ZLIB ALIAS ZLIB::ZLIB)
   add_library(JPEG ALIAS JPEG::JPEG)
   add_library(PNG ALIAS PNG::PNG)
-
-  # YAV is not a dynamic library so we need to download it anyway
-  if (GRVL_LINUX_NATIVE)
-    include(CPM)
-    CPMAddPackage(${CPM_YAV_URI})
-  endif()
-
   return()
 endif()
 
@@ -31,12 +31,12 @@ include(CPM)
 # Set minimum CMake Policy Version for dependencies
 set(CMAKE_POLICY_VERSION_MINIMUM 3.16)
 
-if(GRVL_LINUX_DESKTOP)
-  CPMAddPackage(${CPM_SDL_URI})
-endif()
-
 if (GRVL_LINUX_NATIVE)
-  CPMAddPackage(${CPM_YAV_URI})
+  CPMAddPackage(
+      NAME yav
+      GITHUB_REPOSITORY antmicro/yav
+      GIT_TAG b7a6f53935226dce33129a25a7c30a5bfe7861ec
+      OPTIONS "CMAKE_POSITION_INDEPENDENT_CODE ON")
 endif()
 
 # Zlib
