@@ -289,6 +289,8 @@ namespace grvl {
                 if (event.code == BTN_LEFT) {
                     left_mouse_pressed = event.value;
                 }
+
+                Manager::GetInstance().ProcessKeyInput(event.value != 0, event.code);
             }
 
             if (was_interrupted()) {

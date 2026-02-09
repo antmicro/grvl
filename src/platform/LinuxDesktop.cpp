@@ -77,6 +77,14 @@ namespace grvl {
             if (event.type == SDL_QUIT) {
                 should_run = false;
             }
+
+            if (event.type == SDL_KEYDOWN) {
+                Manager::GetInstance().ProcessKeyInput(true, event.key.keysym.sym);
+            }
+
+            if (event.type == SDL_KEYUP) {
+                Manager::GetInstance().ProcessKeyInput(false, event.key.keysym.sym);
+            }
         }
 
         int x, y;
