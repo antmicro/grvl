@@ -94,10 +94,10 @@ namespace grvl {
             result.SetID(tempChar);
         }
 
-        result.SetOnReleaseEvent(man->GetEventWithArguments(xmlElement->Attribute("onRelease")));
-        result.SetOnPressEvent(man->GetEventWithArguments(xmlElement->Attribute("onPress")));
-        result.SetOnLongPressEvent(man->GetEventWithArguments(xmlElement->Attribute("onLongPress")));
-        result.SetOnLongPressRepeatEvent(man->GetEventWithArguments(xmlElement->Attribute("onLongPressRepeat")));
+        result.SetOnReleaseEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onRelease"))));
+        result.SetOnPressEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onPress"))));
+        result.SetOnLongPressEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPress"))));
+        result.SetOnLongPressRepeatEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPressRepeat"))));
 
         return result;
     }
