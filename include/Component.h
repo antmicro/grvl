@@ -135,7 +135,7 @@ namespace grvl {
         Component(const Component& other);
         Component& operator=(const Component& other);
 
-        virtual ~Component() = default;
+        virtual ~Component();
 
         virtual Component* Clone() const;
 
@@ -226,6 +226,8 @@ namespace grvl {
 
         virtual void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder);
 
+        void PushJSObjectOnStack(duk_context* ctx);
+
         GENERATE_DUK_STRING_GETTER(Component, ID, GetID)
         GENERATE_DUK_STRING_GETTER(Component, ParentID, GetParentID)
 
@@ -313,6 +315,8 @@ namespace grvl {
         Touch::TouchResponse OnMoveCase(const Touch& tp, int32_t ParentX, int32_t ParentY);
 
         virtual void InitFromXML(tinyxml2::XMLElement* xmlElement);
+
+        void* JavascriptObject{nullptr};
     };
 
 } /* namespace grvl */

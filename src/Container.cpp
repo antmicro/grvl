@@ -287,7 +287,7 @@ namespace grvl {
 
         const char* componentName = duk_to_string(ctx, 0);
         if (Component* foundComponent = container->GetElement(componentName)) {
-            JSEngine::PushComponentAsJSObjectOntoStack(foundComponent);
+            foundComponent->PushJSObjectOnStack(ctx);
             return 1;
         }
 
@@ -304,7 +304,7 @@ namespace grvl {
         }
 
         int index = duk_to_int(ctx, 0);
-        JSEngine::PushComponentAsJSObjectOntoStack(container->GetElementByIndex(index));
+        container->GetElementByIndex(index)->PushJSObjectOnStack(ctx);
         return 1;
     }
 

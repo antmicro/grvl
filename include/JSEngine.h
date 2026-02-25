@@ -44,7 +44,8 @@ namespace grvl {
         static void MakeJavaScriptFunctionCall(const char* functionName);
         static void ExecuteJavaScriptCallback(const char* functionName, void* caller, const Event::ArgVector& args);
         static Event CreateJavaScriptFunctionCallEvent(const std::string& functionName, const Event::ArgVector& args);
-        static void PushComponentAsJSObjectOntoStack(Component* component);
+        static void RememberObject(void* objectPtr);
+        static void ForgetObject(void* objectPtr);
 
         static duk_ret_t Print(duk_context* ctx);
         static duk_ret_t GetElementById(duk_context* ctx);
@@ -63,6 +64,7 @@ namespace grvl {
         static void RegisterBasicAPIFunctions();
 
         inline static duk_context* ctx;
+        inline static duk_uarridx_t lowestMaybeEmptyRememberedObjectIdx;
 
         static std::vector<char> LoadCodeFromFile(const char* filePath);
 
@@ -70,6 +72,9 @@ namespace grvl {
 
         static void PrepareJavaScriptFunctionCall(const char* functionName);
         static void ExecutePreparedJavaScriptFunctionCall(const char* functionName, int numOfArgs);
+
+        static void PushRemeberedObjectsArray(duk_context* ctx);
+        static constexpr const char* STASH_REMEBERED_OBJECTS_KEY{"rememberedObjects"};
     };
 
 } /* namespace grvl */

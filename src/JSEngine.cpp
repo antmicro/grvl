@@ -23,6 +23,7 @@
 
 #include "Manager.h"
 #include "JSObjectBuilder.h"
+#include "duktape.h"
 
 namespace grvl {
 
@@ -39,6 +40,9 @@ namespace grvl {
             printf("Failed to create a Duktape heap.\n");
             exit(1);
         }
+        duk_push_heap_stash(ctx);
+        duk_push_array(ctx);
+        duk_put_prop_literal(ctx, -2, STASH_REMEBERED_OBJECTS_KEY);
     }
 
     void JSEngine::RegisterBasicAPIFunctions()
@@ -143,7 +147,7 @@ namespace grvl {
 
         if (auto callerAsComponent = static_cast<Component*>(caller)) {
             numOfArgs += 1;
-            PushComponentAsJSObjectOntoStack(callerAsComponent);
+            callerAsComponent->PushJSObjectOnStack(ctx);
         }
 
         for (const auto& arg : args) {
@@ -166,6 +170,54 @@ namespace grvl {
         return Event{std::move(callback)};
     }
 
+    void JSEngine::PushRemeberedObjectsArray(duk_context* ctx)
+    {
+        duk_push_heap_stash(ctx);
+        duk_get_prop_literal(ctx, -1, STASH_REMEBERED_OBJECTS_KEY);
+        duk_remove(ctx, -2);
+    }
+
+    void JSEngine::RememberObject(void *objectPtr)
+    {
+        PushRemeberedObjectsArray(ctx);
+        duk_uarridx_t len = duk_get_length(ctx, -1);
+        duk_uarridx_t idx = lowestMaybeEmptyRememberedObjectIdx;
+        while (idx < len) {
+            if (!duk_has_prop_index(ctx, -1, idx)) break;
+            idx += 1;
+        }
+        lowestMaybeEmptyRememberedObjectIdx = idx + 1;
+        duk_push_heapptr(ctx, objectPtr);
+        duk_put_prop_index(ctx, -2, idx);
+        duk_pop(ctx);
+    }
+
+    void JSEngine::ForgetObject(void *objectPtr)
+    {
+        PushRemeberedObjectsArray(ctx);
+        duk_uarridx_t len = duk_get_length(ctx, -1);
+        duk_uarridx_t idx = 0;
+        for (; idx < len; duk_pop(ctx), idx += 1) {
+            if (!duk_get_prop_index(ctx, -1, idx)) {
+                continue;
+            }
+            if (duk_get_heapptr(ctx, -1) != objectPtr) {
+                continue;
+            }
+            duk_pop(ctx);
+            break;
+        }
+        if (idx == len) {
+            // Object was already forgotten?
+            return;
+        }
+        duk_del_prop_index(ctx, -1, idx);
+        if (idx < lowestMaybeEmptyRememberedObjectIdx) {
+            lowestMaybeEmptyRememberedObjectIdx = idx;
+        }
+        duk_pop(ctx);
+    }
+
     duk_ret_t JSEngine::Print(duk_context* ctx)
     {
         const char* log = duk_to_string(ctx, 0);
@@ -179,17 +231,11 @@ namespace grvl {
         const char* componentName = duk_to_string(ctx, 0);
         Manager& managerInstance = Manager::GetInstance();
         if (Component* foundComponent = managerInstance.FindElementInTheActiveScreenById(componentName)) {
-            PushComponentAsJSObjectOntoStack(foundComponent);
+            foundComponent->PushJSObjectOnStack(ctx);
             return RETURN_VALUE_PRESENT;
         }
 
         return NO_RETURN_VALUE;
-    }
-
-    void JSEngine::PushComponentAsJSObjectOntoStack(Component* component)
-    {
-        JSObjectBuilder jsObjectBuilder{ctx, component};
-        component->PopulateJavaScriptObject(jsObjectBuilder);
     }
 
     duk_ret_t JSEngine::ShowPopup(duk_context* ctx)
@@ -224,7 +270,7 @@ namespace grvl {
     {
         Manager& managerInstance = Manager::GetInstance();
         Panel* topPanel = managerInstance.GetTopPanel();
-        PushComponentAsJSObjectOntoStack(topPanel);
+        topPanel->PushJSObjectOnStack(ctx);
 
         return RETURN_VALUE_PRESENT;
     }
@@ -233,7 +279,7 @@ namespace grvl {
     {
         Manager& managerInstance = Manager::GetInstance();
         Panel* bottomPanel = managerInstance.GetBottomPanel();
-        PushComponentAsJSObjectOntoStack(bottomPanel);
+        bottomPanel->PushJSObjectOnStack(ctx);
 
         return RETURN_VALUE_PRESENT;
     }
@@ -244,7 +290,7 @@ namespace grvl {
 
         Manager& managerInstance = Manager::GetInstance();
         Component* prefab = managerInstance.GetPrefabByID(prefabId);
-        PushComponentAsJSObjectOntoStack(prefab);
+        prefab->PushJSObjectOnStack(ctx);
 
         return RETURN_VALUE_PRESENT;
     }

@@ -15,6 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "Component.h"
+#include "JSEngine.h"
+#include "JSObject.h"
 #include "grvl.h"
 #include "Manager.h"
 #include "Misc.h"
@@ -125,6 +127,13 @@ namespace grvl {
         onLongPressRepeat.SetSenderPointer(this);
 
         return *this;
+    }
+
+    Component::~Component()
+    {
+        if (JavascriptObject != nullptr) {
+            JSEngine::ForgetObject(JavascriptObject);
+        }
     }
 
     Component* Component::Clone() const
@@ -553,6 +562,18 @@ namespace grvl {
         return metadata.at(key).c_str();
     }
 
+    void Component::PushJSObjectOnStack(duk_context* ctx)
+    {
+        if (JavascriptObject != nullptr) {
+            duk_push_heapptr(ctx, JavascriptObject);
+            return;
+        }
+        JSObjectBuilder jsObjectBuilder{ctx, this};
+        JavascriptObject = duk_get_heapptr(ctx, -1);
+        JSEngine::RememberObject(JavascriptObject);
+        PopulateJavaScriptObject(jsObjectBuilder);
+    }
+
     void Component::PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder)
     {
         jsObjectBuilder.AddProperty("name", Component::JSGetIDWrapper);
@@ -580,8 +601,7 @@ namespace grvl {
         Component* component = static_cast<Component*>(duk_to_pointer(ctx, -1));
         if (component) {
             Component* clonedComponent = component->Clone();
-            JSObjectBuilder jsObjectBuilder{ctx, clonedComponent};
-            clonedComponent->PopulateJavaScriptObject(jsObjectBuilder);
+            clonedComponent->PushJSObjectOnStack(ctx);
 
             return 1;
         }
