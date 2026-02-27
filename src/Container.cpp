@@ -143,6 +143,9 @@ namespace grvl {
         for (int index = 0; index < Elements.size(); ++index) {
             if (strcmp(Elements[index]->GetID(), elementId) == 0) {
                 foundComponent = Elements[index];
+                if (foundComponent == lastActiveChild) {
+                    lastActiveChild = nullptr;
+                }
                 Elements.erase(Elements.begin() + index);
                 delete foundComponent;
                 return;
