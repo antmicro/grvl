@@ -33,26 +33,12 @@ namespace grvl {
     {
         Manager* man = &Manager::GetInstance();
         const char* type;
-        int32_t x = 0;
-        int32_t y = 0;
         Image* result = new Image();
+        result->InitFromXML(xmlElement);
 
         if(XMLSupport::TryGetAttribute(xmlElement, "contentId", &type)) {
             man->BindImageContentToImage(type, result);
         }
-
-        XMLSupport::TryGetIntAttribute(xmlElement, "x", &x);
-        XMLSupport::TryGetIntAttribute(xmlElement, "y", &y);
-
-        result->SetPosition(x, y);
-        result->SetVisible(XMLSupport::GetAttributeOrDefault(xmlElement, "visible", true));
-
-        const char* id = xmlElement->Attribute("id");
-        if(id != NULL) {
-            result->SetID(id);
-        }
-
-        result->SetOnClickEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onClick"))));
         return result;
     }
 

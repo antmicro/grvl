@@ -39,36 +39,14 @@ namespace grvl {
     {
         Manager* man = &Manager::GetInstance();
 
-        int32_t x;
-        int32_t y;
-        int32_t height;
-        int32_t width;
-        if(!XMLSupport::TryGetIntAttribute(xmlElement, "x", &x)
-           || !XMLSupport::TryGetIntAttribute(xmlElement, "y", &y)
-           || !XMLSupport::TryGetIntAttribute(xmlElement, "width", &width)
-           || !XMLSupport::TryGetIntAttribute(xmlElement, "height", &height)) {
-            return NULL;
-        }
+        Clock* result = new Clock();
+        result->InitFromXML(xmlElement);
 
-        Clock* result = new Clock(x, y, width, height);
-        const char* id = xmlElement->Attribute("id");
-        if(id != NULL) {
-            result->SetID(id);
-        }
         result->SetText("");
-        static constexpr uint32_t defaultFg = 0xFFFFFFFF; /*white*/
-        result->SetForegroundColor(XMLSupport::ParseColor(xmlElement, "foregroundColor", defaultFg));
-        result->SetBackgroundColor(XMLSupport::GetAttributeOrDefault(xmlElement, "backgroundColor", (uint32_t)COLOR_ARGB8888_TRANSPARENT));
 
-        result->SetTextFont(man->GetFontPointer(XMLSupport::GetAttributeOrDefault(xmlElement, "font", "normal")));
         result->SetHorizontalAlignment(
             XMLSupport::ParseAlignmentOrDefault(xmlElement, "alignment", Label::Center));
-        result->SetVisible(XMLSupport::GetAttributeOrDefault(xmlElement, "visible", true));
         result->SetVisibleSeconds(XMLSupport::GetAttributeOrDefault(xmlElement, "seconds", false));
-        result->SetOnClickEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onClick"))));
-        result->SetOnReleaseEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onRelease"))));
-        result->SetOnPressEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onPress"))));
-
         result->Start();
 
         return result;

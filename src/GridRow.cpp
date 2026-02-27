@@ -114,6 +114,7 @@ namespace grvl {
     GridRow* GridRow::BuildFromXML(XMLElement* xmlElement)
     {
         GridRow* parent = new GridRow();
+        parent->InitFromXML(xmlElement);
 
         XMLElement* child = xmlElement->FirstChildElement();
         for(; child != NULL; child = child->NextSiblingElement()) {
