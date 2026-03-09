@@ -281,7 +281,9 @@ namespace grvl {
     };
 
 /* Dithering by individual subpixel */
+#ifndef MIN
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#endif
 
     // indexed dithering 888->565
     static void DitherRgb888ToRgb565InPlaceIndexed(unsigned char* src, int w, int h)
