@@ -78,6 +78,11 @@ namespace grvl {
 
     void Slider::SetDiscrete(uint8_t value)
     {
+        if (value < 0 || value > 2) {
+            grvl::Log("[WARNING] Invalid discrete value ignored (%u)", value);    
+            return;
+        }
+
         discrete = value;
     }
 
@@ -501,23 +506,22 @@ namespace grvl {
 
     float Slider::PositionToValue(float position) const
     {
+        float range = MaxValue - MinValue;
+
         if(discrete == 1) {
-            float range = MaxValue - MinValue;
             float newValue = range * position;
             int val = newValue / step;
             newValue = val * step;
             return newValue + MinValue;
         }
-        if(discrete == 0) {
-            float range = MaxValue - MinValue;
-            float newValue = range * position;
-            return newValue + MinValue;
-        }
         if(discrete == 2) {
-            float range = MaxValue - MinValue;
             float newValue = (int)roundf(range * position);
             return newValue + MinValue;
         }
+
+        // Use discrete == 0 as a safe fallback
+        float newValue = range * position;
+        return newValue + MinValue;
     }
 
     void Slider::SetOnValueChangeEvent(const Event& event)
