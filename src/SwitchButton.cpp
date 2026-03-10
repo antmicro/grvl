@@ -253,7 +253,7 @@ namespace grvl {
     void SwitchButton::PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder)
     {
         AbstractButton::PopulateJavaScriptObject(jsObjectBuilder);
-        jsObjectBuilder.AddProperty("switchState", SwitchButton::JSGetSwitchStateWrapper);
+        jsObjectBuilder.AddProperty("switchState", SwitchButton::JSGetSwitchStateWrapper, SwitchButton::JSSetSwitchStateWrapper);
     }
 
 } /* namespace grvl */
