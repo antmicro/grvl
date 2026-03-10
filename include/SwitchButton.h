@@ -88,6 +88,7 @@ namespace grvl {
         void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder) override;
 
         GENERATE_DUK_BOOLEAN_GETTER(SwitchButton, SwitchState, GetSwitchState)
+        GENERATE_DUK_BOOLEAN_SETTER(SwitchButton, SwitchState, SetSwitchState)
 
     protected:
         virtual void DrawActiveState(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY, int32_t RenderWidth, int32_t RenderHeight);
