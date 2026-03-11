@@ -60,6 +60,12 @@ namespace grvl {
     ///
     class Slider : public Component {
     public:
+        enum SliderScaleType {
+            CONTINUOUS = 0,
+            DISCRETE,
+            INTEGER
+        };
+
         Slider() = default;
 
         Slider(int32_t x, int32_t y, int32_t width, int32_t height)
@@ -109,11 +115,12 @@ namespace grvl {
         void SetActiveScrollColor(uint32_t color);
         void SetFrameColor(uint32_t color);
         void SetSelectedFrameColor(uint32_t color);
+        void SetValueRange(float min, float max);
         void SetMinValue(float value);
         void SetMaxValue(float value);
         void SetValue(double value);
         void SetKeepBoundaries(bool value);
-        void SetDiscrete(uint8_t value);
+        void SetSliderType(SliderScaleType type);
         void SetDivision(uint8_t value);
         void CalculateStep();
         void SetTextFont(Font const* font);
@@ -163,7 +170,8 @@ namespace grvl {
         uint64_t PreviousValueUpdateTimestamp{0};
         bool KeepBoundaries{false};
 
-        uint8_t discrete, division;
+        SliderScaleType ScaleType{SliderScaleType::CONTINUOUS};
+        uint8_t division{1};
         uint32_t step;
 
         Font const* SliderFont;

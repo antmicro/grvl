@@ -84,7 +84,15 @@
                     <xs:attribute name="maxValue" type="xs:integer"/>
                     <xs:attribute name="minValue" type="xs:integer"/>
                     <xs:attribute name="keepBoundaries" type="xs:boolean"/>
-                    <xs:attribute name="isDiscrete" type="xs:boolean"/>
+                    <xs:attribute name="type">
+                        <xs:simpleType>
+                            <xs:restriction base="xs:string">
+                                <xs:enumeration value="Continuous" />
+                                <xs:enumeration value="Discrete"/>
+                                <xs:enumeration value="Integer"/>
+                            </xs:restriction>
+                        </xs:simpleType>
+                    </xs:attribute>
                     <xs:attribute name="division" type="xs:integer"/>
                     <xs:attribute name="font" type="xs:string"/>
                     <xs:attribute name="image" type="idType"/>

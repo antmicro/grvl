@@ -57,6 +57,18 @@ namespace grvl {
         FrameColor = color;
     }
 
+#define EPSILON 2.2204460492503131e-16
+    void Slider::SetValueRange(float min, float max)
+    {
+        if (max - min < EPSILON) {
+            grvl::Log("[WARNING] Ignoring invalid Slider value range (%f..%f)", min, max);
+            return;
+        }
+
+        SetMinValue(min);
+        SetMaxValue(max);
+    }
+
     void Slider::SetMinValue(float value)
     {
         Value = value;
@@ -76,18 +88,11 @@ namespace grvl {
         }
     }
 
-    void Slider::SetDiscrete(uint8_t value)
-    {
-        if (value < 0 || value > 2) {
-            grvl::Log("[WARNING] Invalid discrete value ignored (%u)", value);    
-            return;
-        }
-
-        discrete = value;
-    }
-
     void Slider::SetDivision(uint8_t value)
     {
+        if (value == 0) {
+            grvl::Log("[WARNING] Ignoring slider division equal 0");
+        }
         division = value;
         CalculateStep();
     }
@@ -110,7 +115,7 @@ namespace grvl {
             limiters[i] = array[i];
         MinValue = 0;
         MaxValue = size - 1.0;
-        discrete = 2;
+        ScaleType = SliderScaleType::INTEGER;
     }
 
     uint32_t Slider::GetBarColor() const
@@ -148,7 +153,6 @@ namespace grvl {
         return Value;
     }
 
-#define EPSILON 2.2204460492503131e-16
 
     bool AreSame(float a, float b)
     {
@@ -223,7 +227,7 @@ namespace grvl {
             return;
         }
 
-        if(discrete == 0) {
+        if (ScaleType == SliderScaleType::CONTINUOUS) {
             if (BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
                 painter.FillRoundRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor, BorderArcRadius);
             } else {
@@ -287,7 +291,7 @@ namespace grvl {
 
                 ScrollImage.Draw(painter, ParentRenderX + X, ParentRenderY + Y);
             }
-        } else if(discrete == 1) {
+        } else if (ScaleType == SliderScaleType::DISCRETE) {
             uint8_t j = 0;
             for(uint32_t i = MinValue; i <= MaxValue; i = i + step) {
                 uint16_t x = ParentRenderX + X + j * (Width / division);
@@ -308,7 +312,7 @@ namespace grvl {
             }
 
             ScrollImage.Draw(painter, ParentRenderX + X, ParentRenderY + Y);
-        } else if(discrete == 2) {
+        } else if (ScaleType == SliderScaleType::INTEGER) {
             for(uint16_t i = MinValue; i <= MaxValue; i++) {
                 float x = ParentRenderX + X + (float)i * (float)Width / (float)MaxValue;
                 painter.DrawLine(x, Y, x, Y + Height, 0xFFFFFFFF);
@@ -439,14 +443,23 @@ namespace grvl {
         result->SetScrollColor(XMLSupport::ParseColor(xmlElement, "scrollColor", (uint32_t)COLOR_ARGB8888_BLUE));
         result->SetActiveScrollColor(XMLSupport::ParseColor(xmlElement, "activeScrollColor", (uint32_t)result->GetScrollColor()));
 
-        result->SetMaxValue(XMLSupport::GetAttributeOrDefault(xmlElement, "maxValue", (uint32_t)100));
-        result->SetMinValue(XMLSupport::GetAttributeOrDefault(xmlElement, "minValue", (uint32_t)0));
-
+        result->SetValueRange(XMLSupport::GetAttributeOrDefault(xmlElement, "minValue", (uint32_t)0),XMLSupport::GetAttributeOrDefault(xmlElement, "maxValue", (uint32_t)100));
+        
         result->SetKeepBoundaries(XMLSupport::GetAttributeOrDefault(xmlElement, "keepBoundaries", false));
 
-        result->SetDiscrete(XMLSupport::GetAttributeOrDefault(xmlElement, "isDiscrete", (uint32_t)0));
+        const char* typeName = xmlElement->Attribute("type", "Continuous");
+        if (strcasecmp(typeName, "Discrete")) {
+            result->SetDivision(XMLSupport::GetAttributeOrDefault(xmlElement, "division", (uint32_t)1));
+            result->SetSliderType(SliderScaleType::DISCRETE);
+        } else if (strcasecmp(typeName, "Integer")) {
+            result->SetSliderType(SliderScaleType::INTEGER);
+        } else { // fallback to continuous scale as a default
+            if (!strcasecmp(typeName, "Continuous")) { // but warn about invalid type
+                grvl::Log("[WARNING] Ignoring invalid value given for slider type (%s)", typeName);
+            }
 
-        result->SetDivision(XMLSupport::GetAttributeOrDefault(xmlElement, "division", (uint32_t)0));
+            result->SetSliderType(SliderScaleType::CONTINUOUS);
+        }
 
         result->SetTextFont(man->GetFontPointer(XMLSupport::GetAttributeOrDefault(xmlElement, "font", "normal")));
 
@@ -508,18 +521,18 @@ namespace grvl {
     {
         float range = MaxValue - MinValue;
 
-        if(discrete == 1) {
+        if (ScaleType == DISCRETE) {
             float newValue = range * position;
             int val = newValue / step;
             newValue = val * step;
             return newValue + MinValue;
         }
-        if(discrete == 2) {
+        if (ScaleType == INTEGER) {
             float newValue = (int)roundf(range * position);
             return newValue + MinValue;
         }
 
-        // Use discrete == 0 as a safe fallback
+        // Use CONTINUOUS as a safe fallback
         float newValue = range * position;
         return newValue + MinValue;
     }
@@ -543,6 +556,11 @@ namespace grvl {
     void Slider::SetKeepBoundaries(bool value)
     {
         KeepBoundaries = value;
+    }
+
+    void Slider::SetSliderType(SliderScaleType value)
+    {
+        ScaleType = value;
     }
 
     bool Slider::GetKeepBoundaries() const
