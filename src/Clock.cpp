@@ -44,6 +44,8 @@ namespace grvl {
 
         result->SetText("");
 
+        result->SetTextColor(result->GetForegroundColor());
+        result->SetTextFont(man->GetFontPointer(XMLSupport::GetAttributeOrDefault(xmlElement, "font", "normal")));
         result->SetHorizontalAlignment(
             XMLSupport::ParseAlignmentOrDefault(xmlElement, "alignment", Label::Center));
         result->SetVisibleSeconds(XMLSupport::GetAttributeOrDefault(xmlElement, "seconds", false));
