@@ -145,7 +145,7 @@ One of: `none`, `box`, `top`, `right`, `bottom`, `left`.
 * maxValue
 * minValue
 * keepBoundaries
-* type - Continuous (default), Discrete (divided into steps - see division), Integer (snaps to integer values)
+* type - Continuous (default), Discrete (divided into steps - see division), List (list indices)
 * division
 * font
 * image

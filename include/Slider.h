@@ -63,7 +63,7 @@ namespace grvl {
         enum SliderScaleType {
             CONTINUOUS = 0,
             DISCRETE,
-            INTEGER
+            LIST
         };
 
         Slider() = default;
@@ -89,6 +89,7 @@ namespace grvl {
             , FrameColor(Obj.FrameColor)
             , SelectedFrameColor(Obj.SelectedFrameColor)
             , ScrollLength(Obj.ScrollLength)
+            , ScaleType(Obj.ScaleType)
             , MinValue(Obj.MinValue)
             , MaxValue(Obj.MaxValue)
             , Position(Obj.Position)
@@ -160,10 +161,15 @@ namespace grvl {
         uint32_t FrameColor{COLOR_ARGB8888_BLACK};
         uint32_t SelectedFrameColor{COLOR_ARGB8888_BLACK};
         uint32_t ScrollLength{0};
+        // Min value in buisiness logic domain
         float MinValue{0};
+        // Max value in buisiness logic domain
         float MaxValue{0};
+        // Current value normalised to 0..1 scale
         float Position{0};
+        // Current value in buisiness logic domain
         float Value{0};
+        // Value reported by onValueChange event
         float ReportedValue{0};
         Image ScrollImage{};
         Event onValueChange{};

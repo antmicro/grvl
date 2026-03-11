@@ -89,7 +89,7 @@
                             <xs:restriction base="xs:string">
                                 <xs:enumeration value="Continuous" />
                                 <xs:enumeration value="Discrete"/>
-                                <xs:enumeration value="Integer"/>
+                                <xs:enumeration value="List"/>
                             </xs:restriction>
                         </xs:simpleType>
                     </xs:attribute>

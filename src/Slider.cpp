@@ -115,7 +115,7 @@ namespace grvl {
             limiters[i] = array[i];
         MinValue = 0;
         MaxValue = size - 1.0;
-        ScaleType = SliderScaleType::INTEGER;
+        ScaleType = SliderScaleType::LIST;
     }
 
     uint32_t Slider::GetBarColor() const
@@ -312,7 +312,7 @@ namespace grvl {
             }
 
             ScrollImage.Draw(painter, ParentRenderX + X, ParentRenderY + Y);
-        } else if (ScaleType == SliderScaleType::INTEGER) {
+        } else if (ScaleType == SliderScaleType::LIST) {
             for(uint16_t i = MinValue; i <= MaxValue; i++) {
                 float x = ParentRenderX + X + (float)i * (float)Width / (float)MaxValue;
                 painter.DrawLine(x, Y, x, Y + Height, 0xFFFFFFFF);
@@ -374,6 +374,7 @@ namespace grvl {
         MaxValue = Obj.MaxValue;
         Position = Obj.Position;
         Value = Obj.Value;
+        ScaleType = Obj.ScaleType;
 
         onValueChange = Obj.onValueChange;
         onValueChange.SetSenderPointer(this);
@@ -452,7 +453,7 @@ namespace grvl {
             result->SetDivision(XMLSupport::GetAttributeOrDefault(xmlElement, "division", (uint32_t)1));
             result->SetSliderType(SliderScaleType::DISCRETE);
         } else if (strcasecmp(typeName, "Integer")) {
-            result->SetSliderType(SliderScaleType::INTEGER);
+            result->SetSliderType(SliderScaleType::LIST);
         } else { // fallback to continuous scale as a default
             if (!strcasecmp(typeName, "Continuous")) { // but warn about invalid type
                 grvl::Log("[WARNING] Ignoring invalid value given for slider type (%s)", typeName);
@@ -527,7 +528,7 @@ namespace grvl {
             newValue = val * step;
             return newValue + MinValue;
         }
-        if (ScaleType == INTEGER) {
+        if (ScaleType == LIST) {
             float newValue = (int)roundf(range * position);
             return newValue + MinValue;
         }
