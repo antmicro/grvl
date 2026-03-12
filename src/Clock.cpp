@@ -19,6 +19,48 @@
 #include "XMLSupport.h"
 
 namespace grvl {
+    Clock::Clock(const Clock& Obj) 
+    :   Label(Obj),
+        isRunning(Obj.isRunning),
+        visibleSeconds(Obj.visibleSeconds),
+        lastCurrentTime(Obj.lastCurrentTime)
+    {
+        if (Obj.format) {
+            format = strdup(Obj.format);
+        } else {
+            format = nullptr;
+        }
+    }
+
+    Clock::~Clock()
+    {
+        if (format) {
+            grvl::Callbacks()->free(format);
+        }
+    }
+
+    Clock& Clock::operator=(const Clock& Obj)
+    {
+        if(this == &Obj) {
+            return *this;
+        }
+
+        Label::operator=(Obj);
+
+        isRunning = Obj.isRunning;
+        lastCurrentTime = Obj.lastCurrentTime;
+        visibleSeconds = Obj.visibleSeconds;
+        if (format) {
+            grvl::Callbacks()->free(format);
+        }
+        if (Obj.format) {
+            format = strdup(Obj.format);
+        } else {
+            format = nullptr;
+        }
+
+        return *this;
+    }
 
     void Clock::Start()
     {
@@ -49,6 +91,18 @@ namespace grvl {
         result->SetHorizontalAlignment(
             XMLSupport::ParseAlignmentOrDefault(xmlElement, "alignment", Label::Center));
         result->SetVisibleSeconds(XMLSupport::GetAttributeOrDefault(xmlElement, "seconds", false));
+        const char* format = xmlElement->Attribute("format");
+        if (format == NULL) {
+            bool visible_seconds = XMLSupport::GetAttributeOrDefault(xmlElement, "seconds", false);
+            result->SetVisibleSeconds(visible_seconds);
+            format = visible_seconds ? "%H:%M:%S" : "%H:%M";
+        }
+        result->SetTimeFormat(format);
+
+        result->SetOnClickEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onClick"))));
+        result->SetOnReleaseEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onRelease"))));
+        result->SetOnPressEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onPress"))));
+
         result->Start();
 
         return result;
@@ -65,12 +119,22 @@ namespace grvl {
             current_time = time(NULL);
             if(lastCurrentTime != current_time) {
                 char buf[bufferSize];
-                strftime(buf, bufferSize, visibleSeconds ? "%H:%M:%S" : "%H:%M", localtime(&current_time));
+                strftime(buf, bufferSize, format ? format : "%H:%M", localtime(&current_time));
                 SetText(buf);
                 lastCurrentTime = current_time;
             }
         }
         Label::Draw(painter, ParentRenderX, ParentRenderY);
+    }
+
+    void Clock::SetTimeFormat(const char* fmt) { 
+        if (!fmt) {
+            fmt = "%H:%M";
+        }
+        if (format) {
+            grvl::Callbacks()->free(format);
+        }
+        format = strdup(fmt);
     }
 
     void Clock::PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder)

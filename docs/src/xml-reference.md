@@ -126,11 +126,13 @@ One of: `none`, `box`, `top`, `right`, `bottom`, `left`.
 * onRelease (callback)
 * foregroundColor
 * seconds (true/false)
+* format (strftime syntax)
 
 #### Example
 
 ```xml
 <clock id="test_clock" x="150" y="10" width="100" height="100" font="roboto-medium" foregroundColor="#fffff000" seconds="true" />
+<clock id="test_clock" x="150" y="10" width="100" height="100" font="roboto-medium" foregroundColor="#fffff000" format="%a %b %d %l:%M" />
 ```
 
 ### Slider

@@ -66,6 +66,7 @@
                     <xs:attribute name="alignment" type="alignmentType"/>
                     <xs:attribute name="onRelease" type="functionType"/>
                     <xs:attribute name="seconds" type="xs:boolean" />
+                    <xs:attribute name="format" type="xs:string" />
                 </xs:extension>
             </xs:complexContent>
         </xs:complexType>

@@ -26,21 +26,7 @@
 LOG_MODULE_REGISTER(MANAGER, LOG_LEVEL_INF);
 #endif
 
-char* strdup (const char* s) // TODO: probably temporary
-{
-  size_t slen = strlen(s);
-  char* result = (char*)malloc(slen + 1);
-  if(result == NULL)
-  {
-    return NULL;
-  }
-
-  memcpy(result, s, slen+1);
-  return result;
-}
-
 namespace grvl {
-
     // Widget list
     WIDGET(Button);
     WIDGET(Separator);
@@ -127,7 +113,7 @@ namespace grvl {
                 screen_animation = 0;
             if(strcmp(arg1, "animate_crossfade") == 0)
                 screen_animation = 2;
-            free(arg1);
+            grvl::Callbacks()->free(arg1);
         }
         man->SetActiveScreen(Args[0].c_str(), screen_animation);
     }

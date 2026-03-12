@@ -43,6 +43,7 @@ namespace grvl {
     /// * backgroundColor       - background color (default: transparent)
     /// * font                  - text font (default: normal)
     /// * alignment             - horizontal text alignment (default: centered)
+    /// * format                - time format in strftime notation (default: %H:%M)
     ///
     /// XML events:
     /// * onClick               - event invoked when touch is released, but only when it has not left widget boundaries
@@ -74,14 +75,18 @@ namespace grvl {
         {
         }
 
-        Clock(const Clock& Obj) = default;
-        Clock& operator=(const Clock& Obj) = default;
+        Clock(const Clock& Obj);
+
+        virtual ~Clock();
+
+        Clock& operator=(const Clock& Obj);
 
         static Clock* BuildFromXML(XMLElement* xmlElement);
 
         void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
 
         void SetVisibleSeconds(bool value) { visibleSeconds = value; }
+        void SetTimeFormat(const char* fmt);
 
         void Start();
         void Stop();
@@ -96,8 +101,9 @@ namespace grvl {
     private:
         bool isRunning;
         bool visibleSeconds;
+        char* format{nullptr};
         time_t lastCurrentTime;
-        static const int bufferSize = 10;
+        static const int bufferSize = 80;
     };
 
 } /* namespace grvl */
