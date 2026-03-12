@@ -1250,7 +1250,14 @@ namespace grvl {
     {
         if(!styles)
             return;
-        // TODO
+        nextElement = styles->FirstChildElement("font-style");
+        while(nextElement) {
+            uint32_t size = (uint32_t)XMLSupport::GetAttributeOrDefault(nextElement, "size", (uint32_t)0);
+            const char* fname = XMLSupport::GetAttributeOrDefault(nextElement, "name", "");
+            const char* flname = XMLSupport::GetAttributeOrDefault(nextElement, "file", "");
+            grvl::Log("[WARNING] Autoload unimplemented, font \"%s\" of size %d mapping to \"%s\"", flname, size, fname);
+            nextElement = nextElement->NextSiblingElement("font-style");
+        }
     }
 
     void Manager::ParseStylesheet(XMLElement* stylesheet)
