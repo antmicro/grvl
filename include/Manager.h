@@ -407,6 +407,7 @@ namespace grvl {
         void ParseGuiConfiguration(XMLElement* ConfigNode);
         void ParseKeypadMapping(XMLElement* KeypadNode);
         void ParseStylesheet(XMLElement* stylesheet);
+        void ParseFontStyles(XMLElement* stylesheet);
         void ParseScripts(XMLElement* scripts);
         void ParseStyle(char* active_object, char* active_parameter, char* active_parameter_value);
 
