@@ -1257,7 +1257,7 @@ namespace grvl {
             const char* flname = XMLSupport::GetAttributeOrDefault(nextElement, "file", "");
             Font const* tfont = GetFontFromContainer(fname);
             if (tfont == NULL) {
-                AddFontToFontContainer(fname, new grvl::Font(fname));
+                AddFontToFontContainer(fname, new Font(fname));
             } else {
                 grvl::Log("[WARNING] Font \"%s\" of size %d mapping to \"%s\" already loaded", flname, size, fname);
             }
