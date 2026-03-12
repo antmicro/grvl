@@ -21,7 +21,7 @@
     </popup>
     <customView id="start" backgroundColor="#FF4287F5">
 	    <button id="test_button" image="button_image" x="10" y="10" width="100" height="100" textColor="#ff00ff00" activeTextColor="#ffff00ff" onClick="ButtonCallback" text="TEST" font="roboto-medium" />
-        <clock id="test_clock" x="150" y="10" width="100" height="100" font="roboto-medium" foregroundColor="#fffff000" seconds="true" />
+        <clock id="test_clock" x="150" y="10" width="100" height="100" font="roboto-medium" foregroundColor="#fffff000" format="%H:%M:%S" />
         <slider id="vertical_slider" x="300" y="10" width="20" height="100" scrollColor="#ffff0000" activeBarColor="#ff00ff00" />
         <slider id="horizontal_slider" x="340" y="10" width="100" height="20" scrollColor="#fffcba03" activeBarColor="#ffa903fc" />
         <label id="popup_label" font="roboto-medium" x="0" y="100" width="300" height="50" text="This is a Popup." />

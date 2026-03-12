@@ -85,7 +85,6 @@ namespace grvl {
 
         void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
 
-        void SetVisibleSeconds(bool value) { visibleSeconds = value; }
         void SetTimeFormat(const char* fmt);
 
         void Start();
@@ -100,7 +99,6 @@ namespace grvl {
 
     private:
         bool isRunning;
-        bool visibleSeconds;
         char* format{nullptr};
         time_t lastCurrentTime;
         static const int bufferSize = 80;

@@ -22,7 +22,6 @@ namespace grvl {
     Clock::Clock(const Clock& Obj) 
     :   Label(Obj),
         isRunning(Obj.isRunning),
-        visibleSeconds(Obj.visibleSeconds),
         lastCurrentTime(Obj.lastCurrentTime)
     {
         if (Obj.format) {
@@ -49,7 +48,6 @@ namespace grvl {
 
         isRunning = Obj.isRunning;
         lastCurrentTime = Obj.lastCurrentTime;
-        visibleSeconds = Obj.visibleSeconds;
         if (format) {
             grvl::Callbacks()->free(format);
         }
@@ -90,14 +88,12 @@ namespace grvl {
         result->SetTextFont(man->GetFontPointer(XMLSupport::GetAttributeOrDefault(xmlElement, "font", "normal")));
         result->SetHorizontalAlignment(
             XMLSupport::ParseAlignmentOrDefault(xmlElement, "alignment", Label::Center));
-        result->SetVisibleSeconds(XMLSupport::GetAttributeOrDefault(xmlElement, "seconds", false));
+        result->SetVisible(XMLSupport::GetAttributeOrDefault(xmlElement, "visible", true));
+        
         const char* format = xmlElement->Attribute("format");
-        if (format == NULL) {
-            bool visible_seconds = XMLSupport::GetAttributeOrDefault(xmlElement, "seconds", false);
-            result->SetVisibleSeconds(visible_seconds);
-            format = visible_seconds ? "%H:%M:%S" : "%H:%M";
-        }
-        result->SetTimeFormat(format);
+        if (format != NULL) {
+            result->SetTimeFormat(format);
+        }        
 
         result->SetOnClickEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onClick"))));
         result->SetOnReleaseEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onRelease"))));
@@ -127,7 +123,8 @@ namespace grvl {
         Label::Draw(painter, ParentRenderX, ParentRenderY);
     }
 
-    void Clock::SetTimeFormat(const char* fmt) { 
+    void Clock::SetTimeFormat(const char* fmt)
+    {
         if (!fmt) {
             fmt = "%H:%M";
         }
