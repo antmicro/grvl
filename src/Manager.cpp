@@ -1250,7 +1250,7 @@ namespace grvl {
     {
         if(!styles)
             return;
-        nextElement = styles->FirstChildElement("font-style");
+        XMLElement* nextElement = styles->FirstChildElement("font-style");
         while(nextElement) {
             uint32_t size = (uint32_t)XMLSupport::GetAttributeOrDefault(nextElement, "size", (uint32_t)0);
             const char* fname = XMLSupport::GetAttributeOrDefault(nextElement, "name", "");
