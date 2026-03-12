@@ -1246,6 +1246,13 @@ namespace grvl {
         // TODO: actually add this style to a list, and interpret those.
     }
 
+    void Manager::ParseFontStyles(XMLElement* styles)
+    {
+        if(!styles)
+            return;
+        // TODO
+    }
+
     void Manager::ParseStylesheet(XMLElement* stylesheet)
     {
         if(!stylesheet)
@@ -1345,6 +1352,11 @@ namespace grvl {
                 nextElement = Root->FirstChildElement("stylesheet");
                 if(nextElement) {
                     ParseStylesheet(nextElement);
+                }
+                
+                nextElement = Root->FirstChildElement("font-styles");
+                if (nextElement) {
+                    ParseFontStyles(nextElement);
                 }
 
                 for(nextElement = Root->FirstChildElement("script"); nextElement != nullptr; nextElement = nextElement->NextSiblingElement("script")) {
