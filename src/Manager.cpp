@@ -1255,7 +1255,12 @@ namespace grvl {
             uint32_t size = (uint32_t)XMLSupport::GetAttributeOrDefault(nextElement, "size", (uint32_t)0);
             const char* fname = XMLSupport::GetAttributeOrDefault(nextElement, "name", "");
             const char* flname = XMLSupport::GetAttributeOrDefault(nextElement, "file", "");
-            grvl::Log("[WARNING] Autoload unimplemented, font \"%s\" of size %d mapping to \"%s\"", flname, size, fname);
+            Font const* tfont = GetFontFromContainer(fname);
+            if (tfont == NULL) {
+                AddFontToFontContainer(fname, new grvl::Font(fname));
+            } else {
+                grvl::Log("[WARNING] Font \"%s\" of size %d mapping to \"%s\" already loaded", flname, size, fname);
+            }
             nextElement = nextElement->NextSiblingElement("font-style");
         }
     }
