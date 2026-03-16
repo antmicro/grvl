@@ -1,4 +1,4 @@
-// Copyright 2014-2024 Antmicro <antmicro.com>
+// Copyright 2014-2026 Antmicro <antmicro.com>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,9 +34,9 @@ namespace grvl {
     }
 
     bool File::noFS = false;
-    std::map<std::string, std::pair<unsigned char*, uint64_t>>* File::files;
+    std::unordered_map<std::string, std::pair<unsigned char*, uint64_t>>* File::files;
 
-    void File::NoFilesystem(std::map<std::string, std::pair<unsigned char*, uint64_t>>* _files) {
+    void File::NoFilesystem(std::unordered_map<std::string, std::pair<unsigned char*, uint64_t>>* _files) {
         noFS = true;
         files = _files;
     }
@@ -44,141 +44,198 @@ namespace grvl {
     File::File(const char* path)
         : path(path)
     {
-        if(EndsWith(path, ".gz")) {
+        if(noFS) {
             readOnly = true;
-            gzipped = true;
-        } else {
+            storage = DICTIONARY;
+        }
+
+        else if(EndsWith(path, ".gz")) {
+            readOnly = true;
+            storage = GZIPPED;
+        }
+
+        else {
             readOnly = false;
-            gzipped = false;
+            storage = NORMAL;
         }
     }
 
-    bool File::HasExtension(const char* ext)
+    bool File::HasExtension(const char* ext) const
     {
-        size_t len = strlen(path);
-        return !(len < 3 || strcmp(ext, &path[len - 3]) != 0);
+    	const size_t min = strlen(ext);
+        const size_t len = strlen(path);
+        return len >= min && strcmp(ext, &path[len - min]) == 0;
     }
 
-    int32_t File::GetSize()
+    bool File::Exists() const
     {
-        if (!noFS) {
-            if(gzipped) {
-                // TODO: is it possible to check the size without decompression ?
-                gzFile file = gzopen(path, "r");
-                if(file == NULL) {
-                    return -1;
-                }
-                uint32_t offset = 0;
-                int read_bytes;
-                char buffer[bufferSize];
-                while((read_bytes = gzread(file, buffer, bufferSize)) > 0) {
-                    offset += read_bytes;
-                }
-                if(!gzeof(file)) {
-                    gzclose(file);
-                    return -1;
-                }
-                gzclose(file);
-                return offset;
+        if(storage == DICTIONARY) {
+            std::string name = GetName();
+            return files->find(name) != files->end();
+        }
+
+        if (storage == NORMAL || storage == GZIPPED) {
+            FILE* file = fopen(path, "rb");
+
+            if(file == nullptr) {
+                return false;
             }
+
+            fclose(file);
+            return true;
+        }
+
+        return false;
+    }
+
+    std::string File::GetName() const
+    {
+        std::string path_str(path);
+        return path_str.substr(path_str.rfind("/") + 1);
+    }
+
+    int32_t File::GetSize() const
+    {
+        if(storage == DICTIONARY) {
+            std::string name = GetName();
+            auto it = files->find(name);
+
+            if(it == files->end()) {
+                return 0;
+            }
+
+            return it->second.second;
+        }
+
+        if (storage == NORMAL) {
             struct stat file_stat;
             if(stat(path, &file_stat) == -1) {
-                return -1;
+                return 0;
             }
 
             return file_stat.st_size;
         }
-        std::string delimeter = "/";
-        std::string name = std::string(path).substr(std::string(path).rfind(delimeter)+1, std::string(path).length());
 
-        if(files->count(name) == 0) {
-            grvl::Log("No such file: %s", name.c_str());
-            return -1;
+        if(storage == GZIPPED) {
+            // TODO: is it possible to check the size without decompression ?
+            gzFile file = gzopen(path, "r");
+            if(file == nullptr) {
+                return 0;
+            }
+            uint32_t offset = 0;
+            int read_bytes;
+            char buffer[bufferSize];
+            while((read_bytes = gzread(file, buffer, bufferSize)) > 0) {
+                offset += read_bytes;
+            }
+
+            gzclose(file);
+            return offset;
         }
 
-        return files->at(name).second;
+        return 0;
     }
 
-    bool File::ReadToBuffer(uint8_t*& buffer)
+    int32_t File::ReadToBuffer(uint8_t* buffer, int32_t size) const
     {
-        if (!noFS) {
-            if(gzipped) {
-                uint32_t offset = 0;
-                size_t read_bytes;
+        if(storage == DICTIONARY) {
+            std::string name = GetName();
+            const auto it = files->find(name);
 
-                gzFile file = gzopen(path, "r");
-                if(file == NULL) {
-                    return false;
-                }
-
-                while((read_bytes = gzread(file, buffer + offset, bufferSize)) > 0) {
-                    offset += read_bytes;
-                }
-
-                if(!gzeof(file)) {
-                    gzclose(file);
-                    return false;
-                }
-                gzclose(file);
-            } else {
-                uint32_t offset = 0;
-                size_t read_bytes;
-
-                FILE* file = fopen(path, "rb");
-                if(file == NULL) {
-                    return false;
-                }
-
-                while((read_bytes = fread(buffer + offset, 1, bufferSize, file)) > 0) {
-                    offset += read_bytes;
-                }
-
-                if(!feof(file) || ferror(file)) {
-                    fclose(file);
-                    return false;
-                }
-                fclose(file);
-            }
-        } else {
-            std::string delimeter = "/";
-            std::string name = std::string(path).substr(std::string(path).rfind(delimeter)+1, std::string(path).length());
-
-            if(files->count(name) == 0) {
-                grvl::Log("No such file: %s", name.c_str());
+            if (it == files->end()) {
+                grvl::Log("[ERROR] No such filesystem entry: %s", name.c_str());
                 return -1;
             }
 
-            buffer = files->at(name).first;
+            const auto [file_buffer, file_size] = it->second;
+            const int32_t bytes = std::min(size, static_cast<int32_t>(file_size));
+
+            memcpy(buffer, file_buffer, bytes);
+            return bytes;
         }
-        return true;
+
+        if(storage == GZIPPED) {
+            size_t read_bytes;
+
+            gzFile file = gzopen(path, "r");
+            if(file == nullptr) {
+                grvl::Log("No such file: %s", path);
+                return -1;
+            }
+
+            while((size > 0) && ((read_bytes = gzread(file, buffer, size)) > 0)) {
+                buffer += read_bytes;
+                size -= read_bytes;
+            }
+
+            gzclose(file);
+            return read_bytes;
+        }
+
+        if (storage == NORMAL) {
+            uint32_t offset = 0;
+            size_t read_bytes;
+
+            FILE* file = fopen(path, "rb");
+            if(file == nullptr) {
+                grvl::Log("[ERROR] No such file: %s", path);
+                return -1;
+            }
+
+            while((size > 0) && ((read_bytes = fread(buffer, 1, size, file)) > 0)) {
+                buffer += read_bytes;
+                size -= read_bytes;
+            }
+
+            fclose(file);
+            return read_bytes;
+        }
+
+        return -1;
     }
 
-    bool File::WriteFromBuffer(uint8_t*& buffer, uint32_t size)
+    int32_t File::WriteFromBuffer(const uint8_t* buffer, int32_t size)
     {
         if(readOnly) {
-            return false;
-        }
-        FILE* file = fopen(path, "wb");
-        if(file == NULL) {
-            return false;
+            return 0;
         }
 
-        uint32_t offset = 0;
-        size_t wrote_bytes;
+        if (storage == NORMAL) {
+            FILE* file = fopen(path, "wb");
+            if(file == nullptr) {
+                grvl::Log("[ERROR] No such file: %s", path);
+                return -1;
+            }
 
-        do {
-            wrote_bytes = fwrite(buffer + offset, 1, size, file);
-            offset += wrote_bytes;
-            size -= wrote_bytes;
-        } while(size > 0);
+            uint32_t offset = 0;
+            size_t wrote_bytes;
 
-        if(!feof(file) || ferror(file)) {
+            do {
+                wrote_bytes = fwrite(buffer + offset, 1, size, file);
+                offset += wrote_bytes;
+                size -= wrote_bytes;
+            } while(size > 0);
+
             fclose(file);
-            return false;
+            return wrote_bytes;
         }
-        fclose(file);
 
-        return true;
+        return -1;
+    }
+
+    std::vector<char> File::Read() const
+    {
+        std::vector<char> buffer(GetSize());
+
+        uint8_t* data = reinterpret_cast<uint8_t*>(buffer.data());
+        ReadToBuffer(data, buffer.size());
+
+        return buffer;
+    }
+
+    bool File::Write(const std::vector<char>& buffer)
+    {
+        return WriteFromBuffer(reinterpret_cast<const uint8_t*>(buffer.data()), buffer.size()) == buffer.size();
     }
 
 } /* namespace grvl */

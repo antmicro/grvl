@@ -1,4 +1,4 @@
-// Copyright 2014-2024 Antmicro <antmicro.com>
+// Copyright 2014-2026 Antmicro <antmicro.com>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,30 +32,41 @@ namespace grvl {
         return (val << 16) | (val >> 16);
     }
 
-    // Fixme add freeing memory
     Font::~Font()
     {
+        if (FileBuffer != nullptr) {
+            grvl::Callbacks()->free(FileBuffer);
+        }
+
         grvl::Callbacks()->free(WideCharData);
         grvl::Callbacks()->free(WideCharMap);
     }
 
     Font::Font(const uint16_t* FontData)
     {
+        FileBuffer = nullptr;
         Init(FontData);
     }
 
-    Font::Font(const char* fpath)
+    Font::Font(const char* path)
     {
-        File file(fpath);
-        int fSize = file.GetSize();
-        if(fSize == -1) {
-            grvl::Log("[ERROR] Font: Could not load font from file %s", fpath);
-        } else {
-            uint8_t* buffer = (uint8_t*)grvl::Callbacks()->malloc(fSize);
-            file.ReadToBuffer(buffer);
+        File file(path);
 
-            Init((uint16_t*)buffer);
+        if (!file.Exists()) {
+            grvl::Log("[ERROR] Font: No such file %s", path);
+            return;
         }
+
+        const int size = file.GetSize();
+        FileBuffer = static_cast<uint8_t*>(grvl::Callbacks()->malloc(size));
+
+        if(file.ReadToBuffer(FileBuffer, size) != size) {
+            grvl::Log("[ERROR] Font: Could not load font from file %s", path);
+            grvl::Callbacks()->free(FileBuffer);
+            return;
+        }
+
+        Init(reinterpret_cast<const uint16_t*>(FileBuffer));
     }
 
     void Font::Init(const uint16_t* FontData)

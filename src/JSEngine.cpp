@@ -1,4 +1,4 @@
-// Copyright 2014-2024 Antmicro <antmicro.com>
+// Copyright 2014-2026 Antmicro <antmicro.com>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -85,23 +85,10 @@ namespace grvl {
         return LoadJavaScriptCode(source.data(), source.size());
     }
 
-    std::vector<char> JSEngine::LoadCodeFromFile(const char* filePath)
+    std::vector<char> JSEngine::LoadCodeFromFile(const char* path)
     {
-        File javaScriptCodeFile{filePath};
-        std::vector<char> source(javaScriptCodeFile.GetSize());
-
-        if (File::noFS) {
-            uint8_t* buffer;
-            javaScriptCodeFile.ReadToBuffer(buffer);
-
-            memcpy(source.data(), buffer, source.size());
-        }
-        else {
-            uint8_t* buffer = (uint8_t*)source.data();
-            javaScriptCodeFile.ReadToBuffer(buffer);
-        }
-
-        return source;
+        File file {path};
+        return file.Read();
     }
 
     bool JSEngine::LoadJavaScriptCode(const char* code, std::size_t codeSize)

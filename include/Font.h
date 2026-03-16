@@ -1,4 +1,4 @@
-// Copyright 2014-2024 Antmicro <antmicro.com>
+// Copyright 2014-2026 Antmicro <antmicro.com>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -114,6 +114,8 @@ namespace grvl {
         uint16_t KerningEntries; // Number of kerning entries
         int16_t SpaceLength;
         uint32_t current_offset;
+
+        uint8_t* FileBuffer;
 
         void Init(const uint16_t* data);
     };

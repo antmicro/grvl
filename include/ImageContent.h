@@ -1,4 +1,4 @@
-// Copyright 2014-2024 Antmicro <antmicro.com>
+// Copyright 2014-2026 Antmicro <antmicro.com>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -71,8 +71,8 @@ namespace grvl {
                 }
 
                 dataLength = fileSize;
-                data = (uint8_t*)grvl::Callbacks()->malloc(dataLength);
-                initialized = f.ReadToBuffer(data);
+                data = (uint8_t*)grvl::Callbacks()->malloc(fileSize);
+                initialized = (f.ReadToBuffer(data, fileSize) == fileSize);
             }
 
             uint8_t* data;
@@ -109,8 +109,8 @@ namespace grvl {
                 }
 
                 dataLength = fileSize;
-                data = (uint8_t*)grvl::Callbacks()->malloc(dataLength);
-                initialized = f.ReadToBuffer(data);
+                data = (uint8_t*)grvl::Callbacks()->malloc(fileSize);
+                initialized = f.ReadToBuffer(data, fileSize) == fileSize;
             }
 
             uint32_t width;
@@ -144,7 +144,7 @@ namespace grvl {
 
                 dataLength = fileSize;
                 data = (uint8_t*)grvl::Callbacks()->malloc(dataLength);
-                initialized = f.ReadToBuffer(data);
+                initialized = (f.ReadToBuffer(data, fileSize) == fileSize);
             }
 
             uint32_t width;
@@ -157,9 +157,7 @@ namespace grvl {
             if(fromPNG.initialized) {
                 Init(fromPNG.data, fromPNG.dataLength, 0, 0, 0, fromPNG.numberOfFrames, fromPNG.alpha, fromPNG.dither,
                      IMAGE_TYPE_PNG);
-                if (!File::noFS) {
-                    grvl::Callbacks()->free(fromPNG.data);
-                }
+                grvl::Callbacks()->free(fromPNG.data);
             } else {
                 data = NULL;
             }

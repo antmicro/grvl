@@ -1,4 +1,4 @@
-// Copyright 2014-2024 Antmicro <antmicro.com>
+// Copyright 2014-2026 Antmicro <antmicro.com>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -1169,15 +1169,9 @@ namespace grvl {
 
     int32_t Manager::BuildFromXML(const char* filename)
     {
-        File* fl = new File(filename);
-        uint8_t* data = (uint8_t*)grvl::Callbacks()->malloc(fl->GetSize());
-        fl->ReadToBuffer(data);
-        int32_t result = BuildFromXML((char*)data, fl->GetSize());
-        delete fl;
-        if (!File::noFS) {
-            grvl::Callbacks()->free(data);
-        }
-        return result;
+        File file(filename);
+        const std::vector<char> xml = file.Read();
+        return BuildFromXML(xml.data(), xml.size());
     }
 
     void Manager::ParseGuiConfiguration(XMLElement* ConfigNode)
@@ -1368,7 +1362,7 @@ namespace grvl {
                 if(nextElement) {
                     ParseStylesheet(nextElement);
                 }
-                
+
                 nextElement = Root->FirstChildElement("font-styles");
                 if (nextElement) {
                     ParseFontStyles(nextElement);
