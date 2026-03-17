@@ -6,6 +6,8 @@ project(
   grvl
   LANGUAGES C CXX ASM)
 
+set(CMAKE_CXX_STANDARD 11)
+
 include(StandardProjectSettings)
 include(Tools)
 include(Dependencies)

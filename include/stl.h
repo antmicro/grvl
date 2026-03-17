@@ -15,15 +15,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <stdio.h>
-#ifdef CYGONCE_LIBC_STDIO_STDIO_H
-#include "UstlUnorderedMap.h"
-#include <ustl.h>
-using namespace ustl;
-#else
 #include <map>
 #include <queue>
 #include <string>
-#include <tr1/unordered_map>
+#include <unordered_map>
 #include <vector>
 using namespace std;
-#endif
