@@ -118,15 +118,6 @@ namespace grvl {
         man->SetActiveScreen(Args[0].c_str(), screen_animation);
     }
 
-    void* Manager::operator new(size_t size)
-    {
-        return (void*)malloc(size);
-    }
-
-    void Manager::operator delete(void* ptr)
-    {
-        free(ptr);
-    }
     static constexpr auto defaultScrollingDuration = 400;
     Manager::Manager(uint32_t xSize, uint32_t ySize, int bpp, bool rotate90, uint8_t* framebuffer)
         : flips(0)
@@ -1240,7 +1231,6 @@ namespace grvl {
     void Manager::ParseStyle(char* active_object, char* active_parameter, char* active_parameter_value)
     {
         char aobject[255];
-        char* value;
         int type = 0;
         if(active_object[0] == '.')
             type = 1;
@@ -1253,7 +1243,7 @@ namespace grvl {
         key.append(active_parameter);
 
         size_t value_len = strlen(active_parameter_value) + 1;
-        value = (char*)malloc(value_len);
+        char* value = (char*)malloc(value_len);
         strncpy(value, active_parameter_value, value_len);
 
         switch(type) {

@@ -107,12 +107,9 @@ namespace grvl {
             uint32_t repeat;
         };
 
-        map<string, char*> widgetAttributes;
-        map<string, char*> classAttributes;
-        map<string, char*> idAttributes;
-
-        void* operator new(size_t size);
-        void operator delete(void* ptr);
+        unordered_map<string, char*> widgetAttributes;
+        unordered_map<string, char*> classAttributes;
+        unordered_map<string, char*> idAttributes;
 
         virtual ~Manager();
         Panel* GetTopPanel();

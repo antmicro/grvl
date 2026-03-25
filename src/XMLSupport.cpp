@@ -21,17 +21,16 @@
 
 namespace grvl {
 
-    bool TryGetAttributeFromCollection(const map<string, char*>& collection, const char* key, const char* attributeName, const char** value)
+    bool TryGetAttributeFromCollection(const unordered_map<string, char*>& collection, const char* key, const char* attributeName, const char** value)
     {
-        map<string, char*>::const_iterator search;
-
         if(!key) {
-            return 0;
+            return false;
         }
+
         string collectionKey(key);
         collectionKey.append("+");
         collectionKey.append(attributeName);
-        search = collection.find(collectionKey);
+        auto search = collection.find(collectionKey);
         if(search != collection.end()) {
             *value = search->second;
             return true;

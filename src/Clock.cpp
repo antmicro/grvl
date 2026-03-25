@@ -19,46 +19,6 @@
 #include "XMLSupport.h"
 
 namespace grvl {
-    Clock::Clock(const Clock& Obj)
-    :   Label(Obj),
-        isRunning(Obj.isRunning),
-        lastCurrentTime(Obj.lastCurrentTime)
-    {
-        if (Obj.format) {
-            format = strdup(Obj.format);
-        } else {
-            format = nullptr;
-        }
-    }
-
-    Clock::~Clock()
-    {
-        if (format) {
-           free(format);
-        }
-    }
-
-    Clock& Clock::operator=(const Clock& Obj)
-    {
-        if(this == &Obj) {
-            return *this;
-        }
-
-        Label::operator=(Obj);
-
-        isRunning = Obj.isRunning;
-        lastCurrentTime = Obj.lastCurrentTime;
-        if (format) {
-            free(format);
-        }
-        if (Obj.format) {
-            format = strdup(Obj.format);
-        } else {
-            format = nullptr;
-        }
-
-        return *this;
-    }
 
     void Clock::Start()
     {
@@ -115,7 +75,7 @@ namespace grvl {
             current_time = time(NULL);
             if(lastCurrentTime != current_time) {
                 char buf[bufferSize];
-                strftime(buf, bufferSize, format ? format : "%H:%M", localtime(&current_time));
+                strftime(buf, bufferSize, format.c_str(), localtime(&current_time));
                 SetText(buf);
                 lastCurrentTime = current_time;
             }
@@ -128,10 +88,8 @@ namespace grvl {
         if (!fmt) {
             fmt = "%H:%M";
         }
-        if (format) {
-            free(format);
-        }
-        format = strdup(fmt);
+
+        format = fmt;
     }
 
     void Clock::PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder)

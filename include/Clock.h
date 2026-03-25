@@ -75,12 +75,6 @@ namespace grvl {
         {
         }
 
-        Clock(const Clock& Obj);
-
-        virtual ~Clock();
-
-        Clock& operator=(const Clock& Obj);
-
         static Clock* BuildFromXML(XMLElement* xmlElement);
 
         void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
@@ -99,7 +93,7 @@ namespace grvl {
 
     private:
         bool isRunning;
-        char* format{nullptr};
+        std::string format = "%H:%M";
         time_t lastCurrentTime;
         static const int bufferSize = 80;
     };

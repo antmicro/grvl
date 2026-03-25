@@ -115,9 +115,6 @@ namespace grvl {
             OffAndSelected
         };
 
-        void* operator new(size_t size);
-        void operator delete(void* ptr);
-
         Component()
             : uniqueID{AssignUniqueID()}
         {

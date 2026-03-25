@@ -486,16 +486,6 @@ namespace grvl {
         OnRelease();
     }
 
-    void* Component::operator new(size_t size)
-    {
-        return malloc(size);
-    }
-
-    void Component::operator delete(void* ptr)
-    {
-        free(ptr);
-    }
-
     void Component::CheckPlacement()
     {
     }
