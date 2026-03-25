@@ -54,9 +54,6 @@ namespace grvl {
     void PosixApp::SetCallbacks(gui_callbacks_t& callbacks)
     {
         Application::SetCallbacks(callbacks);
-
-        callbacks.malloc = malloc;
-        callbacks.free = free;
         callbacks.gui_printf = PrintfNewline;
 
         callbacks.mutex_create = PosixMutexCreate;

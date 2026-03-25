@@ -1489,7 +1489,7 @@ namespace grvl {
             backLayerPointers[0].data = (uintptr_t)framebuffer;
         }
         else {
-            backLayerPointers[0].data = (uintptr_t)grvl::Callbacks()->malloc(BufferBPP * XSize * YSize * 4);
+            backLayerPointers[0].data = (uintptr_t)malloc(BufferBPP * XSize * YSize * 4);
         }
 
         backLayerPointers[1].data = backLayerPointers[0].data + BufferBPP * XSize * YSize;
@@ -1524,7 +1524,7 @@ namespace grvl {
         }
 
         // Prepare shadow image
-        uint8_t* imgContent = (uint8_t*)grvl::Callbacks()->malloc(XSize * /*1*/ 4);
+        uint8_t* imgContent = (uint8_t*)malloc(XSize * /*1*/ 4);
         shadowImage = new ImageContent(ImageContent::FromRAW(imgContent, XSize, 1, 1, /*COLOR_FORMAT_A8*/ COLOR_FORMAT_RGB888));
         if(IsRotated()) {
             if(!shadowImage->IsRotated()) {

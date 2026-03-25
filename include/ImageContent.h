@@ -71,7 +71,7 @@ namespace grvl {
                 }
 
                 dataLength = fileSize;
-                data = (uint8_t*)grvl::Callbacks()->malloc(fileSize);
+                data = (uint8_t*) malloc(fileSize);
                 initialized = (f.ReadToBuffer(data, fileSize) == fileSize);
             }
 
@@ -109,7 +109,7 @@ namespace grvl {
                 }
 
                 dataLength = fileSize;
-                data = (uint8_t*)grvl::Callbacks()->malloc(fileSize);
+                data = (uint8_t*) malloc(fileSize);
                 initialized = f.ReadToBuffer(data, fileSize) == fileSize;
             }
 
@@ -143,7 +143,7 @@ namespace grvl {
                 }
 
                 dataLength = fileSize;
-                data = (uint8_t*)grvl::Callbacks()->malloc(dataLength);
+                data = (uint8_t*) malloc(dataLength);
                 initialized = (f.ReadToBuffer(data, fileSize) == fileSize);
             }
 
@@ -157,7 +157,7 @@ namespace grvl {
             if(fromPNG.initialized) {
                 Init(fromPNG.data, fromPNG.dataLength, 0, 0, 0, fromPNG.numberOfFrames, fromPNG.alpha, fromPNG.dither,
                      IMAGE_TYPE_PNG);
-                grvl::Callbacks()->free(fromPNG.data);
+                free(fromPNG.data);
             } else {
                 data = NULL;
             }

@@ -113,19 +113,19 @@ namespace grvl {
                 screen_animation = 0;
             if(strcmp(arg1, "animate_crossfade") == 0)
                 screen_animation = 2;
-            grvl::Callbacks()->free(arg1);
+            free(arg1);
         }
         man->SetActiveScreen(Args[0].c_str(), screen_animation);
     }
 
     void* Manager::operator new(size_t size)
     {
-        return (void*)grvl::Callbacks()->malloc(size);
+        return (void*)malloc(size);
     }
 
     void Manager::operator delete(void* ptr)
     {
-        grvl::Callbacks()->free(ptr);
+        free(ptr);
     }
     static constexpr auto defaultScrollingDuration = 400;
     Manager::Manager(uint32_t xSize, uint32_t ySize, int bpp, bool rotate90, uint8_t* framebuffer)
@@ -1253,7 +1253,7 @@ namespace grvl {
         key.append(active_parameter);
 
         size_t value_len = strlen(active_parameter_value) + 1;
-        value = (char*)grvl::Callbacks()->malloc(value_len);
+        value = (char*)malloc(value_len);
         strncpy(value, active_parameter_value, value_len);
 
         switch(type) {

@@ -27,8 +27,6 @@ namespace grvl {
         if(n_callbacks) {
             memcpy(&callbacks, n_callbacks, sizeof(callbacks));
         } else {
-            callbacks.free = free;
-            callbacks.malloc = malloc;
             callbacks.dma_operation = NULL;
             callbacks.gui_printf = NULL;
             callbacks.mutex_create = NULL;

@@ -488,12 +488,12 @@ namespace grvl {
 
     void* Component::operator new(size_t size)
     {
-        return (void*)grvl::Callbacks()->malloc(size);
+        return malloc(size);
     }
 
     void Component::operator delete(void* ptr)
     {
-        grvl::Callbacks()->free(ptr);
+        free(ptr);
     }
 
     void Component::CheckPlacement()

@@ -38,8 +38,6 @@ namespace grvl {
         void (*dma_fill)(uintptr_t dst, uint32_t xs, uint32_t ys, uint32_t offset, uint32_t color_index,
                          uint32_t pixel_format);
         void (*set_layer_pointer)(uintptr_t addr);
-        void* (*malloc)(size_t);
-        void (*free)(void*);
         void (*wait_for_vsync)();
         void (*flipping_completed)();
         void (*gui_printf)(const char* text, va_list argList);

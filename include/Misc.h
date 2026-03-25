@@ -32,17 +32,6 @@ namespace grvl {
         }
     }
 
-    static inline char* strdup (const char* s)
-    {
-        size_t slen = strlen(s) + 1;
-        char* result = (char*)grvl::Callbacks()->malloc(slen);
-        if(result == nullptr) {
-          return nullptr;
-        }
-        memcpy(result, s, slen);
-        return result;
-    }
-
     inline uint32_t PixelFormatToBPP(uint32_t pf)
     {
         switch(pf) {

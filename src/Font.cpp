@@ -35,11 +35,11 @@ namespace grvl {
     Font::~Font()
     {
         if (FileBuffer != nullptr) {
-            grvl::Callbacks()->free(FileBuffer);
+            free(FileBuffer);
         }
 
-        grvl::Callbacks()->free(WideCharData);
-        grvl::Callbacks()->free(WideCharMap);
+        free(WideCharData);
+        free(WideCharMap);
     }
 
     Font::Font(const uint16_t* FontData)
@@ -58,11 +58,11 @@ namespace grvl {
         }
 
         const int size = file.GetSize();
-        FileBuffer = static_cast<uint8_t*>(grvl::Callbacks()->malloc(size));
+        FileBuffer = static_cast<uint8_t*>(malloc(size));
 
         if(file.ReadToBuffer(FileBuffer, size) != size) {
             grvl::Log("[ERROR] Font: Could not load font from file %s", path);
-            grvl::Callbacks()->free(FileBuffer);
+            free(FileBuffer);
             return;
         }
 
@@ -88,13 +88,13 @@ namespace grvl {
 
         current_offset = 0;
         CharData = (uint8_t*)((uintptr_t)KerningMap + (uint32_t)(2 * CharacterEntries));
-        WideCharMap = (map_entry*)grvl::Callbacks()->malloc(CharacterEntries * sizeof(map_entry));
+        WideCharMap = (map_entry*) malloc(CharacterEntries * sizeof(map_entry));
         for(int i = 0; i < CharacterEntries; ++i) {
             WideCharMap[i].code = CharMap[i].code;
             WideCharMap[i].offset = current_offset;
             current_offset += Widths[i] * CharHeight * 4;
         }
-        WideCharData = (uint32_t*)grvl::Callbacks()->malloc(current_offset);
+        WideCharData = (uint32_t*) malloc(current_offset);
         for(int c = 0; c < CharacterEntries; ++c) {
             uint32_t* offset = (uint32_t*)((uintptr_t)WideCharData + (uintptr_t)WideCharMap[c].offset);
             uint8_t* orig_offset = (uint8_t*)((uintptr_t)CharData + (uintptr_t)SwapUint32(CharMap[c].offset));
@@ -118,8 +118,8 @@ namespace grvl {
         if(this != &Obj) {
             CodeMap = Obj.CodeMap;
             current_offset = Obj.current_offset;
-            WideCharMap = (map_entry*)grvl::Callbacks()->malloc(CharacterEntries * sizeof(map_entry));
-            WideCharData = (uint32_t*)grvl::Callbacks()->malloc(current_offset);
+            WideCharMap = (map_entry*)malloc(CharacterEntries * sizeof(map_entry));
+            WideCharData = (uint32_t*)malloc(current_offset);
             for(int i = 0; i < CharacterEntries; ++i) {
                 WideCharMap[i].code = Obj.WideCharMap[i].code;
                 WideCharMap[i].offset = Obj.WideCharMap[i].offset;

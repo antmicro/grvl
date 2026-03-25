@@ -44,7 +44,7 @@ namespace grvl {
             GetJPEGInfo(data, (int)dataLength, &width, &height);
             colorFormat = COLOR_FORMAT_RGB888;
             int rawImageSize = width * height * PixelFormatToBPP(colorFormat);
-            uint8_t* rawData = (uint8_t*)grvl::Callbacks()->malloc(rawImageSize);
+            uint8_t* rawData = (uint8_t*)malloc(rawImageSize);
             GetJPEGData(rawData, data, (int)dataLength);
             data = rawData;
         } else if(imageType == IMAGE_TYPE_PNG) {
@@ -75,7 +75,7 @@ namespace grvl {
                     if(cltSupport) { // if PLTE supported
                         colorFormat = COLOR_FORMAT_L8; // PLTE
                         this->PLTELength = pngInfo.plte_length;
-                        this->PLTE = (uintptr_t)grvl::Callbacks()->malloc(this->PLTELength * 3);
+                        this->PLTE = (uintptr_t)malloc(this->PLTELength * 3);
 
                         // Transfer colors - swapping the red and the blue channel.
                         uint8_t* pltein = (uint8_t*)pngInfo.plte;
@@ -104,7 +104,7 @@ namespace grvl {
 #endif
 
             int rawImageSize = width * height * PixelFormatToBPP(colorFormat);
-            uint8_t* rawData = (uint8_t*)grvl::Callbacks()->malloc(rawImageSize);
+            uint8_t* rawData = (uint8_t*)malloc(rawImageSize);
 
 #ifdef USE_PICOPNG
             decodePNG(rawData, (unsigned long)width, (unsigned long)height, data, (unsigned long)dataLength, true);
@@ -196,7 +196,7 @@ namespace grvl {
             //       already a copy we're copying...
             //       also in general - what does this constructor do? a copy of ImageContent? why?
             uint32_t dataLength = content.GetDataLength();
-            data = (uint8_t*)grvl::Callbacks()->malloc(dataLength);
+            data = (uint8_t*)malloc(dataLength);
             memcpy(data, content.data, dataLength);
         } else {
             data = content.data;
@@ -207,7 +207,7 @@ namespace grvl {
     {
         ImageContent copy(other);
 
-        grvl::Callbacks()->free(data);
+        free(data);
         data = copy.data;
         numberOfFrames = copy.numberOfFrames;
         width = copy.width;
@@ -235,7 +235,7 @@ namespace grvl {
         uint32_t x, y, i, f;
         uint8_t value;
 
-        uint8_t* bufferCopy = (uint8_t*)grvl::Callbacks()->malloc(GetDataLength());
+        uint8_t* bufferCopy = (uint8_t*)malloc(GetDataLength());
         uint32_t bytesPerPixel = GetBytesPerPixel();
         uint32_t wholeImageWidth = width * numberOfFrames;
 
@@ -252,7 +252,7 @@ namespace grvl {
             }
         }
 
-        grvl::Callbacks()->free(bufferCopy);
+        free(bufferCopy);
 
         this->lines = this->width;
         this->pixelsPerLine = this->height * this->numberOfFrames;
@@ -262,10 +262,10 @@ namespace grvl {
     ImageContent::~ImageContent()
     {
         if((imageType == IMAGE_TYPE_PNG) || (imageType == IMAGE_TYPE_JPEG)) {
-            grvl::Callbacks()->free(data);
+            free(data);
         }
         if(PLTE) {
-            grvl::Callbacks()->free((void*)PLTE);
+            free((void*)PLTE);
         }
     }
 

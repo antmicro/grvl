@@ -19,7 +19,7 @@
 #include "XMLSupport.h"
 
 namespace grvl {
-    Clock::Clock(const Clock& Obj) 
+    Clock::Clock(const Clock& Obj)
     :   Label(Obj),
         isRunning(Obj.isRunning),
         lastCurrentTime(Obj.lastCurrentTime)
@@ -34,7 +34,7 @@ namespace grvl {
     Clock::~Clock()
     {
         if (format) {
-            grvl::Callbacks()->free(format);
+           free(format);
         }
     }
 
@@ -49,7 +49,7 @@ namespace grvl {
         isRunning = Obj.isRunning;
         lastCurrentTime = Obj.lastCurrentTime;
         if (format) {
-            grvl::Callbacks()->free(format);
+            free(format);
         }
         if (Obj.format) {
             format = strdup(Obj.format);
@@ -89,11 +89,11 @@ namespace grvl {
         result->SetHorizontalAlignment(
             XMLSupport::ParseAlignmentOrDefault(xmlElement, "alignment", Label::Center));
         result->SetVisible(XMLSupport::GetAttributeOrDefault(xmlElement, "visible", true));
-        
+
         const char* format = xmlElement->Attribute("format");
         if (format != NULL) {
             result->SetTimeFormat(format);
-        }        
+        }
 
         result->SetOnClickEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onClick"))));
         result->SetOnReleaseEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onRelease"))));
@@ -129,7 +129,7 @@ namespace grvl {
             fmt = "%H:%M";
         }
         if (format) {
-            grvl::Callbacks()->free(format);
+            free(format);
         }
         format = strdup(fmt);
     }
