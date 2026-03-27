@@ -30,6 +30,10 @@ namespace grvl {
 
     class TextInput : public Button {
     public:
+        enum InputType {
+            INPUT_TYPE_TEXT = 0,
+            INPUT_TYPE_PASSWORD
+        };
         TextInput()
             : Button{} {}
 
@@ -50,13 +54,18 @@ namespace grvl {
         void RemoveLastCharacter();
         void Clear();
         void Submit();
+        void SetType(InputType type);
 
     protected:
         Event onTextInput{};
         Event onSubmit{};
         std::string basicText{};
+        std::string masked{};
+        InputType type{INPUT_TYPE_TEXT};
 
         void DrawText(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight) override;
+
+        const char* GetTextToDraw();
     };
 
 } /* namespace grvl */
