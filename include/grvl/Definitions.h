@@ -14,21 +14,72 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// Color formats
-#define COLOR_FORMAT_ARGB8888 ((uint32_t)0x00000000)
-#define COLOR_FORMAT_RGB888 ((uint32_t)0x00000001)
-#define COLOR_FORMAT_RGB565 ((uint32_t)0x00000002)
-#define COLOR_FORMAT_ARGB1555 ((uint32_t)0x00000003)
-#define COLOR_FORMAT_ARGB4444 ((uint32_t)0x00000004)
-#define COLOR_FORMAT_L8 ((uint32_t)0x00000005)
-#define COLOR_FORMAT_AL44 ((uint32_t)0x00000006)
-#define COLOR_FORMAT_AL88 ((uint32_t)0x00000007)
-// L4 0x8 - unsupported
-#define COLOR_FORMAT_A8 ((uint32_t)0x00000009)
-// A4 0xa - unsupported
-#define COLOR_FORMAT_ARGB6666 ((uint32_t)0x0000000B)
+#pragma once
 
-#define COLOR_FORMAT_AXXX8888 ((uint32_t)0x00000100)
+enum struct Format {
+    ARGB8888 = 0x00000000,
+    RGB888 = 0x00000001,
+    RGB565 = 0x00000002,
+    ARGB1555 = 0x00000003,
+    ARGB4444 = 0x00000004,
+    L8 = 0x00000005,
+    AL44 = 0x00000006,
+    AL88 = 0x00000007,
+    A8 = 0x00000009,
+    ARGB6666 = 0x0000000B,
+    AXXX8888 = 0x00000100,
+};
+
+// Get size of one pixel in bytes
+constexpr int GetFormatStride(Format format) {
+    if (format == Format::ARGB8888) return 4;
+    if (format == Format::RGB888) return 3;
+    if (format == Format::RGB565) return 2;
+    if (format == Format::ARGB1555) return 2;
+    if (format == Format::ARGB4444) return 2;
+    if (format == Format::L8) return 1;
+    if (format == Format::AL44) return 1;
+    if (format == Format::AL88) return 2;
+    if (format == Format::A8) return 1;
+    if (format == Format::ARGB6666) return 3;
+    if (format == Format::AXXX8888) return 4;
+
+    return 0;
+}
+
+// Get number of separate color channels
+constexpr int GetFormatChannelCount(Format format) {
+    if (format == Format::ARGB8888) return 4;
+    if (format == Format::RGB888) return 3;
+    if (format == Format::RGB565) return 3;
+    if (format == Format::ARGB1555) return 4;
+    if (format == Format::ARGB4444) return 4;
+    if (format == Format::L8) return 1;
+    if (format == Format::AL44) return 2;
+    if (format == Format::AL88) return 2;
+    if (format == Format::A8) return 1;
+    if (format == Format::ARGB6666) return 4;
+    if (format == Format::AXXX8888) return 4;
+
+    return 0;
+}
+
+// Check if this format has an Alpha (transparency) channel
+constexpr bool GetFormatAlphaChannel(Format format) {
+    if (format == Format::ARGB8888) return true;
+    if (format == Format::RGB888) return false;
+    if (format == Format::RGB565) return false;
+    if (format == Format::ARGB1555) return true;
+    if (format == Format::ARGB4444) return true;
+    if (format == Format::L8) return false;
+    if (format == Format::AL44) return true;
+    if (format == Format::AL88) return true;
+    if (format == Format::A8) return true;
+    if (format == Format::ARGB6666) return true;
+    if (format == Format::AXXX8888) return true;
+
+    return false;
+}
 
 // Colors
 #define COLOR_ARGB8888_LIGHTBLUE 0xFF8080FF

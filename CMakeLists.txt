@@ -6,7 +6,7 @@ project(
   grvl
   LANGUAGES C CXX ASM)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 include(StandardProjectSettings)
 include(Tools)
@@ -35,8 +35,6 @@ target_link_libraries(
   grvl
   PRIVATE grvl_options libstb
   PUBLIC ZLIB
-         JPEG
-         PNG
          tinyxml2
          duktape
 
@@ -49,6 +47,9 @@ if(GRVL_LINUX_NATIVE)
   target_compile_definitions(grvl PUBLIC GRVL_LINUX_NATIVE)
 endif()
 
+target_include_directories(
+  grvl PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+              $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/grvl>)
 
 if (NOT GRVL_ZEPHYR)
   add_executable(gbf EXCLUDE_FROM_ALL ${gbf_sources})

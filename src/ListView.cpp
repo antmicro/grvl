@@ -80,7 +80,7 @@ namespace grvl {
 
             // allocate memory for a new image content
             uint8_t* imgContent = (uint8_t*)malloc(4 * static_cast<size_t>(sWidth * sHeight));
-            scrollIndicatorImage = new ImageContent(ImageContent::FromRAW(imgContent, sWidth, sHeight, 1, COLOR_FORMAT_ARGB8888));
+            scrollIndicatorImage = new ImageContent(imgContent, sWidth, sHeight, 1);
         }
 
         Elements.push_back(component);

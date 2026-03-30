@@ -31,7 +31,7 @@ namespace grvl {
 
     typedef struct {
         uintptr_t data;
-        uint32_t pixel_format;
+        Format pixel_format;
     } layer_t;
 
     typedef struct {
@@ -44,7 +44,7 @@ namespace grvl {
                               uint32_t outOffset, uint32_t inColor, uint32_t backgroundColor, uint32_t outColor, uint32_t fontColor, uintptr_t backCLT, uintptr_t frontCTL);
 
     void FallbackDmaFill(uintptr_t dst, uint32_t PixelsPerLine, uint32_t NumberOfLines, uint32_t offset,
-                         uint32_t color_index, uint32_t pixel_format);
+                         uint32_t color_index, Format pixel_format);
 
     /// Represents object used to draw graphics.
     class Painter {
@@ -162,29 +162,29 @@ namespace grvl {
 
         void DmaOperation(uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem, uint32_t PixelsPerLine,
                           uint32_t NumberOfLines, uint32_t inOffset, uint32_t backgroundOffset, uint32_t outOffset,
-                          uint32_t inPixelFormat, uint32_t backgroundPixelFormat, uint32_t outPixelFormat,
+                          Format inPixelFormat, Format backgroundPixelFormat, Format outPixelFormat,
                           uint32_t frontColor = 0) const;
 
         void DmaOperationCLT(uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem, uint32_t PixelsPerLine,
                              uint32_t NumberOfLines, uint32_t inOffset, uint32_t backgroundOffset, uint32_t outOffset,
-                             uint32_t inPixelFormat, uint32_t backgroundPixelFormat, uint32_t outPixelFormat, uintptr_t backCLT, uintptr_t frontCLT) const;
+                             Format inPixelFormat, Format backgroundPixelFormat, Format outPixelFormat, uintptr_t backCLT, uintptr_t frontCLT) const;
 
         void DmaFill(uintptr_t outputMem, uint32_t PixelsPerLine, uint32_t NumberOfLines, uint32_t outOffset,
-                     uint32_t color_index, uint32_t pixel_format) const;
+                     uint32_t color_index, Format pixel_format) const;
 
         void DmaMove(uintptr_t fb_src, uintptr_t fb_dst, int32_t x_src, int32_t y_src, int32_t x_dst, int32_t y_dst,
-                     int32_t width, int32_t height, uint32_t src_pixel_format, uint32_t dst_pixel_format) const;
+                     int32_t width, int32_t height, Format src_pixel_format, Format dst_pixel_format) const;
 
         void DmaMoveImage(uintptr_t img_src, uintptr_t fb_dst, int32_t x_src, int32_t y_src, int32_t x_dst, int32_t y_dst,
                           int32_t width, int32_t height, int32_t totalImageWidth, int32_t totalImageHeight, uint32_t activeFrame,
-                          uint32_t frames, uint32_t inPixelFormat, uint32_t outPixelFormat, bool hasAlpha, uintptr_t imageCLT = 0) const;
+                          uint32_t frames, Format inPixelFormat, Format outPixelFormat, bool hasAlpha, uintptr_t imageCLT = 0) const;
 
         void DmaMoveFont(uintptr_t font_src, uintptr_t font_dst, int32_t x_src, int32_t y_src, int32_t x_dst, int32_t y_dst,
-                         int32_t width, int32_t height, int32_t fontWidth, int32_t fontHeight, uint32_t outPixelFormat,
+                         int32_t width, int32_t height, int32_t fontWidth, int32_t fontHeight, Format outPixelFormat,
                          uint32_t fontColor) const;
 
         void DmaMoveShadow(uintptr_t img_src, uintptr_t fb_dst, int32_t x_dst, int32_t y_dst, int32_t width, int32_t height,
-                           uint32_t outPixelFormat, uint32_t color) const;
+                           Format outPixelFormat, uint32_t color) const;
 
         bool IsRotated() const;
 
@@ -202,11 +202,11 @@ namespace grvl {
                                            int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight, uint32_t index, uint32_t text_color) const;
         void DisplayBoundedAntialiasedString(Font* Font, int16_t Xpos, int16_t Ypos, int16_t ParentX,
                                              int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight, const char* Text, uint32_t text_color) const;
-        uint32_t GetPixelFormat() const;
+        Format GetPixelFormat() const;
         uint32_t GetBytesPerPixel() const;
-        uint32_t GetDisplayPixelFormat() const;
+        Format GetDisplayPixelFormat() const;
         uint32_t GetDisplayBytesPerPixel() const;
-        uint32_t GetActiveBufferPixelFormat() const;
+        Format GetActiveBufferPixelFormat() const;
         uint32_t GetActiveBufferBytesPerPixel() const;
         void SetBackgroundColor(uint32_t color);
         void SetRotation(bool rotate90);
@@ -218,7 +218,7 @@ namespace grvl {
         void DrawRectangle(int32_t Xpos, int32_t Ypos, int32_t Width, int32_t Height, uint32_t text_color) const;
         void DrawRoundRectangle(int32_t Xpos, int32_t Ypos, int32_t Width, int32_t Height, uint32_t text_color, float BorderArcRadius) const;
 
-        void FillMemory(uintptr_t memory, int32_t width, int32_t height, uint32_t text_color, uint32_t colorFormat = COLOR_FORMAT_ARGB8888);
+        void FillMemory(uintptr_t memory, int32_t width, int32_t height, uint32_t text_color, Format colorFormat = Format::ARGB8888);
 
         // Background blocks
         typedef vector<background_block> background_block_vector;

@@ -30,179 +30,29 @@
 
 namespace grvl {
 
-    enum ImageType {
-        IMAGE_TYPE_RAW,
-        IMAGE_TYPE_PNG,
-        IMAGE_TYPE_JPEG
-    };
-    enum DitherMode {
-        DITHER_NONE,
-        DITHER_FLOYD_STEINBERG,
-        DITHER_INDEXED
-    };
-
-    /// Represents content of an image loaded into memory.
     class ImageContent {
     public:
-        struct FromPNG {
-            FromPNG(uint8_t* data, uint32_t dataLength, uint16_t numberOfFrames = 1, bool alpha = true,
-                    DitherMode dither = DITHER_NONE)
-                : data(data)
-                , dataLength(dataLength)
-                , numberOfFrames(numberOfFrames)
-                , alpha(alpha)
-                , dither(dither)
-                , initialized(true)
-            {
-            }
 
-            FromPNG(const char* fpath, uint16_t numberOfFrames = 1, bool alpha = true, DitherMode dither = DITHER_NONE)
-                : data(NULL)
-                , dataLength(0)
-                , numberOfFrames(numberOfFrames)
-                , alpha(alpha)
-                , dither(dither)
-                , initialized(false)
-            {
-                File f(fpath);
-                int32_t fileSize = f.GetSize();
-                if(fileSize == -1 || !f.HasExtension("png")) {
-                    grvl::Log("[ERROR] GUIImageContent: Could not load PNG image from file %s", fpath);
-                    return;
-                }
-
-                dataLength = fileSize;
-                data = (uint8_t*) malloc(fileSize);
-                initialized = (f.ReadToBuffer(data, fileSize) == fileSize);
-            }
-
-            uint8_t* data;
-            uint32_t dataLength;
-            uint16_t numberOfFrames;
-            bool alpha;
-            DitherMode dither;
-
-            bool initialized;
-        };
-
-        struct FromRAW : FromPNG {
-            FromRAW(uint8_t* data, uint32_t width, uint32_t height, uint16_t numberOfFrames, uint32_t colorFormat = COLOR_FORMAT_ARGB1555)
-                : FromPNG(data, 0, numberOfFrames, false)
-                , width(width)
-                , height(height)
-                , colorFormat(colorFormat)
-            {
-            }
-
-            FromRAW(const char* fpath, uint32_t width, uint32_t height, uint16_t numberOfFrames, uint32_t colorFormat = COLOR_FORMAT_ARGB1555)
-                : FromPNG(NULL, 0, numberOfFrames, false, DITHER_NONE)
-                , width(width)
-                , height(height)
-                , colorFormat(
-                      colorFormat)
-            {
-                initialized = false;
-                File f(fpath);
-                int32_t fileSize = f.GetSize();
-                if(fileSize == -1 || !f.HasExtension("raw")) {
-                    grvl::Log("[ERROR] GUIImageContent: Could not load RAW image from file %s", fpath);
-                    return;
-                }
-
-                dataLength = fileSize;
-                data = (uint8_t*) malloc(fileSize);
-                initialized = f.ReadToBuffer(data, fileSize) == fileSize;
-            }
-
-            uint32_t width;
-            uint32_t height;
-            uint32_t colorFormat;
-        };
-
-        struct FromJPEG : FromPNG {
-            FromJPEG(uint8_t* data, uint16_t numberOfFrames)
-                : FromPNG(data, 0, numberOfFrames, false)
-                , width(0)
-                , height(0)
-                , colorFormat(COLOR_FORMAT_RGB888)
-            {
-            }
-
-            FromJPEG(const char* fpath, uint16_t numberOfFrames)
-                : FromPNG(NULL, 0, numberOfFrames, false, DITHER_NONE)
-                , width(0)
-                , height(0)
-                , colorFormat(
-                      COLOR_FORMAT_RGB888)
-            {
-                initialized = false;
-                File f(fpath);
-                int32_t fileSize = f.GetSize();
-                if(fileSize == -1 || !f.HasExtension("jpg")) {
-                    grvl::Log("[ERROR] GUIImageContent: Could not load JPG image from file %s", fpath);
-                    return;
-                }
-
-                dataLength = fileSize;
-                data = (uint8_t*) malloc(dataLength);
-                initialized = (f.ReadToBuffer(data, fileSize) == fileSize);
-            }
-
-            uint32_t width;
-            uint32_t height;
-            uint32_t colorFormat;
-        };
-
-        ImageContent(const FromPNG& fromPNG)
-        {
-            if(fromPNG.initialized) {
-                Init(fromPNG.data, fromPNG.dataLength, 0, 0, 0, fromPNG.numberOfFrames, fromPNG.alpha, fromPNG.dither,
-                     IMAGE_TYPE_PNG);
-                free(fromPNG.data);
-            } else {
-                data = NULL;
-            }
-        };
-
-        ImageContent(const FromRAW& fromRAW)
-        {
-            if(fromRAW.initialized) {
-                Init(fromRAW.data, fromRAW.dataLength, fromRAW.colorFormat, fromRAW.width, fromRAW.height,
-                     fromRAW.numberOfFrames, false, DITHER_NONE, IMAGE_TYPE_RAW);
-            } else {
-                data = NULL;
-            }
-        };
-
-        ImageContent(const FromJPEG& fromJPEG)
-        {
-            if(fromJPEG.initialized) {
-                Init(fromJPEG.data, fromJPEG.dataLength, 0, 0, 0,
-                     fromJPEG.numberOfFrames, false, DITHER_NONE, IMAGE_TYPE_JPEG);
-            } else {
-                data = NULL;
-            }
-        }
-
+        ImageContent(const char* path, Format format = Format::ARGB8888);
+        ImageContent(uint8_t* pixels, int width, int height, int frames, Format format = Format::ARGB8888);
         ImageContent(const ImageContent& content);
-
         ImageContent& operator=(const ImageContent& other);
 
-        virtual ~ImageContent();
+        ~ImageContent();
 
-        uint8_t* GetData() const
+        uint8_t* GetData()
         {
             return data;
         }
 
         uint32_t GetDataLength() const
         {
-            return width * height * numberOfFrames * GetBytesPerPixel();
+            return GetWidth() * GetHeight() * GetNumberOfFrames() * GetBytesPerPixel();
         }
 
         uint16_t GetNumberOfFrames() const
         {
-            return numberOfFrames;
+            return frames;
         }
 
         uint32_t GetWidth() const
@@ -215,29 +65,14 @@ namespace grvl {
             return height;
         }
 
-        uint32_t GetColorFormat() const
-        {
-            return colorFormat;
-        }
-
         uint32_t GetBytesPerPixel() const
         {
-            return PixelFormatToBPP(colorFormat);
-        }
-
-        uint32_t GetNumberOfLines() const
-        {
-            return lines;
-        }
-
-        uint32_t GetPixelsPerLine() const
-        {
-            return pixelsPerLine;
+            return GetFormatStride(format);
         }
 
         bool HasAlphaChannel() const
         {
-            return hasAlpha;
+            return GetFormatAlphaChannel(format);
         }
 
         bool IsRotated() const
@@ -250,32 +85,30 @@ namespace grvl {
             return !data;
         }
 
-        uintptr_t GetPLTE()
+        Format GetColorFormat() const
         {
-            return PLTE;
+            return format;
         }
 
-        // Returns number of colors.
-        uint32_t GetPLTELength()
+        uint32_t GetNumberOfLines() const
         {
-            return PLTELength;
+            return rotated ? width : height;
+        }
+
+        uint32_t GetPixelsPerLine() const
+        {
+            return rotated ? height * frames : width;
         }
 
         void Rotate90();
 
     private:
-        uint8_t* data;
-        uint16_t numberOfFrames;
-        uint32_t width, height, lines, pixelsPerLine;
-        ImageType imageType;
-        uint32_t colorFormat;
-        bool rotated, hasAlpha;
-        uintptr_t PLTE;
-        unsigned int PLTELength;
 
-        void Init(uint8_t* data, uint32_t dataLength, uint32_t colorFormat, uint32_t width, uint32_t height,
-                  uint16_t numberOfFrames, bool alpha, DitherMode dither, ImageType imageType);
-        uint32_t XYToOffset(uint32_t x, uint32_t y, uint32_t byteCount, uint32_t bytesPerPixel, uint32_t wholeImageWidth);
+        uint8_t* data;
+        int32_t width, height, frames;
+        Format format;
+        bool rotated = false;
+
     };
 
 } /* namespace grvl */

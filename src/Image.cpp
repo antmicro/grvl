@@ -56,11 +56,11 @@ namespace grvl {
             }
             return;
         }
-        uint8_t PixelFormat = painter.GetActiveBufferPixelFormat();
+        Format PixelFormat = painter.GetActiveBufferPixelFormat();
 
         uintptr_t Address = (uintptr_t)Content->GetData();
         uint16_t Frames = Content->GetNumberOfFrames();
-        uint32_t ColorFormat = Content->GetColorFormat();
+        Format ColorFormat = Content->GetColorFormat();
         uint32_t Lines = Content->GetNumberOfLines();
         uint32_t PixelPerLine = Content->GetPixelsPerLine();
 
@@ -71,7 +71,7 @@ namespace grvl {
             painter.DmaMoveImage(
                 Address, painter.GetActiveBuffer(), 0, 0, RenderX, RenderY, Width,
                 Height, PixelPerLine, Lines, ActiveFrame, Frames, ColorFormat, PixelFormat,
-                GetContentAlpha(), Content ? Content->GetPLTE() : 0);
+                GetContentAlpha(), 0);
         }
     }
 

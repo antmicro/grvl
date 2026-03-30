@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
+#include "Definitions.h"
 
 #include <duktape.h>
 
@@ -31,12 +32,12 @@ namespace grvl {
     typedef struct {
         void (*dma_operation)(uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem, uint32_t NumberOfLine,
                               uint32_t PixelPerLine, uint32_t inOffset, uint32_t backgroundOffset, uint32_t outOffset,
-                              uint32_t inPixelFormat, uint32_t backgroundPixelFormat, uint32_t outPixelFormat, uint32_t frontColor);
+                              Format inPixelFormat, Format backgroundPixelFormat, Format outPixelFormat, uint32_t frontColor);
         void (*dma_operation_clt)(uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem, uint32_t NumberOfLine,
                                   uint32_t PixelPerLine, uint32_t inOffset, uint32_t backgroundOffset, uint32_t outOffset,
-                                  uint32_t inPixelFormat, uint32_t backgroundPixelFormat, uint32_t outPixelFormat, uint32_t frontColor, uintptr_t backCLT, uintptr_t frontCLT);
+                                  Format inPixelFormat, Format backgroundPixelFormat, Format outPixelFormat, uint32_t frontColor, uintptr_t backCLT, uintptr_t frontCLT);
         void (*dma_fill)(uintptr_t dst, uint32_t xs, uint32_t ys, uint32_t offset, uint32_t color_index,
-                         uint32_t pixel_format);
+                         Format pixel_format);
         void (*set_layer_pointer)(uintptr_t addr);
         void (*wait_for_vsync)();
         void (*flipping_completed)();

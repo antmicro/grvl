@@ -36,32 +36,13 @@ namespace grvl {
         }
     }
 
-    inline uint32_t PixelFormatToBPP(uint32_t pf)
-    {
-        switch(pf) {
-            case COLOR_FORMAT_RGB888:
-                return 3;
-            case COLOR_FORMAT_ARGB8888:
-            case COLOR_FORMAT_AXXX8888:
-                return 4;
-            case COLOR_FORMAT_A8:
-            case COLOR_FORMAT_L8:
-                return 1;
-            case COLOR_FORMAT_AL88:
-            case COLOR_FORMAT_RGB565:
-            case COLOR_FORMAT_ARGB4444:
-            default:
-                return 2;
-        }
-    }
-
-    static inline bool PixelFormatIsCLT(uint32_t pf)
+    static inline bool PixelFormatIsCLT(Format pf)
     {
         switch(pf)
         {
-            case COLOR_FORMAT_L8:
-            case COLOR_FORMAT_AL44:
-            case COLOR_FORMAT_AL88:
+            case Format::L8:
+            case Format::AL44:
+            case Format::AL88:
                 return true;
             default:
                 return false;

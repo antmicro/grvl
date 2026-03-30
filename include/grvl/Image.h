@@ -96,10 +96,10 @@ namespace grvl {
             return 0;
         }
 
-        uint32_t GetContentColorFormat() const
+        Format GetContentColorFormat() const
         {
             if(Content) return Content->GetColorFormat();
-            return 0;
+            return Format::ARGB8888;
         }
 
         bool GetContentAlpha() const

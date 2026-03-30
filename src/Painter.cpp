@@ -31,7 +31,7 @@
 
 namespace grvl {
 
-    static uint32_t ConvertColor(uint32_t color, uint32_t inputPixelFormat, uint32_t outputPixelFormat)
+    static uint32_t ConvertColor(uint32_t color, Format inputPixelFormat, Format outputPixelFormat)
     {
         uint8_t color1 = 0;
         uint8_t color2 = 0;
@@ -42,55 +42,55 @@ namespace grvl {
         }
 
         switch(inputPixelFormat) {
-            case COLOR_FORMAT_ARGB8888:
+            case Format::ARGB8888:
                 switch(outputPixelFormat) {
-                    case COLOR_FORMAT_ARGB4444: // ARGB8888 to ARGB4444
+                    case Format::ARGB4444: // ARGB8888 to ARGB4444
                         color1 = (color & 0x00ff0000) >> 20;
                         color2 = (color & 0x0000ff00) >> 12;
                         color3 = (color & 0x000000ff) >> 4;
                         alpha = (color & 0xff000000) >> 28;
                         return ((alpha << 12) | (color1 << 8) | (color2 << 4) | (color3));
 
-                    case COLOR_FORMAT_ARGB6666: // ARGB8888 to ARGB6666
+                    case Format::ARGB6666: // ARGB8888 to ARGB6666
                         color1 = (color & 0x00ff0000) >> 18;
                         color2 = (color & 0x0000ff00) >> 10;
                         color3 = (color & 0x000000ff) >> 2;
                         alpha = (color & 0xff000000) >> 26;
                         return ((alpha << 18) | (color1 << 12) | (color2 << 6) | (color3));
 
-                    case COLOR_FORMAT_RGB565: // ARGB8888 to RGB565
+                    case Format::RGB565: // ARGB8888 to RGB565
                         color1 = (color & 0x00ff0000) >> 19;
                         color2 = (color & 0x0000ff00) >> 10;
                         color3 = (color & 0x000000ff) >> 3;
                         return ((color1 << 11) | (color2 << 5) | (color3));
 
-                    case COLOR_FORMAT_RGB888: // ARGB8888 to RGB888
+                    case Format::RGB888: // ARGB8888 to RGB888
                         return (color & 0x00FFFFFF);
                 }
                 break;
 
-            case COLOR_FORMAT_RGB888:
+            case Format::RGB888:
                 switch(outputPixelFormat) {
-                    case COLOR_FORMAT_ARGB4444: // RGB888 to ARGB4444
+                    case Format::ARGB4444: // RGB888 to ARGB4444
                         color1 = (color & 0x00ff0000) >> 20;
                         color2 = (color & 0x0000ff00) >> 12;
                         color3 = (color & 0x000000ff) >> 4;
                         return (0xF000 | (color1 << 8) | (color2 << 4) | (color3));
 
-                    case COLOR_FORMAT_RGB565: // RGB888 to RGB565
+                    case Format::RGB565: // RGB888 to RGB565
                         color1 = (color & 0x00ff0000) >> 19;
                         color2 = (color & 0x0000ff00) >> 10;
                         color3 = (color & 0x000000ff) >> 3;
                         return ((color1 << 11) | (color2 << 5) | (color3));
 
-                    case COLOR_FORMAT_ARGB8888: // RGB888 to ARGB8888
+                    case Format::ARGB8888: // RGB888 to ARGB8888
                         return ((color & 0x00FFFFFF) | 0xFF000000);
                 }
                 break;
 
-            case COLOR_FORMAT_ARGB4444:
+            case Format::ARGB4444:
                 switch(outputPixelFormat) {
-                    case COLOR_FORMAT_ARGB8888: // ARGB4444 to ARGB8888
+                    case Format::ARGB8888: // ARGB4444 to ARGB8888
                         color1 = (color & 0x0f00) >> 8;
                         color2 = (color & 0x00f0) >> 4;
                         color3 = (color & 0x000f) >> 0;
@@ -100,9 +100,9 @@ namespace grvl {
                 }
                 break;
 
-            case COLOR_FORMAT_ARGB6666:
+            case Format::ARGB6666:
                 switch(outputPixelFormat) {
-                    case COLOR_FORMAT_ARGB8888: // ARGB6666 to ARGB8888
+                    case Format::ARGB8888: // ARGB6666 to ARGB8888
                         color1 = (color >> 12) & 0x3f;
                         color2 = (color >> 6)  & 0x3f;
                         color3 = (color >> 0)  & 0x3f;
@@ -112,9 +112,9 @@ namespace grvl {
                 }
                 break;
 
-            case COLOR_FORMAT_RGB565:
+            case Format::RGB565:
                 switch(outputPixelFormat) {
-                    case COLOR_FORMAT_ARGB8888: // RGB565 to RGB8888
+                    case Format::ARGB8888: // RGB565 to RGB8888
                         color1 = (color & 0x1f << 11) >> 11;
                         color2 = (color & 0x3f << 5) >> 5;
                         color3 = (color & 0x1f);
@@ -124,14 +124,14 @@ namespace grvl {
                         return (uint32_t)((color1 << 16) | (color2 << 8) | (color3) | 0xff000000);
                 }
                 break;
-            case COLOR_FORMAT_AXXX8888:
+            case Format::AXXX8888:
                 switch(outputPixelFormat) {
-                    case COLOR_FORMAT_ARGB8888: // AXXX8888 to ARGB8888
+                    case Format::ARGB8888: // AXXX8888 to ARGB8888
                         return color & 0xFF000000;
                 }
-            case COLOR_FORMAT_A8:
+            case Format::A8:
                 switch(outputPixelFormat) {
-                    case COLOR_FORMAT_ARGB8888: // A8 to ARGB8888
+                    case Format::ARGB8888: // A8 to ARGB8888
                         return (color & 0xFF) << 24;
                 }
         }
@@ -143,7 +143,7 @@ namespace grvl {
         return (color & 0xFF000000) == 0;
     }
 
-    static uint32_t ConvertPixel(unsigned char* data, uint32_t inputPixelFormat, uint32_t outputPixelFormat)
+    static uint32_t ConvertPixel(unsigned char* data, Format inputPixelFormat, Format outputPixelFormat)
     {
         uint32_t color;
 
@@ -179,18 +179,18 @@ namespace grvl {
         return result;
     }
 
-    static uint32_t LookupClt(uint8_t* mem, uint32_t format, uint8_t* clt)
+    static uint32_t LookupClt(uint8_t* mem, Format format, uint8_t* clt)
     {
         uint32_t color = 0;
         uint16_t cltOffset = 0;
-        if(format == COLOR_FORMAT_AL44) {
+        if(format == Format::AL44) {
             color |= ((mem[0] & 0xf0) * 0x11) << 24;
             cltOffset = (mem[0] & 0x0f) * 0x11;
-        } else if(format == COLOR_FORMAT_AL88) {
+        } else if(format == Format::AL88) {
             // Little endian, so alpha is actually after luminance
             color |= mem[1] << 24;
             cltOffset = mem[0];
-        } else if(format == COLOR_FORMAT_L8) {
+        } else if(format == Format::L8) {
             color |= 0xff000000;
             cltOffset = mem[0];
         } else {
@@ -207,7 +207,7 @@ namespace grvl {
     }
 
     static void PixelFormatConvert(uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem,
-                                   uint32_t inputPixelFormat, uint32_t backgroundPixelFormat, uint32_t outputPixelFormat, uint32_t fontColor, uintptr_t backCLT, uintptr_t frontCLT)
+                                   Format inputPixelFormat, Format backgroundPixelFormat, Format outputPixelFormat, uint32_t fontColor, uintptr_t backCLT, uintptr_t frontCLT)
     {
         uint32_t inputColor = 0;
         uint32_t backgroundColor = 0;
@@ -216,8 +216,8 @@ namespace grvl {
         if(PixelFormatIsCLT(inputPixelFormat)) {
             inputColor = LookupClt((uint8_t*)inputMem, inputPixelFormat, (uint8_t*)frontCLT);
         } else {
-            inputColor = ConvertPixel((unsigned char*)inputMem, inputPixelFormat, COLOR_FORMAT_ARGB8888);
-            if((inputPixelFormat == COLOR_FORMAT_A8) || (inputPixelFormat == COLOR_FORMAT_AXXX8888)) {
+            inputColor = ConvertPixel((unsigned char*)inputMem, inputPixelFormat, Format::ARGB8888);
+            if((inputPixelFormat == Format::A8) || (inputPixelFormat == Format::AXXX8888)) {
                 inputColor = (inputColor & 0xff000000) | (fontColor & 0x00ffffff);
             }
         }
@@ -226,28 +226,28 @@ namespace grvl {
             if(PixelFormatIsCLT(backgroundPixelFormat)) {
                 inputColor = LookupClt((uint8_t*)backgroundMem, backgroundPixelFormat, (uint8_t*)backCLT);
             } else {
-                backgroundColor = ConvertPixel((unsigned char*)backgroundMem, backgroundPixelFormat, COLOR_FORMAT_ARGB8888);
+                backgroundColor = ConvertPixel((unsigned char*)backgroundMem, backgroundPixelFormat, Format::ARGB8888);
             }
             outputColor = Blend(backgroundColor, inputColor);
         } else {
             outputColor = inputColor;
         }
 
-        outputColor = ConvertPixel((unsigned char*)&outputColor, COLOR_FORMAT_ARGB8888, outputPixelFormat);
-        memcpy((void*)outputMem, (void*)&outputColor, PixelFormatToBPP(outputPixelFormat));
+        outputColor = ConvertPixel((unsigned char*)&outputColor, Format::ARGB8888, outputPixelFormat);
+        memcpy((void*)outputMem, (void*)&outputColor, GetFormatStride(outputPixelFormat));
     }
 
     void FallbackDmaOperation(uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem,
                               uint32_t PixelsPerLine, uint32_t NumberOfLines, uint32_t inOffset, uint32_t backgroundOffset,
-                              uint32_t outOffset, uint32_t inColor, uint32_t backgroundColor, uint32_t outColor, uint32_t fontColor, uintptr_t backCLT, uintptr_t frontCTL)
+                              uint32_t outOffset, Format inColor, Format backgroundColor, Format outColor, uint32_t fontColor, uintptr_t backCLT, uintptr_t frontCTL)
     {
         uintptr_t omem = outputMem;
         uintptr_t imem = inputMem;
         uintptr_t bmem = backgroundMem;
         unsigned int y, x;
-        uint32_t omemBPP = PixelFormatToBPP(outColor);
-        uint32_t imemBPP = PixelFormatToBPP(inColor);
-        uint32_t bmemBPP = backgroundMem == 0 ? 0 : PixelFormatToBPP(backgroundColor);
+        uint32_t omemBPP = GetFormatStride(outColor);
+        uint32_t imemBPP = GetFormatStride(inColor);
+        uint32_t bmemBPP = backgroundMem == 0 ? 0 : GetFormatStride(backgroundColor);
 
         for(y = 0; y < NumberOfLines; y++) {
             for(x = 0; x < PixelsPerLine; x++) {
@@ -263,11 +263,11 @@ namespace grvl {
     }
 
     void FallbackDmaFill(uintptr_t dst, uint32_t PixelsPerLine, uint32_t NumberOfLines, uint32_t offset,
-                         uint32_t color_index, uint32_t pixel_format)
+                         uint32_t color_index, Format pixel_format)
     {
         unsigned int x, y;
-        uint32_t color = ConvertColor(color_index, COLOR_FORMAT_ARGB8888, pixel_format);
-        uint32_t dstBPP = PixelFormatToBPP(pixel_format);
+        uint32_t color = ConvertColor(color_index, Format::ARGB8888, pixel_format);
+        uint32_t dstBPP = GetFormatStride(pixel_format);
         for(y = 0; y < NumberOfLines; y++) {
             for(x = 0; x < PixelsPerLine; x++) {
                 memcpy((void*)dst, (void*)&color, dstBPP);
@@ -308,7 +308,7 @@ namespace grvl {
     // Note: Code below causes segfault, is copying from addr 0x0 intended?
 
     // void Painter::ShadowBuffer(uint8_t number, uint32_t color) {
-    //     Painter::DmaOperation(0, GetVisibleBuffer(), GetVisibleBuffer(), XSize, YSize, 0, 0, 0, COLOR_FORMAT_ARGB8888, GetActiveBufferPixelFormat(), GetActiveBufferPixelFormat(), color);
+    //     Painter::DmaOperation(0, GetVisibleBuffer(), GetVisibleBuffer(), XSize, YSize, 0, 0, 0, Format::ARGB8888, GetActiveBufferPixelFormat(), GetActiveBufferPixelFormat(), color);
     // }
 
     void Painter::DrawPixel(uint32_t Xpos, uint32_t Ypos, uint32_t RGB_Code) const
@@ -328,7 +328,7 @@ namespace grvl {
             pixels[Ypos * GetXSize() + Xpos] = RGB_Code;
         } else {
             uint16_t* pixels = (uint16_t*)ptr;
-            uint16_t col = ConvertColor(RGB_Code, COLOR_FORMAT_ARGB8888, GetActiveBufferPixelFormat()) & 0xFFFF;
+            uint16_t col = ConvertColor(RGB_Code, Format::ARGB8888, GetActiveBufferPixelFormat()) & 0xFFFF;
             pixels[Ypos * GetXSize() + Xpos] = col;
         }
     }
@@ -403,7 +403,7 @@ namespace grvl {
             return pixels[Ypos * GetXSize() + Xpos];
         } else {
             uint16_t* pixels = (uint16_t*)ptr;
-            return ConvertColor(pixels[Ypos * GetXSize() + Xpos], GetActiveBufferPixelFormat(), COLOR_FORMAT_ARGB8888);
+            return ConvertColor(pixels[Ypos * GetXSize() + Xpos], GetActiveBufferPixelFormat(), Format::ARGB8888);
         }
     }
 
@@ -741,7 +741,7 @@ namespace grvl {
         uintptr_t ax = 0;
         uintptr_t ptr = GetActiveBuffer();
         uint32_t bytes = GetActiveBufferBytesPerPixel();
-        uint32_t pixelFormat = GetActiveBufferPixelFormat();
+        Format pixelFormat = GetActiveBufferPixelFormat();
 
         float currentGradientValue = startingValue;
         float gradientDelta = (1.0f - currentGradientValue) / length;
@@ -945,7 +945,7 @@ namespace grvl {
         uintptr_t ax = 0;
         uintptr_t ptr = GetActiveBuffer();
         uint32_t bytes = GetActiveBufferBytesPerPixel();
-        uint32_t pixel_format = GetActiveBufferPixelFormat();
+        Format pixel_format = GetActiveBufferPixelFormat();
         if(!IsRotated()) {
             ax = ptr + bytes * (GetXSize() * Ypos + Xpos);
             DmaFill(ax, Length, 1, 0, text_color, pixel_format);
@@ -977,7 +977,7 @@ namespace grvl {
         uintptr_t ax = 0;
         uintptr_t ptr = GetActiveBuffer();
         uint32_t bytes = GetActiveBufferBytesPerPixel();
-        uint32_t pixel_format = GetActiveBufferPixelFormat();
+        Format pixel_format = GetActiveBufferPixelFormat();
         if(!IsRotated()) {
             /* Get the line address */
             ax = ptr + bytes * (GetXSize() * Ypos + Xpos);
@@ -1028,7 +1028,7 @@ namespace grvl {
         uintptr_t ax = 0;
         uint32_t bytes = GetActiveBufferBytesPerPixel();
         uintptr_t ptr = GetActiveBuffer();
-        uint32_t pixel_format = GetActiveBufferPixelFormat();
+        Format pixel_format = GetActiveBufferPixelFormat();
         if(!IsRotated()) {
             /* Get the rectangle start address */
             ax = ptr + bytes * (GetXSize() * Ypos + Xpos);
@@ -1068,7 +1068,7 @@ namespace grvl {
         FillRectangle(Xpos, Ypos + BorderArcRadius, Width, Height - DoubleBorderArcRadius, text_color);
     }
 
-    void Painter::FillMemory(uintptr_t memory, int32_t width, int32_t height, uint32_t text_color, uint32_t colorFormat)
+    void Painter::FillMemory(uintptr_t memory, int32_t width, int32_t height, uint32_t text_color, Format colorFormat)
     {
         if(width <= 0 || height <= 0) {
             return;
@@ -1131,7 +1131,7 @@ namespace grvl {
 
     void Painter::DmaOperation(uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem, uint32_t PixelsPerLine,
                                uint32_t NumberOfLines, uint32_t inOffset, uint32_t backgroundOffset, uint32_t outOffset,
-                               uint32_t inPixelFormat, uint32_t backgroundPixelFormat, uint32_t outPixelFormat, uint32_t frontColor) const
+                               Format inPixelFormat, Format backgroundPixelFormat, Format outPixelFormat, uint32_t frontColor) const
     {
         if(PixelsPerLine == 0 || NumberOfLines == 0) {
             return;
@@ -1150,7 +1150,7 @@ namespace grvl {
 
     void Painter::DmaOperationCLT(uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem, uint32_t PixelsPerLine,
                                   uint32_t NumberOfLines, uint32_t inOffset, uint32_t backgroundOffset, uint32_t outOffset,
-                                  uint32_t inPixelFormat, uint32_t backgroundPixelFormat, uint32_t outPixelFormat, uintptr_t backCLT, uintptr_t frontCLT) const
+                                  Format inPixelFormat, Format backgroundPixelFormat, Format outPixelFormat, uintptr_t backCLT, uintptr_t frontCLT) const
     {
         if(PixelsPerLine == 0 || NumberOfLines == 0) {
             return;
@@ -1182,7 +1182,7 @@ namespace grvl {
     }
 
     void Painter::DmaFill(uintptr_t outputMem, uint32_t PixelsPerLine, uint32_t NumberOfLines, uint32_t outOffset,
-                          uint32_t color_index, uint32_t pixel_format) const
+                          uint32_t color_index, Format pixel_format) const
     {
         if(!grvl::Callbacks()->dma_fill) {
             return FallbackDmaFill(outputMem, PixelsPerLine, NumberOfLines, outOffset, color_index, pixel_format);
@@ -1192,37 +1192,37 @@ namespace grvl {
         }
     }
 
-    uint32_t Painter::GetActiveBufferPixelFormat() const
+    Format Painter::GetActiveBufferPixelFormat() const
     {
         return backLayerPointers[ActiveBuffer].pixel_format;
     }
 
     uint32_t Painter::GetActiveBufferBytesPerPixel() const
     {
-        return PixelFormatToBPP(backLayerPointers[ActiveBuffer].pixel_format);
+        return GetFormatStride(backLayerPointers[ActiveBuffer].pixel_format);
     }
 
-    uint32_t Painter::GetPixelFormat() const
+    Format Painter::GetPixelFormat() const
     {
         return backLayerPointers[0].pixel_format;
     }
 
     uint32_t Painter::GetBytesPerPixel() const
     {
-        return PixelFormatToBPP(backLayerPointers[0].pixel_format);
+        return GetFormatStride(backLayerPointers[0].pixel_format);
     }
 
-    uint32_t Painter::GetDisplayPixelFormat() const
+    Format Painter::GetDisplayPixelFormat() const
     {
         return backLayerPointers[2].pixel_format;
     }
 
     uint32_t Painter::GetDisplayBytesPerPixel() const
     {
-        return PixelFormatToBPP(backLayerPointers[2].pixel_format);
+        return GetFormatStride(backLayerPointers[2].pixel_format);
     }
     void Painter::DmaMove(uintptr_t fb_src, uintptr_t fb_dst, int32_t x_src, int32_t y_src, int32_t x_dst, int32_t y_dst,
-                          int32_t width, int32_t height, uint32_t src_pixel_format, uint32_t dst_pixel_format) const
+                          int32_t width, int32_t height, Format src_pixel_format, Format dst_pixel_format) const
     {
         uint32_t x_lcd_size = GetXSize();
         uint32_t y_lcd_size = GetYSize();
@@ -1230,32 +1230,32 @@ namespace grvl {
         uint32_t NumberOfLines = 0, PixelsPerLine = 0, inOffset = 0, outOffset = 0;
 
         if(IsRotated()) {
-            inputMem = fb_src + PixelFormatToBPP(src_pixel_format) * (y_lcd_size * (x_lcd_size - x_src - width) + y_src);
-            outputMem = fb_dst + PixelFormatToBPP(dst_pixel_format) * (y_lcd_size * (x_lcd_size - x_dst - width) + y_dst);
+            inputMem = fb_src + GetFormatStride(src_pixel_format) * (y_lcd_size * (x_lcd_size - x_src - width) + y_src);
+            outputMem = fb_dst + GetFormatStride(dst_pixel_format) * (y_lcd_size * (x_lcd_size - x_dst - width) + y_dst);
             NumberOfLines = width;
             PixelsPerLine = height;
             inOffset = y_lcd_size - height;
             outOffset = y_lcd_size - height;
         } else {
-            inputMem = fb_src + PixelFormatToBPP(src_pixel_format) * ((x_lcd_size * (y_src)) + x_src);
-            outputMem = fb_dst + PixelFormatToBPP(dst_pixel_format) * ((x_lcd_size * (y_dst)) + x_dst);
+            inputMem = fb_src + GetFormatStride(src_pixel_format) * ((x_lcd_size * (y_src)) + x_src);
+            outputMem = fb_dst + GetFormatStride(dst_pixel_format) * ((x_lcd_size * (y_dst)) + x_dst);
             NumberOfLines = height;
             PixelsPerLine = width;
             inOffset = x_lcd_size - width;
             outOffset = x_lcd_size - width;
         }
         DmaOperation(
-            inputMem, 0, outputMem, PixelsPerLine, NumberOfLines, inOffset, 0, outOffset, src_pixel_format, 0,
+            inputMem, 0, outputMem, PixelsPerLine, NumberOfLines, inOffset, 0, outOffset, src_pixel_format, Format::ARGB8888,
             dst_pixel_format);
     }
 
     void Painter::DmaMoveImage(uintptr_t img_src, uintptr_t fb_dst, int32_t x_src, int32_t y_src, int32_t x_dst,
                                int32_t y_dst, int32_t width, int32_t height, int32_t totalImageWidth, int32_t totalImageHeight,
-                               uint32_t activeFrame, uint32_t frames, uint32_t inPixelFormat, uint32_t outPixelFormat, bool hasAlpha, uintptr_t imageCLT) const
+                               uint32_t activeFrame, uint32_t frames, Format inPixelFormat, Format outPixelFormat, bool hasAlpha, uintptr_t imageCLT) const
     {
 
-        int inBytes = PixelFormatToBPP(inPixelFormat);
-        int outBytes = PixelFormatToBPP(outPixelFormat);
+        int inBytes = GetFormatStride(inPixelFormat);
+        int outBytes = GetFormatStride(outPixelFormat);
         uint32_t x_lcd_size = GetXSize();
         uint32_t y_lcd_size = GetYSize();
         uintptr_t inputMem = 0, outputMem = 0;
@@ -1312,16 +1312,16 @@ namespace grvl {
                 inPixelFormat, outPixelFormat, outPixelFormat, 0, imageCLT);
         } else {
             DmaOperationCLT(
-                inputMem, 0, outputMem, PixelsPerLine, NumberOfLines, inOffset, 0, outOffset, inPixelFormat, 0,
+                inputMem, 0, outputMem, PixelsPerLine, NumberOfLines, inOffset, 0, outOffset, inPixelFormat, Format::ARGB8888,
                 outPixelFormat, 0, imageCLT);
         }
     }
 
     void Painter::DmaMoveShadow(uintptr_t img_src, uintptr_t fb_dst, int32_t x_dst, int32_t y_dst, int32_t width, int32_t height,
-                                uint32_t outPixelFormat, uint32_t color) const
+                                Format outPixelFormat, uint32_t color) const
     {
 
-        int outBytes = PixelFormatToBPP(outPixelFormat);
+        int outBytes = GetFormatStride(outPixelFormat);
         uint32_t x_lcd_size = GetXSize();
         uint32_t y_lcd_size = GetYSize();
         uintptr_t inputMem = 0, outputMem = 0;
@@ -1370,15 +1370,15 @@ namespace grvl {
 
         DmaOperation(
             inputMem, outputMem, outputMem, PixelsPerLine, NumberOfLines, inOffset, outOffset, outOffset,
-            COLOR_FORMAT_ARGB8888, outPixelFormat, outPixelFormat, color);
+            Format::ARGB8888, outPixelFormat, outPixelFormat, color);
     }
 
     void Painter::DmaMoveFont(uintptr_t font_src, uintptr_t font_dst, int32_t x_src, int32_t y_src, int32_t x_dst,
-                              int32_t y_dst, int32_t width, int32_t height, int32_t fontWidth, int32_t fontHeight, uint32_t outPixelFormat,
+                              int32_t y_dst, int32_t width, int32_t height, int32_t fontWidth, int32_t fontHeight, Format outPixelFormat,
                               uint32_t fontColor) const
     {
-        int inBytes = PixelFormatToBPP(COLOR_FORMAT_A8);
-        int outBytes = PixelFormatToBPP(outPixelFormat);
+        int inBytes = GetFormatStride(Format::A8);
+        int outBytes = GetFormatStride(outPixelFormat);
         uint32_t x_lcd_size = CurrentDrawingBoundsEndX();
         uint32_t y_lcd_size = CurrentDrawingBoundsEndY();
         uintptr_t inputMem = 0, outputMem = 0;
@@ -1423,17 +1423,17 @@ namespace grvl {
         }
 
         DmaOperation(inputMem, outputMem, outputMem, PixelsPerLine, NumberOfLines, inOffset, outOffset, outOffset,
-                             COLOR_FORMAT_A8, outPixelFormat, outPixelFormat, fontColor);
+                             Format::A8, outPixelFormat, outPixelFormat, fontColor);
     }
 
     void Painter::DmaTransferToFramebuffer(int32_t y_position, int32_t height, bool with_background, bool inPlace)
     {
 
-        uint8_t backFramebufferPixelFormat = GetPixelFormat();
+        Format backFramebufferPixelFormat = GetPixelFormat();
         uint8_t backFramebufferBPP = GetBytesPerPixel();
-        uint8_t displayFramebufferPixelFormat = GetDisplayPixelFormat();
+        Format displayFramebufferPixelFormat = GetDisplayPixelFormat();
         uint8_t displayFramebufferBPP = GetDisplayBytesPerPixel();
-        uint8_t backgroundPixelFormat = BackgroundImage->GetContentColorFormat();
+        Format backgroundPixelFormat = BackgroundImage->GetContentColorFormat();
         uint8_t backgroundBPP = BackgroundImage->GetContentBytesPerPixel();
 
         uintptr_t inputMem = 0, backMem = 0, outputMem = 0;
@@ -1475,10 +1475,10 @@ namespace grvl {
             outOffset = 0;
         }
 
-        if(with_background && !BackgroundImage->IsEmpty() && backgroundPixelFormat == COLOR_FORMAT_L8) {
+        if(with_background && !BackgroundImage->IsEmpty() && backgroundPixelFormat == Format::L8) {
             DmaOperationCLT(
                 inputMem, backMem, inPlace ? inputMem : outputMem, PixelsPerLine, NumberOfLines, inOffset, backOffset, outOffset,
-                backFramebufferPixelFormat, backgroundPixelFormat, displayFramebufferPixelFormat, BackgroundImage->GetContent()->GetPLTE(), 0);
+                backFramebufferPixelFormat, backgroundPixelFormat, displayFramebufferPixelFormat, 0, 0);
         } else {
             DmaOperation(
                 inputMem, backMem, inPlace ? inputMem : outputMem, PixelsPerLine, NumberOfLines, inOffset, backOffset, outOffset,
@@ -1502,33 +1502,33 @@ namespace grvl {
         switch(BufferBPP) {
             case 2:
             {
-                backLayerPointers[0].pixel_format = COLOR_FORMAT_ARGB4444;
+                backLayerPointers[0].pixel_format = Format::ARGB4444;
                 backLayerPointers[1].pixel_format = backLayerPointers[0].pixel_format;
-                backLayerPointers[2].pixel_format = COLOR_FORMAT_RGB565;
-                backLayerPointers[3].pixel_format = COLOR_FORMAT_RGB565;
+                backLayerPointers[2].pixel_format = Format::RGB565;
+                backLayerPointers[3].pixel_format = Format::RGB565;
                 break;
             }
             case 3:
             {
-                backLayerPointers[0].pixel_format = COLOR_FORMAT_ARGB4444;
+                backLayerPointers[0].pixel_format = Format::ARGB4444;
                 backLayerPointers[1].pixel_format = backLayerPointers[0].pixel_format;
-                backLayerPointers[2].pixel_format = COLOR_FORMAT_RGB888;
-                backLayerPointers[3].pixel_format = COLOR_FORMAT_RGB888;
+                backLayerPointers[2].pixel_format = Format::RGB888;
+                backLayerPointers[3].pixel_format = Format::RGB888;
                 break;
             }
             case 4:
             {
-                backLayerPointers[0].pixel_format = COLOR_FORMAT_ARGB8888;
+                backLayerPointers[0].pixel_format = Format::ARGB8888;
                 backLayerPointers[1].pixel_format = backLayerPointers[0].pixel_format;
-                backLayerPointers[2].pixel_format = COLOR_FORMAT_ARGB8888;
-                backLayerPointers[3].pixel_format = COLOR_FORMAT_ARGB8888;
+                backLayerPointers[2].pixel_format = Format::ARGB8888;
+                backLayerPointers[3].pixel_format = Format::ARGB8888;
                 break;
             }
         }
 
         // Prepare shadow image
         uint8_t* imgContent = (uint8_t*)malloc(XSize * /*1*/ 4);
-        shadowImage = new ImageContent(ImageContent::FromRAW(imgContent, XSize, 1, 1, /*COLOR_FORMAT_A8*/ COLOR_FORMAT_RGB888));
+        shadowImage = new ImageContent(imgContent, XSize, 1, 1);
         if(IsRotated()) {
             if(!shadowImage->IsRotated()) {
                 shadowImage->Rotate90();

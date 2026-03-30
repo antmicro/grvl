@@ -309,7 +309,7 @@ namespace grvl {
                     if (event.code == BTN_LEFT) {
                         left_mouse_pressed = event.value;
                     }
-                    
+
                     xkb_keycode_t keycode = event.code + 8;
                     xkb_keysym_t keysym = xkb_state_key_get_one_sym(xkb_state, keycode);
                     if (event.value > 0) {
@@ -351,12 +351,12 @@ namespace grvl {
                                     if (xkb_state_key_get_utf8(xkb_state, keycode, buffer.data(), buffer.size()) > 0) {
                                         Manager::GetInstance().ProcessTextInput(buffer.data());
                                     }
-                                    
+
                                 }
                         }
-                        
+
                     }
-                    
+
                     // always update the state
                     xkb_state_update_key(xkb_state, keycode, event.value ? XKB_KEY_DOWN : XKB_KEY_UP);
                     Manager::GetInstance().ProcessKeyInput(event.value, event.code);

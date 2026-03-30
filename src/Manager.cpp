@@ -835,8 +835,8 @@ namespace grvl {
             case ToTheLeft: {
                 uint8_t bytesPerPixel = painter.GetBytesPerPixel();
                 uint8_t displayBytesPerPixel = painter.GetDisplayBytesPerPixel();
-                uint8_t pixelFormat = painter.GetPixelFormat();
-                uint8_t displayPixelFormat = painter.GetDisplayPixelFormat();
+                Format pixelFormat = painter.GetPixelFormat();
+                Format displayPixelFormat = painter.GetDisplayPixelFormat();
                 UpdateAnimationWindowOffset();
                 if(painter.IsRotated()) {
                     uintptr_t framePtr = static_cast<uintptr_t>(bytesPerPixel) * GetTotalHeadersHeight();
@@ -853,7 +853,7 @@ namespace grvl {
                                             height - GetTotalHeadersHeight() - GetBottomPanelHeight(), width,
                                             GetTotalHeadersHeight() + GetBottomPanelHeight(), GetTotalHeadersHeight() + GetBottomPanelHeight(),
                                             GetTotalHeadersHeight() + GetBottomPanelHeight(), pixelFormat,
-                                            BackgroundImage.GetContentColorFormat(), displayPixelFormat, BackgroundImage.GetContent() ? BackgroundImage.GetContent()->GetPLTE() : 0, 0);
+                                            BackgroundImage.GetContentColorFormat(), displayPixelFormat, 0, 0);
                     // NOLINTEND
                 } else {
                     if(((int)width >= AnimationWindowOffset) && (AnimationWindowOffset > 0)) {
@@ -871,13 +871,13 @@ namespace grvl {
                                                 (uintptr_t)(BackgroundImage.GetContentData() + BackgroundImage.GetContentBytesPerPixel() * (width * GetTotalHeadersHeight() + w1)),
                                                 painter.GetVisibleBuffer() + displayBytesPerPixel * (width * GetTotalHeadersHeight() + w1), w2,
                                                 height - GetTotalHeadersHeight() - GetBottomPanelHeight(), w1, w1, w1, pixelFormat,
-                                                BackgroundImage.GetContentColorFormat(), displayPixelFormat, BackgroundImage.GetContent() ? BackgroundImage.GetContent()->GetPLTE() : 0, 0);
+                                                BackgroundImage.GetContentColorFormat(), displayPixelFormat, 0, 0);
                         painter.DmaOperationCLT(
                             painter.GetBuffer(1) + bytesPerPixel * (width * GetTotalHeadersHeight() + w2),
                             (uintptr_t)(BackgroundImage.GetContentData() + BackgroundImage.GetContentBytesPerPixel() * (width * GetTotalHeadersHeight())),
                             painter.GetVisibleBuffer() + displayBytesPerPixel * (width * GetTotalHeadersHeight()), w1,
                             height - GetTotalHeadersHeight() - GetBottomPanelHeight(), w2, w2, w2, pixelFormat,
-                            BackgroundImage.GetContentColorFormat(), displayPixelFormat, BackgroundImage.GetContent() ? BackgroundImage.GetContent()->GetPLTE() : 0, 0);
+                            BackgroundImage.GetContentColorFormat(), displayPixelFormat, 0, 0);
                         // NOLINTEND
                     }
                 }
@@ -927,12 +927,12 @@ namespace grvl {
         if(ManagerState == Refreshing) { // Use unified background handling
             painter.MergeBuffers();
         } else if(GetTotalHeadersHeight() > 0 && !painter.IsRotated()) { // Use animation optimized background handling
-            uint8_t pixelFormatBackground = painter.GetPixelFormat();
-            uint8_t pixelFormatBackgroundDisplay = painter.GetDisplayPixelFormat();
+            Format pixelFormatBackground = painter.GetPixelFormat();
+            Format pixelFormatBackgroundDisplay = painter.GetDisplayPixelFormat();
             painter.DmaOperationCLT(painter.GetBuffer(0), (uintptr_t)(BackgroundImage.GetContentData()),
                                     painter.GetVisibleBuffer(), width, GetTotalHeadersHeight(), 0, 0, 0,
                                     pixelFormatBackground, BackgroundImage.GetContentColorFormat(), pixelFormatBackgroundDisplay,
-                                    BackgroundImage.GetContent() ? BackgroundImage.GetContent()->GetPLTE() : 0, 0);
+                                    0, 0);
         }
 
         painter.SetActiveBuffer(painter.GetSwapperValue() ? 2 : 3);
