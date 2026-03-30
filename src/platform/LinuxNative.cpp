@@ -239,11 +239,6 @@ namespace grvl {
 
     bool LinuxNativeApp::Setup()
     {
-        if (geteuid() != 0) {
-            printf("This application requires root privelages to access kernel APIs!\n");
-            return false;
-        }
-
         output = new drm_screen("", width, height);
 
         // Linux kernel input API
