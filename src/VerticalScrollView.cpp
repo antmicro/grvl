@@ -209,96 +209,100 @@ namespace grvl {
         bool DrawHLine = true;
 
         const int ScrollChangeMultiplicator = 2; // predicting a required image content
-        grvl::Callbacks()->mutex_lock(ClearWhileDrawMutex);
-        for(uint32_t i = 0; i < Elements.size(); i++) {
-            if(!Elements[i]->IsVisible()) {
-                continue;
-            }
-            // Element to high - not visible
-            if(Elements[i]->GetY() + Elements[i]->GetHeight() < tempScroll) {
-                if(Elements[i]->GetY() + Elements[i]->GetHeight()
-                   < tempScroll - abs(tempScrollChange) * ScrollChangeMultiplicator) {
-                    continue;
-                }
 
-                // Request new images - scrolling up
-                if(tempScrollChange < 0) {
-                    Elements[i]->PrepareContent(painter.GetContentManager());
-                }
+		{
+		    Guard lock {ClearWhileDrawMutex};
 
-                // Cancel request for passed images - scrolling down
-                if(tempScrollChange > 0) {
-                    Elements[i]->CancelPreparingContent(painter.GetContentManager());
-                }
-            }
+		    for(uint32_t i = 0; i < Elements.size(); i++) {
+		        if(!Elements[i]->IsVisible()) {
+		            continue;
+		        }
+		        // Element to high - not visible
+		        if(Elements[i]->GetY() + Elements[i]->GetHeight() < tempScroll) {
+		            if(Elements[i]->GetY() + Elements[i]->GetHeight()
+		               < tempScroll - abs(tempScrollChange) * ScrollChangeMultiplicator) {
+		                continue;
+		            }
 
-            // Element to low - not visible
-            else if(Elements[i]->GetY() > tempScroll + Height) {
-                if(Elements[i]->GetY() > tempScroll + Height + abs(tempScrollChange) * ScrollChangeMultiplicator) {
-                    continue; // No need to check more elements
-                }
+		            // Request new images - scrolling up
+		            if(tempScrollChange < 0) {
+		                Elements[i]->PrepareContent(painter.GetContentManager());
+		            }
 
-                // Request new images - scrolling down
-                if(tempScrollChange > 0) {
-                    Elements[i]->PrepareContent(painter.GetContentManager());
-                }
+		            // Cancel request for passed images - scrolling down
+		            if(tempScrollChange > 0) {
+		                Elements[i]->CancelPreparingContent(painter.GetContentManager());
+		            }
+		        }
 
-                // Cancel request for passed images - scrolling up
-                if(tempScrollChange < 0) {
-                    Elements[i]->CancelPreparingContent(painter.GetContentManager());
-                }
+		        // Element to low - not visible
+		        else if(Elements[i]->GetY() > tempScroll + Height) {
+		            if(Elements[i]->GetY() > tempScroll + Height + abs(tempScrollChange) * ScrollChangeMultiplicator) {
+		                continue; // No need to check more elements
+		            }
 
-                continue;
-            }
+		            // Request new images - scrolling down
+		            if(tempScrollChange > 0) {
+		                Elements[i]->PrepareContent(painter.GetContentManager());
+		            }
 
-            // Visible elements
-            else {
-                int32_t ButtonHeight = 0;
+		            // Cancel request for passed images - scrolling up
+		            if(tempScrollChange < 0) {
+		                Elements[i]->CancelPreparingContent(painter.GetContentManager());
+		            }
 
-                // Redraw new elements
-                // top part of element invisible
-                if(Elements[i]->GetY() < tempScroll) {
-                    ButtonHeight = Elements[i]->GetY() - tempScroll;
-                    DrawHLine = true;
-                    int realButtonHeight = Elements[i]->GetHeight() + ButtonHeight;
-                    painter.AddBackgroundBlock(
-                        ParentRenderY + Y - tempScroll + Elements[i]->GetY() + Elements[i]->GetHeight() - realButtonHeight,
-                        realButtonHeight, Elements[i]->GetCurrentBackgroundColor());
-                }
+		            continue;
+		        }
 
-                // bottom part of element invisible
-                else if(Elements[i]->GetY() + Elements[i]->GetHeight() > tempScroll + Height) {
-                    ButtonHeight = Elements[i]->GetHeight()
-                        - (Elements[i]->GetY() + Elements[i]->GetHeight() - (tempScroll + Height));
-                    DrawHLine = false;
-                    painter.AddBackgroundBlock(
-                        ParentRenderY + Y - tempScroll + Elements[i]->GetY(), ButtonHeight,
-                        Elements[i]->GetCurrentBackgroundColor());
-                }
+		        // Visible elements
+		        else {
+		            int32_t ButtonHeight = 0;
 
-                // center element - visible
-                else {
-                    ButtonHeight = Elements[i]->GetHeight();
-                    DrawHLine = true;
-                    painter.AddBackgroundBlock(
-                        ParentRenderY + Y - tempScroll + Elements[i]->GetY(), Elements[i]->GetHeight(),
-                        Elements[i]->GetCurrentBackgroundColor());
-                }
+		            // Redraw new elements
+		            // top part of element invisible
+		            if(Elements[i]->GetY() < tempScroll) {
+		                ButtonHeight = Elements[i]->GetY() - tempScroll;
+		                DrawHLine = true;
+		                int realButtonHeight = Elements[i]->GetHeight() + ButtonHeight;
+		                painter.AddBackgroundBlock(
+		                    ParentRenderY + Y - tempScroll + Elements[i]->GetY() + Elements[i]->GetHeight() - realButtonHeight,
+		                    realButtonHeight, Elements[i]->GetCurrentBackgroundColor());
+		            }
 
-                Elements[i]->Draw(painter, ParentRenderX + X, ParentRenderY + Y - tempScroll);
+		            // bottom part of element invisible
+		            else if(Elements[i]->GetY() + Elements[i]->GetHeight() > tempScroll + Height) {
+		                ButtonHeight = Elements[i]->GetHeight()
+		                    - (Elements[i]->GetY() + Elements[i]->GetHeight() - (tempScroll + Height));
+		                DrawHLine = false;
+		                painter.AddBackgroundBlock(
+		                    ParentRenderY + Y - tempScroll + Elements[i]->GetY(), ButtonHeight,
+		                    Elements[i]->GetCurrentBackgroundColor());
+		            }
 
-                if(i == Elements.size() - 1) {
-                    DrawHLine = false;
-                }
+		            // center element - visible
+		            else {
+		                ButtonHeight = Elements[i]->GetHeight();
+		                DrawHLine = true;
+		                painter.AddBackgroundBlock(
+		                    ParentRenderY + Y - tempScroll + Elements[i]->GetY(), Elements[i]->GetHeight(),
+		                    Elements[i]->GetCurrentBackgroundColor());
+		            }
 
-                if(DrawHLine && SplitLineColor > 0) {
-                    painter.DrawHLine(
-                        ParentRenderX + X, ParentRenderY + Y + Elements[i]->GetY() + Elements[i]->GetHeight() - tempScroll - 1,
-                        Width, SplitLineColor);
-                }
-            }
-        }
-        grvl::Callbacks()->mutex_unlock(ClearWhileDrawMutex);
+		            Elements[i]->Draw(painter, ParentRenderX + X, ParentRenderY + Y - tempScroll);
+
+		            if(i == Elements.size() - 1) {
+		                DrawHLine = false;
+		            }
+
+		            if(DrawHLine && SplitLineColor > 0) {
+		                painter.DrawHLine(
+		                    ParentRenderX + X, ParentRenderY + Y + Elements[i]->GetY() + Elements[i]->GetHeight() - tempScroll - 1,
+		                    Width, SplitLineColor);
+		            }
+		        }
+		    }
+		}
+
         if(overscrollBarEnabled && tempCurrentOverscrollSize > 0 && tempScroll - tempCurrentOverscrollSize == ScrollMax) {
             painter.FillRectangle(
                 ParentRenderX + X, ParentRenderY + Y + Height - tempCurrentOverscrollSize, Width, tempCurrentOverscrollSize, overscrollBarColor);
@@ -408,16 +412,16 @@ namespace grvl {
 
                 if(ownCheck) { // Container selected
                     touchActive = true;
-                    grvl::Callbacks()->mutex_lock(ClearWhileTouchMutex);
+                    Guard lock {ClearWhileTouchMutex};
+
                     for(uint32_t i = 0; i < Elements.size(); i++) {
                         Touch::TouchResponse touch = Elements[i]->ProcessTouch(tp, ParentRenderX + X, ParentRenderY + Y - Scroll);
                         if(Touch::TouchHandled == touch || Touch::LongTouchHandled == touch) {
                             SetCurrentlySelectedComponent(Elements[i]);
-                            grvl::Callbacks()->mutex_unlock(ClearWhileTouchMutex);
                             return Touch::TouchHandled; // Child took control
                         }
                     }
-                    grvl::Callbacks()->mutex_unlock(ClearWhileTouchMutex);
+
                     childDropped = true;
                     return Touch::TouchHandled;
                 }

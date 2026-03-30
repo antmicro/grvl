@@ -126,8 +126,9 @@ namespace grvl {
 
     void ListView::ClearList()
     {
-        grvl::Callbacks()->mutex_lock(ClearWhileTouchMutex);
-        grvl::Callbacks()->mutex_lock(ClearWhileDrawMutex);
+        Guard touch_lock {ClearWhileTouchMutex};
+        Guard draw_lock {ClearWhileDrawMutex};
+
         std::vector<Component*>::iterator it;
         for(it = Elements.begin(); it != Elements.end();) {
             delete *it;
@@ -135,8 +136,6 @@ namespace grvl {
         }
 
         Scroll = ScrollMax = ScrollChange = itemsHeight = animation = 0; //NOLINT
-        grvl::Callbacks()->mutex_unlock(ClearWhileDrawMutex);
-        grvl::Callbacks()->mutex_unlock(ClearWhileTouchMutex);
     }
 
     void ListView::Refresh()
@@ -145,8 +144,9 @@ namespace grvl {
         ScrollMax = 0;
         itemsHeight = 0;
 
-        grvl::Callbacks()->mutex_lock(ClearWhileTouchMutex);
-        grvl::Callbacks()->mutex_lock(ClearWhileDrawMutex);
+        Guard touch_lock {ClearWhileTouchMutex};
+        Guard draw_lock {ClearWhileDrawMutex};
+
         for(it = Elements.begin(); it != Elements.end(); it++) {
             if((*it)->IsVisible()) {
                 itemsHeight += (*it)->GetHeight();
@@ -162,8 +162,6 @@ namespace grvl {
         if(Scroll > ScrollMax) {
             Scroll = ScrollMax;
         }
-        grvl::Callbacks()->mutex_unlock(ClearWhileDrawMutex);
-        grvl::Callbacks()->mutex_unlock(ClearWhileTouchMutex);
     }
 
     bool ListView::AddToList(Manager* man, string& listContent)

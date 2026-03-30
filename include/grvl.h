@@ -41,10 +41,6 @@ namespace grvl {
         void (*wait_for_vsync)();
         void (*flipping_completed)();
         void (*gui_printf)(const char* text, va_list argList);
-        void* (*mutex_create)(void);
-        int (*mutex_lock)(void* mutex);
-        void (*mutex_unlock)(void* mutex);
-        void (*mutex_destroy)(void* mutex);
         uint64_t (*get_timestamp)(void);
 
         duk_alloc_function duk_alloc_func;

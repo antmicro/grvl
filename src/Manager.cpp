@@ -158,8 +158,6 @@ namespace grvl {
         width = xSize;
         height = ySize;
 
-        DrawMutex = grvl::Callbacks()->mutex_create();
-
         painter.SetRotation(rotate90);
 
         painter.SetBackgroundImage(&BackgroundImage);
@@ -785,26 +783,9 @@ namespace grvl {
         return painter.GetBuffer(name);
     }
 
-    int Manager::LockDrawMutex()
-    {
-        if(grvl::Callbacks()->mutex_lock != NULL) {
-            return grvl::Callbacks()->mutex_lock(DrawMutex);
-        }
-        return 0;
-    }
-
-    void Manager::UnlockDrawMutex()
-    {
-        if(grvl::Callbacks()->mutex_unlock != NULL) {
-            grvl::Callbacks()->mutex_unlock(DrawMutex);
-        }
-    }
-
     void Manager::Draw()
     {
-        if(LockDrawMutex() != 0) {
-            return;
-        }
+        Guard lock {DrawMutex};
 
         painter.ResetDrawingBounds();
 
@@ -815,7 +796,6 @@ namespace grvl {
                 DrawNextLoadingFrame();
                 ApplyTransparency();
                 painter.FlipSynchronizeBuffers();
-                UnlockDrawMutex();
                 return;
                 break;
             }
@@ -890,7 +870,6 @@ namespace grvl {
                         TopPanel->SetVisible(ActiveScreen->GetGlobalPanelVisibility());
                     }
                     ManagerState = Refreshing;
-                    UnlockDrawMutex();
                     return;
                 }
                 break;
@@ -965,8 +944,6 @@ namespace grvl {
 
         painter.FlipSynchronizeBuffers();
         flips++;
-
-        UnlockDrawMutex();
     }
 
     void Manager::ApplyTransparency()

@@ -29,10 +29,6 @@ namespace grvl {
         } else {
             callbacks.dma_operation = NULL;
             callbacks.gui_printf = NULL;
-            callbacks.mutex_create = NULL;
-            callbacks.mutex_lock = NULL;
-            callbacks.mutex_unlock = NULL;
-            callbacks.mutex_destroy = NULL;
             callbacks.get_timestamp = NULL;
 
             callbacks.duk_alloc_func = NULL;

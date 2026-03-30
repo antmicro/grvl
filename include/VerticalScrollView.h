@@ -21,6 +21,7 @@
 #include "ListItem.h"
 #include "Painter.h"
 #include "stl.h"
+#include "Mutex.h"
 
 namespace grvl {
 
@@ -28,19 +29,14 @@ namespace grvl {
     ///
     class VerticalScrollView : public AbstractView {
     public:
+
         VerticalScrollView()
             : AbstractView()
-        {
-            ClearWhileDrawMutex = grvl::Callbacks()->mutex_create();
-            ClearWhileTouchMutex = grvl::Callbacks()->mutex_create();
-        }
+        {}
 
         VerticalScrollView(int32_t x, int32_t y, int32_t width, int32_t height)
             : AbstractView(x, y, width, height)
-        {
-            ClearWhileDrawMutex = grvl::Callbacks()->mutex_create();
-            ClearWhileTouchMutex = grvl::Callbacks()->mutex_create();
-        }
+        {}
 
         void AddElement(Component* component) override;
         void RemoveElement(const char* elementId) override;
@@ -110,8 +106,9 @@ namespace grvl {
         uint32_t scrollIndicatorColor{0};
         uint8_t scrollIndicatorOpacity{0};
         ImageContent* scrollIndicatorImage{nullptr};
-        void* ClearWhileDrawMutex{nullptr};
-        void* ClearWhileTouchMutex{nullptr};
+
+        Mutex ClearWhileDrawMutex{};
+        Mutex ClearWhileTouchMutex{};
 
         virtual void AdjustScrollViewHeight(Component* child);
 

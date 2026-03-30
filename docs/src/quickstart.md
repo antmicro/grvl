@@ -29,8 +29,6 @@ int main(){
     ...
     // initialize callbacks
     gui_callbacks_t callbacks;
-    callbacks.malloc = malloc;
-    callbacks.free = free;
     callbacks.dma_operation = dma_operation;
     callbacks.dma_operation_clt = dma_operation_clt;
     callbacks.dma_fill = dma_fill;
@@ -38,10 +36,6 @@ int main(){
     callbacks.flipping_completed = flipping_completed;
     callbacks.set_layer_pointer = set_layer_poiner;
     callbacks.gui_printf = gui_printf;
-    callbacks.mutex_create = mutex_create;
-    callbacks.mutex_lock = mutex_lock;
-    callbacks.mutex_unlock = mutex_unlock;
-    callbacks.mutex_destroy = mutex_destroy;
     callbacks.get_timestamp = get_timestamp;
     grvl::Init(&callbacks);
 

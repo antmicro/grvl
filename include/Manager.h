@@ -36,6 +36,7 @@
 #include "AbstractView.h"
 #include "CustomView.h"
 #include "VerticalScrollView.h"
+#include "Mutex.h"
 
 // #include "Component.h"
 // #include "Font.h"
@@ -403,10 +404,7 @@ namespace grvl {
         float initialTransparency, desiredTransparency, currentTransparency;
         uint64_t fadeBeginTimestamp, fadeEndTimestamp;
 
-        // mutex
-        void* DrawMutex;
-        int LockDrawMutex();
-        void UnlockDrawMutex();
+        Mutex DrawMutex {};
 
         // XML private
         void ParseGuiConfiguration(XMLElement* ConfigNode);
