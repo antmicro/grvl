@@ -37,6 +37,7 @@ target_link_libraries(
 
          $<$<BOOL:${GRVL_LINUX_DESKTOP}>:SDL2>
          $<$<BOOL:${GRVL_LINUX_NATIVE}>:yavo>
+         $<$<BOOL:${GRVL_LINUX_NATIVE}>:xkbcommon>
 )
 
 

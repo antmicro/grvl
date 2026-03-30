@@ -28,6 +28,7 @@ namespace grvl {
         result->InitFromXML(xmlElement);
 
         result->SetOnTextInputEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onTextInput"))));
+        result->SetOnSubmitCallback(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onSubmit"))));
 
         result->SetBasicText(XMLSupport::GetAttributeOrDefault(xmlElement, "basicText", ""));
 
@@ -43,6 +44,12 @@ namespace grvl {
         onTextInput.SetSenderPointer(this);
     }
 
+    void TextInput::SetOnSubmitCallback(Event event)
+    {
+        onSubmit = std::move(event);
+        onSubmit.SetSenderPointer(this);
+    }
+
     void TextInput::SetBasicText(const char* text)
     {
         basicText = text;
@@ -53,7 +60,7 @@ namespace grvl {
         Button::OnClick();
 
         Manager& manager = Manager::GetInstance();
-        manager.ShowKeyboard(this);
+        manager.SetActiveInput(this);
     }
 
     void TextInput::AddCharacter(char character)
@@ -82,6 +89,11 @@ namespace grvl {
     {
         Text.clear();
         Manager::GetInstance().GetEventsQueueInstance().push(&onTextInput);
+    }
+
+    void TextInput::Submit()
+    {
+        Manager::GetInstance().GetEventsQueueInstance().push(&onSubmit);
     }
 
     void TextInput::DrawText(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight)

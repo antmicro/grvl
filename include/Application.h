@@ -3,6 +3,7 @@
 #define GRVL_APPLICATION_H_
 
 #include <grvl.h>
+#include <xkbcommon/xkbcommon.h>
 
 class drm_screen;
 class InputSystem;
@@ -96,6 +97,9 @@ namespace grvl {
 
         bool Setup() override;
 
+        struct xkb_context* xkb_ctx;
+        struct xkb_keymap* xkb_keymap;
+        struct xkb_state* xkb_state;
     public:
 
         LinuxNativeApp(int width, int height, bool rotate_sideways = false);

@@ -15,7 +15,7 @@ variables:
   stage: build
   before_script:
     - apt update -qqy
-    - apt install -qqy file git gcc g++ nasm cmake libz-dev libjpeg-dev libpng-dev libtinyxml2-dev duktape-dev
+    - apt install -qqy file git gcc g++ nasm cmake libz-dev libjpeg-dev libpng-dev libtinyxml2-dev duktape-dev libxkbcommon-dev
 
 # Build with provided dependencies
 build_vendored:
@@ -41,7 +41,7 @@ build_latest:
   extends: .build
   image: archlinux:base
   before_script:
-    - pacman -Syu --noconfirm git gcc make cmake zlib libjpeg-turbo libpng tinyxml2 duktape libdrm pkgconf
+    - pacman -Syu --noconfirm git gcc make cmake zlib libjpeg-turbo libpng tinyxml2 duktape libdrm pkgconf libxkbcommon
   script:
     - cmake -B build -DGRVL_STATIC=N -DGRVL_SHARED=Y -DGRVL_LINUX_NATIVE=Y -DUSE_SYSTEM_LIBRARIES=Y
     - cmake --build build

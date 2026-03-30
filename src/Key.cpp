@@ -106,6 +106,8 @@ namespace grvl {
     {
         onPress.SetSenderPointer(sender);
         onRelease.SetSenderPointer(sender);
+        onLongPress.SetSenderPointer(sender);
+        onLongPressRepeat.SetSenderPointer(sender);
     }
 
 } /* namespace grvl */

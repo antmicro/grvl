@@ -12,6 +12,8 @@ if(USE_SYSTEM_LIBRARIES)
   find_package(duktape REQUIRED)
 
   if (GRVL_LINUX_NATIVE)
+    pkg_check_modules(XKBCOMMON REQUIRED IMPORTED_TARGET xkbcommon)
+
     include(CPM)
     CPMAddPackage(
       NAME yav

@@ -204,7 +204,10 @@ namespace grvl {
         void ShowPopup(const char* Style, const char* Message, uint32_t milliseconds);
 
         /// Displays keyboard pop-up window if defined.
-        void ShowKeyboard(TextInput* destinationInput);
+        void ShowKeyboard();
+
+        /// Sets the curren active text input - triggers ShowKeyboard.
+        void SetActiveInput(TextInput* destinationInput);
 
         /// Switches keyboard pop-up keys.
         void SwitchKeyboardKeys();
@@ -323,6 +326,10 @@ namespace grvl {
         Key::KeyState PressKey(const char* id);
         Key::KeyState ReleaseKey(const char* id);
 
+        void ProcessTextInput(const char* text);
+        void ProcessEnter();
+        void ProcessBackspace();
+
         void DrawNextLoadingFrame();
 
         /// Redraws content of a display based on current state of components.
@@ -366,6 +373,7 @@ namespace grvl {
         std::vector<Division*> Prefabs;
 
         Keyboard* keyboard{nullptr};
+        TextInput* activeInput{nullptr};
         vector<Popup*> PopupsContainer;
         Panel* TopPanel;
         Panel* BottomPanel;

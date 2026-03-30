@@ -12,6 +12,8 @@
 #include <filesystem>
 #include <fcntl.h>
 #include <linux/input.h>
+#include <sys/ioctl.h>
+#include <cstdlib>
 
 // input
 
@@ -33,6 +35,7 @@ static std::vector<std::string> GrepFiles(const std::string& path, const std::st
 
 void CloseFiles(int* fds, int count) {
     for (int i = 0; i < count; i ++) {
+        ioctl(fds[i], EVIOCGRAB, 0);
         close(fds[i]);
     }
 
@@ -54,6 +57,10 @@ static int* OpenFiles(const std::vector<std::string>& paths)
             return nullptr;
         }
 
+        int grab = 1;
+        if (ioctl(fd, EVIOCGRAB, &grab) == -1) {
+            printf("Warning: Unable to grab device '%s'. Console may still see input.\n", path.c_str());
+        }
         fds[i] = fd;
         i ++;
     }
@@ -130,11 +137,26 @@ namespace grvl {
         : PosixApp(width, height, rotate_sideways)
     {
         bgra_buffer = new uint32_t [width * height];
+        xkb_ctx = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+        // @TODO: make configurable
+        struct xkb_rule_names names = {
+            .rules = NULL,
+            .model = "pc105",
+            .layout = "pl",
+            .variant = "",
+            .options = NULL
+        };
+        xkb_keymap = xkb_keymap_new_from_names(xkb_ctx, &names, XKB_KEYMAP_COMPILE_NO_FLAGS);
+        xkb_state = xkb_state_new(xkb_keymap);
     }
 
     LinuxNativeApp::~LinuxNativeApp()
     {
         CloseFiles(inputs, count);
+
+        xkb_state_unref(xkb_state);
+        xkb_keymap_unref(xkb_keymap);
+        xkb_context_unref(xkb_ctx);
 
         delete output;
         delete[] bgra_buffer;
@@ -269,28 +291,87 @@ namespace grvl {
 
         while (ReadEvent(&event, inputs, count, false)) {
 
-            // relative mouse movement
-            // event.value contains relative offset
-            if (event.type == EV_REL) {
-                if (event.code == 0) x += event.value;
-                if (event.code == 1) y += event.value;
-            }
-
-            // digitizers and touch controls
-            // event.value contains absolute position
-            if (event.type == EV_ABS) {
-                if (event.code == 0) x = event.value;
-                if (event.code == 1) y = event.value;
-            }
-
-            // mouse and keyboard buttons
-            // event.value contains 0, 1 or 2 (2 for "repeat")
-            if (event.type == EV_KEY) {
-                if (event.code == BTN_LEFT) {
-                    left_mouse_pressed = event.value;
+            switch (event.type) {
+                case EV_REL:
+                {
+                    // relative mouse movement
+                    // event.value contains relative offset
+                    if (event.code == 0) x += event.value;
+                    if (event.code == 1) y += event.value;
+                    break;
                 }
 
-                Manager::GetInstance().ProcessKeyInput(event.value != 0, event.code);
+                case EV_ABS:
+                {
+                    // digitizers and touch controls
+                    // event.value contains absolute position
+                    if (event.code == 0) x = event.value;
+                    if (event.code == 1) y = event.value;
+                    break;
+                }
+
+                case EV_KEY:
+                {
+                    if (event.code == BTN_LEFT) {
+                        left_mouse_pressed = event.value;
+                    }
+                    
+                    xkb_keycode_t keycode = event.code + 8;
+                    xkb_keysym_t keysym = xkb_state_key_get_one_sym(xkb_state, keycode);
+                    if (event.value > 0) {
+                        switch (keysym) {
+                            case XKB_KEY_BackSpace: Manager::GetInstance().ProcessBackspace(); break;
+                            case XKB_KEY_Return: Manager::GetInstance().ProcessEnter(); break;
+
+                            case XKB_KEY_Tab:
+                            case XKB_KEY_Escape:
+                            case XKB_KEY_Delete:
+                            case XKB_KEY_Home:
+                            case XKB_KEY_End:
+                            case XKB_KEY_Left:
+                            case XKB_KEY_Right:
+                            case XKB_KEY_Up:
+                            case XKB_KEY_Down:
+                            case XKB_KEY_Page_Up:
+                            case XKB_KEY_Page_Down:
+                                // @TODO: Manager::GetInstance().....
+                                break;
+
+                            case XKB_KEY_F1:
+                            case XKB_KEY_F2:
+                            case XKB_KEY_F3:
+                            case XKB_KEY_F4:
+                            case XKB_KEY_F5:
+                            case XKB_KEY_F6:
+                            case XKB_KEY_F7:
+                            case XKB_KEY_F8:
+                            case XKB_KEY_F9:
+                            case XKB_KEY_F10:
+                            case XKB_KEY_F11:
+                            case XKB_KEY_F12:
+                                // @TODO: Manager::GetInstance().ProcessFunctionKey(kysym - XKB_KEY_F1 + 1);
+                                break;
+
+                            default:
+                                char* buffer;
+                                size_t size = xkb_state_key_get_utf8(xkb_state, keycode, nullptr, 0) + 1;
+                                if (size > 0) {
+                                    buffer = (char*)malloc(size);
+                                    if (buffer) {
+                                        if (xkb_state_key_get_utf8(xkb_state, keycode, buffer, size) > 0) {
+                                            Manager::GetInstance().ProcessTextInput(buffer);
+                                        }
+                                        free(buffer);
+                                    }
+                                    
+                                }
+                        }
+                        
+                    }
+                    
+                    // always update the state
+                    xkb_state_update_key(xkb_state, keycode, event.value ? XKB_KEY_DOWN : XKB_KEY_UP);
+                }
             }
 
             if (was_interrupted()) {

@@ -39,6 +39,7 @@ namespace grvl {
         static TextInput* BuildFromXML(XMLElement* xmlElement);
 
         void SetOnTextInputEvent(Event event);
+        void SetOnSubmitCallback(Event event);
 
         void SetBasicText(const char* basicText);
 
@@ -48,9 +49,11 @@ namespace grvl {
         void Append(const char* text);
         void RemoveLastCharacter();
         void Clear();
+        void Submit();
 
     protected:
         Event onTextInput{};
+        Event onSubmit{};
         std::string basicText{};
 
         void DrawText(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight) override;

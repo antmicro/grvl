@@ -71,7 +71,7 @@ namespace grvl {
     static void ShowKeyboardCallback(void* sender, const Event::ArgVector& Args)
     {
         Manager* man = &Manager::GetInstance();
-        man->ShowKeyboard(static_cast<TextInput*>(sender));
+        man->ShowKeyboard();
     }
 
     static void KeyboardAddFromKeyCallback(void* sender, const Event::ArgVector& Args)
@@ -654,18 +654,28 @@ namespace grvl {
         }
     }
 
-    void Manager::ShowKeyboard(TextInput* destinationInput)
+    void Manager::ShowKeyboard()
     {
         assert(keyboard && "Keyboard must be defined to show it");
-        assert(destinationInput && "Destination input must be valid");
+        assert(activeInput && "Active input must be valid");
 
         if(CurrentPopup != nullptr) {
             return; // TODO: implement popup queue
         }
 
         CurrentPopup = keyboard;
-        keyboard->SetCurrentInputDestination(destinationInput);
+        keyboard->SetCurrentInputDestination(activeInput);
         ShowPopup();
+    }
+
+    void Manager::SetActiveInput(TextInput* destinationInput)
+    {
+        if (!destinationInput) {
+            return;
+        }
+
+        activeInput = destinationInput;
+        ShowKeyboard();
     }
 
     void Manager::SwitchKeyboardKeys()
@@ -1135,6 +1145,38 @@ namespace grvl {
     Key::KeyState Manager::ReleaseKey(const char* id)
     {
         return ActiveScreen->ReleaseKey(id);
+    }
+
+    void Manager::ProcessTextInput(const char* text)
+    {
+        assert(text && "text cannot be null");
+
+        if (!activeInput) {
+            return;
+        }
+
+        size_t len = strlen(text);
+        for (int i = 0; i < len; i++) {
+            activeInput->AddCharacter(text[i]);
+        }
+    }
+
+    void Manager::ProcessEnter()
+    {
+        if (!activeInput) {
+            return;
+        }
+
+        activeInput->Submit();
+    }
+
+    void Manager::ProcessBackspace()
+    {
+        if (!activeInput) {
+            return;
+        }
+
+        activeInput->RemoveLastCharacter();
     }
 
     bool Manager::UpdateAnimationWindowOffset()
