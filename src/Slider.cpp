@@ -448,14 +448,14 @@ namespace grvl {
         
         result->SetKeepBoundaries(XMLSupport::GetAttributeOrDefault(xmlElement, "keepBoundaries", false));
 
-        const char* typeName = xmlElement->Attribute("type", "Continuous");
-        if (strcasecmp(typeName, "Discrete")) {
+        const char* typeName = XMLSupport::GetAttributeOrDefault(xmlElement, "type", "Continuous");
+        if (strcmp(typeName, "Discrete") == 0) {
             result->SetDivision(XMLSupport::GetAttributeOrDefault(xmlElement, "division", (uint32_t)1));
             result->SetSliderType(SliderScaleType::DISCRETE);
-        } else if (strcasecmp(typeName, "Integer")) {
+        } else if (strcmp(typeName, "Integer") == 0) {
             result->SetSliderType(SliderScaleType::LIST);
         } else { // fallback to continuous scale as a default
-            if (!strcasecmp(typeName, "Continuous")) { // but warn about invalid type
+            if (strcmp(typeName, "Continuous") != 0) { // but warn about invalid type
                 grvl::Log("[WARNING] Ignoring invalid value given for slider type (%s)", typeName);
             }
 
