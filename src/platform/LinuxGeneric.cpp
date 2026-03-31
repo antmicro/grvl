@@ -1,5 +1,6 @@
 
-#include <Application.h>
+#include <platform/LinuxGenericApp.h>
+
 
 #if defined(GRVL_LINUX_NATIVE_SUPPORT) || defined(GRVL_LINUX_DESKTOP_SUPPORT)
 
