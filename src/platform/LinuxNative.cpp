@@ -244,7 +244,7 @@ namespace grvl {
             return false;
         }
 
-        output = new drm_screen("");
+        output = new drm_screen("", width, height);
 
         // Linux kernel input API
         auto paths = GrepFiles("/dev/input/", "event\\d+");
@@ -272,10 +272,6 @@ namespace grvl {
         UpdateBgraBuffer();
 
         image img {(uint8_t*) bgra_buffer, width, height};
-
-        // center vertically and horizontally
-        img.sx = 0.5;
-        img.sy = 0.5;
 
         if (draw_mouse_icon) {
             DrawSimpleMouse();

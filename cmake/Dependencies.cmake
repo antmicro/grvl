@@ -18,7 +18,7 @@ if(USE_SYSTEM_LIBRARIES)
     CPMAddPackage(
       NAME yav
       GITHUB_REPOSITORY antmicro/yav
-      GIT_TAG b7a6f53935226dce33129a25a7c30a5bfe7861ec
+      GIT_TAG a59ff61adc47ba6a8f747e15c8e7312561185ded
       OPTIONS "CMAKE_POSITION_INDEPENDENT_CODE ON")
   endif()
 
@@ -37,7 +37,7 @@ if (GRVL_LINUX_NATIVE)
   CPMAddPackage(
       NAME yav
       GITHUB_REPOSITORY antmicro/yav
-      GIT_TAG b7a6f53935226dce33129a25a7c30a5bfe7861ec
+      GIT_TAG a59ff61adc47ba6a8f747e15c8e7312561185ded
       OPTIONS "CMAKE_POSITION_INDEPENDENT_CODE ON")
 endif()
 
