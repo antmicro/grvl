@@ -27,6 +27,7 @@ namespace grvl {
         Keyboard* keyboard = new Keyboard();
 
         keyboard->InitFromXML(xmlElement);
+        keyboard->SetAutoPopup(XMLSupport::GetAttributeOrDefault(xmlElement, "autoPopup", true));
 
         XMLElement* child = xmlElement->FirstChildElement();
         for(; child != NULL; child = child->NextSiblingElement()) {

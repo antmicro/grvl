@@ -42,9 +42,12 @@ namespace grvl {
         TextInput* GetCurrentInputDestination() const { return currentDestinationInput; }
 
         void SwitchKeys();
+        bool HasAutoPopoup() const { return autoPopup; }
+        void SetAutoPopup(bool value) { autoPopup = value; }
 
     private:
         TextInput* currentDestinationInput{nullptr};
+        bool autoPopup = true;
     };
 
 } /* namespace grvl */

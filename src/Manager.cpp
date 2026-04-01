@@ -675,7 +675,9 @@ namespace grvl {
         }
 
         activeInput = destinationInput;
-        ShowKeyboard();
+        if (keyboard && keyboard->HasAutoPopoup()) {
+            ShowKeyboard();
+        }
     }
 
     void Manager::SwitchKeyboardKeys()
