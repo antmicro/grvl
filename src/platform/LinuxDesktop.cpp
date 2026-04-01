@@ -1,7 +1,7 @@
 
 #if defined(GRVL_LINUX_DESKTOP_SUPPORT)
 
-#include <Application.h>
+#include <platform/LinuxDesktopApp.h>
 #include <Manager.h>
 
 #include <SDL2/SDL.h>

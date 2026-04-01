@@ -1,4 +1,6 @@
 
+#include <platform/LinuxNativeApp.h>
+#include <platform/LinuxDesktopApp.h>
 #include <platform/LinuxGenericApp.h>
 
 
