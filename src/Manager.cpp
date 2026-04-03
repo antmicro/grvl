@@ -102,18 +102,17 @@ namespace grvl {
         Manager* man = &Manager::GetInstance();
 
         if(Args.size() > 1) {
-            char* arg1 = strdup(Args[1].c_str());
-            string_to_lower(arg1);
-            // TODO: convert to lowercase and then compare
-            if(strcmp(arg1, "animate_left") == 0)
+            string arg = Args[1].c_str();
+            string_to_lower(arg);
+
+            if(arg == "animate_left")
                 screen_animation = -1;
-            if(strcmp(arg1, "animate_right") == 0)
+            if(arg == "animate_right")
                 screen_animation = 1;
-            if(strcmp(arg1, "animate_none") == 0)
+            if(arg == "animate_none")
                 screen_animation = 0;
-            if(strcmp(arg1, "animate_crossfade") == 0)
+            if(arg == "animate_crossfade")
                 screen_animation = 2;
-            free(arg1);
         }
         man->SetActiveScreen(Args[0].c_str(), screen_animation);
     }

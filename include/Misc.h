@@ -20,10 +20,12 @@
 #include <ctype.h>
 #include <stdint.h>
 #include <grvl.h>
+#include <string>
 
 namespace grvl {
 
-    static inline void string_to_lower(char* s)
+    template <typename T>
+    static inline void string_to_lower(T& s)
     {
         int i = 0;
         while(s[i] != 0) {
