@@ -40,6 +40,8 @@ namespace grvl {
         static bool LoadJavaScriptCode(const std::string& filePath);
         static bool LoadJavaScriptCode(const char* code, std::size_t size);
         static void AddGlobalFunction(const char* functionName, duk_c_function func, duk_idx_t nargs);
+        static void AddGlobalObject(const char* name, void* ptr, const std::map<const char*, duk_c_function>& methods);
+        static void AddGlobalEnum(const std::string& enumName, const std::map<std::string, int>& values);
 
         static void MakeJavaScriptFunctionCall(const char* functionName);
         static void ExecuteJavaScriptCallback(const char* functionName, void* caller, const Event::ArgVector& args);

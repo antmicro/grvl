@@ -35,12 +35,7 @@ namespace grvl {
         result->SetTextColor(XMLSupport::ParseColor(xmlElement, "textColor", "#ffffffff"));
         result->SetActiveTextColor(XMLSupport::ParseColor(xmlElement, "activeTextColor", result->GetTextColor()));
 
-        const char* type_name = XMLSupport::GetAttributeOrDefault(xmlElement, "type", "text");
-        if (strcmp(type_name, "text") == 0) {
-            result->SetType(INPUT_TYPE_TEXT);
-        } else if (strcmp(type_name, "password") == 0) {
-            result->SetType(INPUT_TYPE_PASSWORD);
-        }
+        result->SetType(XMLSupport::GetAttributeOrDefault(xmlElement, "type", "text"));
 
         return result;
     }
@@ -55,6 +50,11 @@ namespace grvl {
     {
         onSubmit = std::move(event);
         onSubmit.SetSenderPointer(this);
+    }
+
+    const char* TextInput::GetBasicText() const
+    {
+        return basicText.c_str();
     }
 
     void TextInput::SetBasicText(const char* text)
@@ -108,6 +108,16 @@ namespace grvl {
         this->type = type;
     }
 
+    const char* TextInput::GetType() const
+    {
+        return type.ToString().c_str();
+    }
+
+    void TextInput::SetType(const char* type)
+    {
+        this->type = type;
+    }
+
     void TextInput::DrawText(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight)
     {
         const char* textToDraw = GetTextToDraw();
@@ -136,9 +146,9 @@ namespace grvl {
         }
 
         switch (type) {
-            case INPUT_TYPE_TEXT: return Text.c_str();
+            case InputType::INPUT_TYPE_TEXT: return Text.c_str();
 
-            case INPUT_TYPE_PASSWORD: {
+            case InputType::INPUT_TYPE_PASSWORD: {
                 masked = std::string(Text.size(), '*');
                 return masked.c_str();
             }

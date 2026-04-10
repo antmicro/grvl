@@ -63,6 +63,37 @@ namespace grvl {
         duk_put_global_string(ctx, functionName);
     }
 
+    void JSEngine::AddGlobalObject(const char* name, void* ptr, const std::map<const char*, duk_c_function>& methods)
+    {
+        duk_push_object(ctx);
+    
+        duk_push_pointer(ctx, ptr);
+        duk_put_prop_string(ctx, -2, JSObject::C_OBJECT_POINTER_KEY);
+
+        for (auto const& [methodName, func] : methods) {
+            duk_push_c_function(ctx, func, DUK_VARARGS);
+            duk_put_prop_string(ctx, -2, methodName);
+        }
+
+        duk_put_global_string(ctx, name);
+
+    }
+
+    void JSEngine::AddGlobalEnum(const std::string& enumName, const std::map<std::string, int>& values)
+    {
+        duk_push_object(ctx);
+
+        for (auto const& [key, value] : values) {
+            duk_push_int(ctx, value);
+            duk_put_prop_string(ctx, -2, key.c_str());
+        
+            // TODO: the line below crashes for some reason, would be good to make that right
+            //duk_def_prop(ctx, -2, DUK_DEFPROP_HAVE_VALUE | DUK_DEFPROP_HAVE_WRITABLE); 
+        }
+
+        duk_put_global_string(ctx, enumName.c_str());
+    }
+
     void JSEngine::Destroy()
     {
         duk_destroy_heap(ctx);
