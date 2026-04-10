@@ -19,6 +19,32 @@
 #include "Manager.h"
 
 namespace grvl {
+    TextInput::TextInput(const TextInput& other) : Button(other), basicText(other.basicText), type(other.type)
+    {
+        onTextInput.SetSenderPointer(this);
+        onSubmit.SetSenderPointer(this);
+    }
+
+    TextInput& TextInput::operator=(const TextInput& other)
+    {
+        if (this == &other) {
+            return *this;
+        }
+
+        Button::operator=(other);
+
+        basicText = other.basicText;
+        type = other.type;
+        onTextInput.SetSenderPointer(this);
+        onSubmit.SetSenderPointer(this);
+
+        return *this;
+    }
+
+    Component* TextInput::Clone() const
+    {
+        return new TextInput(*this);
+    }
 
     TextInput* TextInput::BuildFromXML(XMLElement* xmlElement)
     {
@@ -110,12 +136,19 @@ namespace grvl {
 
     const char* TextInput::GetType() const
     {
-        return type.ToString().c_str();
+        return type;
     }
 
     void TextInput::SetType(const char* type)
     {
         this->type = type;
+    }
+
+    void TextInput::PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder)
+    {
+        Button::PopulateJavaScriptObject(jsObjectBuilder);
+        jsObjectBuilder.AddProperty("basicText", TextInput::JSGetBasicTextWrapper, TextInput::JSSetBasicTextWrapper);
+        jsObjectBuilder.AddProperty("type", TextInput::JSGetTypeWrapper, TextInput::JSSetTypeWrapper);
     }
 
     void TextInput::DrawText(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight)
@@ -146,9 +179,9 @@ namespace grvl {
         }
 
         switch (type) {
-            case InputType::INPUT_TYPE_TEXT: return Text.c_str();
+            case InputType::TEXT: return Text.c_str();
 
-            case InputType::INPUT_TYPE_PASSWORD: {
+            case InputType::PASSWORD: {
                 masked = std::string(Text.size(), '*');
                 return masked.c_str();
             }

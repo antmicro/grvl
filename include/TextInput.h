@@ -32,55 +32,52 @@ namespace grvl {
     public:
         class InputType {
             public: 
-                enum Value {
-                    INPUT_TYPE_TEXT = 0,
-                    INPUT_TYPE_PASSWORD
+                enum InputTypeValue {
+                    TEXT = 0,
+                    PASSWORD,
+                    _COUNT
                 };
                 
-                InputType(Value v) : value(v) {}
-                
-                InputType(const char * v) {
-                    if (std::strcmp(v, "text") == 0) {
-                        value = INPUT_TYPE_TEXT; 
-                        return;
-                    }
-                    if (std::strcmp(v, "password") == 0) {
-                        value = INPUT_TYPE_PASSWORD;
-                        return;
-                    }
-                    value = INPUT_TYPE_TEXT;
-                }
-
-                std::string ToString() const {
-                    switch (value) {
-                        case INPUT_TYPE_TEXT: return "text";
-                        case INPUT_TYPE_PASSWORD: return "password";
-                    }
-                    return "text";
-                }
+                InputType(InputTypeValue v) : value(v) {}
+                InputType(const char * v) : value(fromString(v)) {}
 
                 bool operator==(const InputType& other) const { return value == other.value; }
-                bool operator==(Value v) const { return value == v; }
-                InputType& operator=(const char* val) {
-                    if (!val) {
-                        return *this;
-                    }
-                    if (std::strcmp(val, "password") == 0) {
-                        value = INPUT_TYPE_PASSWORD;
-                    } else {
-                        value = INPUT_TYPE_TEXT;
-                    }
-                    return *this;
-                }
+                bool operator==(InputTypeValue v) const { return value == v; }
+                InputType& operator=(const char* val) { value = fromString(val); return *this; }
 
-                InputType& operator=(Value v) {
+                InputType& operator=(InputTypeValue v) {
                     value = v;
                     return *this;
                 }
 
-                operator Value() const { return value; }
+                operator InputTypeValue() const { return value; }
+                operator std::string() const { return toString(); }
+                operator const char*() const { return toString(); }
             private:
-                Value value;
+                InputTypeValue value;
+
+                static InputTypeValue fromString(const char* s) {
+                    if (!s) return TEXT;
+
+                    static const std::unordered_map<std::string, InputTypeValue> lookup = {
+                        {"text", TEXT},
+                        {"password", PASSWORD}
+                    };
+                    auto it = lookup.find(s);
+                    return (it != lookup.end()) ? it->second : TEXT;
+                }
+
+                const char* toString() const {
+                    static const char* reverse_lookup[] = {
+                        "text",
+                        "password"
+                    };
+
+                    if (value >= 0 && value < _COUNT) {
+                        return reverse_lookup[value];
+                    }
+                    return "text";
+                }
          };
 
         TextInput()
@@ -88,6 +85,10 @@ namespace grvl {
 
         TextInput(int32_t x, int32_t y, int32_t width, int32_t height)
             : Button{x, y, width, height} {}
+        
+        TextInput(const TextInput& other);
+        TextInput& operator=(const TextInput& other);
+        Component* Clone() const override;
 
         static TextInput* BuildFromXML(XMLElement* xmlElement);
 
@@ -107,7 +108,9 @@ namespace grvl {
         void SetType(InputType type);
         const char* GetType() const;
         void SetType(const char* type);
-
+        
+        void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder) override;
+        
         GENERATE_DUK_STRING_GETTER(TextInput, Type, GetType);
         GENERATE_DUK_STRING_SETTER(TextInput, Type, SetType);
 
@@ -119,7 +122,7 @@ namespace grvl {
         Event onSubmit{};
         std::string basicText{};
         std::string masked{};
-        InputType type{InputType::INPUT_TYPE_TEXT};
+        InputType type{InputType::TEXT};
 
         void DrawText(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight) override;
 
