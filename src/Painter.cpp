@@ -147,7 +147,8 @@ namespace grvl {
     {
         uint32_t color;
 
-        // Fixme should not read 4 bytes if pixel format is different than ARGB8888
+        // FIXME should not read 4 bytes if pixel format is different than ARGB8888
+		// This (sometimes) causes valgrind errors when rendering text!
         memcpy(&color, data, 4);
         return ConvertColor(color, inputPixelFormat, outputPixelFormat);
     }
@@ -1718,13 +1719,13 @@ namespace grvl {
         }
     }
 
-    void Painter::DisplayAntialiasedString(const Font* Font, int16_t Xpos, int16_t Ypos, const char* Text,
+    void Painter::DisplayAntialiasedString(Font* Font, int16_t Xpos, int16_t Ypos, const char* Text,
                                            uint32_t text_color) const
     {
         InnerDisplayAntialiasedString(Font, Xpos, Ypos, Text, text_color, false, CurrentDrawingBoundsStartX(), CurrentDrawingBoundsStartY(), CurrentDrawingBoundsWidth(), CurrentDrawingBoundsHeight());
     }
 
-    void Painter::DisplayBoundedAntialiasedString(const Font* Font, int16_t Xpos, int16_t Ypos, int16_t ParentX,
+    void Painter::DisplayBoundedAntialiasedString(Font* Font, int16_t Xpos, int16_t Ypos, int16_t ParentX,
                                                   int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight, const char* Text, uint32_t text_color) const
     {
         if (Xpos >= CurrentDrawingBoundsEndX() || Ypos >= CurrentDrawingBoundsEndY() ||
@@ -1735,86 +1736,50 @@ namespace grvl {
         InnerDisplayAntialiasedString(Font, Xpos, Ypos, Text, text_color, true, ParentX, ParentY, ParentWidth, ParentHeight);
     }
 
-    void Painter::InnerDisplayAntialiasedString(const Font* Font, int16_t Xpos, int16_t Ypos, const char* Text, uint32_t text_color, bool bound, int16_t ParentX,
+    void Painter::InnerDisplayAntialiasedString(Font* Font, int16_t Xpos, int16_t Ypos, const char* Text, uint32_t text_color, bool bound, int16_t ParentX,
                                                 int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight) const
     {
-        uint32_t previousCharCode = 0; // Save char code placed before space
-        while(*Text != 0) {
-            uint32_t charCode = 0, nextCharCode = 0;
-            int length = 1;
-            Font::unicode_character uchar, next_uchar;
+        uint32_t prev_unicode = 0;
 
-            /* Display one character on LCD */
-            if(*Text != 0x20) { // Not a space
-                if((unsigned char)(*Text) > 0x7F) { // Unicode
-                    uchar = Font::GetUnicodeCharacter(Text);
-                    length = uchar.length;
-                    charCode = uchar.code;
-                    if((*(Text + length)) != 0) {
-                        next_uchar = Font::GetUnicodeCharacter(Text + length);
-                        nextCharCode = next_uchar.code;
-                    }
-                } else { // UTF8
-                    charCode = *Text;
-                    if((*(Text + length)) != 0) {
-                        if((*(Text + length)) <= 0x7f) {
-                            nextCharCode = *(Text + length);
-                        } else { // Next character is a unicode character
-                            next_uchar = Font::GetUnicodeCharacter(Text + length);
-                            nextCharCode = next_uchar.code;
-                        }
-                    }
-                }
+        while (*Text) {
 
-                if(bound) {
-                    DisplayAntialiasedCharInBound(
-                        Font, Xpos, Ypos, ParentX, ParentY, ParentWidth, ParentHeight, charCode, text_color);
-                } else {
-                    DisplayAntialiasedChar(Font, Xpos, Ypos, charCode, text_color);
-                }
-                Xpos += Font->GetCharWidth(charCode);
-                if(nextCharCode) {
-                    Xpos += Font->GetKerning(charCode, nextCharCode);
-                }
-            } else { // space
-                charCode = *Text;
+            Unicode unicode = ParseUnicodeCodepoint(Text);
+            Text += unicode.length;
 
-                if((*(Text + length)) != 0) {
-                    if((*(Text + length)) <= 0x7f) {
-                        nextCharCode = *(Text + length);
-                    } else { // Next character is a unicode character
-                        next_uchar = Font::GetUnicodeCharacter(Text + length);
-                        nextCharCode = next_uchar.code;
-                    }
-                }
+            Glyph glyph = Font->GetGlyph(unicode.code);
 
-                Xpos += Font->GetSpaceLength();
-                if(nextCharCode && previousCharCode) {
-                    Xpos += Font->GetKerning(previousCharCode, nextCharCode);
-                }
+            if (prev_unicode) {
+                Xpos += Font->GetKerning(prev_unicode, unicode.code);
             }
 
-            Text += length;
-
-            if(nextCharCode == 0x20) { // Save char code placed before space
-                previousCharCode = charCode;
+            if(bound) {
+                DisplayAntialiasedCharInBound(Font, Xpos, Ypos, ParentX, ParentY, ParentWidth, ParentHeight, unicode.code, text_color);
+            } else {
+                DisplayAntialiasedChar(Font, Xpos, Ypos, unicode.code, text_color);
             }
+
+            Xpos += glyph.advance;
+
+            if (unicode.code != ' ') {
+                prev_unicode = unicode.code;
+            }
+
         }
     }
 
-    void Painter::DisplayAntialiasedChar(const Font* Font, uint16_t Xpos, uint16_t Ypos, uint32_t Index,
+    void Painter::DisplayAntialiasedChar(Font* Font, uint16_t Xpos, uint16_t Ypos, uint32_t Index,
                                          uint32_t text_color) const
     {
         DrawAntialiasedChar(Font, Xpos, Ypos, Index, text_color);
     }
 
-    void Painter::DrawAntialiasedChar(const Font* Font, int16_t Xpos, int16_t Ypos, uint32_t Index,
+    void Painter::DrawAntialiasedChar(Font* Font, int16_t Xpos, int16_t Ypos, uint32_t Index,
                                       uint32_t text_color) const
     {
         DrawAntialiasedCharInBound(Font, Xpos, Ypos, CurrentDrawingBoundsStartX(), CurrentDrawingBoundsStartY(), CurrentDrawingBoundsWidth(), CurrentDrawingBoundsHeight(), Index, text_color);
     }
 
-    void Painter::DrawAntialiasedCharInBound(const Font* Font, int16_t Xpos, int16_t Ypos, int16_t ParentX,
+    void Painter::DrawAntialiasedCharInBound(Font* Font, int16_t Xpos, int16_t Ypos, int16_t ParentX,
                                              int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight, uint32_t Index,
                                              uint32_t text_color) const
     {
@@ -1822,8 +1787,9 @@ namespace grvl {
             return;
         }
 
-        uint32_t* c = Font->GetCharData(Index);
-        if(c == NULL) {
+        Glyph glyph = Font->GetGlyph(Index);
+
+        if(glyph.bitmap == nullptr) {
             return; // Character doesn't exists
         }
 
@@ -1833,8 +1799,8 @@ namespace grvl {
             return;
         }
 
-        uint16_t fontHeight = Font->GetHeight();
-        uint16_t charWidth = Font->GetCharWidth(Index);
+        int16_t fontHeight = glyph.height;
+        int16_t charWidth = glyph.width;
 
         int offsetFromParentY = Ypos - ParentY;
 
@@ -1859,12 +1825,11 @@ namespace grvl {
         }
 
         DmaMoveFont(
-            (uintptr_t)c, GetActiveBuffer(), 0, TopOffset, Xpos, Ypos + TopOffset, (int32_t)charWidth,
-            (int32_t)fontHeight - (BottomOffset + TopOffset), (int32_t)charWidth, (int32_t)fontHeight,
-            GetActiveBufferPixelFormat(), text_color);
+            (uintptr_t)glyph.bitmap, GetActiveBuffer(), 0, 0, Xpos + glyph.xoff, Ypos + TopOffset + glyph.yoff, charWidth,
+            fontHeight, glyph.width, glyph.height, GetActiveBufferPixelFormat(), text_color);
     }
 
-    void Painter::DisplayAntialiasedCharInBound(const Font* Font, int16_t Xpos, int16_t Ypos, int16_t ParentX,
+    void Painter::DisplayAntialiasedCharInBound(Font* Font, int16_t Xpos, int16_t Ypos, int16_t ParentX,
                                                 int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight, uint32_t index, uint32_t text_color) const
     {
         DrawAntialiasedCharInBound(

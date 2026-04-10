@@ -21,8 +21,14 @@
 #include <unordered_map>
 #include <string>
 #include <vector>
+#include <cstring>
 
 namespace grvl {
+
+    inline bool EndsWith(const char* name, const char* ext)
+    {
+        return strlen(name) >= strlen(ext) && !strcmp(name + strlen(name) - strlen(ext), ext);
+    }
 
     /// Represents a file stored on a file system.
     ///

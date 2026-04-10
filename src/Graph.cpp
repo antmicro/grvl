@@ -57,7 +57,7 @@ namespace grvl {
         graph->SetEndingGradientColor(XMLSupport::ParseColor(xmlElement, "gradientEndColor", NoGradient));
 
         const auto* fontName = XMLSupport::GetAttributeOrDefault(xmlElement, "font", "normal");
-        const auto* font = manager->GetFontPointer(fontName);
+        Font* font = manager->GetFontPointer(fontName);
         if(!font) {
             grvl::Log("[WARNING] Setting invalid label font %s, the label isn't going to be drawn", fontName);
         }
@@ -97,7 +97,7 @@ namespace grvl {
         TextColor = textColor;
     }
 
-    void Graph::SetTextFont(Font const* font)
+    void Graph::SetTextFont(Font* font)
     {
         TextFont = font;
     }
@@ -272,7 +272,7 @@ namespace grvl {
         std::string dataLabel = std::to_string(static_cast<int>(dataValue));
         uint16_t TextSize = TextFont->GetWidth(dataLabel.c_str());
         uint16_t BeginX = dataPoint.x - (TextSize / 2);
-        uint16_t BeginY = dataPoint.y - TextFont->GetHeight() - TextVerticalOffset;
+        uint16_t BeginY = dataPoint.y + TextFont->GetFontHeight() - TextVerticalOffset;
         painter.DisplayAntialiasedString(
             TextFont,
             RenderX + BeginX,

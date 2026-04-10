@@ -102,7 +102,7 @@ namespace grvl {
         step = (MaxValue - MinValue) / division;
     }
 
-    void Slider::SetTextFont(Font const* font)
+    void Slider::SetTextFont(Font* font)
     {
         SliderFont = font;
     }
@@ -445,7 +445,7 @@ namespace grvl {
         result->SetActiveScrollColor(XMLSupport::ParseColor(xmlElement, "activeScrollColor", (uint32_t)result->GetScrollColor()));
 
         result->SetValueRange(XMLSupport::GetAttributeOrDefault(xmlElement, "minValue", (uint32_t)0),XMLSupport::GetAttributeOrDefault(xmlElement, "maxValue", (uint32_t)100));
-        
+
         result->SetKeepBoundaries(XMLSupport::GetAttributeOrDefault(xmlElement, "keepBoundaries", false));
 
         const char* typeName = XMLSupport::GetAttributeOrDefault(xmlElement, "type", "Continuous");

@@ -22,6 +22,10 @@ file(
   GLOB_RECURSE sources
   CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
                     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+file(
+  GLOB_RECURSE gbf_sources
+  CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/gbf/*.hpp"
+                    "${CMAKE_CURRENT_SOURCE_DIR}/gbf/*.cpp")
 
 add_library(grvl ${sources} ${headers})
 set_target_properties(grvl PROPERTIES CXX_STANDARD 17
@@ -29,7 +33,7 @@ set_target_properties(grvl PROPERTIES CXX_STANDARD 17
 
 target_link_libraries(
   grvl
-  PRIVATE grvl_options
+  PRIVATE grvl_options stblib
   PUBLIC ZLIB
          JPEG
          PNG
@@ -45,6 +49,11 @@ if(GRVL_LINUX_NATIVE)
   target_compile_definitions(grvl PUBLIC GRVL_LINUX_NATIVE)
 endif()
 
+
+if (NOT GRVL_ZEPHYR)
+  add_executable(gbf EXCLUDE_FROM_ALL ${gbf_sources})
+  target_link_libraries(gbf PRIVATE grvl)
+endif()
 
 if(USE_SYSTEM_LIBRARIES AND NOT GRVL_ZEPHYR)
   include(GNUInstallDirs)

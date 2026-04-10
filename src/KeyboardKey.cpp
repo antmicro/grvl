@@ -75,7 +75,7 @@ namespace grvl {
         secondaryText = text;
     }
 
-    void KeyboardKey::SetSecondaryTextFont(Font const* font)
+    void KeyboardKey::SetSecondaryTextFont(Font* font)
     {
         secondaryTextFont = font;
     }
@@ -117,7 +117,7 @@ namespace grvl {
             uint16_t TextSize = ButtonFont->GetWidth(primaryKeyValue);
             uint16_t BeginX = (RenderWidth / 2) - (TextSize / 2);
             float TempButtonHeightMultiplier = secondaryKeyValue ? 0.66 : 0.5;
-            uint16_t BeginY = RenderHeight * TempButtonHeightMultiplier - (ButtonFont->GetHeight() / 2) + TextTopOffset;
+            uint16_t BeginY = RenderHeight * TempButtonHeightMultiplier + (ButtonFont->GetFontHeight() / 2) + TextTopOffset;
 
             painter.DisplayBoundedAntialiasedString(
                 ButtonFont,
@@ -135,7 +135,7 @@ namespace grvl {
         if(secondaryKeyValue && secondaryTextFont) {
             uint16_t TextSize = secondaryTextFont->GetWidth(secondaryKeyValue);
             uint16_t BeginX = (RenderWidth / 2) - (TextSize / 2);
-            uint16_t BeginY = (RenderHeight / 4) - (secondaryTextFont->GetHeight() / 2) + TextTopOffset;
+            uint16_t BeginY = (RenderHeight / 4) + (secondaryTextFont->GetFontHeight() / 2) + TextTopOffset;
 
             painter.DisplayBoundedAntialiasedString(
                 secondaryTextFont,

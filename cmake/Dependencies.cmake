@@ -12,6 +12,7 @@ if(USE_SYSTEM_LIBRARIES)
 
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(DUKTAPE REQUIRED duktape)
+  pkg_check_modules(libstb REQUIRED stb)
 
   if (GRVL_LINUX_NATIVE)
     pkg_check_modules(XKBCOMMON REQUIRED IMPORTED_TARGET xkbcommon)
@@ -24,10 +25,10 @@ if(USE_SYSTEM_LIBRARIES)
   return()
 endif()
 
-include(CPM)
-
 # Set minimum CMake Policy Version for dependencies
 set(CMAKE_POLICY_VERSION_MINIMUM 3.16)
+
+include(CPM)
 
 if (GRVL_LINUX_NATIVE)
   CPMAddPackage(
@@ -36,6 +37,15 @@ if (GRVL_LINUX_NATIVE)
       GIT_TAG ab1436ecb733e0f702f1f52a4108cf1b1a73868e
       OPTIONS "CMAKE_POSITION_INDEPENDENT_CODE ON")
 endif()
+
+CPMAddPackage(
+    NAME stb
+    GITHUB_REPOSITORY nothings/stb
+    GIT_TAG 28d546d5eb77d4585506a20480f4de2e706dff4c
+)
+
+add_library(stblib INTERFACE)
+target_include_directories(stblib INTERFACE "${stb_SOURCE_DIR}")
 
 # Zlib
 CPMAddPackage(

@@ -47,7 +47,7 @@ namespace grvl {
 
         void SetTextVerticalOffset(uint32_t textVerticalOffset);
         void SetTextColor(uint32_t textColor);
-        void SetTextFont(const Font* font);
+        void SetTextFont(Font* font);
 
         void SetStartingGradientColor(uint32_t startingGradientColor) { GradientStartColor = startingGradientColor; }
         void SetEndingGradientColor(uint32_t endingGradientColor) { GradientEndColor = endingGradientColor; }
@@ -71,7 +71,7 @@ namespace grvl {
 
         uint32_t TextVerticalOffset{0};
         uint32_t TextColor{0};
-        const Font* TextFont{nullptr};
+        Font* TextFont{nullptr};
 
         bool HasGradientBackground() const { return GradientStartColor != 0 && GradientEndColor != 0; }
 

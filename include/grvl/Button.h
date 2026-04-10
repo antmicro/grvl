@@ -103,7 +103,7 @@ namespace grvl {
         void SetActiveTextColor(uint32_t color);
         void SetIcoColor(uint32_t color);
         void SetActiveIcoColor(uint32_t color);
-        void SetIcoFont(Font const* font);
+        void SetIcoFont(Font* font);
         void SetIcoChar(int16_t textIco);
         void SetImagePosition(int32_t x, int32_t y);
         void SetTextTopOffset(int32_t value);
@@ -118,7 +118,7 @@ namespace grvl {
         uint32_t GetIcoColor() const;
         uint32_t GetActiveTextColor();
         uint32_t GetActiveIcoColor() const;
-        Font const* GetIcoFont();
+        Font* GetIcoFont();
 
         static Button* BuildFromXML(XMLElement* xmlElement);
 
@@ -139,7 +139,7 @@ namespace grvl {
         uint32_t ActiveIcoColor{COLOR_ARGB8888_TRANSPARENT};
         int32_t TextTopOffset{0};
         int16_t IcoChar;
-        Font const* IcoFont;
+        Font* IcoFont;
         bool imageCentered;
 
         virtual void DrawBackgroundItems(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight);

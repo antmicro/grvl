@@ -28,11 +28,6 @@
 namespace grvl {
     static constexpr auto bufferSize = 128;
 
-    inline static bool EndsWith(const char* name, const char* ext)
-    {
-        return strlen(name) >= strlen(ext) && !strcmp(name + strlen(name) - strlen(ext), ext);
-    }
-
     bool File::noFS = false;
     std::unordered_map<std::string, std::pair<unsigned char*, uint64_t>>* File::files;
 

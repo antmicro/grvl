@@ -157,7 +157,7 @@ namespace grvl {
         uint32_t CurrentTextColor = GetTextColor();
         uint16_t TextSize = ButtonFont->GetWidth(textToDraw);
         uint16_t BeginX = 10;
-        uint16_t BeginY = RenderHeight / 2 - (ButtonFont->GetHeight() / 2) + TextTopOffset;
+        uint16_t BeginY = RenderHeight / 2 + (ButtonFont->GetFontHeight() / 2) + TextTopOffset;
 
         painter.DisplayBoundedAntialiasedString(
             ButtonFont,

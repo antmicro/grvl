@@ -60,7 +60,7 @@ namespace grvl {
         result->SetText(XMLSupport::GetAttributeOrDefault(xmlElement, "text", ""));
 
         const auto* fontName = XMLSupport::GetAttributeOrDefault(xmlElement, "font", "normal");
-        const auto* font = man->GetFontPointer(fontName);
+        Font* font = man->GetFontPointer(fontName);
         if(!font){
             grvl::Log("[WARNING] Setting invalid label font %s, the label isn't going to be drawn", fontName);
         }
@@ -89,7 +89,7 @@ namespace grvl {
         if(!TextFont) return;
         int32_t TextWidth = TextFont->GetWidth(Text.c_str());
         uint16_t BeginX = 0;
-        uint16_t BeginY = (Height / 2) - (TextFont->GetHeight() / 2);
+        uint16_t BeginY = (Height / 2) + (TextFont->GetFontHeight() / 2);
         switch(HorizontalAlignment) {
             case Left:
                 BeginX = 3;
@@ -108,12 +108,12 @@ namespace grvl {
         DrawBorderIfNecessary(painter, ParentRenderX + X, ParentRenderY + Y, Width, Height);
     }
 
-    void Label::SetTextFont(Font const* font)
+    void Label::SetTextFont(Font* font)
     {
         TextFont = font;
     }
 
-    Font const* Label::GetTextFont()
+    Font* Label::GetTextFont()
     {
         return TextFont;
     }

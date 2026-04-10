@@ -38,12 +38,12 @@ namespace grvl {
         }
     }
 
-    Font const* Ico::GetIcoFont() const
+    Font* Ico::GetIcoFont() const
     {
         return IcoFont;
     }
 
-    void Ico::SetIcoFont(Font const* icoFont)
+    void Ico::SetIcoFont(Font* icoFont)
     {
         IcoFont = icoFont;
         if(IcoChar) {
@@ -65,7 +65,7 @@ namespace grvl {
             }
 
             uint16_t BeginX = X + (Width / 2) - (IcoFont->GetCharWidth((uint32_t)IcoChar) / 2);
-            uint16_t BeginY = Y + (Height / 2) - (IcoFont->GetFontHeight() / 2);
+            uint16_t BeginY = Y + (Height / 2) + (IcoFont->GetFontHeight() / 2);
 
             painter.DisplayAntialiasedChar(IcoFont, BeginX + ParentRenderX, BeginY + ParentRenderY, IcoChar, ForegroundColor);
 
@@ -79,7 +79,7 @@ namespace grvl {
         if(tWidth > Width) {
             Width = tWidth;
         }
-        int32_t tHeight = IcoFont->GetHeight();
+        int32_t tHeight = IcoFont->GetFontHeight();
         if(tHeight > Height) {
             Height = tHeight;
         }

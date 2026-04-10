@@ -44,12 +44,12 @@ namespace grvl {
 
         void SetText(const char* text);
         void SetImage(const Image& image);
-        void SetTextFont(Font const* font);
+        void SetTextFont(Font* font);
 
         void ClearButtonFont();
 
         const char* GetText();
-        Font const* GetButtonFont();
+        Font* GetButtonFont();
         Image* GetImagePointer();
 
         void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder) override;
@@ -60,7 +60,7 @@ namespace grvl {
     protected:
         std::string Text{};
         Image ButtonImage{};
-        Font const* ButtonFont{nullptr};
+        Font* ButtonFont{nullptr};
 
         virtual void InitFromXML(XMLElement* xmlElement);
     };

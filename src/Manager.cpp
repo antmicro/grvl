@@ -19,7 +19,8 @@
 #include <grvl/ParsingUtils.h>
 
 #include <cassert>
-
+#include <grvl/JSEngine.h>
+#include <grvl/File.h>
 
 #ifdef __ZEPHYR__
 #include <zephyr/logging/log.h>
@@ -526,7 +527,7 @@ namespace grvl {
         KeyMappingContainer[mask] = k;
     }
 
-    Font const* Manager::GetFontFromContainer(const char* name) const
+    Font* Manager::GetFontFromContainer(const char* name) const
     {
         if(name == NULL || *name == 0) {
             return NULL;
@@ -538,7 +539,7 @@ namespace grvl {
         return NULL;
     }
 
-    Font const* Manager::GetDefaultFontFromContainer() const
+    Font* Manager::GetDefaultFontFromContainer() const
     {
         if(!FontContainer.empty()) {
             FontContainerMap::const_iterator searchFont = FontContainer.find("default");
@@ -550,24 +551,25 @@ namespace grvl {
         return NULL;
     }
 
-    Font const* Manager::GetFontPointer(const char* fontName) const
+    Font* Manager::GetFontPointer(const char* fontName) const
     {
-        Font const* tfont = 0;
-        if(fontName) { // Font is defined
-            tfont = GetFontFromContainer(fontName); // Most frequent case
+        Font* font = nullptr;
+
+        if(fontName) {
+            font = GetFontFromContainer(fontName);
         }
-        if(!tfont) {
-            grvl::Log("[WARNING] Font \"%s\" doesn't exist. Using \"normal\"", fontName);
-            tfont = GetFontFromContainer("normal");
+
+        if (!font && (strcmp(fontName, "normal") != 0)) {
+            grvl::Log("[WARNING] Font \"%s\" doesn't exist. Using \"normal\"!", fontName);
+            font = GetFontFromContainer("normal");
         }
-        if(!tfont) {
-            grvl::Log("[WARNING] Font \"normal\" doesn't exist. Using default font");
-            tfont = GetDefaultFontFromContainer();
+
+        if(!font) {
+            grvl::Log("[WARNING] Font \"normal\" doesn't exist. Using default font!");
+            font = GetDefaultFontFromContainer();
         }
-        if(!tfont) {
-            grvl::Log("[ERROR] Default font not found!");
-        }
-        return tfont;
+
+        return font;
     }
 
     AbstractView* Manager::GetScreen(const char* id)
@@ -1243,12 +1245,14 @@ namespace grvl {
             uint32_t size = (uint32_t)XMLSupport::GetAttributeOrDefault(nextElement, "size", (uint32_t)0);
             const char* fname = XMLSupport::GetAttributeOrDefault(nextElement, "name", "");
             const char* flname = XMLSupport::GetAttributeOrDefault(nextElement, "file", "");
-            Font const* tfont = GetFontFromContainer(fname);
+            Font* tfont = GetFontFromContainer(fname);
             if (tfont == NULL) {
-                char *font = (char*)malloc(strlen(fname) + 50);
-                sprintf(font, "fonts/%s.font.gz", fname);
-                AddFontToFontContainer(fname, new Font(font));
-                free(font);
+                std::string font_path = std::string("fonts/") + fname;
+                const char* c_font_path = font_path.c_str();
+
+                if (EndsWith(c_font_path, ".gbf") || EndsWith(c_font_path, ".gbf.gz")) {
+                    AddFontToFontContainer(fname, new GrvlBakedFont(c_font_path));
+                }
             } else {
                 grvl::Log("[WARNING] Font \"%s\" of size %d mapping to \"%s\" already loaded", flname, size, fname);
             }

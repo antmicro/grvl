@@ -43,7 +43,7 @@ namespace grvl {
         Keyboard* GetParentKeyboard() const { return parentKeyboard; }
 
         void SetSecondaryText(const char* text);
-        void SetSecondaryTextFont(Font const* font);
+        void SetSecondaryTextFont(Font* font);
         void SetSecondaryTextColor(uint32_t color);
         void SetActiveSecondaryTextColor(uint32_t color);
         const char* GetSecondaryText();
@@ -58,7 +58,7 @@ namespace grvl {
     protected:
         Keyboard* parentKeyboard{nullptr};
         std::string secondaryText{};
-        Font const* secondaryTextFont{nullptr};
+        Font* secondaryTextFont{nullptr};
         uint32_t secondaryTextColor{0};
         uint32_t activeSecondaryTextColor{0};
 

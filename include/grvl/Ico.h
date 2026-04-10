@@ -27,7 +27,7 @@ namespace grvl {
     class Ico : public Component {
     protected:
         int32_t IcoChar{-1};
-        Font const* IcoFont{nullptr};
+        Font* IcoFont{nullptr};
 
     public:
         Ico() = default;
@@ -42,8 +42,8 @@ namespace grvl {
 
         int32_t GetIcoChar() const;
         void SetIcoChar(int32_t icoChar);
-        Font const* GetIcoFont() const;
-        void SetIcoFont(Font const* icoFont);
+        Font* GetIcoFont() const;
+        void SetIcoFont(Font* icoFont);
 
         void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
 

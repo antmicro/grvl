@@ -30,7 +30,7 @@ namespace grvl {
         return new Button(*this);
     }
 
-    void Button::SetIcoFont(Font const* font)
+    void Button::SetIcoFont(Font* font)
     {
         IcoFont = font;
     }
@@ -40,7 +40,7 @@ namespace grvl {
         IcoFont = NULL;
     }
 
-    Font const* Button::GetIcoFont()
+    Font* Button::GetIcoFont()
     {
         return IcoFont;
     }
@@ -157,7 +157,7 @@ namespace grvl {
         if(TextLen > 0 && ButtonFont != 0) {
             uint16_t TextSize = ButtonFont->GetWidth(Text.c_str());
             uint16_t BeginX = (Width / 2) - (TextSize / 2);
-            uint16_t BeginY = (Height / 2) - (ButtonFont->GetHeight() / 2) + TextTopOffset;
+            uint16_t BeginY = (Height / 2) + (ButtonFont->GetFontHeight() / 2) + TextTopOffset;
 
             if(IcoChar != -1 && IcoFont != 0) {
                 BeginY += Height / 3;
@@ -174,7 +174,7 @@ namespace grvl {
         if(IcoChar != -1 && IcoFont != 0) {
             static constexpr auto charPositionOffsetScale = 5;
             uint16_t BeginX = (Width / 2) - (IcoFont->GetCharWidth((uint32_t)IcoChar) / 2);
-            uint16_t BeginY = (Height / 2) - (IcoFont->GetHeight() / 2);
+            uint16_t BeginY = (Height / 2) + (IcoFont->GetFontHeight() / 2);
 
             if(TextLen > 0 && ButtonFont != 0) {
                 BeginY -= Height / charPositionOffsetScale;

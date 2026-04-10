@@ -84,7 +84,7 @@ namespace grvl {
         ListItem& operator=(const ListItem& Obj) = default;
 
         void SetDescription(const char* desc);
-        void SetDescriptionFont(Font const* font);
+        void SetDescriptionFont(Font* font);
 
         /// Sets type of the list item.
         ///
@@ -119,7 +119,7 @@ namespace grvl {
 
     protected:
         std::string Description{};
-        Font const* DescriptionFont{nullptr};
+        Font* DescriptionFont{nullptr};
         uint32_t DescriptionColor{COLOR_ARGB8888_LIGHTGRAY};
         uint32_t ActiveDescriptionColor{COLOR_ARGB8888_BLACK};
         Image AdditionalImge{};

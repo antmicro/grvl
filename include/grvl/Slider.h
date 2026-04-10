@@ -125,7 +125,7 @@ namespace grvl {
         void SetSliderType(SliderScaleType type);
         void SetDivision(uint8_t value);
         void CalculateStep();
-        void SetTextFont(Font const* font);
+        void SetTextFont(Font* font);
         void SetLimiters(float const array[], uint8_t size);
         static string GetValueOnButton(float val);
 
@@ -181,7 +181,7 @@ namespace grvl {
         uint8_t division{1};
         uint32_t step;
 
-        Font const* SliderFont;
+        Font* SliderFont;
 
         float* limiters;
         uint8_t NumberOfLimiters;

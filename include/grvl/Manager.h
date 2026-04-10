@@ -298,10 +298,10 @@ namespace grvl {
 
         void AddKeyMappingToContainer(uint16_t mask, const string& name, uint32_t repeat);
 
-        Font const* GetFontFromContainer(const char* name) const;
-        Font const* GetDefaultFontFromContainer() const;
+        Font* GetFontFromContainer(const char* name) const;
+        Font* GetDefaultFontFromContainer() const;
         Popup* GetPopupFromContainer(const char* name);
-        Font const* GetFontPointer(const char* fontName) const;
+        Font* GetFontPointer(const char* fontName) const;
 
         // XML
         /// Loads screens from XML file.
@@ -356,8 +356,8 @@ namespace grvl {
         uint32_t width;
         uint32_t height;
         typedef map<string, Event::CallbackPointer> EventsContainerMap;
-        typedef map<string, Font const*> FontContainerMap;
-        typedef map<uint32_t, KeyData> KeyMappingMap;
+        typedef unordered_map<string, Font*> FontContainerMap;
+        typedef unordered_map<uint32_t, KeyData> KeyMappingMap;
         EventsContainerMap EventsContainer;
         FontContainerMap FontContainer;
         KeyMappingMap KeyMappingContainer;

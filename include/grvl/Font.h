@@ -20,106 +20,149 @@
 #include <grvl/stl.h>
 
 #include <stdint.h>
+#include <memory>
+
+struct stbtt_fontinfo;
 
 namespace grvl {
+
+    /// Represents one draw-ready Unicode codepoint
+    struct Glyph {
+        uint8_t* bitmap;
+        int16_t width, height;
+
+        int8_t xoff; // offset to left glyph edge
+        int8_t yoff; // offset to bottom glyph edge
+        int16_t advance; // offset to the next character
+
+        /// Get the number of bytes used by bitmap
+        constexpr uint32_t bytes() const {
+            return width * height;
+        }
+    };
+
+    /// Represents one Unicode codepoint
+    struct Unicode {
+        uint32_t code;
+        int32_t length;
+    };
 
     /// Represents font loaded into memory.
     class Font {
     public:
-        struct unicode_character {
-            uint32_t code;
-            int32_t length;
-        };
 
-        struct kerning_entry {
-            uint8_t left;
-            uint8_t right;
-            int8_t space;
-        };
-
-        struct __attribute__((packed)) map_entry {
-            uint16_t code;
-            uint32_t offset;
-        };
-
-        Font()
-            : CharacterEntries(0)
-            , CharHeight(0)
-            , FontHeight(0)
-            , BasicLength(0)
-            , CharMap(0)
-            , CharData(0)
-            , Widths(0)
-            , KerningMap(0)
-            , KerningData(0)
-            , KerningEntries(0)
-            , SpaceLength(0)
-        {
-        }
-
-        Font(const uint16_t* FontData);
-        Font(const char* fpath);
-        Font(const Font& Obj)
-            : CharacterEntries(Obj.CharacterEntries)
-            , CharHeight(Obj.CharHeight)
-            , FontHeight(Obj.FontHeight)
-            , BasicLength(Obj.BasicLength)
-            , CharMap(Obj.CharMap)
-            , WideCharData(Obj.WideCharData)
-            , WideCharMap(Obj.WideCharMap)
-            , current_offset(Obj.current_offset)
-            , CharData(Obj.CharData)
-            , Widths(Obj.Widths)
-            , KerningMap(Obj.KerningMap)
-            , KerningData(Obj.KerningData)
-            , KerningEntries(Obj.KerningEntries)
-            , SpaceLength(Obj.SpaceLength)
-        {
-            CodeMap = Obj.CodeMap;
-        }
+        Font() = default;
+        Font(const Font& other) = delete;
+        Font(Font&& other) = default;
 
         virtual ~Font();
 
-        Font& operator=(const Font& Obj);
+        /// Get the prepared glyph of a specific Unicode.
+        virtual Glyph GetGlyph(uint32_t unicode) = 0;
 
-        uint16_t GetCharEntries() const;
-        uint16_t GetFontHeight() const;
-        uint16_t GetHeight() const;
-        uint16_t GetBasicLength() const;
-        uint16_t GetKerningEntries() const;
+        /// Get the aditional offset that should be added between two Unicodes.
+        virtual int8_t GetKerning(uint32_t leftCode, uint32_t rightCode) const = 0;
 
-        uint32_t* GetCharData(uint32_t code) const;
-        uint32_t* GetWideCharData(uint32_t code) const;
-        uint16_t GetCharWidth(uint32_t code) const;
-        int8_t GetKerning(uint32_t leftCode, uint32_t rightCode) const;
+        /// Get height of the font, in pixels.
+        int16_t GetFontHeight() const;
 
-        uint16_t GetWidth(const char* text) const;
-        int16_t GetSpaceLength() const;
+        /// Calculate the length of the text, in pixels.
+        uint16_t GetWidth(const char* text);
 
-        static unicode_character GetUnicodeCharacter(const char* in);
+        /// Get width, in pixels, of the given Unicode.
+        uint16_t GetCharWidth(uint32_t code);
+
+        /// Return some fallback glyph for when the requested one is missing
+        Glyph GetFallback();
 
     protected:
-        typedef map<uint16_t, uint16_t> Map;
-        Map CodeMap;
-        uint16_t CharacterEntries; // Number of characters
-        uint16_t CharHeight; // Actual character height
-        uint16_t FontHeight; // Desired font height
-        uint16_t BasicLength; // Standard space
-        map_entry* CharMap; // Char map location
-        map_entry* WideCharMap; // WideChar map location
-        uint8_t* CharData; // Char data location
-        uint32_t* WideCharData; // WideChar data location
-        uint8_t* Widths; // Widths map location
-        uint16_t* KerningMap; // Kerning Map location (lookup table)
-        kerning_entry* KerningData; // Kerning Data location
-        uint16_t KerningEntries; // Number of kerning entries
-        int16_t SpaceLength;
-        uint32_t current_offset;
 
-        uint8_t* FileBuffer;
+        std::unordered_map<uint32_t, Glyph> glyphs;
+        int16_t height = 0;
 
-        void Init(const uint16_t* data);
     };
+
+    /// Wraps a TTF file data.
+    ///
+    /// Wraps TTF file data held in memory and allows reusing it for multiple TrueTypeFonts
+    /// of possibly different sizes, saving memory in the process.
+    class TrueTypeData {
+    public:
+        TrueTypeData(const char* path);
+        ~TrueTypeData();
+
+        /// Pointer to the start of the font data
+        const uint8_t* data() const;
+
+        /// Size of font data in bytes
+        size_t size() const;
+
+        /// Get c-string path
+        const char* path() const;
+
+        /// Get STB FreeType font handle
+        ::stbtt_fontinfo* info() const;
+
+    private:
+        std::vector<char> m_buffer;
+        std::string m_path;
+        ::stbtt_fontinfo* m_info;
+
+    };
+
+    /// Class for loading of .TTF fonts.
+    ///
+    /// This class will holds the whole file in memory but only load (and rasterize) specific
+    /// codepoints once they are requested, as such expect memory usage to rise with each newly
+    /// encountered character. As new glyphs need to be rasterized when first used expect a small
+    /// speed penalty for each new (not previously used) character.
+    /// This font can be resized, and the file overhead shared between multiple instances.
+    class TrueTypeFont : public Font {
+    public:
+
+        /// The given TrueTypeData must be valid for the entire lifetime of TrueTypeFont
+        TrueTypeFont(const std::shared_ptr<const TrueTypeData>& data, int size);
+
+        /// Preload an inclusive range of codepoints
+        int Preload(uint32_t start, uint32_t end);
+
+        /// Export the font to a .GBF file, see GrvlBakedFont
+        int Save(const char* path);
+
+        Glyph GetGlyph(uint32_t unicode) override;
+        int8_t GetKerning(uint32_t leftCode, uint32_t rightCode) const override;
+
+    private:
+
+        float GetCodepointAdvance(int unicode, float scale) const;
+
+        std::shared_ptr<const TrueTypeData> ttf;
+        float scale;
+
+    };
+
+    /// Class for loading .GBF fonts.
+    ///
+    /// This class doesn't hold the file in memory but will copy all the data from it
+    /// to memory on load (expect a ~linear relation between font file size and memory usage),
+    /// the memory usage will stay constant after that initial object creation.
+    /// This font can't be resized.
+    class GrvlBakedFont : public Font {
+    public:
+
+        GrvlBakedFont(const char* path);
+
+        Glyph GetGlyph(uint32_t unicode) override;
+        int8_t GetKerning(uint32_t leftCode, uint32_t rightCode) const override;
+
+    private:
+
+        std::unordered_map<uint64_t, int8_t> kernings;
+
+    };
+
+    /// Query information about Unicode codepoint from a UTF-8 pointer
+    Unicode ParseUnicodeCodepoint(const char* in);
 
 } /* namespace grvl */
 

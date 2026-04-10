@@ -53,12 +53,12 @@ namespace grvl {
         ButtonImage = image;
     }
 
-    Font const* AbstractButton::GetButtonFont()
+    Font* AbstractButton::GetButtonFont()
     {
         return ButtonFont;
     }
 
-    void AbstractButton::SetTextFont(Font const* font)
+    void AbstractButton::SetTextFont(Font* font)
     {
         ButtonFont = font;
     }

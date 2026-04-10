@@ -190,17 +190,17 @@ namespace grvl {
 
         void DrawHLine(int32_t Xpos, int32_t Ypos, int32_t Length, uint32_t text_color) const;
 
-        void DisplayAntialiasedString(const Font* Font, int16_t Xpos, int16_t Ypos, const char* Text,
+        void DisplayAntialiasedString(Font* Font, int16_t Xpos, int16_t Ypos, const char* Text,
                                       uint32_t text_color) const;
-        void DisplayAntialiasedChar(const Font* Font, uint16_t Xpos, uint16_t Ypos, uint32_t Index,
+        void DisplayAntialiasedChar(Font* Font, uint16_t Xpos, uint16_t Ypos, uint32_t Index,
                                     uint32_t text_color) const;
-        void DrawAntialiasedChar(const Font* Font, int16_t Xpos, int16_t Ypos, uint32_t Index,
+        void DrawAntialiasedChar(Font* Font, int16_t Xpos, int16_t Ypos, uint32_t Index,
                                  uint32_t text_color) const;
-        void DrawAntialiasedCharInBound(const Font* Font, int16_t Xpos, int16_t Ypos, int16_t ParentX, int16_t ParentY,
+        void DrawAntialiasedCharInBound(Font* Font, int16_t Xpos, int16_t Ypos, int16_t ParentX, int16_t ParentY,
                                         int16_t ParentWidth, int16_t ParentHeight, uint32_t Index, uint32_t text_color) const;
-        void DisplayAntialiasedCharInBound(const Font* Font, int16_t Xpos, int16_t Ypos, int16_t ParentX,
+        void DisplayAntialiasedCharInBound(Font* Font, int16_t Xpos, int16_t Ypos, int16_t ParentX,
                                            int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight, uint32_t index, uint32_t text_color) const;
-        void DisplayBoundedAntialiasedString(const Font* Font, int16_t Xpos, int16_t Ypos, int16_t ParentX,
+        void DisplayBoundedAntialiasedString(Font* Font, int16_t Xpos, int16_t Ypos, int16_t ParentX,
                                              int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight, const char* Text, uint32_t text_color) const;
         uint32_t GetPixelFormat() const;
         uint32_t GetBytesPerPixel() const;
@@ -247,7 +247,7 @@ namespace grvl {
         constexpr float ToRadians(float eulerAngles) const;
 
     private:
-        void InnerDisplayAntialiasedString(const Font* Font, int16_t Xpos, int16_t Ypos, const char* Text, uint32_t text_color, bool bounded, int16_t ParentX,
+        void InnerDisplayAntialiasedString(Font* Font, int16_t Xpos, int16_t Ypos, const char* Text, uint32_t text_color, bool bounded, int16_t ParentX,
                                            int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight) const;
     };
 
