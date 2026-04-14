@@ -85,11 +85,9 @@ namespace grvl {
         duk_push_object(ctx);
 
         for (auto const& [key, value] : values) {
+            duk_push_string(ctx, key.c_str());
             duk_push_int(ctx, value);
-            duk_put_prop_string(ctx, -2, key.c_str());
-        
-            // TODO: the line below crashes for some reason, would be good to make that right
-            //duk_def_prop(ctx, -2, DUK_DEFPROP_HAVE_VALUE | DUK_DEFPROP_HAVE_WRITABLE); 
+            duk_def_prop(ctx, -3, DUK_DEFPROP_HAVE_VALUE | DUK_DEFPROP_CLEAR_WRITABLE); 
         }
 
         duk_put_global_string(ctx, enumName.c_str());
