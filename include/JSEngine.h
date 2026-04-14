@@ -52,6 +52,7 @@ namespace grvl {
         static duk_ret_t ShowPopup(duk_context* ctx);
         static duk_ret_t ClosePopup(duk_context* ctx);
         static duk_ret_t SetActiveScreen(duk_context* ctx);
+        static duk_ret_t SetActiveInput(duk_context* ctx);
         static duk_ret_t GetTopPanel(duk_context* ctx);
         static duk_ret_t GetBottomPanel(duk_context* ctx);
         static duk_ret_t GetPrefabById(duk_context* ctx);

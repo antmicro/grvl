@@ -253,6 +253,21 @@ namespace grvl {
         return NO_RETURN_VALUE;
     }
 
+    duk_ret_t JSEngine::SetActiveInput(duk_context* ctx)
+    {
+        Manager& managerInstance = Manager::GetInstance();
+        if (duk_is_null(ctx,0)) {
+            managerInstance.SetActiveInput(nullptr);
+            return NO_RETURN_VALUE;
+        }
+
+        const char* inputName = duk_to_string(ctx, 0);
+        auto inputField = managerInstance.FindElementInTheActiveScreenById(inputName);
+        managerInstance.SetActiveInput(dynamic_cast<TextInput*>(inputField));
+
+        return NO_RETURN_VALUE;
+    }
+
     duk_ret_t JSEngine::GetTopPanel(duk_context* ctx)
     {
         Manager& managerInstance = Manager::GetInstance();
