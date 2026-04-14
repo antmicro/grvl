@@ -52,6 +52,7 @@ namespace grvl {
         AddGlobalFunction("ShowPopup", JSEngine::ShowPopup, 1);
         AddGlobalFunction("ClosePopup", JSEngine::ClosePopup, 0);
         AddGlobalFunction("SetActiveScreen", JSEngine::SetActiveScreen, 2);
+        AddGlobalFunction("SetActiveInput", JSEngine::SetActiveInput, 1);
         AddGlobalFunction("GetTopPanel", JSEngine::GetTopPanel, 0);
         AddGlobalFunction("GetBottomPanel", JSEngine::GetBottomPanel, 0);
         AddGlobalFunction("GetPrefabById", JSEngine::GetPrefabById, 1);
