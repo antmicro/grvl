@@ -21,6 +21,10 @@
 #include "XMLSupport.h"
 
 namespace grvl {
+    Component* Image::Clone() const
+    {
+        return new Image(*this);
+    }
 
     void Image::SetActiveFrame(uint32_t activeFrame)
     {

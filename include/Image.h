@@ -66,6 +66,7 @@ namespace grvl {
 
         Image(const Image& other) = default;
         Image& operator=(const Image& other) = default;
+        Component* Clone() const override;
 
         void SetActiveFrame(uint32_t activeFrame);
 
