@@ -922,7 +922,7 @@ namespace grvl {
 
     void Painter::DrawHLine(int32_t Xpos, int32_t Ypos, int32_t Length, uint32_t text_color) const
     {
-        if(Ypos >= CurrentDrawingBoundsEndY() || Ypos < CurrentDrawingBoundsStartY() || Ypos >= CurrentDrawingBoundsEndY()) {
+        if(Ypos >= CurrentDrawingBoundsEndY() || Ypos < CurrentDrawingBoundsStartY() || Xpos >= CurrentDrawingBoundsEndX()) {
             return;
         }
 

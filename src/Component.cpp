@@ -671,12 +671,12 @@ namespace grvl {
             }
             case BorderTypeBits::RIGHT:
             {
-                painter.DrawVLine(StartX + BorderWidth, StartY, BorderHeight, tempBorderColor);
+                painter.DrawVLine(StartX + BorderWidth - 1, StartY, BorderHeight, tempBorderColor);
                 break;
             }
             case BorderTypeBits::BOTTOM:
             {
-                painter.DrawHLine(StartX, StartY + BorderHeight, BorderWidth, tempBorderColor);
+                painter.DrawHLine(StartX, StartY + BorderHeight - 1, BorderWidth, tempBorderColor);
                 break;
             }
             case BorderTypeBits::LEFT:
