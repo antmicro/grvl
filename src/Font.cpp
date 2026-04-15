@@ -232,7 +232,6 @@ namespace grvl {
         auto it = kernings.find(key);
 
         if (it != kernings.end()) {
-
             return it->second;
         }
 

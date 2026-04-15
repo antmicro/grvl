@@ -145,11 +145,8 @@ namespace grvl {
 
     static uint32_t ConvertPixel(unsigned char* data, Format inputPixelFormat, Format outputPixelFormat)
     {
-        uint32_t color;
-
-        // FIXME should not read 4 bytes if pixel format is different than ARGB8888
-		// This (sometimes) causes valgrind errors when rendering text!
-        memcpy(&color, data, 4);
+        uint32_t color = 0;
+        memcpy(&color, data, GetFormatStride(inputPixelFormat));
         return ConvertColor(color, inputPixelFormat, outputPixelFormat);
     }
 
