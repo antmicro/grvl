@@ -16,10 +16,12 @@
 
 #ifndef GRVL_MISC_H_
 #define GRVL_MISC_H_
+
+#include "grvl.h"
 #include "Definitions.h"
+
 #include <ctype.h>
 #include <stdint.h>
-#include <grvl.h>
 #include <string>
 
 namespace grvl {
