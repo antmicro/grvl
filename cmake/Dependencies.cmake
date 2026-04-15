@@ -13,13 +13,7 @@ if(USE_SYSTEM_LIBRARIES)
 
   if (GRVL_LINUX_NATIVE)
     pkg_check_modules(XKBCOMMON REQUIRED IMPORTED_TARGET xkbcommon)
-
-    include(CPM)
-    CPMAddPackage(
-      NAME yav
-      GITHUB_REPOSITORY antmicro/yav
-      GIT_TAG a59ff61adc47ba6a8f747e15c8e7312561185ded
-      OPTIONS "CMAKE_POSITION_INDEPENDENT_CODE ON")
+    find_package(yavo REQUIRED)
   endif()
 
   add_library(ZLIB ALIAS ZLIB::ZLIB)
