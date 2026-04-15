@@ -43,7 +43,7 @@ target_link_libraries(
 
 target_include_directories(
   grvl PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-              $<INSTALL_INTERFACE:include/grvl>)
+              $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/grvl>)
 
 if(USE_SYSTEM_LIBRARIES AND NOT GRVL_ZEPHYR)
   include(GNUInstallDirs)
