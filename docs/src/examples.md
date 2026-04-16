@@ -110,7 +110,55 @@ Adding a popup in XML (with an element closing it on callback):
 
 ## Adding images and fonts
 
+Grvl support two font types **Grvl Baked Fonts** (.gbf) and **True Type Fonts** (.ttf). Both formats have their valid uses.
+You can create a grvl baked font using the provided `gbf` CLI utility, that converts TTFs to GBFs.
+The baking process allows you to select which codepoints should be included, refer to `gbf --help` for more information.
+
+```sh
+# Build GBF utility application
+cmake -B build
+cmake --build build --target gbf
+
+# Bake characters into GBF
+./build/gbf --ttf ./romfs/fonts/MyFont.ttf --size 18 --gbf ./romfs/fonts/MyFont.gbf --range ascii,0x100-0x200
+```
+
+If you want to use TTF fonts in a memory contained enviroment it may be beneficial to create a smaller TTF fonts with some, unused, glyphs removed.
+You can use the open source `pyftsubset` utility for that. Unused glyphs can also be deleted from a font in [Font Forge](https://fontforge.org) graphically.
+
+```sh
+# Create a ASCII-only version of the font
+pyftsubset ./romfs/fonts/MyFont.ttf --unicodes=U+0020-007E --output-file=./romfs/fonts/MyFont-ascii.ttf
+```
+
+Loading both font types is shown below.
+
 ```cpp
-displayManager->AddFontToFontContainer("my_font", new Font(path_to_font));
+displayManager->AddFontToFontContainer("my_font_gbf", new GrvlBakedFont(path_to_font));
 displayManager->AddImageContentToContainer("my_image", new ImageContent(ImageContent::FromPNG(path_to_image)));
+
+// using True Type Fonts
+auto data = std::make_shared<grvl::TrueTypeData>(path_to_font);
+displayManager->AddFontToFontContainer("my_font_ttf", new TrueTypeFont(data, 18));
+```
+
+## Default fonts
+
+When a font is not specified for an element (or the font is not found) grvl will try using the *normal* font - and if that is not present - the *default* font.
+You may see this in the logs:
+
+```
+[WARNING] Font "normal" doesn't exist. Using default font!
+[ERROR] Default font doesn't exist.
+[WARNING] Font "normal" doesn't exist. Using default font!
+[ERROR] Default font doesn't exist.
+[WARNING] Font "normal" doesn't exist. Using default font!
+[ERROR] Default font doesn't exist.
+```
+
+To fix those errors you just need to provide a *normal* (and/or *default*) font, like so:
+
+```cpp
+manager.AddFontToFontContainer("normal", new grvl::TrueTypeFont( /* ... */ ));
+manager.AddFontToFontContainer("default", new grvl::TrueTypeFont( /* ... */ ));
 ```
