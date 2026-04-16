@@ -45,7 +45,7 @@ int main(){
     // fill the gui media
     Manager::GetInstance()
         .AddFontToFontContainer(FONT_NAME_USED_IN_XML, new GrvlBakedFont(FONT_PATH))
-        .AddImageContentToContainer(IMAGE_NAME_USED_IN_XML, new ImageContent(ImageContent::FromPNG(IMAGE_PATH)))
+        .AddImageContentToContainer(IMAGE_NAME_USED_IN_XML, new ImageContent(IMAGE_PATH))
         .AddCallbackToContainer(CALLBACK_NAME_USED_IN_XML, (grvl::Event::CallbackPointer) callback_function)
         .BuildFromXML(XML_PATH)
         .InitializationFinished();

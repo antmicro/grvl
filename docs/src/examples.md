@@ -135,7 +135,7 @@ Loading both font types is shown below.
 
 ```cpp
 displayManager->AddFontToFontContainer("my_font_gbf", new GrvlBakedFont(path_to_font));
-displayManager->AddImageContentToContainer("my_image", new ImageContent(ImageContent::FromPNG(path_to_image)));
+displayManager->AddImageContentToContainer("my_image", new ImageContent(path_to_image));
 
 // using True Type Fonts
 auto data = std::make_shared<grvl::TrueTypeData>(path_to_font);
