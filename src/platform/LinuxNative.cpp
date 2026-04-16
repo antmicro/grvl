@@ -4,9 +4,9 @@
 #include <platform/LinuxNativeApp.h>
 #include <Manager.h>
 
-#include <yavo/core/framebuffer.hpp>
-#include <yavo/core/drm.hpp>
-#include <yavo/core/interrupt.hpp>
+#include <core/framebuffer.hpp>
+#include <core/drm.hpp>
+#include <core/interrupt.hpp>
 
 #include <regex>
 #include <filesystem>
