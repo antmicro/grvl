@@ -1,7 +1,7 @@
 #ifndef LINUXGENERICAPP_H_
 #define LINUXGENERICAPP_H_
 
-#include "Application.h"
+#include "../Application.h"
 
 namespace grvl {
     // Create generic Linux Application
