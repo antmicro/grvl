@@ -311,8 +311,8 @@ namespace grvl {
                     xkb_keysym_t keysym = xkb_state_key_get_one_sym(xkb_state, keycode);
                     if (event.value > 0) {
                         switch (keysym) {
-                            case XKB_KEY_BackSpace: Manager::GetInstance().ProcessBackspace(); break;
-                            case XKB_KEY_Return: Manager::GetInstance().ProcessEnter(); break;
+                            case XKB_KEY_BackSpace:
+                            case XKB_KEY_Return:
 
                             case XKB_KEY_Tab:
                             case XKB_KEY_Escape:
@@ -325,8 +325,6 @@ namespace grvl {
                             case XKB_KEY_Down:
                             case XKB_KEY_Page_Up:
                             case XKB_KEY_Page_Down:
-                                // @TODO: Manager::GetInstance().....
-                                break;
 
                             case XKB_KEY_F1:
                             case XKB_KEY_F2:
@@ -340,19 +338,15 @@ namespace grvl {
                             case XKB_KEY_F10:
                             case XKB_KEY_F11:
                             case XKB_KEY_F12:
-                                // @TODO: Manager::GetInstance().ProcessFunctionKey(kysym - XKB_KEY_F1 + 1);
                                 break;
 
                             default:
                                 char* buffer;
-                                size_t size = xkb_state_key_get_utf8(xkb_state, keycode, nullptr, 0) + 1;
+                                size_t size = xkb_state_key_get_utf8(xkb_state, keycode, nullptr, 0);
                                 if (size > 0) {
-                                    buffer = (char*)malloc(size);
-                                    if (buffer) {
-                                        if (xkb_state_key_get_utf8(xkb_state, keycode, buffer, size) > 0) {
-                                            Manager::GetInstance().ProcessTextInput(buffer);
-                                        }
-                                        free(buffer);
+                                    std::vector<char>buffer(size + 1);
+                                    if (xkb_state_key_get_utf8(xkb_state, keycode, buffer.data(), buffer.size()) > 0) {
+                                        Manager::GetInstance().ProcessTextInput(buffer.data());
                                     }
                                     
                                 }
@@ -362,6 +356,7 @@ namespace grvl {
                     
                     // always update the state
                     xkb_state_update_key(xkb_state, keycode, event.value ? XKB_KEY_DOWN : XKB_KEY_UP);
+                    Manager::GetInstance().ProcessKeyInput(event.value, event.code);
                 }
             }
 

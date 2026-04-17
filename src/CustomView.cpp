@@ -28,6 +28,8 @@ namespace grvl {
             if(strcmp(child->Name(), "header") == 0) {
                 Panel* hdr = (Panel*)create_component("panel", (void*)child);
                 parent->SetHeader(hdr);
+            } else if(strcmp("key", child->Name()) == 0) {
+                continue; // Keys are handled by parent->InitFromXML() below
             } else {
                 Component* element = create_component(child->Name(), (void*)child);
                 if(element)

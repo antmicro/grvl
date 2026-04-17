@@ -206,6 +206,7 @@ namespace grvl {
 
         /// Sets the curren active text input - triggers ShowKeyboard.
         void SetActiveInput(TextInput* destinationInput);
+        TextInput* GetActiveInput();
 
         /// Switches keyboard pop-up keys.
         void SwitchKeyboardKeys();
@@ -325,8 +326,6 @@ namespace grvl {
         Key::KeyState ReleaseKey(const char* id);
 
         void ProcessTextInput(const char* text);
-        void ProcessEnter();
-        void ProcessBackspace();
 
         void DrawNextLoadingFrame();
 

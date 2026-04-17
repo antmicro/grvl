@@ -77,16 +77,27 @@ namespace grvl {
     static void KeyboardAddFromKeyCallback(void* sender, const Event::ArgVector& Args)
     {
         KeyboardKey* keyboardKey = static_cast<KeyboardKey*>(sender);
+        if (!keyboardKey) {
+            return;
+        }
         Keyboard* parentKeyboard = keyboardKey->GetParentKeyboard();
+        if (!parentKeyboard) {
+            return;
+        }
         TextInput* textInput = parentKeyboard->GetCurrentInputDestination();
+        if (!textInput) {
+            return;
+        }
         textInput->Append(keyboardKey->GetCurrentValue());
     }
 
     static void KeyboardRemoveLastCharacterCallback(void* sender, const Event::ArgVector& Args)
     {
-        KeyboardKey* keyboardKey = static_cast<KeyboardKey*>(sender);
-        Keyboard* parentKeyboard = keyboardKey->GetParentKeyboard();
-        TextInput* textInput = parentKeyboard->GetCurrentInputDestination();
+        auto& manager = Manager::GetInstance();
+        auto textInput = manager.GetActiveInput();
+        if (!textInput) {
+            return;
+        }
         textInput->RemoveLastCharacter();
     }
 
@@ -668,6 +679,11 @@ namespace grvl {
         }
     }
 
+    TextInput* Manager::GetActiveInput()
+    {
+        return activeInput;
+    }
+
     void Manager::SwitchKeyboardKeys()
     {
         assert(CurrentPopup == keyboard && "SwitchKeyboardKeys shouldn't be called if keyboard isn't shown");
@@ -1128,24 +1144,6 @@ namespace grvl {
         for (int i = 0; i < len; i++) {
             activeInput->AddCharacter(text[i]);
         }
-    }
-
-    void Manager::ProcessEnter()
-    {
-        if (!activeInput) {
-            return;
-        }
-
-        activeInput->Submit();
-    }
-
-    void Manager::ProcessBackspace()
-    {
-        if (!activeInput) {
-            return;
-        }
-
-        activeInput->RemoveLastCharacter();
     }
 
     bool Manager::UpdateAnimationWindowOffset()
