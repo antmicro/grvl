@@ -41,10 +41,6 @@ target_link_libraries(
 )
 
 
-target_include_directories(
-  grvl PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-              $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/grvl>)
-
 if(USE_SYSTEM_LIBRARIES AND NOT GRVL_ZEPHYR)
   include(GNUInstallDirs)
   include(CMakePackageConfigHelpers)
@@ -69,6 +65,12 @@ if(USE_SYSTEM_LIBRARIES AND NOT GRVL_ZEPHYR)
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
+  target_include_directories(
+    grvl PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+                $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/grvl>
+  )
+
+
   install(
     DIRECTORY include/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/grvl
@@ -85,4 +87,9 @@ if(USE_SYSTEM_LIBRARIES AND NOT GRVL_ZEPHYR)
     FILE grvlTargets.cmake
     NAMESPACE grvl::
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/grvl)
+else()
+  target_include_directories(
+    grvl PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+                $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/grvl>
+  )
 endif()
