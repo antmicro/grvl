@@ -16,12 +16,12 @@
 
 // NOLINTBEGIN
 
-#include "ImageContent.h"
-#include "grvl.h"
-#include "JPEGHelper.h"
-#include "Misc.h"
-#include "Painter.h"
-#include "PngHelper.h"
+#include <grvl/ImageContent.h>
+#include <grvl/JPEGHelper.h>
+#include <grvl/Misc.h>
+#include <grvl/Painter.h>
+#include <grvl/PngHelper.h>
+#include <grvl/grvl.h>
 
 // #define USE_PICOPNG
 #ifdef USE_PICOPNG

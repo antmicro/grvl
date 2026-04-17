@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "Event.h"
+#include <grvl/Event.h>
 
 namespace grvl {
 

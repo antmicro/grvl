@@ -14,10 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "Container.h"
-#include "Manager.h"
-#include "XMLSupport.h"
-#include "JSEngine.h"
+#include <grvl/Container.h>
+#include <grvl/JSEngine.h>
+#include <grvl/Manager.h>
+#include <grvl/XMLSupport.h>
+
 #include <cassert>
 
 namespace grvl {

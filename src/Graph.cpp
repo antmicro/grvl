@@ -14,14 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "Graph.h"
+#include <grvl/Graph.h>
+#include <grvl/Manager.h>
 
 #include <iomanip>
 #include <sstream>
 #include <cassert>
 #include <cmath>
 
-#include "Manager.h"
 
 namespace grvl {
 

@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "ListItem.h"
-#include "Manager.h"
-#include "XMLSupport.h"
+#include <grvl/ListItem.h>
+#include <grvl/Manager.h>
+#include <grvl/XMLSupport.h>
 
 namespace grvl {
 

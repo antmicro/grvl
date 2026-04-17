@@ -1,8 +1,7 @@
-
 #if defined(GRVL_LINUX_NATIVE_SUPPORT)
 
-#include <platform/LinuxNativeApp.h>
-#include <Manager.h>
+#include <grvl/platform/LinuxNativeApp.h>
+#include <grvl/Manager.h>
 
 #include <core/framebuffer.hpp>
 #include <core/drm.hpp>

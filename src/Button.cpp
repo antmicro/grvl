@@ -14,14 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "Button.h"
-#include "Component.h"
-#include "grvl.h"
-#include "Manager.h"
-#include "XMLSupport.h"
-#include "JSEngine.h"
-#include "JSObject.h"
-#include "JSObjectBuilder.h"
+#include <grvl/Button.h>
+#include <grvl/Component.h>
+#include <grvl/JSEngine.h>
+#include <grvl/JSObject.h>
+#include <grvl/JSObjectBuilder.h>
+#include <grvl/Manager.h>
+#include <grvl/XMLSupport.h>
+#include <grvl/grvl.h>
 
 namespace grvl {
 

@@ -14,12 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "Manager.h"
-#include "ParsingUtils.h"
+#include <grvl/JSEngine.h>
+#include <grvl/Manager.h>
+#include <grvl/ParsingUtils.h>
 
 #include <cassert>
 
-#include <JSEngine.h>
 
 #ifdef __ZEPHYR__
 #include <zephyr/logging/log.h>

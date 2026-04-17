@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "Ico.h"
+#include <grvl/Ico.h>
 
 namespace grvl {
 

@@ -16,9 +16,9 @@
 
 // NOLINTBEGIN(readability-magic-numbers)
 
-#include "Font.h"
-#include "File.h"
-#include "grvl.h"
+#include <grvl/File.h>
+#include <grvl/Font.h>
+#include <grvl/grvl.h>
 
 namespace grvl {
     static inline uint16_t SwapBytes(uint16_t data)

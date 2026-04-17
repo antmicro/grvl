@@ -1,8 +1,8 @@
 
 #if defined(GRVL_LINUX_DESKTOP_SUPPORT)
 
-#include <platform/LinuxDesktopApp.h>
-#include <Manager.h>
+#include <grvl/Manager.h>
+#include <grvl/platform/LinuxDesktopApp.h>
 
 #include <SDL2/SDL.h>
 

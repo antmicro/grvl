@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "ProgressBar.h"
-#include "grvl.h"
-#include "Manager.h"
-#include "XMLSupport.h"
+#include <grvl/Manager.h>
+#include <grvl/ProgressBar.h>
+#include <grvl/XMLSupport.h>
+#include <grvl/grvl.h>
 
 namespace grvl {
 

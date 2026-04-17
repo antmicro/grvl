@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "Painter.h"
-#include "AbstractView.h"
-#include "ContentManager.h"
-#include "Image.h"
-#include "ImageContent.h"
-#include "Misc.h"
-#include "stl.h"
+#include <grvl/AbstractView.h>
+#include <grvl/ContentManager.h>
+#include <grvl/Image.h>
+#include <grvl/ImageContent.h>
+#include <grvl/Misc.h>
+#include <grvl/Painter.h>
+#include <grvl/stl.h>
 
 #include <cmath>
 #include <cassert>

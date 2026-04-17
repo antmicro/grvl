@@ -14,9 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "TextInput.h"
-
-#include "Manager.h"
+#include <grvl/Manager.h>
+#include <grvl/TextInput.h>
 
 namespace grvl {
     TextInput::TextInput(const TextInput& other) : Button(other), basicText(other.basicText), type(other.type)

@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "PngHelper.h"
+#include <grvl/PngHelper.h>
 
 static void PrintAndAbort(const char* s, ...)
 {

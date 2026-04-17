@@ -14,16 +14,15 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "JSEngine.h"
+#include <grvl/JSEngine.h>
+#include <grvl/JSObjectBuilder.h>
+#include <grvl/Manager.h>
 
+#include <duktape.h>
 #include <filesystem>
-#include <vector>
 #include <fstream>
 #include <iostream>
-
-#include "Manager.h"
-#include "JSObjectBuilder.h"
-#include "duktape.h"
+#include <vector>
 
 namespace grvl {
 

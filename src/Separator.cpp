@@ -14,11 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "Separator.h"
+#include <grvl/Manager.h>
+#include <grvl/Separator.h>
 
 #include <cassert>
-
-#include "Manager.h"
 
 namespace grvl {
 

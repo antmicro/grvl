@@ -14,10 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "JSObjectBuilder.h"
-
-#include "JSEngine.h"
-#include "JSObject.h"
+#include <grvl/JSEngine.h>
+#include <grvl/JSObject.h>
+#include <grvl/JSObjectBuilder.h>
 
 namespace grvl {
 

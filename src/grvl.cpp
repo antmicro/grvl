@@ -14,9 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "grvl.h"
-
-#include "JSEngine.h"
+#include <grvl/JSEngine.h>
+#include <grvl/grvl.h>
 
 namespace grvl {
 

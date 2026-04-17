@@ -14,9 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "GridCanvas.h"
-
-#include "Manager.h"
+#include <grvl/GridCanvas.h>
+#include <grvl/Manager.h>
 
 namespace grvl {
 

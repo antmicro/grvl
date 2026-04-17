@@ -14,13 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "GridView.h"
+#include <grvl/GridView.h>
+#include <grvl/Key.h>
+#include <grvl/Manager.h>
+#include <grvl/XMLSupport.h>
 
 #include <cassert>
-
-#include "Key.h"
-#include "Manager.h"
-#include "XMLSupport.h"
 
 namespace grvl {
 

@@ -15,9 +15,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //NOLINTBEGIN(readability-magic-numbers)
-#include "XMLSupport.h"
-#include "Manager.h"
-#include "ParsingUtils.h"
+
+#include <grvl/Manager.h>
+#include <grvl/ParsingUtils.h>
+#include <grvl/XMLSupport.h>
 
 namespace grvl {
 

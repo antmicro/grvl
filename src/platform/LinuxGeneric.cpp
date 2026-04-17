@@ -1,7 +1,7 @@
 
-#include <platform/LinuxNativeApp.h>
-#include <platform/LinuxDesktopApp.h>
-#include <platform/LinuxGenericApp.h>
+#include <grvl/platform/LinuxNativeApp.h>
+#include <grvl/platform/LinuxDesktopApp.h>
+#include <grvl/platform/LinuxGenericApp.h>
 
 
 #if defined(GRVL_LINUX_NATIVE_SUPPORT) || defined(GRVL_LINUX_DESKTOP_SUPPORT)

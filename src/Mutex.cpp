@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "Mutex.h"
+#include <grvl/Mutex.h>
 
 namespace grvl {
 

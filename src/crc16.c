@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "crc16.h"
+#include <grvl/crc16.h>
 
 #define CRC16 0x8005
 

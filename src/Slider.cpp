@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "Slider.h"
-#include "grvl.h"
-#include "Manager.h"
+#include <grvl/Manager.h>
+#include <grvl/Slider.h>
+#include <grvl/grvl.h>
 
 //NOLINTBEGIN(readability-magic-numbers, bugprone-branch-clone, bugprone-integer-division)
 

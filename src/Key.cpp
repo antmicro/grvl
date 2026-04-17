@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "Key.h"
-#include "Manager.h"
+#include <grvl/Key.h>
+#include <grvl/Manager.h>
 
 namespace grvl {
 

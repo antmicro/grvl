@@ -14,9 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "VerticalScrollView.h"
-#include "Image.h"
-#include "Manager.h"
+#include <grvl/Image.h>
+#include <grvl/Manager.h>
+#include <grvl/VerticalScrollView.h>
+
 //NOLINTBEGIN
 #define min(x, y) (x < y ? x : y)
 #define max(x, y) (x < y ? y : x)

@@ -16,7 +16,8 @@ include(Docs)
 
 file(
   GLOB_RECURSE headers
-  CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h")
+  CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/grvl/*.h"
+                    "${CMAKE_CURRENT_SOURCE_DIR}/include/grvl/platform/*.h")
 file(
   GLOB_RECURSE sources
   CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
@@ -76,7 +77,7 @@ if(USE_SYSTEM_LIBRARIES AND NOT GRVL_ZEPHYR)
 
 
   install(
-    DIRECTORY include/
+    DIRECTORY include/grvl
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/grvl
     FILES_MATCHING PATTERN "*.h")
 

@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "File.h"
-#include "grvl.h"
+#include <grvl/File.h>
+#include <grvl/grvl.h>
 
 #include <stdio.h>
 #include <stdlib.h>

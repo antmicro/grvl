@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "Border.h"
+#include <grvl/Border.h>
 
 #include <cassert>
 

@@ -14,11 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "Image.h"
-
-#include "Manager.h"
-#include "Painter.h"
-#include "XMLSupport.h"
+#include <grvl/Image.h>
+#include <grvl/Manager.h>
+#include <grvl/Painter.h>
+#include <grvl/XMLSupport.h>
 
 namespace grvl {
     Component* Image::Clone() const

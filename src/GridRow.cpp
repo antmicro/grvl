@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "GridRow.h"
-#include "Button.h"
-#include "Manager.h"
-#include "XMLSupport.h"
+#include <grvl/Button.h>
+#include <grvl/GridRow.h>
+#include <grvl/Manager.h>
+#include <grvl/XMLSupport.h>
 
 namespace grvl {
 
