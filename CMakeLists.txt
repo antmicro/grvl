@@ -40,6 +40,10 @@ target_link_libraries(
          $<$<BOOL:${GRVL_LINUX_NATIVE}>:xkbcommon>
 )
 
+if(GRVL_LINUX_NATIVE)
+  target_compile_definitions(grvl PUBLIC GRVL_LINUX_NATIVE)
+endif()
+
 
 if(USE_SYSTEM_LIBRARIES AND NOT GRVL_ZEPHYR)
   include(GNUInstallDirs)

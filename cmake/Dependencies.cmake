@@ -10,8 +10,8 @@ if(USE_SYSTEM_LIBRARIES)
   find_package(PNG REQUIRED)
   find_package(tinyxml2 REQUIRED)
 
-  find_package(PkgConfig QUIET)
-  pkg_check_modules(DUKTAPE REQUIRED IMPORTED_TARGET duktape)
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(DUKTAPE REQUIRED duktape)
 
   if (GRVL_LINUX_NATIVE)
     pkg_check_modules(XKBCOMMON REQUIRED IMPORTED_TARGET xkbcommon)
