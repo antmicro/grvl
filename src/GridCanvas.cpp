@@ -57,7 +57,7 @@ namespace grvl {
 
     void GridCanvas::DrawBackgroundItems(Painter& painter, int32_t renderX, int32_t renderY, int32_t renderWidth, int32_t renderHeight)
     {
-        if (BackgroundColor & 0xFF000000 == 0) {
+        if ((BackgroundColor & 0xFF000000) == 0) {
             return;
         }
 
@@ -67,7 +67,7 @@ namespace grvl {
 
     void GridCanvas::DrawForegroundItems(Painter& painter, int32_t renderX, int32_t renderY, int32_t renderWidth, int32_t renderHeight)
     {
-        if (ForegroundColor & 0xFF000000 == 0) {
+        if ((ForegroundColor & 0xFF000000) == 0) {
             return;
         }
 

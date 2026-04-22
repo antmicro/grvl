@@ -90,7 +90,6 @@ namespace grvl {
             , FrameColor(Obj.FrameColor)
             , SelectedFrameColor(Obj.SelectedFrameColor)
             , ScrollLength(Obj.ScrollLength)
-            , ScaleType(Obj.ScaleType)
             , MinValue(Obj.MinValue)
             , MaxValue(Obj.MaxValue)
             , Position(Obj.Position)
@@ -100,6 +99,7 @@ namespace grvl {
             , onValueChange(Obj.onValueChange)
             , PreviousValueUpdateTimestamp(Obj.PreviousValueUpdateTimestamp)
             , KeepBoundaries(Obj.KeepBoundaries)
+            , ScaleType(Obj.ScaleType)
         {
             onValueChange.SetSenderPointer(this);
         }
@@ -120,7 +120,7 @@ namespace grvl {
         void SetValueRange(float min, float max);
         void SetMinValue(float value);
         void SetMaxValue(float value);
-        void SetValue(double value);
+        void SetValue(float value);
         void SetKeepBoundaries(bool value);
         void SetSliderType(SliderScaleType type);
         void SetDivision(uint8_t value);

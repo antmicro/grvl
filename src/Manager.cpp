@@ -54,7 +54,7 @@ namespace grvl {
 
     static inline float MotionFunc(float x)
     {
-        return (sin(3.1415 * x - 1.57) + 1) / 2; //NOLINT(readability-magic-numbers)
+        return (sin(3.1415f * x - 1.57f) + 1) / 2; //NOLINT(readability-magic-numbers)
     }
 
     static void ClosePopupCallback(void* sender, const Event::ArgVector& Args)
@@ -216,7 +216,7 @@ namespace grvl {
 
     Manager& Manager::SetTransparency(float value, uint32_t milliseconds)
     {
-        if(value <= 1.0 && value >= 0.0) {
+        if(value <= 1.0f && value >= 0.0f) {
             desiredTransparency = value;
             initialTransparency = currentTransparency;
             fadeBeginTimestamp = grvl::Callbacks()->get_timestamp();
@@ -970,14 +970,14 @@ namespace grvl {
             CurrentTimestamp = grvl::Callbacks()->get_timestamp();
             float deltaTransparency = desiredTransparency - initialTransparency;
             float deltaTime = (float)(CurrentTimestamp - fadeBeginTimestamp) / (float)(fadeEndTimestamp - fadeBeginTimestamp);
-            if(deltaTime > 1.0) {
+            if(deltaTime > 1.0f) {
                 currentTransparency = desiredTransparency;
             } else {
                 currentTransparency = initialTransparency + (deltaTransparency) * (deltaTime);
             }
         }
         // Apply transparency
-        if(currentTransparency < 1.0) {
+        if(currentTransparency < 1.0f) {
             painter.ShadowBuffer(painter.GetSwapperValue() ? 2 : 3, ((uint32_t)(0xff - 0xff * currentTransparency)) << 24); // NOLINT
         }
     }
@@ -1153,14 +1153,14 @@ namespace grvl {
         int32_t originalAnimationWindowOffset = AnimationWindowOffset;
         CurrentTimestamp = grvl::Callbacks()->get_timestamp();
         float progress = ((float)(CurrentTimestamp - BeginTimestamp)) / ScrollingDuration; // 0 - 1
-        if(progress < 0.0) {
-            progress = 0.0;
-        } else if(progress > 1.0) {
-            progress = 1.0;
+        if(progress < 0.0f) {
+            progress = 0.0f;
+        } else if(progress > 1.0f) {
+            progress = 1.0f;
         } else {
             progress = MotionFunc(progress);
         }
-        AnimationWindowOffset = (1.0 - progress) * width;
+        AnimationWindowOffset = (1.0f - progress) * width;
         return AnimationWindowOffset != originalAnimationWindowOffset;
     }
 

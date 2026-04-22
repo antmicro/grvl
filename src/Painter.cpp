@@ -182,7 +182,7 @@ namespace grvl {
     static uint32_t LookupClt(uint8_t* mem, uint32_t format, uint8_t* clt)
     {
         uint32_t color = 0;
-        uint16_t cltOffset;
+        uint16_t cltOffset = 0;
         if(format == COLOR_FORMAT_AL44) {
             color |= ((mem[0] & 0xf0) * 0x11) << 24;
             cltOffset = (mem[0] & 0x0f) * 0x11;
@@ -209,7 +209,9 @@ namespace grvl {
     static void PixelFormatConvert(uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem,
                                    uint32_t inputPixelFormat, uint32_t backgroundPixelFormat, uint32_t outputPixelFormat, uint32_t fontColor, uintptr_t backCLT, uintptr_t frontCLT)
     {
-        uint32_t inputColor, backgroundColor, outputColor;
+        uint32_t inputColor = 0;
+        uint32_t backgroundColor = 0;
+        uint32_t outputColor = 0;
 
         if(PixelFormatIsCLT(inputPixelFormat)) {
             inputColor = LookupClt((uint8_t*)inputMem, inputPixelFormat, (uint8_t*)frontCLT);
@@ -542,7 +544,7 @@ namespace grvl {
         // loop through the lines between the edges and draw spans
         for(int y = e2.Y1; y < e2.Y2; y++) {
             // create and draw span
-            DrawSpan(e1.X1 + (int)(e1xdiff * factor1 + 0.5), e2.X1 + (int)(e2xdiff * factor2 + 0.5), e1.Color, y);
+            DrawSpan(e1.X1 + (int)(e1xdiff * factor1 + 0.5f), e2.X1 + (int)(e2xdiff * factor2 + 0.5f), e1.Color, y);
 
             // increase factors
             factor1 += factorStep1;
@@ -890,7 +892,7 @@ namespace grvl {
 
         // Compute points
         for(int i = 0; i < steps * 2 + 2; i += 2) {
-            radians = (t - 90) * 3.1415 / 180.0;
+            radians = (t - 90) * 3.1415f / 180.0f;
 
             // Store all points - for future purposes
             points[i].x = (radius - width) * cos(radians) + Xpos;
@@ -916,8 +918,8 @@ namespace grvl {
             uint32_t currentColor = (uint32_t)(alpha += alphaDiff) << 24 | (uint32_t)(red += redDiff) << 16
                 | (uint32_t)(green += greenDiff) << 8 | (uint32_t)(blue += blueDiff);
             FillTriangle(
-                points[i - 2].x + 0.5, points[i - 1].x + 0.5, points[i].x + 0.5, points[i - 2].y + 0.5,
-                points[i - 1].y + 0.5, points[i].y + 0.5, currentColor);
+                points[i - 2].x + 0.5f, points[i - 1].x + 0.5f, points[i].x + 0.5f, points[i - 2].y + 0.5f,
+                points[i - 1].y + 0.5f, points[i].y + 0.5f, currentColor);
         }
     }
 

@@ -520,9 +520,9 @@ namespace grvl {
                     dSpeed = 0;
                     animation = 0;
                 } else {
-                    if(dSpeed > 0.1) {
+                    if(dSpeed > 0.1f) {
                         animation = 1;
-                    } else if(dSpeed < -0.1) {
+                    } else if(dSpeed < -0.1f) {
                         animation = -1;
                     } else {
                         animation = 0;

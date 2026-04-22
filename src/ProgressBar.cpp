@@ -61,7 +61,7 @@ namespace grvl {
         }
         DrawBorderIfNecessary(painter, X + ParentRenderX, Y + ParentRenderY, Width, Height);
 
-        int barWidth = (Width) * ((ProgressValue) / 100.0);
+        int barWidth = (Width) * ((ProgressValue) / 100.0f);
         if(barWidth > 0) {
             painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, barWidth, Height, ForegroundColor);
         }

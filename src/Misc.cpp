@@ -34,7 +34,7 @@ namespace grvl {
 
     inline static float FloatMod(float a, float b)
     {
-        return (a - b * floor(a / b));
+        return (a - b * floorf(a / b));
     }
 
     float ConstrainAngle(float angle)

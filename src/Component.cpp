@@ -633,7 +633,7 @@ namespace grvl {
 
     void Component::DrawBorderIfNecessary(Painter& painter, int32_t StartX, int32_t StartY, int32_t BorderWidth, int32_t BorderHeight)
     {
-        uint32_t tempBorderColor;
+        uint32_t tempBorderColor = 0;
 
         if(State == On || State == Pressed || State == OnAndSelected) {
             tempBorderColor = ActiveBorderColor;

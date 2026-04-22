@@ -118,7 +118,7 @@ namespace grvl {
                 return 0;
             }
             uint32_t offset = 0;
-            int read_bytes;
+            int read_bytes = 0;
             char buffer[bufferSize];
             while((read_bytes = gzread(file, buffer, bufferSize)) > 0) {
                 offset += read_bytes;
@@ -150,7 +150,7 @@ namespace grvl {
         }
 
         if(storage == GZIPPED) {
-            size_t read_bytes;
+            size_t read_bytes = 0;
 
             gzFile file = gzopen(path, "r");
             if(file == nullptr) {
@@ -169,7 +169,7 @@ namespace grvl {
 
         if (storage == NORMAL) {
             uint32_t offset = 0;
-            size_t read_bytes;
+            size_t read_bytes = 0;
 
             FILE* file = fopen(path, "rb");
             if(file == nullptr) {

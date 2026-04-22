@@ -74,9 +74,9 @@ namespace grvl {
             : AbstractButton()
             , IcoColor(COLOR_ARGB8888_BLACK)
             , ActiveIcoColor(COLOR_ARGB8888_BLACK)
-            , IcoChar(-1)
             , TextTopOffset(0)
-            , IcoFont(NULL)
+            , IcoChar(-1)
+            , IcoFont(nullptr)
             , imageCentered(false)
         {
             BackgroundColor = COLOR_ARGB8888_LIGHTGRAY;
@@ -86,9 +86,9 @@ namespace grvl {
             : AbstractButton(x, y, width, height)
             , IcoColor(COLOR_ARGB8888_BLACK)
             , ActiveIcoColor(COLOR_ARGB8888_BLACK)
-            , IcoChar(-1)
             , TextTopOffset(0)
-            , IcoFont(NULL)
+            , IcoChar(-1)
+            , IcoFont(nullptr)
             , imageCentered(false)
         {
             BackgroundColor = COLOR_ARGB8888_LIGHTGRAY;
