@@ -12,7 +12,9 @@ if(USE_SYSTEM_LIBRARIES)
 
   find_package(PkgConfig REQUIRED)
   pkg_check_modules(DUKTAPE REQUIRED duktape)
-  pkg_check_modules(libstb REQUIRED stb)
+
+  # Placeholder library
+  add_library(libstb INTERFACE)
 
   if (GRVL_LINUX_NATIVE)
     pkg_check_modules(XKBCOMMON REQUIRED IMPORTED_TARGET xkbcommon)
@@ -44,8 +46,10 @@ CPMAddPackage(
     GIT_TAG 28d546d5eb77d4585506a20480f4de2e706dff4c
 )
 
-add_library(stblib INTERFACE)
-target_include_directories(stblib INTERFACE "${stb_SOURCE_DIR}")
+file(CREATE_LINK "${stb_SOURCE_DIR}" "${stb_SOURCE_DIR}/stb" SYMBOLIC)
+
+add_library(libstb INTERFACE)
+target_include_directories(libstb INTERFACE "${stb_SOURCE_DIR}")
 
 # Zlib
 CPMAddPackage(

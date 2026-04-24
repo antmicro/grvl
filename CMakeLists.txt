@@ -33,7 +33,7 @@ set_target_properties(grvl PROPERTIES CXX_STANDARD 17
 
 target_link_libraries(
   grvl
-  PRIVATE grvl_options stblib
+  PRIVATE grvl_options libstb
   PUBLIC ZLIB
          JPEG
          PNG
