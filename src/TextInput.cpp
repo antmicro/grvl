@@ -201,11 +201,14 @@ namespace grvl {
             case InputType::PASSWORD: {
                 const size_t count = GetUTF8CharacterCount();
 
+                constexpr char mask_char[] = "\xE2\x97\x8F"; // Unicode character 'Black Circle'
+                constexpr size_t mask_char_len = sizeof(mask_char) - 1;
+
                 masked.clear();
-                masked.reserve(count * 3); // "●" is encoded using 3 bytes
+                masked.reserve(count * mask_char_len);
 
                 for (size_t i = 0; i < count; ++i) {
-                    masked += "●";
+                    masked += mask_char;
                 }
 
                 return masked.c_str();
