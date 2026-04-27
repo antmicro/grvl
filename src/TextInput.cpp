@@ -113,7 +113,12 @@ namespace grvl {
             return;
         }
 
-        Text.erase(Text.length() - 1);
+        size_t pos = Text.size() - 1;
+        while (pos > 0 && (static_cast<unsigned char>(Text[pos]) & 0xC0) == 0x80) {
+            --pos;
+        }
+        Text.erase(pos);
+
         Manager::GetInstance().GetEventsQueueInstance().push(&onTextInput);
     }
 
@@ -141,6 +146,19 @@ namespace grvl {
     void TextInput::SetType(const char* type)
     {
         this->type = type;
+    }
+    
+    size_t TextInput::GetUTF8CharacterCount() const
+    {
+        size_t count = 0;
+
+        for (unsigned char c : Text) {
+            if ((c & 0xC0) != 0x80) {
+                ++count;
+            }
+        }
+
+        return count;
     }
 
     void TextInput::PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder)
@@ -181,7 +199,15 @@ namespace grvl {
             case InputType::TEXT: return Text.c_str();
 
             case InputType::PASSWORD: {
-                masked = std::string(Text.size(), '*');
+                const size_t count = GetUTF8CharacterCount();
+
+                masked.clear();
+                masked.reserve(count * 3); // "●" is encoded using 3 bytes
+
+                for (size_t i = 0; i < count; ++i) {
+                    masked += "●";
+                }
+
                 return masked.c_str();
             }
         }

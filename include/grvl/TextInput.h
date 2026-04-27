@@ -108,6 +108,8 @@ namespace grvl {
         const char* GetType() const;
         void SetType(const char* type);
         
+        size_t GetUTF8CharacterCount() const;
+                
         void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder) override;
         
         GENERATE_DUK_STRING_GETTER(TextInput, Type, GetType);
