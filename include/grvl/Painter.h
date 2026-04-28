@@ -17,7 +17,7 @@
 #ifndef GRVL_PAINTER_H_
 #define GRVL_PAINTER_H_
 
-#include <grvl/Definitions.h>
+#include <grvl/Format.h>
 #include <grvl/Font.h>
 #include <grvl/stl.h>
 

@@ -1,4 +1,4 @@
-// Copyright 2014-2024 Antmicro <antmicro.com>
+// Copyright 2014-2026 Antmicro <antmicro.com>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,22 +33,26 @@ namespace grvl {
 
     ImageContent::ImageContent(const char* path, Format format)
     {
-
         int channels = GetFormatChannelCount(format);
         int stride = GetFormatStride(format);
 
+        Format image_format = format;
+
         // we only support loading images where one byte is used per channel
         if ((channels != stride) || (stride == 0)) {
-            data = nullptr;
-            return;
+            channels = 4;
+            image_format = Format::ARGB8888;
         }
 
-        int32_t file_channels = 4;
-
+        int32_t file_channels;
         this->data = stbi_load(path, &width, &height, &file_channels, channels);
         this->frames = 1;
-        this->format = format;
+        this->format = image_format;
 
+        // if the format could not have been loaded directly we perform transcoding
+        Transcode(format);
+
+        grvl::Log("[INFO] Loaded %dx%d image %s as %s", width, height, path, GetFormatName(format));
     }
 
     ImageContent::ImageContent(uint8_t* pixels, int width, int height, int frames, Format format)
@@ -94,21 +98,47 @@ namespace grvl {
         }
     }
 
+    void ImageContent::Transcode(Format target)
+    {
+        if (format == target) {
+            return;
+        }
+
+        const int input_stride = GetBytesPerPixel();
+        const int output_stride = GetFormatStride(target);
+
+        const uint32_t input_size = GetDataLength();
+        const uint32_t output_size = input_stride * width * height * frames;
+
+        const uint8_t* input_buffer = data;
+        uint8_t* output_buffer = static_cast<uint8_t*>(malloc(output_size));
+
+        for (uint32_t j = 0, i = 0; i < input_size; i += input_stride) {
+            ConvertPixel(input_buffer + i, output_buffer + j, format, target);
+            j += output_stride;
+        }
+
+        // update object
+        free(this->data);
+        this->data = output_buffer;
+        this->format = target;
+    }
+
     void ImageContent::Rotate90()
     {
         if(this->rotated) {
             return;
         }
 
-        uint8_t* bufferCopy = (uint8_t*) malloc(GetDataLength());
+        uint8_t* bufferCopy = static_cast<uint8_t*>(malloc(GetDataLength()));
         uint32_t bytesPerPixel = GetBytesPerPixel();
         uint32_t wholeImageWidth = width * frames;
 
         memcpy(bufferCopy, data, GetDataLength());
 
         for(uint32_t f = 0; f < frames; f++) {
-            for(uint32_t x = 0; x < width; x++) {
-                for(uint32_t y = 0; y < height; y++) {
+            for(uint32_t y = 0; y < height; y++) {
+                for(uint32_t x = 0; x < width; x++) {
                     for(uint32_t i = 0; i < bytesPerPixel; i++) {
                         uint8_t value = bufferCopy[XYToOffset(f * width + x, y, i, bytesPerPixel, wholeImageWidth)];
                         data[XYToOffset(f * height + y, width - x - 1, i, bytesPerPixel, height * frames)] = value;
@@ -119,6 +149,19 @@ namespace grvl {
 
         free(bufferCopy);
         this->rotated = true;
+    }
+
+    uint32_t ConvertPixel(const uint8_t* data, Format input, Format output)
+    {
+        uint32_t color = 0;
+        memcpy(&color, data, GetFormatStride(input));
+        return ConvertColorFormat(color, input, output);
+    }
+
+    void ConvertPixel(const uint8_t* in, uint8_t* out, Format input, Format output)
+    {
+        uint32_t color = ConvertPixel(in, input, output);
+        memcpy(out, &color, GetFormatStride(output));
     }
 
 } /* namespace grvl */

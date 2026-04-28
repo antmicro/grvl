@@ -1,4 +1,4 @@
-// Copyright 2014-2024 Antmicro <antmicro.com>
+// Copyright 2014-2026 Antmicro <antmicro.com>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,21 +23,42 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
-#include "Definitions.h"
+#include <grvl/Format.h>
 
 #include <duktape.h>
 
 namespace grvl {
 
-    typedef struct {
-        void (*dma_operation)(uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem, uint32_t NumberOfLine,
-                              uint32_t PixelPerLine, uint32_t inOffset, uint32_t backgroundOffset, uint32_t outOffset,
+    using DmaFillFunction = void (*) (uintptr_t dst, uint32_t xs, uint32_t ys, uint32_t offset, uint32_t color_index, Format pixel_format);
+
+    using DmaBlitFunction = void (*) (uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem, uint32_t PixelPerLine,
+                              uint32_t NumberOfLine, uint32_t inOffset, uint32_t backgroundOffset, uint32_t outOffset,
                               Format inPixelFormat, Format backgroundPixelFormat, Format outPixelFormat, uint32_t frontColor);
-        void (*dma_operation_clt)(uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem, uint32_t NumberOfLine,
-                                  uint32_t PixelPerLine, uint32_t inOffset, uint32_t backgroundOffset, uint32_t outOffset,
-                                  Format inPixelFormat, Format backgroundPixelFormat, Format outPixelFormat, uint32_t frontColor, uintptr_t backCLT, uintptr_t frontCLT);
+
+    using DmaBlitCltFunction = void (*) (uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem, uint32_t PixelPerLine,
+                              uint32_t NumberOfLine, uint32_t inOffset, uint32_t backgroundOffset, uint32_t outOffset,
+                              Format inPixelFormat, Format backgroundPixelFormat, Format outPixelFormat, uint32_t frontColor, uintptr_t backCLT, uintptr_t frontCTL);
+
+    typedef struct {
+
+        [[deprecated("For removal! Use .blit instead")]]
+        void (*dma_operation)(uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem, uint32_t PixelPerLine,
+                              uint32_t NumberOfLine, uint32_t inOffset, uint32_t backgroundOffset, uint32_t outOffset,
+                              uint32_t inPixelFormat, uint32_t backgroundPixelFormat, uint32_t outPixelFormat, uint32_t frontColor);
+
+        [[deprecated("For removal! Use .blit_clt instead")]]
+        void (*dma_operation_clt)(uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem, uint32_t PixelPerLine,
+                                  uint32_t NumberOfLine, uint32_t inOffset, uint32_t backgroundOffset, uint32_t outOffset,
+                                  uint32_t inPixelFormat, uint32_t backgroundPixelFormat, uint32_t outPixelFormat, uint32_t frontColor, uintptr_t backCLT, uintptr_t frontCLT);
+
+        [[deprecated("For removal! Use .fill instead")]]
         void (*dma_fill)(uintptr_t dst, uint32_t xs, uint32_t ys, uint32_t offset, uint32_t color_index,
-                         Format pixel_format);
+                         uint32_t pixel_format);
+
+        DmaFillFunction fill;
+        DmaBlitFunction blit;
+        DmaBlitCltFunction blit_clt;
+
         void (*set_layer_pointer)(uintptr_t addr);
         void (*wait_for_vsync)();
         void (*flipping_completed)();
@@ -53,7 +74,7 @@ namespace grvl {
     class grvl {
 
     public:
-        /// Method accepting callbacks to platform-dependent functions, e.g. for memory management.
+        /// Method accepting callbacks to platform-dependent functions
         static void Init(gui_callbacks_t* n_callbacks);
         static void Destroy();
         static gui_callbacks_t* Callbacks();

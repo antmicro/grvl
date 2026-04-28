@@ -21,8 +21,8 @@
 #include <grvl/File.h>
 #include <grvl/Misc.h>
 #include <grvl/Painter.h>
-#include <grvl/crc16.h>
 #include <grvl/grvl.h>
+#include <grvl/Format.h>
 
 #include <stdint.h>
 #include <stdio.h>
@@ -41,6 +41,11 @@ namespace grvl {
         ~ImageContent();
 
         uint8_t* GetData()
+        {
+            return data;
+        }
+
+        const uint8_t* GetData() const
         {
             return data;
         }
@@ -100,7 +105,18 @@ namespace grvl {
             return rotated ? height * frames : width;
         }
 
+        void Transcode(Format format);
         void Rotate90();
+
+        [[deprecated("For removal! ImageContent::FromPNG() call can be removed!")]]
+        constexpr static const char* FromPNG(const char* path) {
+            return path;
+        }
+
+        [[deprecated("For removal! ImageContent::FromJPEG() call can be removed!")]]
+        constexpr static const char* FromJPEG(const char* path) {
+            return path;
+        }
 
     private:
 
@@ -110,6 +126,12 @@ namespace grvl {
         bool rotated = false;
 
     };
+
+    /// Convert the pointed to pixel to a color, in the specific output format
+    uint32_t ConvertPixel(const uint8_t* data, Format input, Format output);
+
+    /// Convert the pointed to pixel to a color, in the specific output format
+    void ConvertPixel(const uint8_t* in, uint8_t* out, Format input, Format output);
 
 } /* namespace grvl */
 

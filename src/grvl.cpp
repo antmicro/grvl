@@ -17,6 +17,8 @@
 #include <grvl/JSEngine.h>
 #include <grvl/grvl.h>
 
+#include <grvl/Blitter.h>
+
 namespace grvl {
 
     static gui_callbacks_t callbacks;
@@ -24,15 +26,34 @@ namespace grvl {
     void grvl::Init(gui_callbacks_t* n_callbacks)
     {
         if(n_callbacks) {
+            if (n_callbacks->dma_fill) {
+                Log("[WARN] Deprecated callback .dma_fill used, move to .fill!");
+                n_callbacks->fill = UseOldDmaFill;
+            }
+
+            if (n_callbacks->dma_operation) {
+                Log("[WARN] Deprecated callback .dma_operation used, move to .blit!");
+                n_callbacks->blit = UseOldDmaBlit;
+            }
+
+             if (n_callbacks->dma_operation_clt) {
+                Log("[WARN] Deprecated callback .dma_operation_clt used, move to .blit_clt!");
+                n_callbacks->blit_clt = UseOldDmaBlitClt;
+            }
+
+            if (n_callbacks->fill == nullptr) n_callbacks->fill = FallbackFill;
+            if (n_callbacks->blit == nullptr) n_callbacks->blit = FallbackBlit;
+            if (n_callbacks->blit_clt == nullptr) n_callbacks->blit_clt = FallbackBlitClt;
+
             memcpy(&callbacks, n_callbacks, sizeof(callbacks));
         } else {
-            callbacks.dma_operation = NULL;
-            callbacks.gui_printf = NULL;
-            callbacks.get_timestamp = NULL;
+            callbacks.dma_operation = nullptr;
+            callbacks.gui_printf = nullptr;
+            callbacks.get_timestamp = nullptr;
 
-            callbacks.duk_alloc_func = NULL;
-            callbacks.duk_realloc_func = NULL;
-            callbacks.duk_free_func = NULL;
+            callbacks.duk_alloc_func = nullptr;
+            callbacks.duk_realloc_func = nullptr;
+            callbacks.duk_free_func = nullptr;
         }
 
         JSEngine::Initialize(n_callbacks);

@@ -17,7 +17,7 @@
 #ifndef GRVL_MISC_H_
 #define GRVL_MISC_H_
 
-#include <grvl/Definitions.h>
+#include <grvl/Format.h>
 #include <grvl/grvl.h>
 
 #include <ctype.h>
