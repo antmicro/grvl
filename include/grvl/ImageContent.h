@@ -105,6 +105,11 @@ namespace grvl {
             return rotated ? height * frames : width;
         }
 
+        uintptr_t GetColorPalette() const
+        {
+            return 0;
+        }
+
         void Transcode(Format format);
         void Rotate90();
 

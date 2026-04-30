@@ -39,13 +39,6 @@ namespace grvl {
         int32_t height;
     } background_block;
 
-    void FallbackDmaOperation(uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem,
-                              uint32_t PixelsPerLine, uint32_t NumberOfLines, uint32_t inOffset, uint32_t backgroundOffset,
-                              uint32_t outOffset, uint32_t inColor, uint32_t backgroundColor, uint32_t outColor, uint32_t fontColor, uintptr_t backCLT, uintptr_t frontCTL);
-
-    void FallbackDmaFill(uintptr_t dst, uint32_t PixelsPerLine, uint32_t NumberOfLines, uint32_t offset,
-                         uint32_t color_index, Format pixel_format);
-
     /// Represents object used to draw graphics.
     class Painter {
     public:
@@ -148,6 +141,7 @@ namespace grvl {
 
         void FillTriangle(int16_t x1, int16_t x2, int16_t x3, int16_t y1, int16_t y2, int16_t y3, uint32_t color) const;
 
+        void DrawImage(int16_t x, int16_t y, const ImageContent* image, uint32_t frame = 0) const;
         void DrawLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint32_t color) const;
         void DrawAntialiasedLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint32_t color) const;
         void DrawVLine(int32_t Xpos, int32_t Ypos, int32_t Length, uint32_t text_color) const;

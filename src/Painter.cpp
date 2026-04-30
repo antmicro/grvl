@@ -430,6 +430,21 @@ namespace grvl {
         DrawPixel(x2, y2, color);
     }
 
+    void Painter::DrawImage(int16_t x, int16_t y, const ImageContent* image, uint32_t frame) const
+    {
+        if (image == nullptr || image->IsEmpty()) {
+            return;
+        }
+
+        uintptr_t address = reinterpret_cast<uintptr_t>(image->GetData());
+
+        DmaMoveImage(
+            address, GetActiveBuffer(), 0, 0, x, y, image->GetWidth(), image->GetHeight(),
+            image->GetPixelsPerLine(), image->GetNumberOfLines(), frame, image->GetNumberOfFrames(),
+            image->GetColorFormat(), GetPixelFormat(), image->HasAlphaChannel(), image->GetColorPalette()
+        );
+    }
+
     void Painter::DrawLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint32_t color) const
     {
         int16_t deltax = 0, deltay = 0, x = 0, y = 0, xinc1 = 0, xinc2 = 0, yinc1 = 0, yinc2 = 0, den = 0, num = 0,
@@ -928,7 +943,7 @@ namespace grvl {
                 inputMem, backgroundMem, outputMem, PixelsPerLine, NumberOfLines, inOffset, backgroundOffset, outOffset,
                 inPixelFormat, backgroundPixelFormat, outPixelFormat, 0, backCLT, frontCLT);
 
-			return;
+            return;
         }
 
         grvl::Callbacks()->blit(
@@ -1062,8 +1077,8 @@ namespace grvl {
                 inPixelFormat, outPixelFormat, outPixelFormat, 0, imageCLT);
         } else {
             DmaOperationCLT(
-                inputMem, 0, outputMem, PixelsPerLine, NumberOfLines, inOffset, 0, outOffset, inPixelFormat, Format::ARGB8888,
-                outPixelFormat, 0, imageCLT);
+                inputMem, 0, outputMem, PixelsPerLine, NumberOfLines, inOffset, 0, outOffset,
+                inPixelFormat, Format::ARGB8888, outPixelFormat, 0, imageCLT);
         }
     }
 
