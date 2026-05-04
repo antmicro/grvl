@@ -21,7 +21,7 @@
 #include <grvl/component/Image.h>
 #include <grvl/Key.h>
 #include <grvl/Painter.h>
-#include <grvl/Panel.h>
+#include <grvl/container/Panel.h>
 #include <grvl/stl.h>
 
 #include <math.h>

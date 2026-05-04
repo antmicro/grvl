@@ -19,7 +19,7 @@
 
 #include <grvl/component/ListItem.h>
 #include <grvl/Painter.h>
-#include <grvl/VerticalScrollView.h>
+#include <grvl/container/VerticalScrollView.h>
 #include <grvl/stl.h>
 
 namespace grvl {

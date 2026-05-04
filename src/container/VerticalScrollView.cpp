@@ -16,7 +16,7 @@
 
 #include <grvl/component/Image.h>
 #include <grvl/Manager.h>
-#include <grvl/VerticalScrollView.h>
+#include <grvl/container/VerticalScrollView.h>
 
 //NOLINTBEGIN
 #define min(x, y) (x < y ? x : y)

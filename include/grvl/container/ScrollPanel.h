@@ -17,7 +17,7 @@
 #ifndef GRVL_SCROLLPANEL_H_
 #define GRVL_SCROLLPANEL_H_
 
-#include <grvl/VerticalScrollView.h>
+#include <grvl/container/VerticalScrollView.h>
 
 namespace grvl {
 

@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <grvl/Container.h>
+#include <grvl/container/Container.h>
 #include <grvl/JSEngine.h>
 #include <grvl/Manager.h>
 #include <grvl/XMLSupport.h>

@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <grvl/ScrollPanel.h>
+#include <grvl/container/ScrollPanel.h>
 
 namespace grvl {
 

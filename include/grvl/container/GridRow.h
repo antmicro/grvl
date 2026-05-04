@@ -17,7 +17,7 @@
 #ifndef GRVL_GRIDROW_H_
 #define GRVL_GRIDROW_H_
 
-#include <grvl/Container.h>
+#include <grvl/container/Container.h>
 #include <grvl/Painter.h>
 #include <grvl/stl.h>
 

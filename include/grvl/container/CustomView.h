@@ -17,7 +17,7 @@
 #ifndef GRVL_CUSTOMVIEW_H_
 #define GRVL_CUSTOMVIEW_H_
 
-#include <grvl/AbstractView.h>
+#include <grvl/container/AbstractView.h>
 #include <grvl/Painter.h>
 #include <grvl/stl.h>
 

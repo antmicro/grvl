@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <grvl/Division.h>
+#include <grvl/container/Division.h>
 #include <grvl/Manager.h>
 #include <grvl/XMLSupport.h>
 

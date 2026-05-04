@@ -17,7 +17,7 @@
 #ifndef GRVL_VERTICALSCROLLVIEW_H_
 #define GRVL_VERTICALSCROLLVIEW_H_
 
-#include <grvl/AbstractView.h>
+#include <grvl/container/AbstractView.h>
 #include <grvl/component/ListItem.h>
 #include <grvl/Mutex.h>
 #include <grvl/Painter.h>

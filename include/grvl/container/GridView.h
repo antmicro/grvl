@@ -17,10 +17,10 @@
 #ifndef GRVL_GRIDVIEW_H_
 #define GRVL_GRIDVIEW_H_
 
-#include <grvl/GridRow.h>
+#include <grvl/container/GridRow.h>
 #include <grvl/Manager.h>
 #include <grvl/Painter.h>
-#include <grvl/VerticalScrollView.h>
+#include <grvl/container/VerticalScrollView.h>
 #include <grvl/stl.h>
 
 #include <tinyxml2.h>

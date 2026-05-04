@@ -17,7 +17,7 @@
 #ifndef GRVL_PANEL_H_
 #define GRVL_PANEL_H_
 
-#include <grvl/Container.h>
+#include <grvl/container/Container.h>
 
 using namespace tinyxml2;
 

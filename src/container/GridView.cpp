@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <grvl/GridView.h>
+#include <grvl/container/GridView.h>
 #include <grvl/Key.h>
 #include <grvl/Manager.h>
 #include <grvl/XMLSupport.h>

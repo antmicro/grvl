@@ -18,7 +18,7 @@
 #define GRVL_KEYBOARD_H_
 
 #include <grvl/Event.h>
-#include <grvl/Popup.h>
+#include <grvl/container/Popup.h>
 #include <grvl/component/TextInput.h>
 #include <grvl/XMLSupport.h>
 #include <grvl/stl.h>
