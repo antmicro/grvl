@@ -159,7 +159,7 @@ namespace grvl {
         return fabs(a - b) < EPSILON;
     }
 
-    string GetFriction(float val)
+    std::string GetFriction(float val)
     {
         if(AreSame(4.0, val))
             return "4";
@@ -216,7 +216,7 @@ namespace grvl {
         return "0";
     }
 
-    string Slider::GetValueOnButton(float val)
+    std::string Slider::GetValueOnButton(float val)
     {
         return GetFriction(val);
     }
@@ -317,7 +317,7 @@ namespace grvl {
                 float x = ParentRenderX + X + (float)i * (float)Width / (float)MaxValue;
                 painter.DrawLine(x, Y, x, Y + Height, 0xFFFFFFFF);
                 // char buffer[10];
-                string buff;
+                std::string buff;
                 if(MaxValue == 10) {
                     if(i % 2 == 0) {
                         buff = GetFriction(limiters[i]);

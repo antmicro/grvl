@@ -19,7 +19,7 @@
 
 namespace grvl {
 
-    void ContentManager::UpdateContent(string& name, ImageContent* ic)
+    void ContentManager::UpdateContent(std::string& name, ImageContent* ic)
     {
         BindingsToRemove bindingsToErase;
         ImageBindingMap::iterator it = MissingContent.begin();
@@ -38,12 +38,12 @@ namespace grvl {
         }
     }
 
-    void ContentManager::AddInternalImageContent(string& name, ImageContent* ic)
+    void ContentManager::AddInternalImageContent(std::string& name, ImageContent* ic)
     {
         InternalImageContainer[name] = ic;
     }
 
-    void ContentManager::AddExternalImageContent(string& name, ImageContent* ic)
+    void ContentManager::AddExternalImageContent(std::string& name, ImageContent* ic)
     {
         ExternalImageContainer[name] = ic;
 
@@ -59,7 +59,7 @@ namespace grvl {
         }
     }
 
-    bool ContentManager::TryToFindInInternalContent(const string& contentName, Image* image)
+    bool ContentManager::TryToFindInInternalContent(const std::string& contentName, Image* image)
     {
         ImageContentMap::const_iterator searchLocalContainer = InternalImageContainer.find(contentName);
         if(searchLocalContainer != InternalImageContainer.end()) {
@@ -68,7 +68,7 @@ namespace grvl {
         }
         return false;
     }
-    bool ContentManager::TryToFindInExternalContent(const string& contentName, Image* image)
+    bool ContentManager::TryToFindInExternalContent(const std::string& contentName, Image* image)
     {
         ImageContentMap::const_iterator searchExternalContainer = ExternalImageContainer.find(contentName);
         if(searchExternalContainer != ExternalImageContainer.end()) {
@@ -78,7 +78,7 @@ namespace grvl {
         return false;
     }
 
-    void ContentManager::BindImageContentToImage(const string& contentName, Image* image)
+    void ContentManager::BindImageContentToImage(const std::string& contentName, Image* image)
     {
         bool contentBinded = false;
 
@@ -106,7 +106,7 @@ namespace grvl {
 
     void ContentManager::RequestBinding(Image* image)
     {
-        string requestedContentName = MissingContent[image];
+        std::string requestedContentName = MissingContent[image];
         if(requestedContentName.length() == 0) {
             return;
         }
@@ -130,7 +130,7 @@ namespace grvl {
 
     void ContentManager::CancelRequest(Image* image)
     {
-        string requestedContentName = MissingContent[image];
+        std::string requestedContentName = MissingContent[image];
 
         if(requestedContentName.length() == 0) {
             return;

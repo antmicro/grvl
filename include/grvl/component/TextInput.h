@@ -20,7 +20,6 @@
 #include <grvl/component/Button.h>
 #include <grvl/Event.h>
 #include <grvl/XMLSupport.h>
-#include <grvl/stl.h>
 
 #include <array>
 #include <stdint.h>

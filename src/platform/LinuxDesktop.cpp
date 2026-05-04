@@ -97,7 +97,7 @@ namespace grvl {
 
         int x, y;
         bool state = SDL_GetMouseState(&x, &y) & SDL_BUTTON(SDL_BUTTON_LEFT);
-        Manager::GetInstance().ProcessTouchPoint(state, min(x, width), min(y, height));
+        Manager::GetInstance().ProcessTouchPoint(state, std::min(x, width), std::min(y, height));
 
     }
 

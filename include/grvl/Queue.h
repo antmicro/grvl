@@ -18,11 +18,11 @@
 #define GRVL_Queue_H_
 
 #include <grvl/grvl.h>
-#include <grvl/stl.h>
 #include <grvl/Mutex.h>
 
 #include <optional>
 #include <stdint.h>
+#include <queue>
 
 namespace grvl {
 
@@ -35,7 +35,7 @@ namespace grvl {
 
     private:
         mutable Mutex m;
-        queue<T> elementsQueue;
+        std::queue<T> elementsQueue;
     };
 
     template <class T>

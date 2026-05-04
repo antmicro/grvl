@@ -30,7 +30,7 @@ namespace grvl {
 
     void Container::deleteContainerComponents()
     {
-        vector<Component*>::iterator it;
+        std::vector<Component*>::iterator it;
         for(it = Elements.begin(); it != Elements.end();) {
             delete *it;
             it = Elements.erase(it);
@@ -154,7 +154,7 @@ namespace grvl {
         }
     }
 
-    vector<Component*>& Container::GetElements()
+    std::vector<Component*>& Container::GetElements()
     {
         return Elements;
     }

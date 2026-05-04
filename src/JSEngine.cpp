@@ -63,7 +63,7 @@ namespace grvl {
         duk_put_global_string(ctx, functionName);
     }
 
-    void JSEngine::AddGlobalObject(const char* name, void* ptr, const std::map<const char*, duk_c_function>& methods)
+    void JSEngine::AddGlobalObject(const char* name, void* ptr, const std::unordered_map<const char*, duk_c_function>& methods)
     {
         duk_push_object(ctx);
 
@@ -79,7 +79,7 @@ namespace grvl {
 
     }
 
-    void JSEngine::AddGlobalEnum(const std::string& enumName, const std::map<std::string, int>& values)
+    void JSEngine::AddGlobalEnum(const std::string& enumName, const std::unordered_map<std::string, int>& values)
     {
         duk_push_object(ctx);
 

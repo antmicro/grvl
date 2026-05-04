@@ -35,7 +35,7 @@ namespace grvl {
 
     void Label::SetText(const char* text)
     {
-        Text = string(text);
+        Text = std::string(text);
     }
 
     void Label::SetHorizontalAlignment(TextHorizontalAlignment alignment)

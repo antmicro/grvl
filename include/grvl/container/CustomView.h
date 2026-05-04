@@ -19,7 +19,6 @@
 
 #include <grvl/container/AbstractView.h>
 #include <grvl/Painter.h>
-#include <grvl/stl.h>
 
 namespace grvl {
 

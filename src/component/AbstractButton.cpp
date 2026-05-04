@@ -42,7 +42,7 @@ namespace grvl {
 
     void AbstractButton::SetText(const char* text)
     {
-        Text = string(text);
+        Text = std::string(text);
     }
 
     void AbstractButton::SetImage(const Image& image)

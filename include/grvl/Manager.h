@@ -46,7 +46,6 @@
 #include <grvl/Mutex.h>
 #include <grvl/Painter.h>
 #include <grvl/Queue.h>
-#include <grvl/stl.h>
 #include <grvl/XMLSupport.h>
 
 #include <tinyxml2.h>
@@ -55,6 +54,9 @@
 #include <time.h>
 #include <unistd.h>
 #include <string>
+#include <map>
+#include <unordered_map>
+#include <vector>
 
 using namespace tinyxml2;
 
@@ -101,13 +103,13 @@ namespace grvl {
                 , repeat(100)
             {
             }
-            string name;
+            std::string name;
             uint32_t repeat;
         };
 
-        unordered_map<string, char*> widgetAttributes;
-        unordered_map<string, char*> classAttributes;
-        unordered_map<string, char*> idAttributes;
+        std::unordered_map<std::string, char*> widgetAttributes;
+        std::unordered_map<std::string, char*> classAttributes;
+        std::unordered_map<std::string, char*> idAttributes;
 
         virtual ~Manager();
         Panel* GetTopPanel();
@@ -224,7 +226,7 @@ namespace grvl {
         int8_t IsLoadingIcoVisible() const;
 
         Manager& AddScreen(AbstractView* screen);
-        vector<AbstractView*>& GetScreensCollection();
+        std::vector<AbstractView*>& GetScreensCollection();
         AbstractView* GetLastScreen();
         AbstractView* GetActiveScreen();
 
@@ -256,13 +258,13 @@ namespace grvl {
         ///
         /// @param name Image content's identifier.
         /// @param image Image content object.
-        Manager& AddImageContentToContainer(string name, ImageContent* image);
+        Manager& AddImageContentToContainer(std::string name, ImageContent* image);
 
         /// Binds registered image content to an image object.
         ///
         /// @param contentName Identifier of the content.
         /// @param image Image object.
-        Manager& BindImageContentToImage(const string& contentName, Image* image);
+        Manager& BindImageContentToImage(const std::string& contentName, Image* image);
 
         /// Registers callback method for an event.
         ///
@@ -271,14 +273,14 @@ namespace grvl {
         ///
         /// @param name Identifier of an event that should invoke the callback.
         /// @param Callback Callback that should be called on event.
-        Manager& AddCallbackToContainer(const string& name, Event::CallbackPointer Callback);
+        Manager& AddCallbackToContainer(const std::string& name, Event::CallbackPointer Callback);
 
         /// Tries to search if there is callback defined with C/C++ code (added by AddCallbackToContainer), if not
         /// then it creates new one that will call JavaScript code with provided constant args.
         ///
         /// @param callbackFunctionName Identifier of a function invoked by the callback.
         /// @param callbackArgs Constant args that will be passed as callback function arguments
-        Event GetOrCreateCallback(const string& callbackFunctionName, const Event::ArgVector& callbackArgs);
+        Event GetOrCreateCallback(const std::string& callbackFunctionName, const Event::ArgVector& callbackArgs);
         Event GetOrCreateCallback(const CallbackDefinition& callbackDefinition);
 
         Division* GetPrefabByID(const char* id);
@@ -295,9 +297,9 @@ namespace grvl {
         ///
         /// @param name Font's identifier.
         /// @param font Font object.
-        Manager& AddFontToFontContainer(const string& name, Font* font);
+        Manager& AddFontToFontContainer(const std::string& name, Font* font);
 
-        void AddKeyMappingToContainer(uint16_t mask, const string& name, uint32_t repeat);
+        void AddKeyMappingToContainer(uint16_t mask, const std::string& name, uint32_t repeat);
 
         Font* GetFontFromContainer(const char* name) const;
         Font* GetDefaultFontFromContainer() const;
@@ -356,19 +358,19 @@ namespace grvl {
 
         uint32_t width;
         uint32_t height;
-        typedef map<string, Event::CallbackPointer> EventsContainerMap;
-        typedef unordered_map<string, Font*> FontContainerMap;
-        typedef unordered_map<uint32_t, KeyData> KeyMappingMap;
+        typedef std::map<std::string, Event::CallbackPointer> EventsContainerMap;
+        typedef std::unordered_map<std::string, Font*> FontContainerMap;
+        typedef std::unordered_map<uint32_t, KeyData> KeyMappingMap;
         EventsContainerMap EventsContainer;
         FontContainerMap FontContainer;
         KeyMappingMap KeyMappingContainer;
-        vector<AbstractView*> Screens;
+        std::vector<AbstractView*> Screens;
 
         std::vector<Division*> Prefabs;
 
         Keyboard* keyboard{nullptr};
         TextInput* activeInput{nullptr};
-        vector<Popup*> PopupsContainer;
+        std::vector<Popup*> PopupsContainer;
         Panel* TopPanel;
         Panel* BottomPanel;
         Panel* StartHeader;
@@ -416,7 +418,7 @@ namespace grvl {
 
         void ApplyTransparency();
 
-        Event::CallbackPointer GetCallbackFromContainer(const string& name) const;
+        Event::CallbackPointer GetCallbackFromContainer(const std::string& name) const;
     };
 
 } /* namespace grvl */

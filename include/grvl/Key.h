@@ -20,9 +20,9 @@
 #include <grvl/component/Component.h>
 #include <grvl/Event.h>
 #include <grvl/XMLSupport.h>
-#include <grvl/stl.h>
 
 #include <stdint.h>
+#include <string>
 
 namespace grvl {
 
@@ -72,7 +72,7 @@ namespace grvl {
         const char* GetID();
 
     private:
-        string ID;
+        std::string ID;
         Event onPress, onRelease, onLongPress, onLongPressRepeat;
     };
 

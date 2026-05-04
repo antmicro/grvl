@@ -21,10 +21,10 @@
 #include <grvl/Misc.h>
 #include <grvl/Painter.h>
 #include <grvl/Blitter.h>
-#include <grvl/stl.h>
 
 #include <cmath>
 #include <cassert>
+#include <string>
 
 // NOLINTBEGIN
 
@@ -1448,7 +1448,7 @@ namespace grvl {
         }
     }
 
-    void Painter::SetBackgroundImage(const string& resource)
+    void Painter::SetBackgroundImage(const std::string& resource)
     {
         // TODO:
         contentManager->BindImageContentToImage(resource, BackgroundImage);

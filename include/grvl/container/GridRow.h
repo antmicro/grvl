@@ -19,7 +19,6 @@
 
 #include <grvl/container/Container.h>
 #include <grvl/Painter.h>
-#include <grvl/stl.h>
 
 #include <tinyxml2.h>
 

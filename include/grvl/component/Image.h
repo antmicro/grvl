@@ -21,7 +21,6 @@
 #include <grvl/ContentManager.h>
 #include <grvl/ImageContent.h>
 #include <grvl/Painter.h>
-#include <grvl/stl.h>
 
 using namespace tinyxml2;
 
@@ -122,7 +121,7 @@ namespace grvl {
         bool bindingRegistered; // Binding request has already been sent
         bool imageContentRequested; // Waiting for content to be filled by ContentManager
 
-        friend void ContentManager::BindImageContentToImage(const string& contentName, Image* image);
+        friend void ContentManager::BindImageContentToImage(const std::string& contentName, Image* image);
         friend void ContentManager::CancelRequest(Image* image);
         friend void ContentManager::RequestBinding(Image* image);
     };

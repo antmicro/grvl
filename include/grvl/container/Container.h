@@ -20,9 +20,9 @@
 #include <grvl/component/Component.h>
 #include <grvl/component/Image.h>
 #include <grvl/Painter.h>
-#include <grvl/stl.h>
 
 #include <tinyxml2.h>
+#include <vector>
 
 namespace grvl {
     class Manager;
@@ -45,7 +45,7 @@ namespace grvl {
         virtual void CheckPlacement();
         void SetBackgroundImage(Image* image);
 
-        vector<Component*>& GetElements();
+        std::vector<Component*>& GetElements();
         Component* GetElement(const char* id);
         Component* GetElementByIndex(int index);
         bool HasElement(const char* ComponentID);

@@ -18,18 +18,18 @@
 
 namespace grvl {
 
-    string ParsingUtils::GetFunctionName(const string& CallbackString)
+    std::string ParsingUtils::GetFunctionName(const std::string& CallbackString)
     {
         return CallbackString.substr(0, CallbackString.find_first_of(" (", 0));
     }
 
-    Event::ArgVector ParsingUtils::GetArguments(const string& CallbackString)
+    Event::ArgVector ParsingUtils::GetArguments(const std::string& CallbackString)
     {
         Event::ArgVector Vec;
         size_t start_pos = CallbackString.find_first_of("(", 0); //NOLINT
 
         unsigned int currentChar = start_pos + 1;
-        string argument;
+        std::string argument;
 
         enum mode {
             Regular,

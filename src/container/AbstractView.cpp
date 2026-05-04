@@ -180,7 +180,7 @@ namespace grvl {
         this->SetOnLongPressEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPress"))));
         this->SetOnLongPressRepeatEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPressRepeat"))));
 
-        string collectionString = XMLSupport::GetAttributeOrDefault(xmlElement, "collection", "0/0");
+        std::string collectionString = XMLSupport::GetAttributeOrDefault(xmlElement, "collection", "0/0");
         this->SetCollectionSize(XMLSupport::GetCollectionSize(collectionString));
         this->SetPositionInCollection(XMLSupport::GetPositionInCollection(collectionString));
 

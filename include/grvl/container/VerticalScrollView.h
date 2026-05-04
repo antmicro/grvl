@@ -21,7 +21,6 @@
 #include <grvl/component/ListItem.h>
 #include <grvl/Mutex.h>
 #include <grvl/Painter.h>
-#include <grvl/stl.h>
 
 namespace grvl {
 

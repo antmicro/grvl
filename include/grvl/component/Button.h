@@ -20,7 +20,6 @@
 #include <grvl/component/AbstractButton.h>
 #include <grvl/Font.h>
 #include <grvl/Painter.h>
-#include <grvl/stl.h>
 
 #include <tinyxml2.h>
 

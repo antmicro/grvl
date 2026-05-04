@@ -144,7 +144,7 @@ namespace grvl {
 
     void Component::SetID(const char* id)
     {
-        ID = string(id);
+        ID = std::string(id);
     }
 
     void Component::SetParentID(const char* id)

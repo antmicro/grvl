@@ -20,6 +20,8 @@
 #include <grvl/CallbackDefinition.h>
 #include <grvl/component/Label.h>
 
+#include <string>
+#include <unordered_map>
 #include <tinyxml2.h>
 
 using namespace tinyxml2;
@@ -37,8 +39,8 @@ namespace grvl {
                                                                            enum Label::TextHorizontalAlignment defaultValue);
         static bool TryGetAttribute(XMLElement* element, const char* attributeName, const char** value);
         static bool TryGetIntAttribute(XMLElement* element, const char* attributeName, int32_t* value);
-        static uint32_t GetPositionInCollection(const string& collectionString);
-        static uint32_t GetCollectionSize(const string& collectionString);
+        static uint32_t GetPositionInCollection(const std::string& collectionString);
+        static uint32_t GetCollectionSize(const std::string& collectionString);
 
         static uint32_t ParseColor(XMLElement* xmlElement, const char* attributeName, const char* defaultValue);
         static uint32_t ParseColor(XMLElement* xmlElement, const char* attributeName, uint32_t defaultValue);

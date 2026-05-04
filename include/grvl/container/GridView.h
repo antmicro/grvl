@@ -21,7 +21,6 @@
 #include <grvl/Manager.h>
 #include <grvl/Painter.h>
 #include <grvl/container/VerticalScrollView.h>
-#include <grvl/stl.h>
 
 #include <tinyxml2.h>
 

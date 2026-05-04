@@ -21,7 +21,7 @@ namespace grvl {
 
     void Key::SetID(const char* id)
     {
-        ID = string(id);
+        ID = std::string(id);
     }
 
     const char* Key::GetID()

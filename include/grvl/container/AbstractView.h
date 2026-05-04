@@ -22,9 +22,9 @@
 #include <grvl/Key.h>
 #include <grvl/Painter.h>
 #include <grvl/container/Panel.h>
-#include <grvl/stl.h>
 
 #include <math.h>
+#include <vector>
 
 namespace grvl {
 
@@ -123,7 +123,7 @@ namespace grvl {
         Event onSlideToLeft, onSlideToRight;
         Event onLongPress, onLongPressRepeat;
         uint32_t collectionSize, positionInCollection;
-        vector<Key> KeyCollection;
+        std::vector<Key> KeyCollection;
 
         virtual void InitFromXML(XMLElement* xmlElement);
 

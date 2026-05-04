@@ -24,7 +24,6 @@
 #include <grvl/JSObjectBuilder.h>
 #include <grvl/Painter.h>
 #include <grvl/Touch.h>
-#include <grvl/stl.h>
 
 #include <duktape.h>
 #include <tinyxml2.h>

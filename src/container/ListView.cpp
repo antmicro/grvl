@@ -69,7 +69,7 @@ namespace grvl {
             static constexpr auto minSHeight = 50;
             int sWidth = minSWitdth;
 
-            int sHeight = max((int)((float)Height / (float)itemsHeight * Height), minSHeight);
+            int sHeight = std::max((int)((float)Height / (float)itemsHeight * Height), minSHeight);
 
             if(scrollIndicatorImage != NULL) {
                 delete scrollIndicatorImage;
@@ -159,7 +159,7 @@ namespace grvl {
         }
     }
 
-    bool ListView::AddToList(Manager* man, string& listContent)
+    bool ListView::AddToList(Manager* man, std::string& listContent)
     {
 
         XMLDocument xmlContent;

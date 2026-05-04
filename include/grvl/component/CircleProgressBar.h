@@ -19,7 +19,6 @@
 
 #include <grvl/Painter.h>
 #include <grvl/component/ProgressBar.h>
-#include <grvl/stl.h>
 
 #include <tinyxml2.h>
 

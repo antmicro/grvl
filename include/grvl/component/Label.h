@@ -20,7 +20,6 @@
 #include <grvl/component/Component.h>
 #include <grvl/Font.h>
 #include <grvl/Painter.h>
-#include <grvl/stl.h>
 
 #include <duktape.h>
 #include <tinyxml2.h>
@@ -56,7 +55,7 @@ namespace grvl {
         };
 
     protected:
-        string Text;
+        std::string Text;
         TextHorizontalAlignment HorizontalAlignment{TextHorizontalAlignment::Center};
         Font* TextFont{nullptr};
         uint32_t TextColor{0};

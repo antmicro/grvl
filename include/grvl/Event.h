@@ -17,17 +17,17 @@
 #ifndef GRVL_EVENT_H_
 #define GRVL_EVENT_H_
 
-#include <grvl/stl.h>
-
 #include <functional>
 #include <stdint.h>
+#include <vector>
+#include <string>
 
 namespace grvl {
 
     /// Represents event.
     class Event {
     public:
-        typedef vector<string> ArgVector;
+        typedef std::vector<std::string> ArgVector;
         typedef void (*CallbackPointer)(void* senderPtr, const Event::ArgVector&);
         using CallbackFunction = std::function<void(void* senderPtr, const Event::ArgVector&)>;
 

@@ -21,7 +21,6 @@
 #include <grvl/Event.h>
 #include <grvl/JSObjectBuilder.h>
 #include <grvl/Painter.h>
-#include <grvl/stl.h>
 
 #include <tinyxml2.h>
 

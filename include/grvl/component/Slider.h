@@ -23,6 +23,7 @@
 #include <grvl/XMLSupport.h>
 
 #include <tinyxml2.h>
+#include <string>
 
 using namespace tinyxml2;
 
@@ -127,7 +128,7 @@ namespace grvl {
         void CalculateStep();
         void SetTextFont(Font* font);
         void SetLimiters(float const array[], uint8_t size);
-        static string GetValueOnButton(float val);
+        static std::string GetValueOnButton(float val);
 
         uint32_t GetBarColor() const;
         uint32_t GetActiveBarColor() const;

@@ -17,7 +17,9 @@
 #ifndef GRVL_CONTENTMANAGER_H_
 #define GRVL_CONTENTMANAGER_H_
 
-#include <grvl/stl.h>
+#include <unordered_map>
+#include <vector>
+#include <string>
 
 namespace grvl {
     class Image;
@@ -34,20 +36,20 @@ namespace grvl {
 
         virtual ~ContentManager() = default;
 
-        typedef map<string, ImageContent*> ImageContentMap;
-        typedef map<Image*, string> ImageBindingMap;
+        typedef std::unordered_map<std::string, ImageContent*> ImageContentMap;
+        typedef std::unordered_map<Image*, std::string> ImageBindingMap;
         typedef ImageBindingMap::iterator ImageBindingIterator;
-        typedef vector<ImageBindingIterator> BindingsToRemove;
-        typedef vector<string> PendingRequestsVector;
+        typedef std::vector<ImageBindingIterator> BindingsToRemove;
+        typedef std::vector<std::string> PendingRequestsVector;
 
-        typedef void (*ContentCallback)(const string contentName);
+        typedef void (*ContentCallback)(const std::string& contentName);
 
-        void AddInternalImageContent(string& name, ImageContent* ic);
-        void AddExternalImageContent(string& name, ImageContent* ic);
-        void BindImageContentToImage(const string& contentName, Image* image);
+        void AddInternalImageContent(std::string& name, ImageContent* ic);
+        void AddExternalImageContent(std::string& name, ImageContent* ic);
+        void BindImageContentToImage(const std::string& contentName, Image* image);
 
-        bool TryToFindInInternalContent(const string& contentName, Image* image);
-        bool TryToFindInExternalContent(const string& contentName, Image* image);
+        bool TryToFindInInternalContent(const std::string& contentName, Image* image);
+        bool TryToFindInExternalContent(const std::string& contentName, Image* image);
 
         void RequestBinding(Image* image);
         void CancelRequest(Image* image);
@@ -62,7 +64,7 @@ namespace grvl {
         PendingRequestsVector PendingRequests;
         ContentCallback RequestContentCallback, CancelRequestCallback;
 
-        void UpdateContent(string& name, ImageContent* ic);
+        void UpdateContent(std::string& name, ImageContent* ic);
     };
 
 } /* namespace grvl */

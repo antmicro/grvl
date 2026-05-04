@@ -21,7 +21,6 @@
 #include <grvl/container/Popup.h>
 #include <grvl/component/TextInput.h>
 #include <grvl/XMLSupport.h>
-#include <grvl/stl.h>
 
 #include <array>
 #include <stdint.h>

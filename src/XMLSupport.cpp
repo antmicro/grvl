@@ -22,13 +22,13 @@
 
 namespace grvl {
 
-    bool TryGetAttributeFromCollection(const unordered_map<string, char*>& collection, const char* key, const char* attributeName, const char** value)
+    bool TryGetAttributeFromCollection(const std::unordered_map<std::string, char*>& collection, const char* key, const char* attributeName, const char** value)
     {
         if(!key) {
             return false;
         }
 
-        string collectionKey(key);
+        std::string collectionKey(key);
         collectionKey.append("+");
         collectionKey.append(attributeName);
         auto search = collection.find(collectionKey);
@@ -165,7 +165,7 @@ namespace grvl {
         return defaultValue;
     }
 
-    static int atoi(const string& str)
+    static int atoi(const std::string& str)
     {
         int32_t n = 0;
         for(uint32_t i = 0; i < str.size(); i += 1) {
@@ -179,18 +179,18 @@ namespace grvl {
         return n;
     }
 
-    uint32_t XMLSupport::GetPositionInCollection(const string& collectionString)
+    uint32_t XMLSupport::GetPositionInCollection(const std::string& collectionString)
     {
         uint32_t result = 0;
-        string subString = collectionString.substr(0, collectionString.find_first_of("/", 0)); //NOLINT
+        std::string subString = collectionString.substr(0, collectionString.find_first_of("/", 0)); //NOLINT
         result = atoi(subString);
         return result;
     }
 
-    uint32_t XMLSupport::GetCollectionSize(const string& collectionString)
+    uint32_t XMLSupport::GetCollectionSize(const std::string& collectionString)
     {
         uint32_t result = 0;
-        string subString = collectionString.substr(collectionString.find_first_of("/", 0) + 1, collectionString.length()); //NOLINT
+        std::string subString = collectionString.substr(collectionString.find_first_of("/", 0) + 1, collectionString.length()); //NOLINT
         result = atoi(subString);
         return result;
     }

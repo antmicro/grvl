@@ -17,10 +17,11 @@
 #ifndef GRVL_Font_H_
 #define GRVL_Font_H_
 
-#include <grvl/stl.h>
-
 #include <stdint.h>
 #include <memory>
+#include <unordered_map>
+#include <vector>
+#include <string>
 
 struct stbtt_fontinfo;
 

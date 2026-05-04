@@ -20,7 +20,7 @@
 #include <grvl/component/ListItem.h>
 #include <grvl/Painter.h>
 #include <grvl/container/VerticalScrollView.h>
-#include <grvl/stl.h>
+#include <string>
 
 namespace grvl {
 
@@ -80,7 +80,7 @@ namespace grvl {
 
         // XML operations
         void ClearList();
-        bool AddToList(Manager* man, string& listContent);
+        bool AddToList(Manager* man, std::string& listContent);
 
         static ListView* BuildFromXML(XMLElement* xmlElement);
 

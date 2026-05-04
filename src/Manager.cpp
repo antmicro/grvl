@@ -114,7 +114,7 @@ namespace grvl {
         Manager* man = &Manager::GetInstance();
 
         if(Args.size() > 1) {
-            string arg = Args[1].c_str();
+            std::string arg = Args[1].c_str();
             string_to_lower(arg);
 
             if(arg == "animate_left")
@@ -257,7 +257,7 @@ namespace grvl {
         return BottomPanel;
     }
 
-    vector<AbstractView*>& Manager::GetScreensCollection()
+    std::vector<AbstractView*>& Manager::GetScreensCollection()
     {
         return Screens;
     }
@@ -454,7 +454,7 @@ namespace grvl {
         return ActiveScreen;
     }
 
-    Manager& Manager::AddImageContentToContainer(string name, ImageContent* image)
+    Manager& Manager::AddImageContentToContainer(std::string name, ImageContent* image)
     {
         if(painter.IsRotated())
             if(!image->IsRotated())
@@ -467,13 +467,13 @@ namespace grvl {
         return *this;
     }
 
-    Manager& Manager::BindImageContentToImage(const string& contentName, Image* image)
+    Manager& Manager::BindImageContentToImage(const std::string& contentName, Image* image)
     {
         contentManager.BindImageContentToImage(contentName, image);
         return *this;
     }
 
-    Manager& Manager::AddCallbackToContainer(const string& name, Event::CallbackPointer Callback)
+    Manager& Manager::AddCallbackToContainer(const std::string& name, Event::CallbackPointer Callback)
     {
         if(Callback == NULL) {
             return *this;
@@ -482,7 +482,7 @@ namespace grvl {
         return *this;
     }
 
-    Event::CallbackPointer Manager::GetCallbackFromContainer(const string& name) const
+    Event::CallbackPointer Manager::GetCallbackFromContainer(const std::string& name) const
     {
         EventsContainerMap::const_iterator searchImage = EventsContainer.find(name);
         if(searchImage != EventsContainer.end()) {
@@ -510,13 +510,13 @@ namespace grvl {
         return ManagerState != Loading;
     }
 
-    Manager& Manager::AddFontToFontContainer(const string& name, Font* font)
+    Manager& Manager::AddFontToFontContainer(const std::string& name, Font* font)
     {
         FontContainer[name] = font;
         return *this;
     }
 
-    void Manager::AddKeyMappingToContainer(uint16_t mask, const string& name, uint32_t repeat)
+    void Manager::AddKeyMappingToContainer(uint16_t mask, const std::string& name, uint32_t repeat)
     {
         if(mask == 0x0) {
             return;
@@ -1202,7 +1202,7 @@ namespace grvl {
             uint32_t repeat = defaultRepeat;
             nextElement->QueryUnsignedAttribute("repeat", (unsigned int*)&repeat);
 
-            AddKeyMappingToContainer(code_int, string(id), repeat);
+            AddKeyMappingToContainer(code_int, std::string(id), repeat);
 
             nextElement = nextElement->NextSiblingElement("key");
         }
@@ -1218,7 +1218,7 @@ namespace grvl {
             type = 2;
         memmove(aobject, active_object + ((type > 0) ? 1 : 0), strlen(active_object) + ((type > 0) ? 0 : 1));
 
-        string key(aobject);
+        std::string key(aobject);
         key.append("+");
         key.append(active_parameter);
 
@@ -1468,9 +1468,9 @@ namespace grvl {
         if(!eventName) {
             return Event();
         }
-            string FunctionName = ParsingUtils::GetFunctionName(string(eventName));
+            std::string FunctionName = ParsingUtils::GetFunctionName(eventName);
             Event::CallbackPointer callbackPtr = GetCallbackFromContainer(FunctionName);
-            Event::ArgVector argVec = ParsingUtils::GetArguments(string(eventName));
+            Event::ArgVector argVec = ParsingUtils::GetArguments(eventName);
 
         if(callbackPtr) {
             return Event(callbackPtr, argVec);
@@ -1559,12 +1559,12 @@ namespace grvl {
     {
         ActiveScreen = NULL;
         CurrentPopup = NULL;
-        vector<AbstractView*>::iterator it;
+        std::vector<AbstractView*>::iterator it;
         for(it = Screens.begin(); it != Screens.end();) {
             delete *it;
             it = Screens.erase(it);
         }
-        vector<Popup*>::iterator itp;
+        std::vector<Popup*>::iterator itp;
         for(itp = PopupsContainer.begin(); itp != PopupsContainer.end();) {
             delete *itp;
             itp = PopupsContainer.erase(itp);

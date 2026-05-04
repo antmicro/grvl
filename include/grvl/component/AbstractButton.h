@@ -22,7 +22,6 @@
 #include <grvl/component/Image.h>
 #include <grvl/Painter.h>
 #include <grvl/grvl.h>
-#include <grvl/stl.h>
 
 namespace grvl {
 

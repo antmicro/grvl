@@ -19,8 +19,9 @@
 
 #include <grvl/Format.h>
 #include <grvl/Font.h>
-#include <grvl/stl.h>
 
+#include <string>
+#include <vector>
 #include <stdint.h>
 #include <array>
 
@@ -83,7 +84,7 @@ namespace grvl {
         void CreateFramebuffersCollection(uint8_t BufferBPP, uint8_t* framebuffer = NULL);
         void InitFramebuffersCollection();
         void SetBackgroundImage(Image* image);
-        void SetBackgroundImage(const string& resource);
+        void SetBackgroundImage(const std::string& resource);
 
         void SetContentManager(ContentManager* cm);
         ContentManager* GetContentManager();
@@ -215,7 +216,7 @@ namespace grvl {
         void FillMemory(uintptr_t memory, int32_t width, int32_t height, uint32_t text_color, Format colorFormat = Format::ARGB8888);
 
         // Background blocks
-        typedef vector<background_block> background_block_vector;
+        using background_block_vector = std::vector<background_block>;
         background_block_vector bblocks;
         void AddBackgroundBlock(int32_t y_position, int32_t height, uint32_t backgroundColor);
         void DmaTransferToFramebuffer(int32_t y_position, int32_t height, bool with_background, bool inPlace = false);

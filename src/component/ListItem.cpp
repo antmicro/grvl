@@ -165,7 +165,7 @@ namespace grvl {
         if(!desc) {
             return;
         }
-        Description = string(desc);
+        Description = std::string(desc);
     }
 
     void ListItem::SetDescriptionFont(Font* font)
