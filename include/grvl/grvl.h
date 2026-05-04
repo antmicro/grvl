@@ -65,9 +65,6 @@ namespace grvl {
         void (*gui_printf)(const char* text, va_list argList);
         uint64_t (*get_timestamp)(void);
 
-        duk_alloc_function duk_alloc_func;
-        duk_realloc_function duk_realloc_func;
-        duk_free_function duk_free_func;
     } gui_callbacks_t;
 
     /// Class used to initialize the library.

@@ -32,7 +32,7 @@ namespace grvl {
 
     class JSEngine {
     public:
-        static void Initialize(gui_callbacks_t* n_callbacks);
+        static void Initialize();
         static void Destroy();
 
         static void SetSourceCodeWorkingDirectory(std::string path);
@@ -63,6 +63,7 @@ namespace grvl {
 
     private:
         static void InitializeDukContext(gui_callbacks_t* n_callbacks);
+        static void InitializeDukContext();
         static void RegisterBasicAPIFunctions();
 
         inline static duk_context* ctx;

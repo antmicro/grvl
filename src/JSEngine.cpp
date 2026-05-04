@@ -26,15 +26,15 @@
 
 namespace grvl {
 
-    void JSEngine::Initialize(gui_callbacks_t* n_callbacks)
+    void JSEngine::Initialize()
     {
-        InitializeDukContext(n_callbacks);
+        InitializeDukContext();
         RegisterBasicAPIFunctions();
     }
 
-    void JSEngine::InitializeDukContext(gui_callbacks_t* n_callbacks)
+    void JSEngine::InitializeDukContext()
     {
-        ctx = duk_create_heap(n_callbacks->duk_alloc_func, n_callbacks->duk_realloc_func, n_callbacks->duk_free_func, NULL, NULL);
+        ctx = duk_create_heap(nullptr, nullptr, nullptr, nullptr, nullptr);
         if (!ctx) {
             printf("Failed to create a Duktape heap.\n");
             exit(1);
@@ -66,7 +66,7 @@ namespace grvl {
     void JSEngine::AddGlobalObject(const char* name, void* ptr, const std::map<const char*, duk_c_function>& methods)
     {
         duk_push_object(ctx);
-    
+
         duk_push_pointer(ctx, ptr);
         duk_put_prop_string(ctx, -2, JSObject::C_OBJECT_POINTER_KEY);
 
@@ -86,7 +86,7 @@ namespace grvl {
         for (auto const& [key, value] : values) {
             duk_push_string(ctx, key.c_str());
             duk_push_int(ctx, value);
-            duk_def_prop(ctx, -3, DUK_DEFPROP_HAVE_VALUE | DUK_DEFPROP_CLEAR_WRITABLE); 
+            duk_def_prop(ctx, -3, DUK_DEFPROP_HAVE_VALUE | DUK_DEFPROP_CLEAR_WRITABLE);
         }
 
         duk_put_global_string(ctx, enumName.c_str());
