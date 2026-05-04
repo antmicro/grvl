@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <grvl/ContentManager.h>
-#include <grvl/Image.h>
+#include <grvl/component/Image.h>
 
 namespace grvl {
 

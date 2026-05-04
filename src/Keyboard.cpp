@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <grvl/Keyboard.h>
-#include <grvl/KeyboardKey.h>
+#include <grvl/component/KeyboardKey.h>
 
 #include <cassert>
 

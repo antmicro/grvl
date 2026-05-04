@@ -18,7 +18,7 @@
 #define GRVL_POPUP_H_
 
 #include <grvl/Container.h>
-#include <grvl/Label.h>
+#include <grvl/component/Label.h>
 #include <grvl/Painter.h>
 #include <grvl/stl.h>
 

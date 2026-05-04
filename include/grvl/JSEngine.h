@@ -18,7 +18,7 @@
 #define GRVL_JSENGINE_H_
 
 #include <grvl/CallbackDefinition.h>
-#include <grvl/Component.h>
+#include <grvl/component/Component.h>
 #include <grvl/Event.h>
 #include <grvl/JSObject.h>
 #include <grvl/grvl.h>

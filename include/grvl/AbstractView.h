@@ -17,8 +17,8 @@
 #ifndef GRVL_ABSTRACTVIEW_H_
 #define GRVL_ABSTRACTVIEW_H_
 
-#include <grvl/Component.h>
-#include <grvl/Image.h>
+#include <grvl/component/Component.h>
+#include <grvl/component/Image.h>
 #include <grvl/Key.h>
 #include <grvl/Painter.h>
 #include <grvl/Panel.h>

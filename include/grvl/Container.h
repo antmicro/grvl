@@ -17,8 +17,8 @@
 #ifndef GRVL_CONTAINER_H_
 #define GRVL_CONTAINER_H_
 
-#include <grvl/Component.h>
-#include <grvl/Image.h>
+#include <grvl/component/Component.h>
+#include <grvl/component/Image.h>
 #include <grvl/Painter.h>
 #include <grvl/stl.h>
 

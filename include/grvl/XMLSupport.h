@@ -18,7 +18,7 @@
 #define GRVL_XMLSUPPORT_H_
 
 #include <grvl/CallbackDefinition.h>
-#include <grvl/Label.h>
+#include <grvl/component/Label.h>
 
 #include <tinyxml2.h>
 

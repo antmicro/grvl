@@ -17,7 +17,7 @@
 #ifndef GRVL_LISTVIEW_H_
 #define GRVL_LISTVIEW_H_
 
-#include <grvl/ListItem.h>
+#include <grvl/component/ListItem.h>
 #include <grvl/Painter.h>
 #include <grvl/VerticalScrollView.h>
 #include <grvl/stl.h>

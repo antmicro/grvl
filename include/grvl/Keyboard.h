@@ -19,7 +19,7 @@
 
 #include <grvl/Event.h>
 #include <grvl/Popup.h>
-#include <grvl/TextInput.h>
+#include <grvl/component/TextInput.h>
 #include <grvl/XMLSupport.h>
 #include <grvl/stl.h>
 

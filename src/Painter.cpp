@@ -16,7 +16,7 @@
 
 #include <grvl/AbstractView.h>
 #include <grvl/ContentManager.h>
-#include <grvl/Image.h>
+#include <grvl/component/Image.h>
 #include <grvl/ImageContent.h>
 #include <grvl/Misc.h>
 #include <grvl/Painter.h>
