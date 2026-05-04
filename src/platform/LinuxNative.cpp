@@ -141,7 +141,7 @@ namespace grvl {
         struct xkb_rule_names names = {
             .rules = NULL,
             .model = "pc105",
-            .layout = "pl",
+            .layout = "us",
             .variant = "",
             .options = NULL
         };
