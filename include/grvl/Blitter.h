@@ -23,21 +23,23 @@ namespace grvl {
 
     uint32_t FormatToDma2d(Format format);
 
+    [[deprecated]]
     void UseOldDmaBlitClt(
         uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem, uint32_t PixelsPerLine,
         uint32_t NumberOfLine, uint32_t inOffset, uint32_t backgroundOffset, uint32_t outOffset,
         Format inPixelFormat, Format backgroundPixelFormat, Format outPixelFormat, uint32_t frontColor, uintptr_t backCLT, uintptr_t frontCTL);
 
+    [[deprecated]]
     void UseOldDmaBlit(
         uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem, uint32_t PixelsPerLine,
         uint32_t NumberOfLine, uint32_t inOffset, uint32_t backgroundOffset, uint32_t outOffset,
         Format inPixelFormat, Format backgroundPixelFormat, Format outPixelFormat, uint32_t frontColor);
 
+    [[deprecated]]
     void UseOldDmaFill(uintptr_t dst, uint32_t xs, uint32_t ys, uint32_t offset, uint32_t color_index, Format pixel_format);
 
     uint32_t Blend(uint32_t bcol, uint32_t icol);
     uint32_t LookupClt(uint8_t* mem, Format format, uint8_t* clt);
-    void PixelFormatConvert(uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem, Format inputPixelFormat, Format backgroundPixelFormat, Format outputPixelFormat, uint32_t fontColor, uintptr_t backCLT, uintptr_t frontCLT);
 
     void FallbackBlitClt(uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem,
         uint32_t PixelsPerLine, uint32_t NumberOfLines, uint32_t inOffset, uint32_t backgroundOffset,

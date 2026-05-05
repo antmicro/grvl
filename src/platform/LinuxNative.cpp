@@ -276,7 +276,6 @@ namespace grvl {
         }
 
         output->blit(img);
-        usleep(4000);
     }
 
     void LinuxNativeApp::Poll()

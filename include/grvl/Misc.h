@@ -36,19 +36,6 @@ namespace grvl {
         }
     }
 
-    static inline bool PixelFormatIsCLT(Format pf)
-    {
-        switch(pf)
-        {
-            case Format::L8:
-            case Format::AL44:
-            case Format::AL88:
-                return true;
-            default:
-                return false;
-        }
-    }
-
     int32_t Clamp(int32_t val, int32_t left, int32_t right);
 
     float ConstrainAngle(float angle);

@@ -925,7 +925,7 @@ namespace grvl {
             return;
         }
 
-        bool usesClt = PixelFormatIsCLT(inPixelFormat) || PixelFormatIsCLT(backgroundPixelFormat);
+        bool usesClt = GetFormatUsesColorLookup(inPixelFormat) || GetFormatUsesColorLookup(backgroundPixelFormat);
 
         if(usesClt) {
 

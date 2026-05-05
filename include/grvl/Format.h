@@ -35,25 +35,55 @@ namespace grvl {
         AXXX8888 = 10,
     };
 
+    struct Color {
+        uint8_t r = 0;
+        uint8_t g = 0;
+        uint8_t b = 0;
+        uint8_t a = 255;
+
+        constexpr uint32_t pack(Format format) const
+        {
+            switch (format) {
+
+                case Format::ARGB8888: return (a << 24) | (r << 16) | (g << 8) | (b);
+                case Format::RGB888: return (r << 16) | (g << 8) | (b);
+                case Format::RGB565: return ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
+                case Format::ARGB1555: return ((a >> 7) << 15) | ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3);
+                case Format::ARGB4444: return ((a >> 4) << 12) | ((r >> 4) << 8) | ((g >> 4) << 4) | (b >> 4);
+                case Format::L8: return r;
+                case Format::AL44: return (r >> 4) | (a & 0xf0);
+                case Format::AL88: return r | (a << 8);
+                case Format::A8: return a;
+                case Format::ARGB6666: return ((a >> 2) << 18) | ((r >> 2) << 12) | ((g >> 2) << 6) | (b >> 2);
+                case Format::AXXX8888: return a << 24;
+
+            }
+
+            // invalid format?
+            return 0;
+        }
+    };
+
     struct FormatInfo {
         int stride;
         int channels;
         bool alpha;
+        bool clt;
         const char* name;
     };
 
     constexpr inline FormatInfo format_descriptors[] = {
-        {4, 4, true, "ARGB8888"},
-        {3, 3, false, "RGB888"},
-        {2, 3, false, "RGB565"},
-        {2, 4, true, "ARGB1555"},
-        {2, 4, true, "ARGB4444"},
-        {1, 1, false, "L8"},
-        {1, 2, true, "AL44"},
-        {2, 2, true, "AL88"},
-        {1, 1, true, "A8"},
-        {3, 4, true, "ARGB6666"},
-        {4, 1, true, "AXXX8888"},
+        {4, 4, true,  false, "ARGB8888"},
+        {3, 3, false, false, "RGB888"},
+        {2, 3, false, false, "RGB565"},
+        {2, 4, true,  false, "ARGB1555"},
+        {2, 4, true,  false, "ARGB4444"},
+        {1, 1, false, true,  "L8"},
+        {1, 2, true,  true,  "AL44"},
+        {2, 2, true,  true,  "AL88"},
+        {1, 1, true,  false, "A8"},
+        {3, 4, true,  false, "ARGB6666"},
+        {4, 1, true,  false, "AXXX8888"},
     };
 
     // Get format information object
@@ -86,12 +116,15 @@ namespace grvl {
         return GetFormatInfo(format).name;
     }
 
-    // Convert color from one format to another
-    constexpr uint32_t ConvertColorFormat(uint32_t color, Format input, Format output)
+    // Check if this format uses Color Lookup Tables
+    constexpr bool GetFormatUsesColorLookup(Format format)
     {
-        if (input == output) {
-            return color;
-        }
+        return GetFormatInfo(format).clt;
+    }
+
+    // Convert packed color in specific format to a Color object
+    constexpr Color DecomposeColorFormat(uint32_t color, Format format)
+    {
 
         uint8_t r = 0;
         uint8_t g = 0;
@@ -101,7 +134,7 @@ namespace grvl {
         // first we decompose the color using the input format
         // then recombine it using output format, this avoids having to write a full-graph of conversions
 
-        switch (input) {
+        switch (format) {
 
             case Format::ARGB8888:
                 r = (color & 0x00ff0000) >> 16;
@@ -189,23 +222,18 @@ namespace grvl {
 
         }
 
-        switch (output) {
+        return {r, g, b, a};
 
-            case Format::ARGB8888: return (a << 24) | (r << 16) | (g << 8) | (b);
-            case Format::RGB888: return (r << 16) | (g << 8) | (b);
-            case Format::RGB565: return ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
-            case Format::ARGB1555: return ((a >> 7) << 15) | ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3);
-            case Format::ARGB4444: return ((a >> 4) << 12) | ((r >> 4) << 8) | ((g >> 4) << 4) | (b >> 4);
-            case Format::L8: return r;
-            case Format::AL44: return (r >> 4) | (a & 0xf0);
-            case Format::AL88: return r | (a << 8);
-            case Format::A8: return a;
-            case Format::ARGB6666: return ((a >> 2) << 18) | ((r >> 2) << 12) | ((g >> 2) << 6) | (b >> 2);
-            case Format::AXXX8888: return a << 24;
+    }
 
+    // Convert color from one format to another
+    constexpr uint32_t ConvertColorFormat(uint32_t color, Format input, Format output)
+    {
+        if (input == output) {
+            return color;
         }
 
-        return 0;
+        return DecomposeColorFormat(color, input).pack(output);
     }
 
 }

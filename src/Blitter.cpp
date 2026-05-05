@@ -33,6 +33,8 @@ namespace grvl {
         if (format == Format::A8) return 0x00000009;
         if (format == Format::ARGB6666) return 0x0000000B;
         if (format == Format::AXXX8888) return 0x00000100;
+
+        return 0;
     }
 
     /*
@@ -71,6 +73,9 @@ namespace grvl {
      * Fallback Blitter
      */
 
+    using BakedFillFunc = void (*) (uint8_t* dst, uint32_t color, uint32_t columns, uint32_t rows, uint32_t offset);
+    using BakedBlitFunc = void (*) (uintptr_t omem, uintptr_t imem, uintptr_t bmem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff, uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL);
+
     // Based on the ST documentation
     uint32_t Blend(uint32_t bcol, uint32_t icol)
     {
@@ -108,12 +113,12 @@ namespace grvl {
             // Little endian, so alpha is actually after luminance
             color |= mem[1] << 24;
             cltOffset = mem[0];
-        } else if(format == Format::L8) {
-            color |= 0xff000000;
-            cltOffset = mem[0];
         } else {
             // We make sure this function will only ever be called for CLT formats
+            color |= 0xff000000;
+            cltOffset = mem[0];
         }
+
         // Do greyscale if no palette is passed
         if(clt == nullptr) {
             color |= cltOffset * 0x010101;
@@ -124,80 +129,123 @@ namespace grvl {
         return color;
     }
 
-    void PixelFormatConvert(uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem, Format inputPixelFormat, Format backgroundPixelFormat, Format outputPixelFormat, uint32_t fontColor, uintptr_t backCLT, uintptr_t frontCLT)
+    template <size_t stride, typename T>
+    static uint32_t FastConvertPixel(const T* data, Format input, Format output)
     {
-        uint32_t inputColor = 0;
-        uint32_t backgroundColor = 0;
-        uint32_t outputColor = 0;
+        uint32_t color = 0;
+        memcpy(&color, data, stride);
+        return ConvertColorFormat(color, input, output);
+    }
 
-        if(PixelFormatIsCLT(inputPixelFormat)) {
-            inputColor = LookupClt((uint8_t*)inputMem, inputPixelFormat, (uint8_t*)frontCLT);
+    template <size_t stride>
+    static void PixelFormatConvert(uintptr_t imem, uintptr_t bmem, uintptr_t omem, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCLT)
+    {
+        uint32_t icol = 0;
+        uint32_t bcol = 0;
+        uint32_t ocol = 0;
+
+        if(GetFormatUsesColorLookup(ifmt)) {
+            icol = LookupClt((uint8_t*)imem, ifmt, (uint8_t*)frontCLT);
         } else {
-            inputColor = ConvertPixel((const unsigned char*)inputMem, inputPixelFormat, Format::ARGB8888);
-            if((inputPixelFormat == Format::A8) || (inputPixelFormat == Format::AXXX8888)) {
-                inputColor = (inputColor & 0xff000000) | (fontColor & 0x00ffffff);
+            icol = FastConvertPixel<stride>((const unsigned char*)imem, ifmt, Format::ARGB8888);
+            if((ifmt == Format::A8) || (ifmt == Format::AXXX8888)) {
+                icol = (icol & 0xff000000) | (font_color & 0x00ffffff);
             }
         }
 
-        if(backgroundMem != 0) {
-            if(PixelFormatIsCLT(backgroundPixelFormat)) {
-                inputColor = LookupClt((uint8_t*)backgroundMem, backgroundPixelFormat, (uint8_t*)backCLT);
+        if(bmem != 0) {
+            if(GetFormatUsesColorLookup(bfmt)) {
+                bcol = LookupClt((uint8_t*)bmem, bfmt, (uint8_t*)backCLT);
             } else {
-                backgroundColor = ConvertPixel((const unsigned char*)backgroundMem, backgroundPixelFormat, Format::ARGB8888);
+                bcol = FastConvertPixel<stride>((const unsigned char*)bmem, bfmt, Format::ARGB8888);
             }
-            outputColor = Blend(backgroundColor, inputColor);
+            ocol = Blend(bcol, icol);
         } else {
-            outputColor = inputColor;
+            ocol = icol;
         }
 
-        outputColor = ConvertPixel((const unsigned char*)&outputColor, Format::ARGB8888, outputPixelFormat);
-        memcpy((void*)outputMem, (void*)&outputColor, GetFormatStride(outputPixelFormat));
+        ocol = FastConvertPixel<stride>(&ocol, Format::ARGB8888, ofmt);
+        memcpy((void*)omem, &ocol, stride);
     }
 
-    void FallbackBlitClt(uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem,
-        uint32_t PixelsPerLine, uint32_t NumberOfLines, uint32_t inOffset, uint32_t backgroundOffset,
-        uint32_t outOffset, Format inColor, Format backgroundColor, Format outColor, uint32_t fontColor, uintptr_t backCLT, uintptr_t frontCTL)
+    template <size_t ostride>
+    static void FastBlitPixel(uintptr_t omem, uintptr_t imem, uintptr_t bmem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff,
+        uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL)
     {
-        uintptr_t omem = outputMem;
-        uintptr_t imem = inputMem;
-        uintptr_t bmem = backgroundMem;
-        unsigned int y, x;
-        uint32_t omemBPP = GetFormatStride(outColor);
-        uint32_t imemBPP = GetFormatStride(inColor);
-        uint32_t bmemBPP = backgroundMem == 0 ? 0 : GetFormatStride(backgroundColor);
+        const uint32_t istride = GetFormatStride(ifmt);
+        const uint32_t bstride = bmem == 0 ? 0 : GetFormatStride(bfmt);
 
-        for(y = 0; y < NumberOfLines; y++) {
-            for(x = 0; x < PixelsPerLine; x++) {
-                PixelFormatConvert(imem, bmem, omem, inColor, backgroundColor, outColor, fontColor, backCLT, frontCTL);
-                omem += omemBPP;
-                imem += imemBPP;
-                bmem += bmemBPP;
+        for (uint32_t y = 0; y < rows; y++) {
+            for (uint32_t x = 0; x < columns; x++) {
+                PixelFormatConvert<ostride>(imem, bmem, omem, ifmt, bfmt, ofmt, font_color, backCLT, frontCTL);
+                omem += ostride;
+                imem += istride;
+                bmem += bstride;
             }
-            omem += outOffset * omemBPP;
-            imem += inOffset * imemBPP;
-            bmem += backgroundOffset * bmemBPP;
+
+            omem += ooff * ostride;
+            imem += ioff * istride;
+            bmem += boff * bstride;
         }
     }
 
-    void FallbackBlit(uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem,
-        uint32_t PixelsPerLine, uint32_t NumberOfLines, uint32_t inOffset, uint32_t backgroundOffset,
-        uint32_t outOffset, Format inPixelFormat, Format backgroundPixelFormat, Format outPixelFormat, uint32_t frontColor)
+    void FallbackBlitClt(uintptr_t imem, uintptr_t bmem, uintptr_t omem,
+        uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff,
+        uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL)
     {
-        FallbackBlitClt(inputMem, backgroundMem, outputMem, PixelsPerLine, NumberOfLines, inOffset, backgroundOffset, outOffset, inPixelFormat, backgroundPixelFormat, outPixelFormat, frontColor, 0, 0);
+        const uint32_t ostride = GetFormatStride(ofmt);
+
+        const BakedBlitFunc func[5] = {
+            FastBlitPixel<0>, // this is a dummy case
+            FastBlitPixel<1>,
+            FastBlitPixel<2>,
+            FastBlitPixel<3>,
+            FastBlitPixel<4>
+        };
+
+        // bake stride into the function so that memcpy call can be optimized away
+        func[ostride](omem, imem, bmem, columns, rows, ioff, boff, ooff, ifmt, bfmt, ofmt, font_color, backCLT, frontCTL);
     }
 
-    void FallbackFill(uintptr_t dst, uint32_t PixelsPerLine, uint32_t NumberOfLines, uint32_t offset, uint32_t color_index, Format pixel_format) {
-        unsigned int x, y;
-        uint32_t color = ConvertColorFormat(color_index, Format::ARGB8888, pixel_format);
-        uint32_t dstBPP = GetFormatStride(pixel_format);
+    void FallbackBlit(uintptr_t imem, uintptr_t bmem, uintptr_t omem,
+        uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff,
+        uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color)
+    {
+        FallbackBlitClt(imem, bmem, omem, columns, rows, ioff, boff, ooff, ifmt, bfmt, ofmt, font_color, 0, 0);
+    }
 
-        for(y = 0; y < NumberOfLines; y++) {
-            for(x = 0; x < PixelsPerLine; x++) {
-                memcpy((void*)dst, (void*)&color, dstBPP);
-                dst += dstBPP;
+    /*
+     * Fallback Filler
+     */
+
+    template <size_t stride>
+    static void FastFillPixel(uint8_t* dst, uint32_t color, uint32_t columns, uint32_t rows, uint32_t offset)
+    {
+        for (uint32_t y = 0; y < rows; y++) {
+            for (uint32_t x = 0; x < columns; x++) {
+                memcpy(dst, &color, stride);
+                dst += stride;
             }
-            dst += offset * dstBPP;
+
+            dst += offset * stride;
         }
+    }
+
+    void FallbackFill(uintptr_t dst, uint32_t columns, uint32_t rows, uint32_t offset, uint32_t color_index, Format pixel_format)
+    {
+        const uint32_t color = ConvertColorFormat(color_index, Format::ARGB8888, pixel_format);
+        const uint32_t stride = GetFormatStride(pixel_format);
+
+        const BakedFillFunc func[5] = {
+            FastFillPixel<0>, // this is a dummy case
+            FastFillPixel<1>,
+            FastFillPixel<2>,
+            FastFillPixel<3>,
+            FastFillPixel<4>
+        };
+
+        // bake stride into the function so that memcpy call can be optimized away
+        func[stride]((uint8_t*) dst, color, columns, rows, offset);
     }
 
 }
