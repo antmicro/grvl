@@ -137,15 +137,19 @@ namespace grvl {
     {
         bgra_buffer = new uint32_t [width * height];
         xkb_ctx = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
-        // @TODO: make configurable
-        struct xkb_rule_names names = {
-            .rules = NULL,
-            .model = "pc105",
-            .layout = "us",
-            .variant = "",
-            .options = NULL
-        };
-        xkb_keymap = xkb_keymap_new_from_names(xkb_ctx, &names, XKB_KEYMAP_COMPILE_NO_FLAGS);
+
+        xkb_keymap = xkb_keymap_new_from_names(xkb_ctx, nullptr, XKB_KEYMAP_COMPILE_NO_FLAGS);
+        if (!xkb_keymap) {
+            // @TODO: make configurable
+            struct xkb_rule_names names = {
+                .rules = NULL,
+                .model = "pc105",
+                .layout = "us",
+                .variant = "",
+                .options = NULL
+            };
+            xkb_keymap = xkb_keymap_new_from_names(xkb_ctx, &names, XKB_KEYMAP_COMPILE_NO_FLAGS);
+        }
         xkb_state = xkb_state_new(xkb_keymap);
     }
 
