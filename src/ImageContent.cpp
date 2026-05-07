@@ -119,7 +119,7 @@ namespace grvl {
         const int output_stride = GetFormatStride(target);
 
         const uint32_t input_size = GetDataLength();
-        const uint32_t output_size = input_stride * width * height * frames;
+        const uint32_t output_size = output_stride * width * height * frames;
 
         const uint8_t* input_buffer = data;
         uint8_t* output_buffer = static_cast<uint8_t*>(malloc(output_size));
