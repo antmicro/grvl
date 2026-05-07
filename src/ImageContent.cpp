@@ -66,26 +66,37 @@ namespace grvl {
 
     ImageContent::ImageContent(const ImageContent& other)
     {
-        uint8_t* copied = (uint8_t*) malloc(other.width * other.height * 4);
+        const auto size = other.GetDataLength();
+        data = static_cast<uint8_t*>(malloc(size));
+        if (data && other.data) {
+            memcpy(data, other.data, size);
+        }
+
         width = other.width;
         height = other.height;
         frames = other.frames;
         format = other.format;
-        rotated = other.rotated;
-        data = copied;
+        rotated = other.rotated;   
     }
 
     ImageContent& ImageContent::operator=(const ImageContent& other)
     {
-        uint8_t* copied = (uint8_t*) malloc(other.width * other.height * 4);
-        this->~ImageContent();
+        if (this == &other) {
+            return *this;
+        }
+   
+        const auto size = other.GetDataLength();
+        if (data) free(data);
+        data = static_cast<uint8_t*>(malloc(size));
+        if (data && other.data) {
+            memcpy(data, other.data, size);
+        }
 
         width = other.width;
         height = other.height;
         frames = other.frames;
         format = other.format;
         rotated = other.rotated;
-        data = copied;
 
         return *this;
     }
