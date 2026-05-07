@@ -51,6 +51,10 @@ namespace grvl {
             callbacks.gui_printf = nullptr;
             callbacks.get_timestamp = nullptr;
 
+            callbacks.fill = FallbackFill;
+            callbacks.blit = FallbackBlit;
+            callbacks.blit_clt = FallbackBlitClt;
+
             callbacks.duk_alloc_func = nullptr;
             callbacks.duk_realloc_func = nullptr;
             callbacks.duk_free_func = nullptr;
