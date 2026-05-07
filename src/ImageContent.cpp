@@ -46,6 +46,14 @@ namespace grvl {
 
         int32_t file_channels;
         this->data = stbi_load(path, &width, &height, &file_channels, channels);
+        if (!this->data) {
+            grvl::Log("[ERROR] Failed to load image %s: %s", path, stbi_failure_reason());
+            this->width = 0;
+            this->height = 0;
+            this->frames = 0;
+            this->format = format;
+            return;
+        }
         this->frames = 1;
         this->format = image_format;
 
