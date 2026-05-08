@@ -14,6 +14,7 @@
 #include <libdrm/drm_fourcc.h>
 
 #include <xkbcommon/xkbcommon.h>
+#include <unordered_set>
 
 class drm_screen;
 class framebuffer_screen;
@@ -50,8 +51,12 @@ namespace grvl {
 
         int x = 0;
         int y = 0;
+        int abs_x = -1;
+        int abs_y = -1;
         int* inputs = nullptr;
+        std::unordered_set<int> pointer_devices;
         int count = 0;
+        bool touch_down = false;
         bool left_mouse_pressed = false;
         bool draw_mouse_icon = true;
 

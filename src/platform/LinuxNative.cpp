@@ -126,12 +126,16 @@ static void FileRead(int fd, char* element, int size)
     }
 }
 
-static bool ReadEvent(struct input_event* event, const int* fds, int file_count, bool wait)
+static bool ReadEvent(struct input_event* event, const int* fds, int file_count, bool wait, int* read_from = nullptr)
 {
     const int fd = FindReadable(fds, file_count, wait);
 
     if (fd == -1) {
         return false;
+    }
+
+    if (read_from != nullptr) {
+        *read_from = fd;
     }
 
     FileRead(fd, (char*) event, sizeof(*event));
@@ -310,6 +314,17 @@ static void page_flip_handler(int fd,
             output = nullptr;
 
             return false;
+        }
+
+        // Check for trackpads which return absolute position,
+        // but use pointer (relative move)
+        unsigned long props;
+        for(int i = 0; i < count; ++i) {
+            if(ioctl(inputs[i], EVIOCGPROP(sizeof(props)), &props) >= 0) {
+                if(props & (1UL << INPUT_PROP_POINTER)) {
+                    pointer_devices.insert(inputs[i]);
+                }
+            }
         }
 
         Manager::Initialize(width, height, 4, sideways);
@@ -552,8 +567,9 @@ static void page_flip_handler(int fd,
     void LinuxNativeApp::Poll()
     {
         struct input_event event;
+        int fd;
 
-            while(ReadEvent(&event, inputs, count, false)) {
+            while(ReadEvent(&event, inputs, count, false, &fd)) {
 
             switch (event.type) {
                 case EV_REL:
@@ -572,10 +588,31 @@ static void page_flip_handler(int fd,
 
                 case EV_ABS:
                 {
-                    // digitizers and touch controls
-                    // event.value contains absolute position
-                    if (event.code == 0) x = event.value;
-                    if (event.code == 1) y = event.value;
+                    // Touchpad device - translate absolute position
+                    // to relative offset
+                    if (pointer_devices.find(fd) != pointer_devices.end()) {
+                        if (!touch_down) break;
+
+                        if (abs_x == -1 || abs_y == -1) {
+                            if (event.code == 0) abs_x = event.value;
+                            if (event.code == 1) abs_y = event.value;
+                            break;
+                        }
+
+                        if (event.code == 0) {
+                            x += (event.value - abs_x);
+                            abs_x = event.value;
+                        }
+                        if (event.code == 1) {
+                            y += (event.value - abs_y);
+                            abs_y = event.value;
+                        }
+                    } else {
+                        // digitizers and touch controls
+                        // event.value contains absolute position
+                        if (event.code == 0) x = event.value;
+                        if (event.code == 1) y = event.value;
+                    }
 
                     g_cursor.latest_x = x;
                     g_cursor.latest_y = y;
@@ -588,6 +625,12 @@ static void page_flip_handler(int fd,
                 {
                     if (event.code == BTN_LEFT) {
                         left_mouse_pressed = event.value;
+                    } else if(event.code == BTN_TOUCH) {
+                        touch_down = event.value;
+                        if(!event.value) {
+                            abs_x = -1;
+                            abs_y = -1;
+                        }
                     }
 
                     xkb_keycode_t keycode = event.code + 8;
