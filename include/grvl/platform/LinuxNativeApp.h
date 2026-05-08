@@ -1,12 +1,22 @@
 #ifndef LINUXNATIVEAPP_H_
 #define LINUXNATIVEAPP_H_
 
+#include <unistd.h>
 #if defined(GRVL_LINUX_NATIVE_SUPPORT)
 #include <grvl/platform/PosixApp.h>
+
+#include <libdrm/drm.h>
+#include <libdrm/drm_mode.h>
+
+#include <xf86drm.h>
+#include <xf86drmMode.h>
+
+#include <drm/drm_fourcc.h>
 
 #include <xkbcommon/xkbcommon.h>
 
 class drm_screen;
+class framebuffer_screen;
 
 namespace grvl {
 
@@ -24,6 +34,20 @@ namespace grvl {
 
         drm_screen* output = nullptr;
 
+        struct {
+          struct drm_mode_create_dumb dumb = {};
+          uint32_t fb;
+          uint32_t plane;
+          struct {
+            uint32_t fb, crtc, x, y;
+          } props;
+          void *map = nullptr;
+          uint32_t handles[4] = {};
+          uint32_t pitches[4] = {};
+          uint32_t offsets[4] = {};
+        } primary, cursor;
+        drmEventContext ev = {};
+
         int x = 0;
         int y = 0;
         int* inputs = nullptr;
@@ -35,7 +59,6 @@ namespace grvl {
 
         void ClampCursor();
         void UpdateBgraBuffer();
-        void DrawSimpleMouse();
 
         bool Setup() override;
 
@@ -48,7 +71,9 @@ namespace grvl {
         ~LinuxNativeApp() override;
 
         void Render() override;
+        void RenderCursor() override;
         void Poll() override;
+        void DRMWait() override;
 
         // Decide whether a simple mouse icon should be drawn at the cursor position.
         //
