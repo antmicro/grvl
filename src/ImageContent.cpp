@@ -72,6 +72,15 @@ namespace grvl {
         this->format = format;
     }
 
+    ImageContent::ImageContent(int32_t width, int32_t height, int32_t frames, Format format)
+    {
+        this->width = width;
+        this->height = height;
+        this->frames = frames;
+        this->format = format;
+        this->data = static_cast<uint8_t*>(malloc(this->GetDataLength()));
+    }
+
     ImageContent::ImageContent(const ImageContent& other)
     {
         const auto size = other.GetDataLength();
@@ -84,7 +93,7 @@ namespace grvl {
         height = other.height;
         frames = other.frames;
         format = other.format;
-        rotated = other.rotated;   
+        rotated = other.rotated;
     }
 
     ImageContent& ImageContent::operator=(const ImageContent& other)
@@ -92,7 +101,7 @@ namespace grvl {
         if (this == &other) {
             return *this;
         }
-   
+
         const auto size = other.GetDataLength();
         if (data) free(data);
         data = static_cast<uint8_t*>(malloc(size));

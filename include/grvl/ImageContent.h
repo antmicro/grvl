@@ -32,9 +32,9 @@ namespace grvl {
 
     class ImageContent {
     public:
-
         ImageContent(const char* path, Format format = Format::ARGB8888);
         ImageContent(uint8_t* pixels, int width, int height, int frames, Format format = Format::ARGB8888);
+        ImageContent(int32_t width, int32_t height, int32_t frames = 1, Format format = Format::ARGB8888);
         ImageContent(const ImageContent& content);
         ImageContent& operator=(const ImageContent& other);
 

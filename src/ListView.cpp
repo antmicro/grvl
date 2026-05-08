@@ -72,15 +72,10 @@ namespace grvl {
             int sHeight = max((int)((float)Height / (float)itemsHeight * Height), minSHeight);
 
             if(scrollIndicatorImage != NULL) {
-
-                // Remove the old scroll indicator image
-                free(scrollIndicatorImage->GetData());
                 delete scrollIndicatorImage;
             }
 
-            // allocate memory for a new image content
-            uint8_t* imgContent = (uint8_t*)malloc(4 * static_cast<size_t>(sWidth * sHeight));
-            scrollIndicatorImage = new ImageContent(imgContent, sWidth, sHeight, 1);
+            scrollIndicatorImage = new ImageContent(sWidth, sHeight);
         }
 
         Elements.push_back(component);
