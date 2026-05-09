@@ -32,7 +32,7 @@ if (GRVL_LINUX_NATIVE)
   CPMAddPackage(
       NAME yav
       GITHUB_REPOSITORY antmicro/yav
-      GIT_TAG 1dda3cbffbc0bcd54450eb043fde856121bef253
+      GIT_TAG c70930d954814ad14671603daf6017dc75b9ddb8
       OPTIONS "CMAKE_POSITION_INDEPENDENT_CODE ON")
 endif()
 
