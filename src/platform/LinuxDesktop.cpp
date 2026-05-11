@@ -49,6 +49,10 @@ namespace grvl {
         return true;
     }
 
+    // FIXME remove this
+    void LinuxDesktopApp::RenderCursor() {}
+    void LinuxDesktopApp::DRMWait() {}
+
     void LinuxDesktopApp::Render()
     {
         Manager::GetInstance().MainLoopIteration();
