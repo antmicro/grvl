@@ -31,11 +31,17 @@ namespace grvl {
             n_callbacks = &default_callbacks;
         }
 
+        // this avoids a terrible performance regression for users that did not define blit_clt but require
+        // custom blit/fill functions, previously grvl would avoid using CLT formats altogether in those cases, but now it's the use who decides
+        if (n_callbacks->blit && !n_callbacks->blit_clt) {
+            n_callbacks->blit_clt = UseBlitAsBlitClt;
+        }
+
         if (n_callbacks->fill == nullptr) n_callbacks->fill = FallbackFill;
         if (n_callbacks->blit == nullptr) n_callbacks->blit = FallbackBlit;
         if (n_callbacks->blit_clt == nullptr) n_callbacks->blit_clt = FallbackBlitClt;
 
-        memcpy(&callbacks, n_callbacks, sizeof(callbacks));
+        callbacks = *n_callbacks;
         JSEngine::Initialize();
     }
 

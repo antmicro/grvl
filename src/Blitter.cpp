@@ -73,6 +73,17 @@ namespace grvl {
      * Fallback Blitter
      */
 
+    void UseBlitAsBlitClt(uintptr_t imem, uintptr_t bmem, uintptr_t omem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff,
+        uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL)
+    {
+        // we ignore those and use color index directly as brightness
+        // this is fine in most cases (e.g. when we load the image from file)
+        (void) backCLT;
+        (void) frontCTL;
+
+        grvl::Callbacks()->blit(imem, bmem, omem, columns, rows, ioff, boff, ooff, ifmt, bfmt, ofmt, font_color);
+    }
+
     using BakedFillFunc = void (*) (uint8_t* dst, uint32_t color, uint32_t columns, uint32_t rows, uint32_t offset);
     using BakedBlitFunc = void (*) (uintptr_t omem, uintptr_t imem, uintptr_t bmem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff, uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL);
 

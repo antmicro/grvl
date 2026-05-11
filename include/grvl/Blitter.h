@@ -38,18 +38,19 @@ namespace grvl {
     [[deprecated]]
     void UseOldDmaFill(uintptr_t dst, uint32_t xs, uint32_t ys, uint32_t offset, uint32_t color_index, Format pixel_format);
 
+    void UseBlitAsBlitClt(uintptr_t imem, uintptr_t bmem, uintptr_t omem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff,
+        uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL);
+
     uint32_t Blend(uint32_t bcol, uint32_t icol);
     uint32_t LookupClt(uint8_t* mem, Format format, uint8_t* clt);
 
-    void FallbackBlitClt(uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem,
-        uint32_t PixelsPerLine, uint32_t NumberOfLines, uint32_t inOffset, uint32_t backgroundOffset,
-        uint32_t outOffset, Format inColor, Format backgroundColor, Format outColor, uint32_t fontColor, uintptr_t backCLT, uintptr_t frontCTL);
+    void FallbackBlitClt(uintptr_t imem, uintptr_t bmem, uintptr_t omem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff,
+        uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL);
 
-    void FallbackBlit(uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem,
-        uint32_t PixelsPerLine, uint32_t NumberOfLines, uint32_t inOffset, uint32_t backgroundOffset,
-        uint32_t outOffset, Format inPixelFormat, Format backgroundPixelFormat, Format outPixelFormat, uint32_t frontColor);
+    void FallbackBlit(uintptr_t imem, uintptr_t bmem, uintptr_t omem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff,
+        uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color);
 
-    void FallbackFill(uintptr_t dst, uint32_t PixelsPerLine, uint32_t NumberOfLines, uint32_t offset, uint32_t color_index, Format pixel_format);
+    void FallbackFill(uintptr_t dst, uint32_t columns, uint32_t rows, uint32_t offset, uint32_t color_index, Format pixel_format);
 
 }
 
