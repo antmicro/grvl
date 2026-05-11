@@ -113,16 +113,6 @@ namespace grvl {
         void Transcode(Format format);
         void Rotate90();
 
-        [[deprecated("For removal! ImageContent::FromPNG() call can be removed!")]]
-        constexpr static const char* FromPNG(const char* path) {
-            return path;
-        }
-
-        [[deprecated("For removal! ImageContent::FromJPEG() call can be removed!")]]
-        constexpr static const char* FromJPEG(const char* path) {
-            return path;
-        }
-
     private:
 
         uint8_t* data;
