@@ -401,8 +401,8 @@ static void page_flip_handler(int fd,
             0b110000000000,
         };
 
-        for (int by = 0, iy = y; iy < bw; iy ++) {
-            for (int bx = 0, ix = x; ix < bh; ix ++) {
+        for (int by = 0, iy = y; iy < bh; iy ++) {
+            for (int bx = 0, ix = x; ix < bw; ix ++) {
                 bool bit = bitmap[by] & (1 << (bw - bx));
 
                 if (bit) {
