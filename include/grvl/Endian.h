@@ -25,49 +25,37 @@
 
 namespace grvl {
 
-    inline uint16_t ByteSwap16(uint16_t x)
+    constexpr uint16_t ByteSwap16(uint16_t x)
     {
         return (((uint16_t) (x & 0xFF) << 8) | (x >> 8));
     }
 
-    inline uint32_t ByteSwap32(uint32_t x)
+    constexpr uint32_t ByteSwap32(uint32_t x)
     {
         return (((uint32_t) ByteSwap16(x & 0xFFFF) << 16) | ByteSwap16(x >> 16));
     }
 
-    inline uint64_t ByteSwap64(uint64_t x)
+    constexpr uint64_t ByteSwap64(uint64_t x)
     {
         return (((uint64_t) ByteSwap32(x & 0xFFFFFFFF) << 32) | ByteSwap32(x >> 32));
     }
 
     /// Native to Big Endian or Big Endian to Native, 16 bit
-    inline uint32_t BigEndian16(uint16_t x)
+    constexpr uint32_t BigEndian16(uint16_t x)
     {
-#if GRVL_BIG_ENDIAN
-        return x;
-#else
-        return ByteSwap16(x);
-#endif
+        return GRVL_BIG_ENDIAN ? x : ByteSwap16(x);
     }
 
     /// Native to Big Endian or Big Endian to Native, 32 bit
-    inline uint32_t BigEndian32(uint32_t x)
+    constexpr uint32_t BigEndian32(uint32_t x)
     {
-#if GRVL_BIG_ENDIAN
-        return x;
-#else
-        return ByteSwap32(x);
-#endif
+        return GRVL_BIG_ENDIAN ? x : ByteSwap32(x);
     }
 
     /// Native to Big Endian or Big Endian to Native, 64 bit
-    inline uint64_t BigEndian64(uint64_t x)
+    constexpr uint64_t BigEndian64(uint64_t x)
     {
-#if GRVL_BIG_ENDIAN
-        return x;
-#else
-        return ByteSwap64(x);
-#endif
+        return GRVL_BIG_ENDIAN ? x : ByteSwap64(x);
     }
 
 };

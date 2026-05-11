@@ -20,7 +20,14 @@
 #include <grvl/grvl.h>
 #include <grvl/Misc.h>
 #include <grvl/Painter.h>
+#include <grvl/Endian.h>
 
+// save on binary size
+#define STBI_ONLY_JPEG
+#define STBI_ONLY_PNG
+#define STBI_ONLY_BMP
+
+#define STBI_FAILURE_USERMSG
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
@@ -33,19 +40,16 @@ namespace grvl {
 
     ImageContent::ImageContent(const char* path, Format format)
     {
-        int channels = GetFormatChannelCount(format);
-        int stride = GetFormatStride(format);
+        Format image_format = Format::ARGB8888;
 
-        Format image_format = format;
-
-        // we only support loading images where one byte is used per channel
-        if ((channels != stride) || (stride == 0)) {
-            channels = 4;
-            image_format = Format::ARGB8888;
+        if (format == Format::L8 || format == Format::AL88) {
+            image_format = format;
         }
 
         int32_t file_channels;
+        const int channels = GetFormatChannelCount(image_format);
         this->data = stbi_load(path, &width, &height, &file_channels, channels);
+
         if (!this->data) {
             grvl::Log("[ERROR] Failed to load image %s: %s", path, stbi_failure_reason());
             this->width = 0;
@@ -54,8 +58,30 @@ namespace grvl {
             this->format = format;
             return;
         }
+
         this->frames = 1;
         this->format = image_format;
+
+        // grvl and STB use a different channel order, we swap them here
+        if (image_format == Format::ARGB8888) {
+            uint32_t* pixels = reinterpret_cast<uint32_t*>(this->data);
+            const uint32_t length = width * height * frames;
+
+            for (uint32_t i = 0; i < length; i ++) {
+                uint32_t& pixel = pixels[i];
+
+#if GRVL_BIG_ENDIAN
+                // Move A to the front (RGBA -> ARGB)
+                uint8_t a = pixel & 0xff;
+                pixel = (pixel >> 8) | (a << 24);
+#else
+                // Swap R and B (ABGR -> ARGB)
+                uint8_t r = pixel & 0xff;
+                uint8_t b = (pixel >> 16) & 0xff;
+                pixel = (pixel & 0xff00ff00) | r << 16 | b;
+#endif
+            }
+        }
 
         // if the format could not have been loaded directly we perform transcoding
         Transcode(format);
