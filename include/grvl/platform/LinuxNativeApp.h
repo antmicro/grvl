@@ -36,16 +36,16 @@ namespace grvl {
         drm_screen* output = nullptr;
 
         struct {
-          struct drm_mode_create_dumb dumb = {};
-          uint32_t fb;
-          uint32_t plane;
-          struct {
-            uint32_t fb, crtc, x, y;
-          } props;
-          void *map = nullptr;
-          uint32_t handles[4] = {};
-          uint32_t pitches[4] = {};
-          uint32_t offsets[4] = {};
+            struct drm_mode_create_dumb dumb = {};
+            uint32_t fb;
+            uint32_t plane;
+            struct {
+                uint32_t fb, crtc, x, y;
+            } props;
+            void *map = nullptr;
+            uint32_t handles[4] = {};
+            uint32_t pitches[4] = {};
+            uint32_t offsets[4] = {};
         } primary, cursor;
         drmEventContext ev = {};
 

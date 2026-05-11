@@ -42,7 +42,8 @@ static std::vector<std::string> GrepFiles(const std::string& path, const std::st
     return paths;
 }
 
-void CloseFiles(int* fds, int count) {
+void CloseFiles(int* fds, int count)
+{
     for (int i = 0; i < count; i ++) {
         ioctl(fds[i], EVIOCGRAB, 0);
         close(fds[i]);
@@ -236,8 +237,6 @@ namespace grvl {
         return prop_id;
     }
 
-
-
     uint32_t get_plane_type(int fd, uint32_t plane_id) {
         uint32_t type_val = uint32_t(-1);
 
@@ -257,45 +256,41 @@ namespace grvl {
     }
 
     uint32_t find_plane_by_type(int drm_fd, uint32_t plane_type) {
-      drmModePlaneRes *plane_res = drmModeGetPlaneResources(drm_fd);
-      if (!plane_res) return 0;
+        drmModePlaneRes *plane_res = drmModeGetPlaneResources(drm_fd);
+        if (!plane_res) return 0;
 
-      uint32_t found_id = 0;
+        uint32_t found_id = 0;
 
-      for (uint32_t i = 0; i < plane_res->count_planes; i++) {
-          uint32_t plane_id = plane_res->planes[i];
+        for (uint32_t i = 0; i < plane_res->count_planes; i++) {
+            uint32_t plane_id = plane_res->planes[i];
 
-          if (get_plane_type(drm_fd, plane_id) == plane_type) {
-              found_id = plane_id;
-              break;
-          }
-      }
+            if (get_plane_type(drm_fd, plane_id) == plane_type) {
+                found_id = plane_id;
+                break;
+            }
+        }
 
-      drmModeFreePlaneResources(plane_res);
-    return found_id;
-}
+        drmModeFreePlaneResources(plane_res);
+        return found_id;
+    }
 
-struct CursorState {
-    std::atomic<int> latest_x{0};
-    std::atomic<int> latest_y{0};
+    struct CursorState {
+        std::atomic<int> latest_x{0};
+        std::atomic<int> latest_y{0};
 
-    std::atomic<bool> dirty{false};
-    std::atomic<bool> pending{false};
+        std::atomic<bool> dirty{false};
+        std::atomic<bool> pending{false};
 
-    int displayed_x = 0;
-    int displayed_y = 0;
-};
+        int displayed_x = 0;
+        int displayed_y = 0;
+    };
 
-static CursorState g_cursor;
+    static CursorState g_cursor;
 
-static void page_flip_handler(int fd,
-                              unsigned int frame,
-                              unsigned int sec,
-                              unsigned int usec,
-                              void *data)
-{
-    g_cursor.pending = false;
-}
+    static void page_flip_handler(int fd, unsigned int frame, unsigned int sec, unsigned int usec, void *data)
+    {
+        g_cursor.pending = false;
+    }
 
     bool LinuxNativeApp::Setup()
     {
@@ -351,7 +346,6 @@ static void page_flip_handler(int fd,
         mreq.handle = cursor.dumb.handle; // The handle from your CREATE_DUMB call
         if (drmIoctl(output->fd(), DRM_IOCTL_MODE_MAP_DUMB, &mreq) < 0) {
             perror("Failed to prepare dumb buffer for mapping");
-
         }
 
         cursor.map = (uint32_t *)mmap(0, cursor.dumb.size, PROT_READ | PROT_WRITE,
@@ -488,8 +482,7 @@ static void page_flip_handler(int fd,
         drmModeAtomicAddProperty(req, primary.plane, src_w, width << 16);
         drmModeAtomicAddProperty(req, primary.plane, src_h, height << 16);
 
-        uint32_t
-          flags = DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_ATOMIC_ALLOW_MODESET;
+        uint32_t flags = DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_ATOMIC_ALLOW_MODESET;
         int rc = drmModeAtomicCommit(drm_fd, req, flags, NULL);
         drmModeAtomicFree(req);
 
@@ -537,7 +530,6 @@ static void page_flip_handler(int fd,
         int rc = drmModeAtomicCommit(drm_fd, req, flags, NULL);
 
         drmModeAtomicFree(req);
-
 
          if (rc == 0) {
              g_cursor.pending = true;
@@ -686,8 +678,9 @@ static void page_flip_handler(int fd,
                 }
             }
 
-            if (was_interrupted())
+            if (was_interrupted()) {
                 should_run = false;
+            }
 
             Manager::GetInstance().ProcessTouchPoint(left_mouse_pressed, x, y);
             ClampCursor();
