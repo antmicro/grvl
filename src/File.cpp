@@ -228,6 +228,17 @@ namespace grvl {
         return buffer;
     }
 
+    std::string File::ReadString() const
+    {
+        std::string buffer;
+        buffer.resize(GetSize());
+
+        uint8_t* data = reinterpret_cast<uint8_t*>(buffer.data());
+        ReadToBuffer(data, buffer.size());
+
+        return buffer;
+    }
+
     bool File::Write(const std::vector<char>& buffer)
     {
         return WriteFromBuffer(reinterpret_cast<const uint8_t*>(buffer.data()), buffer.size()) == buffer.size();

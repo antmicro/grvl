@@ -71,6 +71,9 @@ namespace grvl {
         /// Read file into a buffer
         std::vector<char> Read() const;
 
+        /// Read file into a string
+        std::string ReadString() const;
+
         /// Write the given buffer to the file
         bool Write(const std::vector<char>& data);
 

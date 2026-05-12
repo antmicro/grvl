@@ -54,6 +54,7 @@
 #include <math.h>
 #include <time.h>
 #include <unistd.h>
+#include <string>
 
 using namespace tinyxml2;
 
@@ -309,7 +310,7 @@ namespace grvl {
         /// @param filename Path to the file with screens definition.
         /// @return Result of parsing the file (0 = OK, -1 = there was an error)
         int32_t BuildFromXML(const char* filename);
-        int32_t BuildFromXML(const char* XMLDoc, size_t len);
+        int32_t BuildFromXMLString(const std::string& document);
         Event GetEventWithArguments(const char* eventName) const;
 
         // //Physical keys

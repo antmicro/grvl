@@ -19,6 +19,14 @@
 
 #include <grvl/Blitter.h>
 
+static void NoOpSetLayerPointer(uintptr_t addr) {
+    (void) addr;
+}
+
+static uint64_t NoOpGetTimestamp() {
+    return 0;
+}
+
 namespace grvl {
 
     static gui_callbacks_t callbacks;
@@ -40,6 +48,10 @@ namespace grvl {
         if (n_callbacks->fill == nullptr) n_callbacks->fill = FallbackFill;
         if (n_callbacks->blit == nullptr) n_callbacks->blit = FallbackBlit;
         if (n_callbacks->blit_clt == nullptr) n_callbacks->blit_clt = FallbackBlitClt;
+
+        // those should probably be set for grvl to be usefull but let's not crash if they are not
+        if (n_callbacks->set_layer_pointer == nullptr) n_callbacks->set_layer_pointer = NoOpSetLayerPointer;
+        if (n_callbacks->get_timestamp == nullptr) n_callbacks->get_timestamp = NoOpGetTimestamp;
 
         callbacks = *n_callbacks;
         JSEngine::Initialize();

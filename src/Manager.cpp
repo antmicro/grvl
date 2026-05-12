@@ -1172,8 +1172,7 @@ namespace grvl {
     int32_t Manager::BuildFromXML(const char* filename)
     {
         File file(filename);
-        const std::vector<char> xml = file.Read();
-        return BuildFromXML(xml.data(), xml.size());
+        return BuildFromXMLString(file.ReadString());
     }
 
     void Manager::ParseGuiConfiguration(XMLElement* ConfigNode)
@@ -1339,16 +1338,15 @@ namespace grvl {
     }
     // NOLINTEND
 
-    int32_t Manager::BuildFromXML(const char* XMLDoc, size_t len)
+    int32_t Manager::BuildFromXMLString(const std::string& document)
     {
-
-        if(!XMLDoc) {
+        if(document.empty()) {
             return -1; // Parsing failed
         }
 
         XMLDocument doc;
 
-        XMLError Error = doc.Parse(XMLDoc, len);
+        XMLError Error = doc.Parse(document.c_str(), document.length());
 
         if(Error == XML_SUCCESS) {
             XMLNode* Root = doc.LastChild();
