@@ -56,3 +56,15 @@ target_link_libraries(app PRIVATE grvl)
 ## Sample
 
 Sample application using grvl with Zephyr is available [here](https://github.com/antmicro/grvl-zephyr-calendar-demo).
+
+## Testing
+
+grvl contains both test samples (complete executables using grvl located in the `./samples` directory) as well as standard tests with assertions.
+To run a sample use the `./samples/sample.sh` script, to learn more use `./samples/sample.sh --help`.
+
+To run the tests run those commands:
+```sh
+cmake -B build
+cmake --build build --target tests
+./build/test/tests
+```
