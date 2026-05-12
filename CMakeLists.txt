@@ -50,6 +50,10 @@ endif()
 if (NOT GRVL_ZEPHYR)
   add_executable(gbf EXCLUDE_FROM_ALL ${gbf_sources})
   target_link_libraries(gbf PRIVATE grvl)
+
+  if(PROJECT_IS_TOP_LEVEL)
+    add_subdirectory(test)
+  endif()
 endif()
 
 if(USE_SYSTEM_LIBRARIES AND NOT GRVL_ZEPHYR)
