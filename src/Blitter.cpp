@@ -38,38 +38,6 @@ namespace grvl {
     }
 
     /*
-     * Old API compatibility
-     */
-
-    void UseOldDmaBlitClt(
-        uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem, uint32_t PixelsPerLine,
-        uint32_t NumberOfLine, uint32_t inOffset, uint32_t backgroundOffset, uint32_t outOffset,
-        Format inPixelFormat, Format backgroundPixelFormat, Format outPixelFormat, uint32_t frontColor, uintptr_t backCLT, uintptr_t frontCTL)
-    {
-        uint32_t dma2d_inPixelFormat = FormatToDma2d(inPixelFormat);
-        uint32_t dma2d_backgroundPixelFormat = FormatToDma2d(backgroundPixelFormat);
-        uint32_t dma2d_outPixelFormat = FormatToDma2d(outPixelFormat);
-        grvl::Callbacks()->dma_operation_clt(inputMem, backgroundMem, outputMem, PixelsPerLine, NumberOfLine, inOffset, backgroundOffset, outOffset, dma2d_inPixelFormat, dma2d_backgroundPixelFormat, dma2d_outPixelFormat, frontColor, backCLT, frontCTL);
-    }
-
-    void UseOldDmaBlit(
-        uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem, uint32_t PixelsPerLine,
-        uint32_t NumberOfLine, uint32_t inOffset, uint32_t backgroundOffset, uint32_t outOffset,
-        Format inPixelFormat, Format backgroundPixelFormat, Format outPixelFormat, uint32_t frontColor)
-    {
-        uint32_t dma2d_inPixelFormat = FormatToDma2d(inPixelFormat);
-        uint32_t dma2d_backgroundPixelFormat = FormatToDma2d(backgroundPixelFormat);
-        uint32_t dma2d_outPixelFormat = FormatToDma2d(outPixelFormat);
-        grvl::Callbacks()->dma_operation(inputMem, backgroundMem, outputMem, PixelsPerLine, NumberOfLine, inOffset, backgroundOffset, outOffset, dma2d_inPixelFormat, dma2d_backgroundPixelFormat, dma2d_outPixelFormat, frontColor);
-    }
-
-    void UseOldDmaFill(uintptr_t dst, uint32_t xs, uint32_t ys, uint32_t offset, uint32_t color_index, Format pixel_format)
-    {
-        uint32_t dma2d_pixel_format = FormatToDma2d(pixel_format);
-        grvl::Callbacks()->dma_fill(dst, xs, ys, offset, color_index, dma2d_pixel_format);
-    }
-
-    /*
      * Fallback Blitter
      */
 

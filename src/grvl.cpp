@@ -40,7 +40,7 @@ namespace grvl {
         }
 
         // this avoids a terrible performance regression for users that did not define blit_clt but require
-        // custom blit/fill functions, previously grvl would avoid using CLT formats altogether in those cases, but now it's the use who decides
+        // custom blit/fill functions, previously grvl would avoid using CLT formats altogether in those cases, but now it's the user who decides
         if (n_callbacks->blit && !n_callbacks->blit_clt) {
             n_callbacks->blit_clt = UseBlitAsBlitClt;
         }
