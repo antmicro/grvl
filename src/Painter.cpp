@@ -1067,7 +1067,7 @@ namespace grvl {
             outputMem = fb_dst + outBytes * ((x_lcd_size * (y_dst)) + x_dst);
             NumberOfLines = height;
             PixelsPerLine = width;
-            inOffset = totalImageWidth - width + (x_src + frameWidth - width);
+            inOffset = totalImageWidth - width;
             outOffset = x_lcd_size - width;
         }
 
