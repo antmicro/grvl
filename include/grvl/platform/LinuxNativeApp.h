@@ -15,6 +15,7 @@
 
 #include <xkbcommon/xkbcommon.h>
 #include <unordered_set>
+#include <atomic>
 
 class drm_screen;
 class framebuffer_screen;
@@ -47,6 +48,13 @@ namespace grvl {
             uint32_t pitches[4] = {};
             uint32_t offsets[4] = {};
         } primary, cursor;
+
+        struct CursorState {
+            std::atomic<int> x = 0;
+            std::atomic<int> y = 0;
+            std::atomic<bool> pending = false;
+        } cursor_state;
+
         drmEventContext ev = {};
 
         int x = 0;
@@ -60,25 +68,24 @@ namespace grvl {
         bool left_mouse_pressed = false;
         bool draw_mouse_icon = true;
 
-        uint32_t* bgra_buffer;
-
-        void ClampCursor();
-        void UpdateBgraBuffer();
-
-        bool Setup() override;
-
         struct xkb_context* xkb_ctx;
         struct xkb_keymap* xkb_keymap;
         struct xkb_state* xkb_state;
+
+        static void PageFlipHandler(int fd, unsigned int frame, unsigned int sec, unsigned int usec, void* app);
+
+        void LoadPointerDevices();
+        void ClampCursor();
+        bool Setup() override;
+        void RenderCursor();
+        void DRMWait();
     public:
 
         LinuxNativeApp(int width, int height, bool rotate_sideways = false);
         ~LinuxNativeApp() override;
 
         void Render() override;
-        void RenderCursor() override;
         void Poll() override;
-        void DRMWait() override;
 
         // Decide whether a simple mouse icon should be drawn at the cursor position.
         //

@@ -41,8 +41,6 @@ namespace grvl {
         // Draw the next frame.
         // This method should be called in the main render loop.
         virtual void Render() = 0;
-        virtual void RenderCursor() = 0;
-        virtual void DRMWait() = 0;
 
         // Pool user inputs.
         // This method should be called in the main render loop.

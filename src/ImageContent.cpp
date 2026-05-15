@@ -31,6 +31,15 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
+struct Channels {
+    uint8_t r, g, b, a;
+};
+
+union Pixel {
+    Channels channels;
+    uint32_t data;
+};
+
 namespace grvl {
 
     static uint32_t XYToOffset(uint32_t x, uint32_t y, uint32_t byteCount, uint32_t bytesPerPixel, uint32_t wholeImageWidth)
@@ -64,21 +73,16 @@ namespace grvl {
 
         // grvl and STB use a different channel order, we swap them here
         if (image_format == Format::ARGB8888) {
-            uint32_t* pixels = reinterpret_cast<uint32_t*>(this->data);
+            Pixel* pixels = reinterpret_cast<Pixel*>(this->data);
             const uint32_t length = width * height * frames;
 
             for (uint32_t i = 0; i < length; i ++) {
-                uint32_t& pixel = pixels[i];
+                Pixel& pixel = pixels[i];
 
 #if GRVL_BIG_ENDIAN
-                // Move A to the front (RGBA -> ARGB)
-                uint8_t a = pixel & 0xff;
-                pixel = (pixel >> 8) | (a << 24);
+                pixel.data = (pixel.data >> 8) | (pixel.channels.a << 24);
 #else
-                // Swap R and B (ABGR -> ARGB)
-                uint8_t r = pixel & 0xff;
-                uint8_t b = (pixel >> 16) & 0xff;
-                pixel = (pixel & 0xff00ff00) | r << 16 | b;
+                std::swap(pixel.channels.r, pixel.channels.b);
 #endif
             }
         }

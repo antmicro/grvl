@@ -14,7 +14,6 @@
 #include <sys/ioctl.h>
 #include <cstdlib>
 
-#include <atomic>
 #include <poll.h>
 #include <libdrm/drm.h>
 #include <libdrm/drm_mode.h>
@@ -175,6 +174,68 @@ static bool ReadEvent(struct input_event* event, const int* fds, int file_count,
     return true;
 }
 
+static uint32_t GetPropertyId(int fd, uint32_t obj_id, const char *name)
+{
+    uint32_t prop_id = 0;
+
+    drmModeObjectProperties *props = drmModeObjectGetProperties(fd, obj_id, DRM_MODE_OBJECT_PLANE);
+    if (!props) return 0;
+
+    for (uint32_t i = 0; i < props->count_props; i++) {
+        drmModePropertyRes *prop = drmModeGetProperty(fd, props->props[i]);
+        if (!prop) continue;
+
+        if (std::strcmp(prop->name, name) == 0) {
+            prop_id = prop->prop_id;
+            drmModeFreeProperty(prop);
+            break;
+        }
+        drmModeFreeProperty(prop);
+    }
+
+    drmModeFreeObjectProperties(props);
+    return prop_id;
+}
+
+static uint32_t GetPlaneType(int fd, uint32_t plane_id)
+{
+    uint32_t type_val = uint32_t(-1);
+
+    drmModeObjectProperties *props = drmModeObjectGetProperties(fd, plane_id, DRM_MODE_OBJECT_PLANE);
+
+    uint32_t type_prop_id = GetPropertyId(fd, plane_id, "type");
+
+    for (uint32_t i = 0; i < props->count_props; i++) {
+        if (props->props[i] == type_prop_id) {
+            type_val = (uint32_t)props->prop_values[i];
+            break;
+        }
+    }
+
+    drmModeFreeObjectProperties(props);
+    return type_val;
+}
+
+static uint32_t FindPlaneByType(int drm_fd, uint32_t plane_type)
+{
+    drmModePlaneRes *plane_res = drmModeGetPlaneResources(drm_fd);
+    if (!plane_res) return 0;
+
+    uint32_t found_id = 0;
+
+    for (uint32_t i = 0; i < plane_res->count_planes; i++) {
+        uint32_t plane_id = plane_res->planes[i];
+
+        if (GetPlaneType(drm_fd, plane_id) == plane_type) {
+            found_id = plane_id;
+            break;
+        }
+    }
+
+    drmModeFreePlaneResources(plane_res);
+    return found_id;
+}
+
 // implementation
 
 namespace grvl {
@@ -182,7 +243,6 @@ namespace grvl {
     LinuxNativeApp::LinuxNativeApp(int width, int height, bool rotate_sideways)
         : PosixApp(width, height, rotate_sideways)
     {
-        bgra_buffer = new uint32_t [width * height];
         xkb_ctx = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
 
         xkb_keymap = xkb_keymap_new_from_names(xkb_ctx, nullptr, XKB_KEYMAP_COMPILE_NO_FLAGS);
@@ -210,31 +270,21 @@ namespace grvl {
         xkb_context_unref(xkb_ctx);
 
         delete output;
-        delete[] bgra_buffer;
 
         grvl::grvl::Destroy();
     }
 
-    void LinuxNativeApp::UpdateBgraBuffer()
+    void LinuxNativeApp::LoadPointerDevices()
     {
-        struct Channels {
-            uint8_t r, g, b, a;
-        };
+        uint64_t props = 0;
 
-        union Pixel {
-            Channels channels;
-            uint32_t data;
-        };
-
-        uint32_t* source = reinterpret_cast<uint32_t*>(framebuffer);
-
-        for (int iy = 0; iy < height; iy ++) {
-            for (int ix = 0; ix < width; ix ++) {
-                Pixel pixel;
-
-                pixel.data = source[iy * width + ix];
-                std::swap(pixel.channels.r, pixel.channels.b);
-                bgra_buffer[iy * width + ix] = pixel.data;
+        // Check for trackpads which return absolute position,
+        // but use pointer (relative move)
+        for(int i = 0; i < count; ++i) {
+            if(ioctl(inputs[i], EVIOCGPROP(sizeof(props)), &props) >= 0) {
+                if(props & (1UL << INPUT_PROP_POINTER)) {
+                    pointer_devices.insert(inputs[i]);
+                }
             }
         }
     }
@@ -247,81 +297,52 @@ namespace grvl {
         if (y > height) y = height - 1;
     }
 
-    uint32_t get_prop_id(int fd, uint32_t obj_id, const char *name) {
-        uint32_t prop_id = 0;
-
-        drmModeObjectProperties *props = drmModeObjectGetProperties(fd, obj_id, DRM_MODE_OBJECT_PLANE);
-        if (!props) return 0;
-
-        for (uint32_t i = 0; i < props->count_props; i++) {
-            drmModePropertyRes *prop = drmModeGetProperty(fd, props->props[i]);
-            if (!prop) continue;
-
-            if (std::strcmp(prop->name, name) == 0) {
-                prop_id = prop->prop_id;
-                drmModeFreeProperty(prop);
-                break;
-            }
-            drmModeFreeProperty(prop);
-        }
-
-        drmModeFreeObjectProperties(props);
-        return prop_id;
-    }
-
-    uint32_t get_plane_type(int fd, uint32_t plane_id) {
-        uint32_t type_val = uint32_t(-1);
-
-        drmModeObjectProperties *props = drmModeObjectGetProperties(fd, plane_id, DRM_MODE_OBJECT_PLANE);
-
-        uint32_t type_prop_id = get_prop_id(fd, plane_id, "type");
-
-        for (uint32_t i = 0; i < props->count_props; i++) {
-            if (props->props[i] == type_prop_id) {
-                type_val = (uint32_t)props->prop_values[i];
-                break;
-            }
-        }
-
-        drmModeFreeObjectProperties(props);
-        return type_val;
-    }
-
-    uint32_t find_plane_by_type(int drm_fd, uint32_t plane_type) {
-        drmModePlaneRes *plane_res = drmModeGetPlaneResources(drm_fd);
-        if (!plane_res) return 0;
-
-        uint32_t found_id = 0;
-
-        for (uint32_t i = 0; i < plane_res->count_planes; i++) {
-            uint32_t plane_id = plane_res->planes[i];
-
-            if (get_plane_type(drm_fd, plane_id) == plane_type) {
-                found_id = plane_id;
-                break;
-            }
-        }
-
-        drmModeFreePlaneResources(plane_res);
-        return found_id;
-    }
-
-    struct CursorState {
-        std::atomic<int> latest_x{0};
-        std::atomic<int> latest_y{0};
-
-        std::atomic<bool> dirty{false};
-        std::atomic<bool> pending{false};
-
-        int displayed_x = 0;
-        int displayed_y = 0;
-    };
-
-    static CursorState g_cursor;
-
-    static void page_flip_handler(int fd, unsigned int frame, unsigned int sec, unsigned int usec, void *data)
+    void LinuxNativeApp::PageFlipHandler(int fd, unsigned int frame, unsigned int sec, unsigned int usec, void* app)
     {
-        g_cursor.pending = false;
+        reinterpret_cast<LinuxNativeApp*>(app)->cursor_state.pending = false;
+    }
+
+    void LinuxNativeApp::RenderCursor()
+    {
+        if (cursor_state.pending){
+            return;
+        }
+
+        int x = cursor_state.x.load();
+        int y = cursor_state.y.load();
+
+        int drm_fd = output->fd();
+        uint32_t crtc_id = output->fb->crtc->crtc_id;
+        drmModeAtomicReq *req = drmModeAtomicAlloc();
+        drmModeAtomicAddProperty(req, cursor.plane, cursor.props.fb, cursor.fb);
+        drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, crtc_id);
+        drmModeAtomicAddProperty(req, cursor.plane, cursor.props.x, x);
+        drmModeAtomicAddProperty(req, cursor.plane, cursor.props.y, y);
+        drmModeAtomicAddProperty(req, primary.plane, primary.props.fb, primary.fb);
+
+        uint32_t flags = DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_PAGE_FLIP_EVENT;
+        int rc = drmModeAtomicCommit(drm_fd, req, flags, this);
+
+        drmModeAtomicFree(req);
+
+         if (rc == 0) {
+             cursor_state.pending = true;
+             return;
+        }
+    }
+
+    void LinuxNativeApp::DRMWait()
+    {
+        int drm_fd = output->fd();
+        pollfd pfd = {};
+        pfd.fd = drm_fd;
+        pfd.events = POLLIN;
+
+        int ret = poll(&pfd, 1, 16);
+
+        if (ret > 0 && (pfd.revents & POLLIN)) {
+            drmHandleEvent(drm_fd, &ev);
+        }
     }
 
     bool LinuxNativeApp::Setup()
@@ -343,16 +364,7 @@ namespace grvl {
             return false;
         }
 
-        // Check for trackpads which return absolute position,
-        // but use pointer (relative move)
-        unsigned long props;
-        for(int i = 0; i < count; ++i) {
-            if(ioctl(inputs[i], EVIOCGPROP(sizeof(props)), &props) >= 0) {
-                if(props & (1UL << INPUT_PROP_POINTER)) {
-                    pointer_devices.insert(inputs[i]);
-                }
-            }
-        }
+        LoadPointerDevices();
 
         Manager::Initialize(width, height, 4, sideways);
         setup_interrupt_handlers();
@@ -360,7 +372,10 @@ namespace grvl {
         // set drm caps
         int ret = drmSetClientCap(output->fd(), DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
         if (ret != 0) {
-            perror("Failed to enable Universal Planes");
+            printf("Failed to enable Universal Planes!\n");
+
+            delete output;
+            return false;
         }
 
         drmSetClientCap(output->fd(), DRM_CLIENT_CAP_ATOMIC, 1);
@@ -375,9 +390,12 @@ namespace grvl {
         cursor.pitches[0] = cursor.dumb.pitch;
 
         struct drm_mode_map_dumb mreq = {};
-        mreq.handle = cursor.dumb.handle; // The handle from your CREATE_DUMB call
+        mreq.handle = cursor.dumb.handle;
         if (drmIoctl(output->fd(), DRM_IOCTL_MODE_MAP_DUMB, &mreq) < 0) {
-            perror("Failed to prepare dumb buffer for mapping");
+            printf("Failed to prepare dumb buffer for mapping!\n");
+
+            delete output;
+            return false;
         }
 
         cursor.map = (uint32_t *)mmap(0, cursor.dumb.size, PROT_READ | PROT_WRITE,
@@ -387,7 +405,7 @@ namespace grvl {
                       cursor.handles, cursor.pitches,
                       cursor.offsets, &cursor.fb, 0);
 
-        cursor.plane = find_plane_by_type(output->fd(), DRM_PLANE_TYPE_CURSOR);
+        cursor.plane = FindPlaneByType(output->fd(), DRM_PLANE_TYPE_CURSOR);
 
         // Prepare primary plane buffers
         primary.dumb.width = width;
@@ -418,7 +436,7 @@ namespace grvl {
         memset(primary.map, 0, primary.dumb.size);
 
         // this is common so just call it once
-        primary.plane = find_plane_by_type(output->fd(), DRM_PLANE_TYPE_PRIMARY);
+        primary.plane = FindPlaneByType(output->fd(), DRM_PLANE_TYPE_PRIMARY);
 
         // draw the cursor (once)
         for (int by = 0, iy = y; iy < cursor_map_height; iy ++) {
@@ -437,13 +455,13 @@ namespace grvl {
         drmModeAtomicReq *req = drmModeAtomicAlloc();
 
         // Set up cursor request
-        cursor.props.fb = get_prop_id(drm_fd, cursor.plane, "FB_ID");
-        cursor.props.crtc = get_prop_id(drm_fd, cursor.plane, "CRTC_ID");
-        cursor.props.x = get_prop_id(drm_fd, cursor.plane, "CRTC_X");
-        cursor.props.y = get_prop_id(drm_fd, cursor.plane, "CRTC_Y");
+        cursor.props.fb = GetPropertyId(drm_fd, cursor.plane, "FB_ID");
+        cursor.props.crtc = GetPropertyId(drm_fd, cursor.plane, "CRTC_ID");
+        cursor.props.x = GetPropertyId(drm_fd, cursor.plane, "CRTC_X");
+        cursor.props.y = GetPropertyId(drm_fd, cursor.plane, "CRTC_Y");
 
-        primary.props.fb = get_prop_id(drm_fd, primary.plane, "FB_ID");
-        primary.props.crtc = get_prop_id(drm_fd, primary.plane, "CRTC_ID");
+        primary.props.fb = GetPropertyId(drm_fd, primary.plane, "FB_ID");
+        primary.props.crtc = GetPropertyId(drm_fd, primary.plane, "CRTC_ID");
 
         drmModeAtomicAddProperty(req, cursor.plane, cursor.props.fb, cursor.fb);
         drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, crtc_id);
@@ -452,12 +470,12 @@ namespace grvl {
 
         uint32_t crtc_x, crtc_y, crtc_w, crtc_h, src_w, src_h, src_x, src_y;
 
-        crtc_w = get_prop_id(drm_fd, cursor.plane, "CRTC_W");
-        crtc_h = get_prop_id(drm_fd, cursor.plane, "CRTC_H");
-        src_w = get_prop_id(drm_fd, cursor.plane, "SRC_W");
-        src_h = get_prop_id(drm_fd, cursor.plane, "SRC_H");
-        src_x = get_prop_id(drm_fd, cursor.plane, "SRC_X");
-        src_y = get_prop_id(drm_fd, cursor.plane, "SRC_Y");
+        crtc_w = GetPropertyId(drm_fd, cursor.plane, "CRTC_W");
+        crtc_h = GetPropertyId(drm_fd, cursor.plane, "CRTC_H");
+        src_w = GetPropertyId(drm_fd, cursor.plane, "SRC_W");
+        src_h = GetPropertyId(drm_fd, cursor.plane, "SRC_H");
+        src_x = GetPropertyId(drm_fd, cursor.plane, "SRC_X");
+        src_y = GetPropertyId(drm_fd, cursor.plane, "SRC_Y");
 
         drmModeAtomicAddProperty(req, cursor.plane, crtc_w, 64);
         drmModeAtomicAddProperty(req, cursor.plane, crtc_h, 64);
@@ -469,14 +487,14 @@ namespace grvl {
         drmModeAtomicAddProperty(req, cursor.plane, src_h, 64 << 16);
 
         // add primary plane to the same request
-        crtc_x = get_prop_id(drm_fd, primary.plane, "CRTC_X");
-        crtc_y = get_prop_id(drm_fd, primary.plane, "CRTC_Y");
-        crtc_w = get_prop_id(drm_fd, primary.plane, "CRTC_W");
-        crtc_h = get_prop_id(drm_fd, primary.plane, "CRTC_H");
-        src_w = get_prop_id(drm_fd, primary.plane, "SRC_W");
-        src_h = get_prop_id(drm_fd, primary.plane, "SRC_H");
-        src_x = get_prop_id(drm_fd, primary.plane, "SRC_X");
-        src_y = get_prop_id(drm_fd, primary.plane, "SRC_Y");
+        crtc_x = GetPropertyId(drm_fd, primary.plane, "CRTC_X");
+        crtc_y = GetPropertyId(drm_fd, primary.plane, "CRTC_Y");
+        crtc_w = GetPropertyId(drm_fd, primary.plane, "CRTC_W");
+        crtc_h = GetPropertyId(drm_fd, primary.plane, "CRTC_H");
+        src_w = GetPropertyId(drm_fd, primary.plane, "SRC_W");
+        src_h = GetPropertyId(drm_fd, primary.plane, "SRC_H");
+        src_x = GetPropertyId(drm_fd, primary.plane, "SRC_X");
+        src_y = GetPropertyId(drm_fd, primary.plane, "SRC_Y");
 
         drmModeAtomicAddProperty(req, primary.plane, primary.props.crtc, crtc_id);
         drmModeAtomicAddProperty(req, primary.plane, primary.props.fb, primary.fb);
@@ -493,9 +511,8 @@ namespace grvl {
         int rc = drmModeAtomicCommit(drm_fd, req, flags, NULL);
         drmModeAtomicFree(req);
 
-
         ev.version = DRM_EVENT_CONTEXT_VERSION;
-        ev.page_flip_handler = page_flip_handler;
+        ev.page_flip_handler = PageFlipHandler;
 
         return true;
     }
@@ -503,76 +520,29 @@ namespace grvl {
     void LinuxNativeApp::Render()
     {
         Manager::GetInstance().MainLoopIteration();
-        UpdateBgraBuffer();
+
+        const uint32_t row_bytes = width * 4;
+        auto* dst = static_cast<uint8_t*>(primary.map);
+        auto* src = reinterpret_cast<const uint8_t*>(framebuffer);
 
         // copy framebuffer to primary plane buffer
         // DRM dumb buffers may have pitch != width * 4, so do not copy the
         // whole logical image as one tightly packed block.
-        const uint32_t row_bytes = width * 4;
-        auto* dst = static_cast<uint8_t*>(primary.map);
-        auto* src = reinterpret_cast<const uint8_t*>(bgra_buffer);
-
-        for (int y = 0; y < height; ++y, src += row_bytes, dst += primary.dumb.pitch) {
-            memcpy(dst, src, row_bytes);
+        if (row_bytes == primary.dumb.pitch) {
+            memcpy(dst, src, row_bytes * height);
+        } else {
+            for (int y = 0; y < height; ++y, src += row_bytes, dst += primary.dumb.pitch) {
+                memcpy(dst, src, row_bytes);
+            }
         }
 
-        g_cursor.dirty = true;
-    }
-    void LinuxNativeApp::RenderCursor()
-    {
-        if (g_cursor.pending){
-            return;
-        }
-
-        if (!g_cursor.dirty) {
-            return;
-        }
-
-        int x = g_cursor.latest_x.load();
-        int y = g_cursor.latest_y.load();
-
-        int drm_fd = output->fd();
-        uint32_t crtc_id = output->fb->crtc->crtc_id;
-        drmModeAtomicReq *req = drmModeAtomicAlloc();
-        drmModeAtomicAddProperty(req, cursor.plane, cursor.props.fb, cursor.fb);
-        drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, crtc_id);
-        drmModeAtomicAddProperty(req, cursor.plane, cursor.props.x, x);
-        drmModeAtomicAddProperty(req, cursor.plane, cursor.props.y, y);
-        drmModeAtomicAddProperty(req, primary.plane, primary.props.fb, primary.fb);
-
-        uint32_t flags = DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_PAGE_FLIP_EVENT; //DRM_MODE_ATOMIC_ALLOW_MODESET;
-        static int last_rc = 0;
-        int rc = drmModeAtomicCommit(drm_fd, req, flags, NULL);
-
-        drmModeAtomicFree(req);
-
-         if (rc == 0) {
-             g_cursor.pending = true;
-             g_cursor.dirty = false;
-
-             g_cursor.displayed_x = x;
-             g_cursor.displayed_y = y;
-
-             return;
-        }
-    }
-
-    void LinuxNativeApp::DRMWait()
-    {
-        int drm_fd = output->fd();
-        pollfd pfd = {};
-        pfd.fd = drm_fd;
-        pfd.events = POLLIN;
-
-        int ret = poll(&pfd, 1, 16);
-
-        if (ret > 0 && (pfd.revents & POLLIN)) {
-            drmHandleEvent(drm_fd, &ev);
-        }
+        RenderCursor();
     }
 
     void LinuxNativeApp::Poll()
     {
+        DRMWait();
+
         struct input_event event;
         int fd;
 
@@ -586,9 +556,8 @@ namespace grvl {
                     if (event.code == 0) x += event.value;
                     if (event.code == 1) y += event.value;
 
-                    g_cursor.latest_x = x;
-                    g_cursor.latest_y = y;
-                    g_cursor.dirty = true;
+                    cursor_state.x = x;
+                    cursor_state.y = y;
 
                     break;
                 }
@@ -621,9 +590,8 @@ namespace grvl {
                         if (event.code == 1) y = event.value;
                     }
 
-                    g_cursor.latest_x = x;
-                    g_cursor.latest_y = y;
-                    g_cursor.dirty = true;
+                    cursor_state.x = x;
+                    cursor_state.y = y;
 
                     break;
                 }
