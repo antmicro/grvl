@@ -26,6 +26,7 @@
 
 // Adawaita default cursor
 // CC-BY-SA
+// clang-format off
 static const uint32_t cursor_map[] = {
   0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
   0x00000000, 0x00000000, 0x02000000, 0x45f0f0f0, 0x03000000, 0x01000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
@@ -54,6 +55,7 @@ static const uint32_t cursor_map[] = {
 };
 static const int cursor_map_width = 17;
 static const int cursor_map_height = 24;
+// clang-format on
 
 // input
 static std::vector<std::string> GrepFiles(const std::string& path, const std::string& pattern)
