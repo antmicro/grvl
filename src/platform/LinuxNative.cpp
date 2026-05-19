@@ -247,68 +247,6 @@ drmModeModeInfoPtr PickMode(drmModeConnectorPtr connector, const uint16_t width,
     return nullptr;
 }
 
-static uint32_t GetPropertyId(int fd, uint32_t obj_id, const char* name)
-{
-    uint32_t prop_id = 0;
-
-    drmModeObjectProperties *props = drmModeObjectGetProperties(fd, obj_id, DRM_MODE_OBJECT_PLANE);
-    if (!props) return 0;
-
-    for (uint32_t i = 0; i < props->count_props; i++) {
-        drmModePropertyRes *prop = drmModeGetProperty(fd, props->props[i]);
-        if (!prop) continue;
-
-        if (std::strcmp(prop->name, name) == 0) {
-            prop_id = prop->prop_id;
-            drmModeFreeProperty(prop);
-            break;
-        }
-        drmModeFreeProperty(prop);
-    }
-
-    drmModeFreeObjectProperties(props);
-    return prop_id;
-}
-
-static uint32_t GetPlaneType(int fd, uint32_t plane_id)
-{
-    uint32_t type_val = uint32_t(-1);
-
-    drmModeObjectProperties *props = drmModeObjectGetProperties(fd, plane_id, DRM_MODE_OBJECT_PLANE);
-
-    uint32_t type_prop_id = GetPropertyId(fd, plane_id, "type");
-
-    for (uint32_t i = 0; i < props->count_props; i++) {
-        if (props->props[i] == type_prop_id) {
-            type_val = (uint32_t)props->prop_values[i];
-            break;
-        }
-    }
-
-    drmModeFreeObjectProperties(props);
-    return type_val;
-}
-
-static uint32_t FindPlaneByType(int drm_fd, uint32_t plane_type)
-{
-    drmModePlaneRes *plane_res = drmModeGetPlaneResources(drm_fd);
-    if (!plane_res) return 0;
-
-    uint32_t found_id = 0;
-
-    for (uint32_t i = 0; i < plane_res->count_planes; i++) {
-        uint32_t plane_id = plane_res->planes[i];
-
-        if (GetPlaneType(drm_fd, plane_id) == plane_type) {
-            found_id = plane_id;
-            break;
-        }
-    }
-
-    drmModeFreePlaneResources(plane_res);
-    return found_id;
-}
-
 // implementation
 
 namespace grvl {
@@ -345,6 +283,68 @@ namespace grvl {
         CloseDriver();
 
         grvl::grvl::Destroy();
+    }
+
+    uint32_t LinuxNativeApp::GetPropertyId(uint32_t obj_id, const char* name)
+    {
+        uint32_t prop_id = 0;
+
+        drmModeObjectProperties *props = drmModeObjectGetProperties(fd, obj_id, DRM_MODE_OBJECT_PLANE);
+        if (!props) return 0;
+
+        for (uint32_t i = 0; i < props->count_props; i++) {
+            drmModePropertyRes *prop = drmModeGetProperty(fd, props->props[i]);
+            if (!prop) continue;
+
+            if (std::strcmp(prop->name, name) == 0) {
+                prop_id = prop->prop_id;
+                drmModeFreeProperty(prop);
+                break;
+            }
+            drmModeFreeProperty(prop);
+        }
+
+        drmModeFreeObjectProperties(props);
+        return prop_id;
+    }
+
+    uint32_t LinuxNativeApp::GetPlaneType(uint32_t plane_id)
+    {
+        uint32_t type_val = uint32_t(-1);
+
+        drmModeObjectProperties *props = drmModeObjectGetProperties(fd, plane_id, DRM_MODE_OBJECT_PLANE);
+
+        uint32_t type_prop_id = GetPropertyId(plane_id, "type");
+
+        for (uint32_t i = 0; i < props->count_props; i++) {
+            if (props->props[i] == type_prop_id) {
+                type_val = (uint32_t)props->prop_values[i];
+                break;
+            }
+        }
+
+        drmModeFreeObjectProperties(props);
+        return type_val;
+    }
+
+    uint32_t LinuxNativeApp::FindPlaneByType(uint32_t plane_type)
+    {
+        drmModePlaneRes *plane_res = drmModeGetPlaneResources(fd);
+        if (!plane_res) return 0;
+
+        uint32_t found_id = 0;
+
+        for (uint32_t i = 0; i < plane_res->count_planes; i++) {
+            uint32_t plane_id = plane_res->planes[i];
+
+            if (GetPlaneType(plane_id) == plane_type) {
+                found_id = plane_id;
+                break;
+            }
+        }
+
+        drmModeFreePlaneResources(plane_res);
+        return found_id;
     }
 
     void LinuxNativeApp::CloseDriver()
@@ -401,7 +401,7 @@ namespace grvl {
 
     bool LinuxNativeApp::TryUsingDriver(const char* path, uint16_t width, uint16_t height, uint32_t refresh)
     {
-        if (path != nullptr) {
+        if (path != nullptr && (strlen(path) != 0)) {
             int fh = open(path, O_RDWR);
             if (fh > 0) {
                 return InitDriver(fh, width, height, refresh);
@@ -535,7 +535,7 @@ namespace grvl {
                       cursor.handles, cursor.pitches,
                       cursor.offsets, &cursor.fb, 0);
 
-        cursor.plane = FindPlaneByType(fd, DRM_PLANE_TYPE_CURSOR);
+        cursor.plane = FindPlaneByType(DRM_PLANE_TYPE_CURSOR);
 
         // Prepare primary plane buffers
         primary.dumb.width = width;
@@ -566,7 +566,7 @@ namespace grvl {
         memset(primary.map, 0, primary.dumb.size);
 
         // this is common so just call it once
-        primary.plane = FindPlaneByType(fd, DRM_PLANE_TYPE_PRIMARY);
+        primary.plane = FindPlaneByType(DRM_PLANE_TYPE_PRIMARY);
 
         // draw the cursor (once)
         for (int by = 0, iy = y; iy < cursor_map_height; iy ++) {
@@ -582,13 +582,13 @@ namespace grvl {
         drmModeAtomicReqPtr req = drmModeAtomicAlloc();
 
         // Set up cursor request
-        cursor.props.fb = GetPropertyId(fd, cursor.plane, "FB_ID");
-        cursor.props.crtc = GetPropertyId(fd, cursor.plane, "CRTC_ID");
-        cursor.props.x = GetPropertyId(fd, cursor.plane, "CRTC_X");
-        cursor.props.y = GetPropertyId(fd, cursor.plane, "CRTC_Y");
+        cursor.props.fb = GetPropertyId(cursor.plane, "FB_ID");
+        cursor.props.crtc = GetPropertyId(cursor.plane, "CRTC_ID");
+        cursor.props.x = GetPropertyId(cursor.plane, "CRTC_X");
+        cursor.props.y = GetPropertyId(cursor.plane, "CRTC_Y");
 
-        primary.props.fb = GetPropertyId(fd, primary.plane, "FB_ID");
-        primary.props.crtc = GetPropertyId(fd, primary.plane, "CRTC_ID");
+        primary.props.fb = GetPropertyId(primary.plane, "FB_ID");
+        primary.props.crtc = GetPropertyId(primary.plane, "CRTC_ID");
 
         drmModeAtomicAddProperty(req, cursor.plane, cursor.props.fb, cursor.fb);
         drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, encoder->crtc_id);
@@ -597,12 +597,12 @@ namespace grvl {
 
         uint32_t crtc_x, crtc_y, crtc_w, crtc_h, src_w, src_h, src_x, src_y;
 
-        crtc_w = GetPropertyId(fd, cursor.plane, "CRTC_W");
-        crtc_h = GetPropertyId(fd, cursor.plane, "CRTC_H");
-        src_w = GetPropertyId(fd, cursor.plane, "SRC_W");
-        src_h = GetPropertyId(fd, cursor.plane, "SRC_H");
-        src_x = GetPropertyId(fd, cursor.plane, "SRC_X");
-        src_y = GetPropertyId(fd, cursor.plane, "SRC_Y");
+        crtc_w = GetPropertyId(cursor.plane, "CRTC_W");
+        crtc_h = GetPropertyId(cursor.plane, "CRTC_H");
+        src_w = GetPropertyId(cursor.plane, "SRC_W");
+        src_h = GetPropertyId(cursor.plane, "SRC_H");
+        src_x = GetPropertyId(cursor.plane, "SRC_X");
+        src_y = GetPropertyId(cursor.plane, "SRC_Y");
 
         drmModeAtomicAddProperty(req, cursor.plane, crtc_w, 64);
         drmModeAtomicAddProperty(req, cursor.plane, crtc_h, 64);
@@ -614,14 +614,14 @@ namespace grvl {
         drmModeAtomicAddProperty(req, cursor.plane, src_h, 64 << 16);
 
         // add primary plane to the same request
-        crtc_x = GetPropertyId(fd, primary.plane, "CRTC_X");
-        crtc_y = GetPropertyId(fd, primary.plane, "CRTC_Y");
-        crtc_w = GetPropertyId(fd, primary.plane, "CRTC_W");
-        crtc_h = GetPropertyId(fd, primary.plane, "CRTC_H");
-        src_w = GetPropertyId(fd, primary.plane, "SRC_W");
-        src_h = GetPropertyId(fd, primary.plane, "SRC_H");
-        src_x = GetPropertyId(fd, primary.plane, "SRC_X");
-        src_y = GetPropertyId(fd, primary.plane, "SRC_Y");
+        crtc_x = GetPropertyId(primary.plane, "CRTC_X");
+        crtc_y = GetPropertyId(primary.plane, "CRTC_Y");
+        crtc_w = GetPropertyId(primary.plane, "CRTC_W");
+        crtc_h = GetPropertyId(primary.plane, "CRTC_H");
+        src_w = GetPropertyId(primary.plane, "SRC_W");
+        src_h = GetPropertyId(primary.plane, "SRC_H");
+        src_x = GetPropertyId(primary.plane, "SRC_X");
+        src_y = GetPropertyId(primary.plane, "SRC_Y");
 
         drmModeAtomicAddProperty(req, primary.plane, primary.props.crtc, encoder->crtc_id);
         drmModeAtomicAddProperty(req, primary.plane, primary.props.fb, primary.fb);

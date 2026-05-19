@@ -79,6 +79,10 @@ namespace grvl {
 
         static void PageFlipHandler(int fd, unsigned int frame, unsigned int sec, unsigned int usec, void* app);
 
+        uint32_t GetPropertyId(uint32_t obj_id, const char* name);
+        uint32_t GetPlaneType(uint32_t plane_id);
+        uint32_t FindPlaneByType(uint32_t plane_type);
+
         void CloseDriver();
         bool InitDriver(int fd, uint16_t width, uint16_t height, uint32_t refresh);
         bool TryUsingDriver(const char* path, uint16_t width, uint16_t height, uint32_t refresh);
