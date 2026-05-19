@@ -38,6 +38,7 @@ namespace grvl {
         ~LinuxDesktopApp() override;
 
         void Render() override;
+        void Swap() override;
         void Poll() override;
 
         // Set title for the window.

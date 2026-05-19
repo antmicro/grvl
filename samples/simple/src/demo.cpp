@@ -56,9 +56,14 @@ int main()
 
         app->Render();
 
+        // draw directly over the framebuffer
+        grvl::Font* font = manager.GetFontFromContainer("mona16");
+        manager.painter.DisplayAntialiasedString(font, 2, 16, "Hello Overlay!", 0xffff0000);
+
         grvl::JSEngine::MakeJavaScriptFunctionCall("UpdateCurrentTime");
         grvl::JSEngine::MakeJavaScriptFunctionCall("UpdatePositionOfCurrentTimeLine");
 
+        app->Swap();
         app->Poll();
     }
 

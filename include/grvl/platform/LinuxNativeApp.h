@@ -100,6 +100,7 @@ namespace grvl {
         ~LinuxNativeApp() override;
 
         void Render() override;
+        void Swap() override;
         void Poll() override;
 
         // Decide whether a simple mouse icon should be drawn at the cursor position.

@@ -52,7 +52,10 @@ namespace grvl {
     void LinuxDesktopApp::Render()
     {
         Manager::GetInstance().MainLoopIteration();
+    }
 
+    void LinuxDesktopApp::Swap()
+    {
         void* pixels = 0;
         int pitch;
 

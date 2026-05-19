@@ -675,7 +675,10 @@ namespace grvl {
     void LinuxNativeApp::Render()
     {
         Manager::GetInstance().MainLoopIteration();
+    }
 
+    void LinuxNativeApp::Swap()
+    {
         const uint32_t row_bytes = width * 4;
         auto* dst = static_cast<uint8_t*>(primary.map);
         auto* src = reinterpret_cast<const uint8_t*>(framebuffer);

@@ -39,11 +39,15 @@ namespace grvl {
         virtual ~Application() = default;
 
         // Draw the next frame.
-        // This method should be called in the main render loop.
+        // This method should be called at the start of the main render loop.
         virtual void Render() = 0;
 
-        // Pool user inputs.
-        // This method should be called in the main render loop.
+        // Swap the screen buffers.
+        // This method should be called in the middle of the main render loop.
+        virtual void Swap() = 0;
+
+        // Poll user inputs.
+        // This method should be called at the end of the main render loop.
         virtual void Poll() = 0;
 
         // Check if the application should exit the main loop and terminate
