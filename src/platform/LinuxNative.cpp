@@ -71,8 +71,10 @@ static std::vector<std::string> GrepFiles(const std::string& path, const std::st
 
 void CloseFiles(int* fds, int count)
 {
+    const int grab = 0;
+
     for (int i = 0; i < count; i ++) {
-        ioctl(fds[i], EVIOCGRAB, 0);
+        ioctl(fds[i], EVIOCGRAB, &grab);
         close(fds[i]);
     }
 
@@ -170,12 +172,14 @@ static bool ReadEvent(struct input_event* event, const int* fds, int file_count,
     return true;
 }
 
-drmModeConnectorPtr PickConnector(int fd, drmModeResPtr resource, size_t index)
+drmModeConnectorPtr PickConnector(int fd, drmModeResPtr resource)
 {
     std::vector<drmModeConnectorPtr> connectors;
+    int selected = -1;
 
     for (int i = 0; i < resource->count_connectors; i++) {
         const auto connector = drmModeGetConnectorCurrent(fd, resource->connectors[i]);
+        connectors.push_back(connector);
 
         if (connector == nullptr) {
             continue;
@@ -189,25 +193,23 @@ drmModeConnectorPtr PickConnector(int fd, drmModeResPtr resource, size_t index)
             continue;
         }
 
-        connectors.push_back(connector);
-    }
-
-    if (connectors.empty()) {
-        printf("No valid DRM connectors found!\n");
-        return nullptr;
+        // we always select the "last" connector (first valid)
+        selected = connectors.size() - 1;
+        break;
     }
 
     for (size_t i = 0; i < connectors.size(); i++) {
-        if (i != index) {
+        if (i != selected) {
             drmModeFreeConnector(connectors[i]);
         }
     }
 
-    if (index >= connectors.size()) {
+    if (selected == -1) {
+        printf("No valid DRM connectors found!\n");
         return nullptr;
     }
 
-    return connectors[index];
+    return connectors[selected];
 }
 
 drmModeModeInfoPtr PickMode(drmModeConnectorPtr connector, const uint16_t width, const uint16_t height, const uint32_t refresh)
@@ -396,7 +398,7 @@ namespace grvl {
             return false;
         }
 
-        this->conn = PickConnector(fd, resource, 0);
+        this->conn = PickConnector(fd, resource);
         if (!conn) {
             printf("Unable to pick DRM connection!\n");
             return false;
