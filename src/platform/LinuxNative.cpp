@@ -329,21 +329,39 @@ namespace grvl {
 
     uint32_t LinuxNativeApp::FindPlaneByType(uint32_t plane_type)
     {
-        drmModePlaneRes *plane_res = drmModeGetPlaneResources(fd);
+        drmModePlaneResPtr plane_res = drmModeGetPlaneResources(fd);
         if (!plane_res) return 0;
 
         uint32_t found_id = 0;
+        bool selected = false;
 
         for (uint32_t i = 0; i < plane_res->count_planes; i++) {
             uint32_t plane_id = plane_res->planes[i];
 
-            if (GetPlaneType(plane_id) == plane_type) {
-                found_id = plane_id;
-                break;
+            if (GetPlaneType(plane_id) != plane_type) {
+                continue;
             }
+
+            drmModePlanePtr plane = drmModeGetPlane(fd, plane_id);
+            uint32_t crtcs = plane->possible_crtcs;
+            drmModeFreePlane(plane);
+
+            // Only select planes compatible with our CRTC
+            if (!(crtcs & (1 << crtc_index))) {
+                continue;
+            }
+
+            found_id = plane_id;
+            selected = true;
+            break;
         }
 
         drmModeFreePlaneResources(plane_res);
+
+        if (!selected) {
+            printf("Failed to select DRM plane!\n");
+        }
+
         return found_id;
     }
 
@@ -380,13 +398,13 @@ namespace grvl {
 
         this->conn = PickConnector(fd, resource, 0);
         if (!conn) {
-            printf("Unable to pick any DRM connection!\n");
+            printf("Unable to pick DRM connection!\n");
             return false;
         }
 
         this->mode = PickMode(conn, width, height, refresh);
         if (!mode) {
-            printf("Unable to pick any DRM mode!\n");
+            printf("Unable to pick DRM mode!\n");
             return false;
         }
 
@@ -394,6 +412,14 @@ namespace grvl {
         if (!encoder) {
             printf("Unable to get DRM encoder!\n");
             return false;
+        }
+
+        // Find index of the CRTC we are using
+        for (int i = 0; i < resource->count_crtcs; i++) {
+            if (resource->crtcs[i] == encoder->crtc_id) {
+                crtc_index = i;
+                break;
+            }
         }
 
         return true;

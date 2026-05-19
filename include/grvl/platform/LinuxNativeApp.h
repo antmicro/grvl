@@ -35,6 +35,8 @@ namespace grvl {
     private:
 
         int fd = -1;
+        int crtc_index = -1;
+
         drmModeResPtr resource = nullptr;
         drmModeConnectorPtr conn = nullptr;
         drmModeModeInfoPtr mode = nullptr;
