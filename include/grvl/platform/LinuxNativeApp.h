@@ -34,7 +34,12 @@ namespace grvl {
     class LinuxNativeApp : public PosixApp {
     private:
 
-        drm_screen* output = nullptr;
+        int fd = -1;
+        drmModeResPtr resource = nullptr;
+        drmModeConnectorPtr conn = nullptr;
+        drmModeModeInfoPtr mode = nullptr;
+        drmModeEncoderPtr encoder = nullptr;
+        drmModeCrtcPtr crtc = nullptr;
 
         struct {
             struct drm_mode_create_dumb dumb = {};
@@ -73,6 +78,10 @@ namespace grvl {
         struct xkb_state* xkb_state;
 
         static void PageFlipHandler(int fd, unsigned int frame, unsigned int sec, unsigned int usec, void* app);
+
+        void CloseDriver();
+        bool InitDriver(int fd, uint16_t width, uint16_t height, uint32_t refresh);
+        bool TryUsingDriver(const char* path, uint16_t width, uint16_t height, uint32_t refresh);
 
         void LoadPointerDevices();
         void ClampCursor();

@@ -3,10 +3,6 @@
 #include <grvl/platform/LinuxNativeApp.h>
 #include <grvl/Manager.h>
 
-#include <core/framebuffer.hpp>
-#include <core/drm.hpp>
-#include <core/interrupt.hpp>
-
 #include <regex>
 #include <filesystem>
 #include <fcntl.h>
@@ -174,7 +170,84 @@ static bool ReadEvent(struct input_event* event, const int* fds, int file_count,
     return true;
 }
 
-static uint32_t GetPropertyId(int fd, uint32_t obj_id, const char *name)
+drmModeConnectorPtr PickConnector(int fd, drmModeResPtr resource, size_t index)
+{
+    std::vector<drmModeConnectorPtr> connectors;
+
+    for (int i = 0; i < resource->count_connectors; i++) {
+        const auto connector = drmModeGetConnectorCurrent(fd, resource->connectors[i]);
+
+        if (connector == nullptr) {
+            continue;
+        }
+
+        if (connector->count_modes == 0) {
+            continue;
+        }
+
+        if (connector->connection == DRM_MODE_DISCONNECTED) {
+            continue;
+        }
+
+        connectors.push_back(connector);
+    }
+
+    if (connectors.empty()) {
+        printf("No valid DRM connectors found!\n");
+        return nullptr;
+    }
+
+    for (size_t i = 0; i < connectors.size(); i++) {
+        if (i != index) {
+            drmModeFreeConnector(connectors[i]);
+        }
+    }
+
+    if (index >= connectors.size()) {
+        return nullptr;
+    }
+
+    return connectors[index];
+}
+
+drmModeModeInfoPtr PickMode(drmModeConnectorPtr connector, const uint16_t width, const uint16_t height, const uint32_t refresh)
+{
+    size_t pixels = 0;
+    drmModeModeInfoPtr preferred = nullptr, highest = nullptr;
+
+    for (int i = 0; i < connector->count_modes; i++) {
+        const auto mode = &connector->modes[i];
+        if (width == mode->hdisplay && height == mode->vdisplay) {
+            if (refresh == -1 || refresh == mode->vrefresh) {
+                return mode;
+            }
+        }
+
+        if (mode->type & DRM_MODE_TYPE_PREFERRED) {
+            preferred = mode;
+        }
+
+        const size_t size = mode->vdisplay * mode->hdisplay;
+
+        // pick the mode with the highest resolution
+        if (size > pixels) {
+            pixels = size;
+            highest = mode;
+        }
+    }
+
+    if (preferred) {
+        return preferred;
+    }
+
+    if (highest) {
+        return highest;
+    }
+
+    return nullptr;
+}
+
+static uint32_t GetPropertyId(int fd, uint32_t obj_id, const char* name)
 {
     uint32_t prop_id = 0;
 
@@ -269,9 +342,75 @@ namespace grvl {
         xkb_keymap_unref(xkb_keymap);
         xkb_context_unref(xkb_ctx);
 
-        delete output;
+        CloseDriver();
 
         grvl::grvl::Destroy();
+    }
+
+    void LinuxNativeApp::CloseDriver()
+    {
+        if (fd == -1) {
+            return;
+        }
+
+        if (resource) {
+            drmModeFreeResources(resource);
+        }
+
+        if (conn) {
+            drmModeFreeConnector(conn);
+        }
+
+        if (encoder) {
+            drmModeFreeEncoder(encoder);
+        }
+
+        close(fd);
+    }
+
+    bool LinuxNativeApp::InitDriver(int fd, uint16_t width, uint16_t height, uint32_t refresh)
+    {
+        this->fd = fd;
+
+        this->resource = drmModeGetResources(fd);
+        if (!resource) {
+            printf("Unable to get DRM resources!\n");
+            return false;
+        }
+
+        this->conn = PickConnector(fd, resource, 0);
+        if (!conn) {
+            printf("Unable to pick any DRM connection!\n");
+            return false;
+        }
+
+        this->mode = PickMode(conn, width, height, refresh);
+        if (!mode) {
+            printf("Unable to pick any DRM mode!\n");
+            return false;
+        }
+
+        this->encoder = drmModeGetEncoder(fd, conn->encoder_id);
+        if (!encoder) {
+            printf("Unable to get DRM encoder!\n");
+            return false;
+        }
+
+        return true;
+    }
+
+    bool LinuxNativeApp::TryUsingDriver(const char* path, uint16_t width, uint16_t height, uint32_t refresh)
+    {
+        if (path != nullptr) {
+            int fh = open(path, O_RDWR);
+            if (fh > 0) {
+                return InitDriver(fh, width, height, refresh);
+            }
+
+            printf("Failed to open '%s'!\n", path);
+        }
+
+        return false;
     }
 
     void LinuxNativeApp::LoadPointerDevices()
@@ -311,21 +450,19 @@ namespace grvl {
         int x = cursor_state.x.load();
         int y = cursor_state.y.load();
 
-        int drm_fd = output->fd();
-        uint32_t crtc_id = output->fb->crtc->crtc_id;
         drmModeAtomicReq *req = drmModeAtomicAlloc();
         drmModeAtomicAddProperty(req, cursor.plane, cursor.props.fb, cursor.fb);
-        drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, crtc_id);
+        drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, encoder->crtc_id);
         drmModeAtomicAddProperty(req, cursor.plane, cursor.props.x, x);
         drmModeAtomicAddProperty(req, cursor.plane, cursor.props.y, y);
         drmModeAtomicAddProperty(req, primary.plane, primary.props.fb, primary.fb);
 
         uint32_t flags = DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_PAGE_FLIP_EVENT;
-        int rc = drmModeAtomicCommit(drm_fd, req, flags, this);
+        int rc = drmModeAtomicCommit(fd, req, flags, this);
 
         drmModeAtomicFree(req);
 
-         if (rc == 0) {
+        if (rc == 0) {
              cursor_state.pending = true;
              return;
         }
@@ -333,21 +470,26 @@ namespace grvl {
 
     void LinuxNativeApp::DRMWait()
     {
-        int drm_fd = output->fd();
         pollfd pfd = {};
-        pfd.fd = drm_fd;
+        pfd.fd = fd;
         pfd.events = POLLIN;
 
         int ret = poll(&pfd, 1, 16);
 
         if (ret > 0 && (pfd.revents & POLLIN)) {
-            drmHandleEvent(drm_fd, &ev);
+            drmHandleEvent(fd, &ev);
         }
     }
 
     bool LinuxNativeApp::Setup()
     {
-        output = new drm_screen("", width, height);
+        const char* drivers[] = {
+            std::getenv("DRM_PATH"), "/dev/dri/card0", "/dev/dri/card1"
+        };
+
+        for (const char* path : drivers) {
+            if (TryUsingDriver(path, width, height, -1)) break;
+        }
 
         // Linux kernel input API
         auto paths = GrepFiles("/dev/input/", "event\\d+");
@@ -356,68 +498,56 @@ namespace grvl {
 
         if (count == 0 || inputs == nullptr) {
             printf("Unable to access Linux kernel input API!\n");
-
-            // make sure we don't exit without closing YAV screen
-            delete output;
-            output = nullptr;
-
             return false;
         }
 
         LoadPointerDevices();
-
         Manager::Initialize(width, height, 4, sideways);
-        setup_interrupt_handlers();
 
         // set drm caps
-        int ret = drmSetClientCap(output->fd(), DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
+        int ret = drmSetClientCap(fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
         if (ret != 0) {
             printf("Failed to enable Universal Planes!\n");
-
-            delete output;
             return false;
         }
 
-        drmSetClientCap(output->fd(), DRM_CLIENT_CAP_ATOMIC, 1);
+        drmSetClientCap(fd, DRM_CLIENT_CAP_ATOMIC, 1);
 
         // Prepare DRM buffers for the mouse cursor
         cursor.dumb.width = 64;
         cursor.dumb.height = 64;
         cursor.dumb.bpp = 32;
-        drmIoctl(output->fd(), DRM_IOCTL_MODE_CREATE_DUMB, &cursor.dumb);
+        drmIoctl(fd, DRM_IOCTL_MODE_CREATE_DUMB, &cursor.dumb);
 
         cursor.handles[0] = cursor.dumb.handle;
         cursor.pitches[0] = cursor.dumb.pitch;
 
         struct drm_mode_map_dumb mreq = {};
         mreq.handle = cursor.dumb.handle;
-        if (drmIoctl(output->fd(), DRM_IOCTL_MODE_MAP_DUMB, &mreq) < 0) {
+        if (drmIoctl(fd, DRM_IOCTL_MODE_MAP_DUMB, &mreq) < 0) {
             printf("Failed to prepare dumb buffer for mapping!\n");
-
-            delete output;
             return false;
         }
 
-        cursor.map = (uint32_t *)mmap(0, cursor.dumb.size, PROT_READ | PROT_WRITE,
-                                      MAP_SHARED, output->fd(), mreq.offset);
+        cursor.map = (uint32_t *)mmap(0, cursor.dumb.size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, mreq.offset);
 
-        drmModeAddFB2(output->fd(), 64, 64, DRM_FORMAT_ARGB8888,
+        drmModeAddFB2(fd, 64, 64, DRM_FORMAT_ARGB8888,
                       cursor.handles, cursor.pitches,
                       cursor.offsets, &cursor.fb, 0);
 
-        cursor.plane = FindPlaneByType(output->fd(), DRM_PLANE_TYPE_CURSOR);
+        cursor.plane = FindPlaneByType(fd, DRM_PLANE_TYPE_CURSOR);
 
         // Prepare primary plane buffers
         primary.dumb.width = width;
         primary.dumb.height = height;
         primary.dumb.bpp = 32;
 
-        drmIoctl(output->fd(), DRM_IOCTL_MODE_CREATE_DUMB, &primary.dumb);
+        drmIoctl(fd, DRM_IOCTL_MODE_CREATE_DUMB, &primary.dumb);
 
         primary.handles[0] = primary.dumb.handle;
         primary.pitches[0] = primary.dumb.pitch;
 
-        drmModeAddFB2(output->fd(), width, height, DRM_FORMAT_XRGB8888,
+        drmModeAddFB2(fd, width, height, DRM_FORMAT_XRGB8888,
                       primary.handles,
                       primary.pitches,
                       primary.offsets,
@@ -427,16 +557,16 @@ namespace grvl {
         // Map it to CPU memory
         struct drm_mode_map_dumb dmap = {};
         dmap.handle = primary.dumb.handle;
-        drmIoctl(output->fd(), DRM_IOCTL_MODE_MAP_DUMB, &dmap);
+        drmIoctl(fd, DRM_IOCTL_MODE_MAP_DUMB, &dmap);
 
         primary.map = mmap(0, primary.dumb.size, PROT_READ | PROT_WRITE,
-                              MAP_SHARED, output->fd(), dmap.offset);
+                              MAP_SHARED, fd, dmap.offset);
 
         // Clear the buffer (black)
         memset(primary.map, 0, primary.dumb.size);
 
         // this is common so just call it once
-        primary.plane = FindPlaneByType(output->fd(), DRM_PLANE_TYPE_PRIMARY);
+        primary.plane = FindPlaneByType(fd, DRM_PLANE_TYPE_PRIMARY);
 
         // draw the cursor (once)
         for (int by = 0, iy = y; iy < cursor_map_height; iy ++) {
@@ -449,33 +579,30 @@ namespace grvl {
             by ++;
         }
 
-        int drm_fd = output->fd();
-        uint32_t crtc_id = output->fb->crtc->crtc_id;
-
-        drmModeAtomicReq *req = drmModeAtomicAlloc();
+        drmModeAtomicReqPtr req = drmModeAtomicAlloc();
 
         // Set up cursor request
-        cursor.props.fb = GetPropertyId(drm_fd, cursor.plane, "FB_ID");
-        cursor.props.crtc = GetPropertyId(drm_fd, cursor.plane, "CRTC_ID");
-        cursor.props.x = GetPropertyId(drm_fd, cursor.plane, "CRTC_X");
-        cursor.props.y = GetPropertyId(drm_fd, cursor.plane, "CRTC_Y");
+        cursor.props.fb = GetPropertyId(fd, cursor.plane, "FB_ID");
+        cursor.props.crtc = GetPropertyId(fd, cursor.plane, "CRTC_ID");
+        cursor.props.x = GetPropertyId(fd, cursor.plane, "CRTC_X");
+        cursor.props.y = GetPropertyId(fd, cursor.plane, "CRTC_Y");
 
-        primary.props.fb = GetPropertyId(drm_fd, primary.plane, "FB_ID");
-        primary.props.crtc = GetPropertyId(drm_fd, primary.plane, "CRTC_ID");
+        primary.props.fb = GetPropertyId(fd, primary.plane, "FB_ID");
+        primary.props.crtc = GetPropertyId(fd, primary.plane, "CRTC_ID");
 
         drmModeAtomicAddProperty(req, cursor.plane, cursor.props.fb, cursor.fb);
-        drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, crtc_id);
+        drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, encoder->crtc_id);
         drmModeAtomicAddProperty(req, cursor.plane, cursor.props.x, 0);
         drmModeAtomicAddProperty(req, cursor.plane, cursor.props.y, 0);
 
         uint32_t crtc_x, crtc_y, crtc_w, crtc_h, src_w, src_h, src_x, src_y;
 
-        crtc_w = GetPropertyId(drm_fd, cursor.plane, "CRTC_W");
-        crtc_h = GetPropertyId(drm_fd, cursor.plane, "CRTC_H");
-        src_w = GetPropertyId(drm_fd, cursor.plane, "SRC_W");
-        src_h = GetPropertyId(drm_fd, cursor.plane, "SRC_H");
-        src_x = GetPropertyId(drm_fd, cursor.plane, "SRC_X");
-        src_y = GetPropertyId(drm_fd, cursor.plane, "SRC_Y");
+        crtc_w = GetPropertyId(fd, cursor.plane, "CRTC_W");
+        crtc_h = GetPropertyId(fd, cursor.plane, "CRTC_H");
+        src_w = GetPropertyId(fd, cursor.plane, "SRC_W");
+        src_h = GetPropertyId(fd, cursor.plane, "SRC_H");
+        src_x = GetPropertyId(fd, cursor.plane, "SRC_X");
+        src_y = GetPropertyId(fd, cursor.plane, "SRC_Y");
 
         drmModeAtomicAddProperty(req, cursor.plane, crtc_w, 64);
         drmModeAtomicAddProperty(req, cursor.plane, crtc_h, 64);
@@ -487,16 +614,16 @@ namespace grvl {
         drmModeAtomicAddProperty(req, cursor.plane, src_h, 64 << 16);
 
         // add primary plane to the same request
-        crtc_x = GetPropertyId(drm_fd, primary.plane, "CRTC_X");
-        crtc_y = GetPropertyId(drm_fd, primary.plane, "CRTC_Y");
-        crtc_w = GetPropertyId(drm_fd, primary.plane, "CRTC_W");
-        crtc_h = GetPropertyId(drm_fd, primary.plane, "CRTC_H");
-        src_w = GetPropertyId(drm_fd, primary.plane, "SRC_W");
-        src_h = GetPropertyId(drm_fd, primary.plane, "SRC_H");
-        src_x = GetPropertyId(drm_fd, primary.plane, "SRC_X");
-        src_y = GetPropertyId(drm_fd, primary.plane, "SRC_Y");
+        crtc_x = GetPropertyId(fd, primary.plane, "CRTC_X");
+        crtc_y = GetPropertyId(fd, primary.plane, "CRTC_Y");
+        crtc_w = GetPropertyId(fd, primary.plane, "CRTC_W");
+        crtc_h = GetPropertyId(fd, primary.plane, "CRTC_H");
+        src_w = GetPropertyId(fd, primary.plane, "SRC_W");
+        src_h = GetPropertyId(fd, primary.plane, "SRC_H");
+        src_x = GetPropertyId(fd, primary.plane, "SRC_X");
+        src_y = GetPropertyId(fd, primary.plane, "SRC_Y");
 
-        drmModeAtomicAddProperty(req, primary.plane, primary.props.crtc, crtc_id);
+        drmModeAtomicAddProperty(req, primary.plane, primary.props.crtc, encoder->crtc_id);
         drmModeAtomicAddProperty(req, primary.plane, primary.props.fb, primary.fb);
         drmModeAtomicAddProperty(req, primary.plane, crtc_x, 0);
         drmModeAtomicAddProperty(req, primary.plane, crtc_y, 0);
@@ -508,7 +635,7 @@ namespace grvl {
         drmModeAtomicAddProperty(req, primary.plane, src_h, height << 16);
 
         uint32_t flags = DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_ATOMIC_ALLOW_MODESET;
-        int rc = drmModeAtomicCommit(drm_fd, req, flags, NULL);
+        int rc = drmModeAtomicCommit(fd, req, flags, NULL);
         drmModeAtomicFree(req);
 
         ev.version = DRM_EVENT_CONTEXT_VERSION;
@@ -649,7 +776,6 @@ namespace grvl {
                                     if (xkb_state_key_get_utf8(xkb_state, keycode, buffer.data(), buffer.size()) > 0) {
                                         Manager::GetInstance().ProcessTextInput(buffer.data());
                                     }
-
                                 }
                         }
 
@@ -659,10 +785,6 @@ namespace grvl {
                     xkb_state_update_key(xkb_state, keycode, event.value ? XKB_KEY_DOWN : XKB_KEY_UP);
                     Manager::GetInstance().ProcessKeyInput(event.value, event.code);
                 }
-            }
-
-            if (was_interrupted()) {
-                should_run = false;
             }
 
             Manager::GetInstance().ProcessTouchPoint(left_mouse_pressed, x, y);

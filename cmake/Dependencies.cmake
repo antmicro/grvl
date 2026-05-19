@@ -4,6 +4,18 @@ if (GRVL_LINUX_DESKTOP)
   find_package(SDL2 REQUIRED)
 endif()
 
+if (GRVL_LINUX_NATIVE)
+  find_package(PkgConfig REQUIRED)
+
+  pkg_check_modules(LIBDRM REQUIRED IMPORTED_TARGET libdrm)
+  get_target_property(lib_drm_includes PkgConfig::LIBDRM INTERFACE_INCLUDE_DIRECTORIES)
+  message(STATUS "LIBDRM includes: ${lib_drm_includes}")
+
+  pkg_check_modules(XKBCOMMON REQUIRED IMPORTED_TARGET xkbcommon)
+  get_target_property(lib_xkbcommon_includes PkgConfig::LIBDRM INTERFACE_INCLUDE_DIRECTORIES)
+  message(STATUS "XKBCOMMON includes: ${lib_xkbcommon_includes}")
+endif()
+
 if(USE_SYSTEM_LIBRARIES)
   find_package(ZLIB REQUIRED)
   find_package(tinyxml2 REQUIRED)
@@ -14,11 +26,6 @@ if(USE_SYSTEM_LIBRARIES)
   # Placeholder library
   add_library(libstb INTERFACE)
 
-  if (GRVL_LINUX_NATIVE)
-    pkg_check_modules(XKBCOMMON REQUIRED IMPORTED_TARGET xkbcommon)
-    find_package(yavo REQUIRED)
-  endif()
-
   add_library(ZLIB ALIAS ZLIB::ZLIB)
   return()
 endif()
@@ -27,14 +34,6 @@ endif()
 set(CMAKE_POLICY_VERSION_MINIMUM 3.16)
 
 include(CPM)
-
-if (GRVL_LINUX_NATIVE)
-  CPMAddPackage(
-      NAME yav
-      GITHUB_REPOSITORY antmicro/yav
-      GIT_TAG c70930d954814ad14671603daf6017dc75b9ddb8
-      OPTIONS "CMAKE_POSITION_INDEPENDENT_CODE ON")
-endif()
 
 CPMAddPackage(
     NAME stb

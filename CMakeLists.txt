@@ -39,7 +39,7 @@ target_link_libraries(
          duktape
 
          $<$<BOOL:${GRVL_LINUX_DESKTOP}>:SDL2>
-         $<$<BOOL:${GRVL_LINUX_NATIVE}>:yavo::yavo>
+         $<$<BOOL:${GRVL_LINUX_NATIVE}>:PkgConfig::LIBDRM>
          $<$<BOOL:${GRVL_LINUX_NATIVE}>:xkbcommon>
 )
 
