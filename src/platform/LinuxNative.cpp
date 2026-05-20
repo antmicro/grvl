@@ -558,7 +558,15 @@ namespace grvl {
         UpdateBgraBuffer();
 
         // copy framebuffer to primary plane buffer
-        memcpy(primary.map, bgra_buffer, width * height * 4);
+        // DRM dumb buffers may have pitch != width * 4, so do not copy the
+        // whole logical image as one tightly packed block.
+        const uint32_t row_bytes = width * 4;
+        auto* dst = static_cast<uint8_t*>(primary.map);
+        auto* src = reinterpret_cast<const uint8_t*>(bgra_buffer);
+
+        for (int y = 0; y < height; ++y, src += row_bytes, dst += primary.dumb.pitch) {
+            memcpy(dst, src, row_bytes);
+        }
 
         g_cursor.dirty = true;
     }
