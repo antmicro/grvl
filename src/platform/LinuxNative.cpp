@@ -287,7 +287,7 @@ namespace grvl {
         return type_val;
     }
 
-    uint32_t find_plane_by_type(int drm_fd, uint32_t plane_type, uint32_t crtc_id) {
+    uint32_t find_plane_by_type(int drm_fd, uint32_t plane_type) {
         drmModePlaneRes *plane_res = drmModeGetPlaneResources(drm_fd);
         if (!plane_res) return 0;
 
@@ -295,14 +295,6 @@ namespace grvl {
 
         for (uint32_t i = 0; i < plane_res->count_planes; i++) {
             uint32_t plane_id = plane_res->planes[i];
-            drmModePlane *plane =
-              drmModeGetPlane(drm_fd, plane_id);
-
-            if (!(plane->possible_crtcs & (1 << crtc_id))) {
-                drmModeFreePlane(plane);
-                continue;
-            }
-            drmModeFreePlane(plane);
 
             if (get_plane_type(drm_fd, plane_id) == plane_type) {
                 found_id = plane_id;
@@ -395,52 +387,7 @@ namespace grvl {
                       cursor.handles, cursor.pitches,
                       cursor.offsets, &cursor.fb, 0);
 
-        drmModeRes *res = drmModeGetResources(output->fd());
-        if (!res) {
-          fprintf(stderr, "drmModeGetResources failed\n");
-          return 1;
-        }
-
-        drmModeConnector *conn = NULL;
-
-        for (int i = 0; i < res->count_connectors; i++) {
-
-          conn = drmModeGetConnector(output->fd(), res->connectors[i]);
-
-          if (conn && conn->connection == DRM_MODE_CONNECTED)
-            break;
-
-          drmModeFreeConnector(conn);
-          conn = NULL;
-        }
-
-        if (!conn) {
-          fprintf(stderr, "no connected connector\n");
-          return 1;
-        }
-
-        drmModeModeInfo mode = conn->modes[0];
-
-        drmModeEncoder *enc =
-          drmModeGetEncoder(output->fd(), conn->encoder_id);
-
-        if (!enc) {
-          fprintf(stderr, "no encoder\n");
-          return 1;
-        }
-
-        uint32_t crtc_id = enc->crtc_id;
-
-        uint32_t crtc_index = 0;
-
-        for (int i = 0; i < res->count_crtcs; i++) {
-          if (res->crtcs[i] == crtc_id) {
-            crtc_index = i;
-            break;
-          }
-        }
-
-        cursor.plane = find_plane_by_type(output->fd(), DRM_PLANE_TYPE_CURSOR, crtc_index);
+        cursor.plane = find_plane_by_type(output->fd(), DRM_PLANE_TYPE_CURSOR);
 
         // Prepare primary plane buffers
         primary.dumb.width = width;
@@ -471,7 +418,7 @@ namespace grvl {
         memset(primary.map, 0, primary.dumb.size);
 
         // this is common so just call it once
-        primary.plane = find_plane_by_type(output->fd(), DRM_PLANE_TYPE_PRIMARY, crtc_index);
+        primary.plane = find_plane_by_type(output->fd(), DRM_PLANE_TYPE_PRIMARY);
 
         // draw the cursor (once)
         for (int by = 0, iy = y; iy < cursor_map_height; iy ++) {
@@ -485,6 +432,7 @@ namespace grvl {
         }
 
         int drm_fd = output->fd();
+        uint32_t crtc_id = output->fb->crtc->crtc_id;
 
         drmModeAtomicReq *req = drmModeAtomicAlloc();
 
