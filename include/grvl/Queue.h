@@ -21,6 +21,7 @@
 #include <grvl/stl.h>
 #include <grvl/Mutex.h>
 
+#include <optional>
 #include <stdint.h>
 
 namespace grvl {
@@ -29,31 +30,31 @@ namespace grvl {
     class Queue {
 
     public:
-        void push(T* element);
-        T* pop();
+        void push(const T& element);
+        std::optional<T> pop();
 
     private:
-        Mutex m;
-        queue<T*> elementsQueue;
+        mutable Mutex m;
+        queue<T> elementsQueue;
     };
 
     template <class T>
-    void Queue<T>::push(T* element)
+    void Queue<T>::push(const T& element)
     {
         Guard lock {m};
         elementsQueue.push(element);
     }
 
     template <class T>
-    T* Queue<T>::pop()
+    std::optional<T> Queue<T>::pop()
     {
         Guard lock {m};
 
         if(elementsQueue.empty()) {
-            return nullptr;
+            return std::nullopt;
         }
 
-        T* result = elementsQueue.front();
+        T result = elementsQueue.front();
         elementsQueue.pop();
         return result;
     }

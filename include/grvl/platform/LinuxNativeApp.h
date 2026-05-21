@@ -4,6 +4,8 @@
 #include <unistd.h>
 #if defined(GRVL_LINUX_NATIVE_SUPPORT)
 #include <grvl/platform/PosixApp.h>
+#include <grvl/Queue.h>
+#include <functional>
 
 #include <libdrm/drm.h>
 #include <libdrm/drm_mode.h>
@@ -16,6 +18,7 @@
 #include <xkbcommon/xkbcommon.h>
 #include <unordered_set>
 #include <atomic>
+#include <thread>
 
 class drm_screen;
 class framebuffer_screen;
@@ -43,6 +46,10 @@ namespace grvl {
         drmModeEncoderPtr encoder = nullptr;
         drmModeCrtcPtr crtc = nullptr;
 
+        Queue<std::function<void()>> events;
+        std::atomic<bool> thread_run;
+        std::thread cursor_thread, input_thread;
+
         struct {
             struct drm_mode_create_dumb dumb = {};
             uint32_t fb;
@@ -50,7 +57,7 @@ namespace grvl {
             struct {
                 uint32_t fb, crtc, x, y;
             } props;
-            void *map = nullptr;
+            void* map = nullptr;
             uint32_t handles[4] = {};
             uint32_t pitches[4] = {};
             uint32_t offsets[4] = {};
@@ -89,8 +96,9 @@ namespace grvl {
         bool InitDriver(int fd, uint16_t width, uint16_t height, uint32_t refresh);
         bool TryUsingDriver(const char* path, uint16_t width, uint16_t height, uint32_t refresh);
 
+        void HandleInput(suseconds_t timeout);
         void LoadPointerDevices();
-        void ClampCursor();
+        void UpdateCursorPos();
         bool Setup() override;
         void RenderCursor();
         void DRMWait();

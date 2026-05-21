@@ -107,7 +107,7 @@ static int* OpenFiles(const std::vector<std::string>& paths)
     return fds;
 }
 
-static int FindReadable(const int* fds, int file_count, bool wait)
+static int FindReadable(const int* fds, int file_count, suseconds_t usec_timeout)
 {
     fd_set rdset;
     FD_ZERO(&rdset);
@@ -125,9 +125,9 @@ static int FindReadable(const int* fds, int file_count, bool wait)
 
     struct timeval timeout;
     timeout.tv_sec = 0;
-    timeout.tv_usec = 0;
+    timeout.tv_usec = usec_timeout;
 
-    int ret = select(max_fd + 1, &rdset, nullptr, nullptr, wait ? nullptr : &timeout);
+    int ret = select(max_fd + 1, &rdset, nullptr, nullptr, &timeout);
 
     if (ret > 0) {
         for (int i = 0; i < file_count; i ++) {
@@ -156,9 +156,9 @@ static void FileRead(int fd, char* element, int size)
     }
 }
 
-static bool ReadEvent(struct input_event* event, const int* fds, int file_count, bool wait, int* read_from = nullptr)
+static bool ReadEvent(struct input_event* event, const int* fds, int file_count, suseconds_t timeout, int* read_from = nullptr)
 {
-    const int fd = FindReadable(fds, file_count, wait);
+    const int fd = FindReadable(fds, file_count, timeout);
 
     if (fd == -1) {
         return false;
@@ -276,12 +276,16 @@ namespace grvl {
 
     LinuxNativeApp::~LinuxNativeApp()
     {
+        thread_run = false;
+
+        input_thread.join();
         CloseFiles(inputs, count);
 
         xkb_state_unref(xkb_state);
         xkb_keymap_unref(xkb_keymap);
         xkb_context_unref(xkb_ctx);
 
+        cursor_thread.join();
         CloseDriver();
 
         grvl::grvl::Destroy();
@@ -456,12 +460,15 @@ namespace grvl {
         }
     }
 
-    void LinuxNativeApp::ClampCursor()
+    void LinuxNativeApp::UpdateCursorPos()
     {
         if (x < 0) x = 0;
         if (x >= width) x = width - 1;
         if (y < 0) y = 0;
         if (y > height) y = height - 1;
+
+        cursor_state.x = x;
+        cursor_state.y = y;
     }
 
     void LinuxNativeApp::PageFlipHandler(int fd, unsigned int frame, unsigned int sec, unsigned int usec, void* app)
@@ -663,11 +670,25 @@ namespace grvl {
         drmModeAtomicAddProperty(req, primary.plane, src_h, height << 16);
 
         uint32_t flags = DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_ATOMIC_ALLOW_MODESET;
-        int rc = drmModeAtomicCommit(fd, req, flags, NULL);
+        drmModeAtomicCommit(fd, req, flags, nullptr);
         drmModeAtomicFree(req);
 
         ev.version = DRM_EVENT_CONTEXT_VERSION;
         ev.page_flip_handler = PageFlipHandler;
+
+        thread_run = true;
+        cursor_thread = std::thread([this] () -> void {
+            while (thread_run) {
+                RenderCursor();
+                DRMWait();
+            }
+        });
+
+        input_thread = std::thread([this] () -> void {
+            while (thread_run) {
+                HandleInput(5000); // ~5ms
+            }
+        });
 
         return true;
     }
@@ -693,18 +714,27 @@ namespace grvl {
                 memcpy(dst, src, row_bytes);
             }
         }
-
-        RenderCursor();
     }
 
     void LinuxNativeApp::Poll()
     {
-        DRMWait();
+        while (true) {
+            auto event = events.pop();
 
+            if (!event) {
+                break;
+            }
+
+            (*event)();
+        }
+    }
+
+    void LinuxNativeApp::HandleInput(suseconds_t timeout)
+    {
         struct input_event event;
         int fd;
 
-            while(ReadEvent(&event, inputs, count, false, &fd)) {
+        while(ReadEvent(&event, inputs, count, timeout, &fd)) {
 
             switch (event.type) {
                 case EV_REL:
@@ -714,9 +744,7 @@ namespace grvl {
                     if (event.code == 0) x += event.value;
                     if (event.code == 1) y += event.value;
 
-                    cursor_state.x = x;
-                    cursor_state.y = y;
-
+                    UpdateCursorPos();
                     break;
                 }
 
@@ -748,9 +776,7 @@ namespace grvl {
                         if (event.code == 1) y = event.value;
                     }
 
-                    cursor_state.x = x;
-                    cursor_state.y = y;
-
+                    UpdateCursorPos();
                     break;
                 }
 
@@ -802,24 +828,35 @@ namespace grvl {
                             default:
                                 char* buffer;
                                 size_t size = xkb_state_key_get_utf8(xkb_state, keycode, nullptr, 0);
+
                                 if (size > 0) {
-                                    std::vector<char>buffer(size + 1);
+                                    std::vector<char> buffer (size + 1);
                                     if (xkb_state_key_get_utf8(xkb_state, keycode, buffer.data(), buffer.size()) > 0) {
-                                        Manager::GetInstance().ProcessTextInput(buffer.data());
+
+                                        // move the buffer to the handler
+                                        events.push([buffer = std::move(buffer)] () {
+                                            Manager::GetInstance().ProcessTextInput(buffer.data());
+                                        });
                                     }
                                 }
+
+
                         }
 
                     }
 
                     // always update the state
                     xkb_state_update_key(xkb_state, keycode, event.value ? XKB_KEY_DOWN : XKB_KEY_UP);
-                    Manager::GetInstance().ProcessKeyInput(event.value, event.code);
+
+                    events.push([event] () {
+                        Manager::GetInstance().ProcessKeyInput(event.value, event.code);
+                    });
                 }
             }
 
-            Manager::GetInstance().ProcessTouchPoint(left_mouse_pressed, x, y);
-            ClampCursor();
+            events.push([pressed = left_mouse_pressed, px = cursor_state.x.load(), py = cursor_state.y.load()] () {
+                Manager::GetInstance().ProcessTouchPoint(pressed, px, py);
+            });
         }
     }
 

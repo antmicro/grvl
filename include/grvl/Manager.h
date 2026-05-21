@@ -70,8 +70,8 @@ namespace grvl {
         static void Initialize(uint32_t xSize, uint32_t ySize, int bpp, bool rotate90, uint8_t* framebuffer);
         static Manager& GetInstance();
 
-        typedef Queue<Event> EventQueue;
-        typedef Queue<Popup> PopupQueue;
+        typedef Queue<Event*> EventQueue;
+        typedef Queue<Popup*> PopupQueue;
 
         enum State {
             Loading = 0,

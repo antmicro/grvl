@@ -48,6 +48,7 @@ int main()
 
     grvl::JSEngine::MakeJavaScriptFunctionCall("InitializeCalendar");
 
+    const uint64_t runtime = 10'000'000; // us
     const uint64_t start = ChronoGetTimestamp();
     int frames = 0;
 
@@ -62,6 +63,11 @@ int main()
 
         grvl::JSEngine::MakeJavaScriptFunctionCall("UpdateCurrentTime");
         grvl::JSEngine::MakeJavaScriptFunctionCall("UpdatePositionOfCurrentTimeLine");
+
+        if ((ChronoGetTimestamp() - start) > runtime) {
+            printf("Goodbye!\n");
+            break;
+        }
 
         app->Swap();
         app->Poll();

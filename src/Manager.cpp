@@ -1530,14 +1530,15 @@ namespace grvl {
 
     void Manager::ProcessEvents()
     {
-        Event* currentEvent;
-        do {
-            currentEvent = eventsQueue.pop();
-            if(!currentEvent) {
+        while (true) {
+            auto event = eventsQueue.pop();
+
+            if(!event) {
                 break;
             }
-            currentEvent->Trigger();
-        } while(currentEvent);
+
+            (*event)->Trigger();
+        }
     }
 
     void Manager::Initialize(uint32_t xSize, uint32_t ySize, int bpp, bool rotate90)

@@ -42,15 +42,15 @@ namespace grvl {
         // This method should be called at the start of the main render loop.
         virtual void Render() = 0;
 
-        // Swap the screen buffers.
-        // This method should be called in the middle of the main render loop.
+        // Swap the screen buffers. This method should be called in the middle
+        // of the main render loop, from the same thread as Render(), after all rendering is complete.
         virtual void Swap() = 0;
 
-        // Poll user inputs.
-        // This method should be called at the end of the main render loop.
+        // Poll user inputs (non-blocking). This method should be called at the end
+        // of the main render loop, from the same thread as Render().
         virtual void Poll() = 0;
 
-        // Check if the application should exit the main loop and terminate
+        // Check if the application should exit the main loop and terminate,
         // for example due to the user closing the application window.
         virtual bool ShouldRun() const;
 
