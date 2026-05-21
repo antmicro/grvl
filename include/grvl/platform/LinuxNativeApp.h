@@ -100,7 +100,7 @@ namespace grvl {
         void LoadPointerDevices();
         void UpdateCursorPos();
         bool Setup() override;
-        void RenderCursor();
+        void CommitPlanes();
         void DRMWait();
     public:
 

@@ -465,7 +465,7 @@ namespace grvl {
         if (x < 0) x = 0;
         if (x >= width) x = width - 1;
         if (y < 0) y = 0;
-        if (y > height) y = height - 1;
+        if (y >= height) y = height - 1;
 
         cursor_state.x = x;
         cursor_state.y = y;
@@ -476,7 +476,7 @@ namespace grvl {
         reinterpret_cast<LinuxNativeApp*>(app)->cursor_state.pending = false;
     }
 
-    void LinuxNativeApp::RenderCursor()
+    void LinuxNativeApp::CommitPlanes()
     {
         if (cursor_state.pending){
             return;
@@ -679,7 +679,7 @@ namespace grvl {
         thread_run = true;
         cursor_thread = std::thread([this] () -> void {
             while (thread_run) {
-                RenderCursor();
+                CommitPlanes();
                 DRMWait();
             }
         });
