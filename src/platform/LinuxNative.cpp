@@ -9,6 +9,8 @@
 #include <linux/input.h>
 #include <sys/ioctl.h>
 #include <cstdlib>
+#include <pthread.h>
+#include <sched.h>
 
 #include <poll.h>
 #include <libdrm/drm.h>
@@ -52,127 +54,7 @@ static const int cursor_map_width = 17;
 static const int cursor_map_height = 24;
 // clang-format on
 
-// input
-static std::vector<std::string> GrepFiles(const std::string& path, const std::string& pattern)
-{
-    std::vector<std::string> paths;
-    std::regex expr {pattern};
-
-    for (const auto& entry : std::filesystem::directory_iterator(path)) {
-        std::string path = entry.path();
-
-        if (std::regex_search(path, expr)) {
-            paths.push_back(path);
-        }
-    }
-
-    return paths;
-}
-
-void CloseFiles(int* fds, int count)
-{
-    const int grab = 0;
-
-    for (int i = 0; i < count; i ++) {
-        ioctl(fds[i], EVIOCGRAB, &grab);
-        close(fds[i]);
-    }
-
-    delete[] fds;
-}
-
-static int* OpenFiles(const std::vector<std::string>& paths)
-{
-    int* fds = new int[paths.size()];
-    int i = 0;
-
-    for (const auto& path : paths) {
-        int fd = open(path.c_str(), O_RDONLY);
-
-        if (fd == -1) {
-            printf("Unable to open event source '%s'!\n", path.c_str());
-
-            CloseFiles(fds, i);
-            return nullptr;
-        }
-
-        int grab = 1;
-        if (ioctl(fd, EVIOCGRAB, &grab) == -1) {
-            printf("Warning: Unable to grab device '%s'. Console may still see input.\n", path.c_str());
-        }
-        fds[i] = fd;
-        i ++;
-    }
-
-    return fds;
-}
-
-static int FindReadable(const int* fds, int file_count, suseconds_t usec_timeout)
-{
-    fd_set rdset;
-    FD_ZERO(&rdset);
-
-    int max_fd = 0;
-
-    for (int i = 0; i < file_count; i ++) {
-        const int fd = fds[i];
-        FD_SET(fd, &rdset);
-
-        if (fd > max_fd) {
-            max_fd = fd;
-        }
-    }
-
-    struct timeval timeout;
-    timeout.tv_sec = 0;
-    timeout.tv_usec = usec_timeout;
-
-    int ret = select(max_fd + 1, &rdset, nullptr, nullptr, &timeout);
-
-    if (ret > 0) {
-        for (int i = 0; i < file_count; i ++) {
-            int fd = fds[i];
-            if (FD_ISSET(fd, &rdset)) {
-                return fd;
-            }
-        }
-    }
-
-    return -1;
-}
-
-static void FileRead(int fd, char* element, int size)
-{
-    while (size != 0) {
-        int ret = read(fd, element, size);
-
-        if (ret < 0) {
-            printf("Failed to read from open file descriptor %d!\n", ret);
-            exit(1);
-        }
-
-        size -= ret;
-        element += ret;
-    }
-}
-
-static bool ReadEvent(struct input_event* event, const int* fds, int file_count, suseconds_t timeout, int* read_from = nullptr)
-{
-    const int fd = FindReadable(fds, file_count, timeout);
-
-    if (fd == -1) {
-        return false;
-    }
-
-    if (read_from != nullptr) {
-        *read_from = fd;
-    }
-
-    FileRead(fd, (char*) event, sizeof(*event));
-    return true;
-}
-
-drmModeConnectorPtr PickConnector(int fd, drmModeResPtr resource)
+static drmModeConnectorPtr PickConnector(int fd, drmModeResPtr resource)
 {
     std::vector<drmModeConnectorPtr> connectors;
     int selected = -1;
@@ -212,7 +94,7 @@ drmModeConnectorPtr PickConnector(int fd, drmModeResPtr resource)
     return connectors[selected];
 }
 
-drmModeModeInfoPtr PickMode(drmModeConnectorPtr connector, const uint16_t width, const uint16_t height, const uint32_t refresh)
+static drmModeModeInfoPtr PickMode(drmModeConnectorPtr connector, const uint16_t width, const uint16_t height, const uint32_t refresh)
 {
     size_t pixels = 0;
     drmModeModeInfoPtr preferred = nullptr, highest = nullptr;
@@ -249,6 +131,17 @@ drmModeModeInfoPtr PickMode(drmModeConnectorPtr connector, const uint16_t width,
     return nullptr;
 }
 
+const static struct libinput_interface interface = {
+    .open_restricted = [] (const char* path, int flags, void* user) {
+        const int fd = open(path, flags);
+        return fd < 0 ? -errno : fd;
+    },
+    .close_restricted = [] (int fd, void* user) {
+        close(fd);
+    }
+};
+
+
 // implementation
 
 namespace grvl {
@@ -279,7 +172,9 @@ namespace grvl {
         thread_run = false;
 
         input_thread.join();
-        CloseFiles(inputs, count);
+
+        libinput_unref(li);
+        udev_unref(ud);
 
         xkb_state_unref(xkb_state);
         xkb_keymap_unref(xkb_keymap);
@@ -445,21 +340,6 @@ namespace grvl {
         return false;
     }
 
-    void LinuxNativeApp::LoadPointerDevices()
-    {
-        uint64_t props = 0;
-
-        // Check for trackpads which return absolute position,
-        // but use pointer (relative move)
-        for(int i = 0; i < count; ++i) {
-            if(ioctl(inputs[i], EVIOCGPROP(sizeof(props)), &props) >= 0) {
-                if(props & (1UL << INPUT_PROP_POINTER)) {
-                    pointer_devices.insert(inputs[i]);
-                }
-            }
-        }
-    }
-
     void LinuxNativeApp::UpdateCursorPos()
     {
         if (x < 0) x = 0;
@@ -526,17 +406,10 @@ namespace grvl {
             if (TryUsingDriver(path, width, height, -1)) break;
         }
 
-        // Linux kernel input API
-        auto paths = GrepFiles("/dev/input/", "event\\d+");
-        inputs = OpenFiles(paths);
-        count = paths.size();
+        ud = udev_new();
+        li = libinput_udev_create_context(&interface, nullptr, ud);
+        libinput_udev_assign_seat(li, "seat0");
 
-        if (count == 0 || inputs == nullptr) {
-            printf("Unable to access Linux kernel input API!\n");
-            return false;
-        }
-
-        LoadPointerDevices();
         Manager::Initialize(width, height, 4, sideways);
 
         // set drm caps
@@ -686,7 +559,7 @@ namespace grvl {
 
         input_thread = std::thread([this] () -> void {
             while (thread_run) {
-                HandleInput(5000); // ~5ms
+                HandleInput();
             }
         });
 
@@ -727,137 +600,135 @@ namespace grvl {
 
             (*event)();
         }
+
+        auto x = cursor_state.x.load();
+        auto y = cursor_state.y.load();
+
+        Manager::GetInstance().ProcessTouchPoint(left_mouse_pressed, x, y);
     }
 
-    void LinuxNativeApp::HandleInput(suseconds_t timeout)
+    void LinuxNativeApp::HandleKeycode(uint32_t keycode, bool pressed)
     {
-        struct input_event event;
-        int fd;
+        xkb_keysym_t keysym = xkb_state_key_get_one_sym(xkb_state, keycode);
 
-        while(ReadEvent(&event, inputs, count, timeout, &fd)) {
+        if (pressed) switch (keysym) {
+            case XKB_KEY_BackSpace:
+            case XKB_KEY_Return:
 
-            switch (event.type) {
-                case EV_REL:
+            case XKB_KEY_Tab:
+            case XKB_KEY_Escape:
+            case XKB_KEY_Delete:
+            case XKB_KEY_Home:
+            case XKB_KEY_End:
+            case XKB_KEY_Left:
+            case XKB_KEY_Right:
+            case XKB_KEY_Up:
+            case XKB_KEY_Down:
+            case XKB_KEY_Page_Up:
+            case XKB_KEY_Page_Down:
+
+            case XKB_KEY_F1:
+            case XKB_KEY_F2:
+            case XKB_KEY_F3:
+            case XKB_KEY_F4:
+            case XKB_KEY_F5:
+            case XKB_KEY_F6:
+            case XKB_KEY_F7:
+            case XKB_KEY_F8:
+            case XKB_KEY_F9:
+            case XKB_KEY_F10:
+            case XKB_KEY_F11:
+            case XKB_KEY_F12:
+                break;
+
+            default:
+                char* buffer;
+                size_t size = xkb_state_key_get_utf8(xkb_state, keycode, nullptr, 0);
+
+                if (size > 0) {
+                    std::vector<char> buffer (size + 1);
+                    if (xkb_state_key_get_utf8(xkb_state, keycode, buffer.data(), buffer.size()) > 0) {
+
+                        // move the buffer to the handler
+                        events.push([buffer = std::move(buffer)] () {
+                            Manager::GetInstance().ProcessTextInput(buffer.data());
+                        });
+                    }
+                }
+        }
+
+        xkb_state_update_key(xkb_state, keycode, pressed ? XKB_KEY_DOWN : XKB_KEY_UP);
+
+        events.push([pressed, keycode] () {
+            Manager::GetInstance().ProcessKeyInput(pressed, keycode);
+        });
+    }
+
+    void LinuxNativeApp::HandleInput()
+    {
+        struct libinput_event* event;
+
+        libinput_dispatch(li);
+
+        while ((event = libinput_get_event(li)) != nullptr) {
+            auto type = libinput_event_get_type(event);
+
+            switch (type) {
+
+                // Relative movement (e.g. mouse)
+                case LIBINPUT_EVENT_POINTER_MOTION:
                 {
-                    // relative mouse movement
-                    // event.value contains relative offset
-                    if (event.code == 0) x += event.value;
-                    if (event.code == 1) y += event.value;
+                    libinput_event_pointer* pointer = libinput_event_get_pointer_event(event);
+
+                    x += libinput_event_pointer_get_dx(pointer);
+                    y += libinput_event_pointer_get_dy(pointer);
 
                     UpdateCursorPos();
                     break;
                 }
 
-                case EV_ABS:
+                // Digitizers and touch controls (e.g. drawing tablets)
+                case LIBINPUT_EVENT_POINTER_MOTION_ABSOLUTE:
                 {
-                    // Touchpad device - translate absolute position
-                    // to relative offset
-                    if (pointer_devices.find(fd) != pointer_devices.end()) {
-                        if (!touch_down) break;
+                    libinput_event_pointer* pointer = libinput_event_get_pointer_event(event);
 
-                        if (abs_x == -1 || abs_y == -1) {
-                            if (event.code == 0) abs_x = event.value;
-                            if (event.code == 1) abs_y = event.value;
-                            break;
-                        }
-
-                        if (event.code == 0) {
-                            x += (event.value - abs_x);
-                            abs_x = event.value;
-                        }
-                        if (event.code == 1) {
-                            y += (event.value - abs_y);
-                            abs_y = event.value;
-                        }
-                    } else {
-                        // digitizers and touch controls
-                        // event.value contains absolute position
-                        if (event.code == 0) x = event.value;
-                        if (event.code == 1) y = event.value;
-                    }
+                    x = libinput_event_pointer_get_absolute_x_transformed(pointer, width);
+                    y = libinput_event_pointer_get_absolute_y_transformed(pointer, height);
 
                     UpdateCursorPos();
                     break;
                 }
 
-                case EV_KEY:
+                case LIBINPUT_EVENT_POINTER_BUTTON:
                 {
-                    if (event.code == BTN_LEFT) {
-                        left_mouse_pressed = event.value;
-                    } else if(event.code == BTN_TOUCH) {
-                        touch_down = event.value;
-                        if(!event.value) {
-                            abs_x = -1;
-                            abs_y = -1;
-                        }
+                    libinput_event_pointer* pointer = libinput_event_get_pointer_event(event);
+                    uint32_t button = libinput_event_pointer_get_button(pointer);
+                    bool pressed = (libinput_event_pointer_get_button_state(pointer) == LIBINPUT_BUTTON_STATE_PRESSED);
+
+                    if (button == BTN_LEFT) {
+                        left_mouse_pressed = pressed;
                     }
-
-                    xkb_keycode_t keycode = event.code + 8;
-                    xkb_keysym_t keysym = xkb_state_key_get_one_sym(xkb_state, keycode);
-                    if (event.value > 0) {
-                        switch (keysym) {
-                            case XKB_KEY_BackSpace:
-                            case XKB_KEY_Return:
-
-                            case XKB_KEY_Tab:
-                            case XKB_KEY_Escape:
-                            case XKB_KEY_Delete:
-                            case XKB_KEY_Home:
-                            case XKB_KEY_End:
-                            case XKB_KEY_Left:
-                            case XKB_KEY_Right:
-                            case XKB_KEY_Up:
-                            case XKB_KEY_Down:
-                            case XKB_KEY_Page_Up:
-                            case XKB_KEY_Page_Down:
-
-                            case XKB_KEY_F1:
-                            case XKB_KEY_F2:
-                            case XKB_KEY_F3:
-                            case XKB_KEY_F4:
-                            case XKB_KEY_F5:
-                            case XKB_KEY_F6:
-                            case XKB_KEY_F7:
-                            case XKB_KEY_F8:
-                            case XKB_KEY_F9:
-                            case XKB_KEY_F10:
-                            case XKB_KEY_F11:
-                            case XKB_KEY_F12:
-                                break;
-
-                            default:
-                                char* buffer;
-                                size_t size = xkb_state_key_get_utf8(xkb_state, keycode, nullptr, 0);
-
-                                if (size > 0) {
-                                    std::vector<char> buffer (size + 1);
-                                    if (xkb_state_key_get_utf8(xkb_state, keycode, buffer.data(), buffer.size()) > 0) {
-
-                                        // move the buffer to the handler
-                                        events.push([buffer = std::move(buffer)] () {
-                                            Manager::GetInstance().ProcessTextInput(buffer.data());
-                                        });
-                                    }
-                                }
-
-
-                        }
-
-                    }
-
-                    // always update the state
-                    xkb_state_update_key(xkb_state, keycode, event.value ? XKB_KEY_DOWN : XKB_KEY_UP);
-
-                    events.push([event] () {
-                        Manager::GetInstance().ProcessKeyInput(event.value, event.code);
-                    });
+                    break;
                 }
+
+                case LIBINPUT_EVENT_KEYBOARD_KEY:
+                {
+                    libinput_event_keyboard* keyboard = libinput_event_get_keyboard_event(event);
+                    uint32_t key = libinput_event_keyboard_get_key(keyboard);
+                    libinput_key_state state = libinput_event_keyboard_get_key_state(keyboard);
+
+                    // The '+8' is here to convert from the kernel/libinput's
+                    // keycodes to the ones expected by xkbcommon
+                    HandleKeycode(key + 8, state == LIBINPUT_KEY_STATE_PRESSED);
+                    break;
+                }
+
             }
 
-            events.push([pressed = left_mouse_pressed, px = cursor_state.x.load(), py = cursor_state.y.load()] () {
-                Manager::GetInstance().ProcessTouchPoint(pressed, px, py);
-            });
+            libinput_event_destroy(event);
+            libinput_dispatch(li);
         }
+
     }
 
     void LinuxNativeApp::DrawMouseIcon(bool flag) {

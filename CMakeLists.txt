@@ -40,7 +40,9 @@ target_link_libraries(
 
          $<$<BOOL:${GRVL_LINUX_DESKTOP}>:SDL2>
          $<$<BOOL:${GRVL_LINUX_NATIVE}>:PkgConfig::LIBDRM>
-         $<$<BOOL:${GRVL_LINUX_NATIVE}>:xkbcommon>
+         $<$<BOOL:${GRVL_LINUX_NATIVE}>:PkgConfig::LIBUDEV>
+         $<$<BOOL:${GRVL_LINUX_NATIVE}>:PkgConfig::LIBINPUT>
+         $<$<BOOL:${GRVL_LINUX_NATIVE}>:PkgConfig::XKBCOMMON>
 )
 
 if(GRVL_LINUX_NATIVE)

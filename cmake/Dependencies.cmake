@@ -14,6 +14,14 @@ if (GRVL_LINUX_NATIVE)
   pkg_check_modules(XKBCOMMON REQUIRED IMPORTED_TARGET xkbcommon)
   get_target_property(lib_xkbcommon_includes PkgConfig::LIBDRM INTERFACE_INCLUDE_DIRECTORIES)
   message(STATUS "XKBCOMMON includes: ${lib_xkbcommon_includes}")
+
+  pkg_check_modules(LIBINPUT REQUIRED IMPORTED_TARGET libinput)
+  get_target_property(lib_libinput_includes PkgConfig::LIBINPUT INTERFACE_INCLUDE_DIRECTORIES)
+  message(STATUS "LIBINPUT includes: ${lib_libinput_includes}")
+
+  pkg_check_modules(LIBUDEV REQUIRED IMPORTED_TARGET libudev)
+  get_target_property(lib_libudev_includes PkgConfig::LIBUDEV INTERFACE_INCLUDE_DIRECTORIES)
+  message(STATUS "LIBUDEV includes: ${lib_libudev_includes}")
 endif()
 
 if(USE_SYSTEM_LIBRARIES)

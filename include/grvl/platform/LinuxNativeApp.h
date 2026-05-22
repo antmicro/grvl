@@ -12,6 +12,8 @@
 
 #include <xf86drm.h>
 #include <xf86drmMode.h>
+#include <libinput.h>
+#include <libudev.h>
 
 #include <libdrm/drm_fourcc.h>
 
@@ -70,14 +72,13 @@ namespace grvl {
         } cursor_state;
 
         drmEventContext ev = {};
+        struct libinput* li = nullptr;
+        struct udev* ud = nullptr;
 
         int x = 0;
         int y = 0;
         int abs_x = -1;
         int abs_y = -1;
-        int* inputs = nullptr;
-        std::unordered_set<int> pointer_devices;
-        int count = 0;
         bool touch_down = false;
         bool left_mouse_pressed = false;
         bool draw_mouse_icon = true;
@@ -96,8 +97,8 @@ namespace grvl {
         bool InitDriver(int fd, uint16_t width, uint16_t height, uint32_t refresh);
         bool TryUsingDriver(const char* path, uint16_t width, uint16_t height, uint32_t refresh);
 
-        void HandleInput(suseconds_t timeout);
-        void LoadPointerDevices();
+        void HandleKeycode(uint32_t keycode, bool pressed);
+        void HandleInput();
         void UpdateCursorPos();
         bool Setup() override;
         void CommitPlanes();
