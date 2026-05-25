@@ -3,9 +3,9 @@
 	<stylesheet></stylesheet>
 	<script src="callbacks.js" />
 	<prefab id="calendarItem" width="200" height="18" backgroundColor="#FF0A0A0A">
-		<checkbox id="checkbox" text="" x="3" y="0" width="18" height="18" backgroundColor="#FF0A0A0A" activeBackgroundColor="#FF0059EC" borderColor="#FF2E2E2E" borderType="box" onClick="AddOrRemoveTopic"/>
-		<label id="name" text="Personal" font="mona12" alignment="Left" x="27" y="0" width="150" height="18" textColor="#FFECEDEE" />
-		<button id="dots" image="dots" x="200" y="0" width="18" height="18" />
+		<checkbox id="checkbox" text="" x="3" y="7" width="18" height="18" backgroundColor="#FF0A0A0A" activeBackgroundColor="#FF0059EC" borderColor="#FF2E2E2E" borderType="box" onClick="AddOrRemoveTopic"/>
+		<label id="name" text="Personal" font="mona12" alignment="Left" x="27" y="7" width="150" height="18" textColor="#FFECEDEE" />
+		<button id="dots" image="dots" x="200" y="7" width="30" height="18" />
 	</prefab>
 	<prefab id="eventItem" width="95" height="60" borderType="left" >
 		<label id="name" text="team planning" font="mona16" x="0" y="0" width="138" height="35" horizontalOffset="8" textColor="#FF47A8FF" alignment="left" />

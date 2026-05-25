@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doc>
+	<stylesheet></stylesheet>
+	<script src="callbacks.js" />
+	<customView id="home" backgroundColor="#FF0A0A0A">
+		<checkbox id="checkbox" text="" x="5" y="5" width="18" height="18" backgroundColor="#FF2A2A2A" activeBackgroundColor="#FF3359EC" borderColor="#FF2E2E2E" borderType="box" onClick="OnSomeCheckbox"/>
+		<label id="name" text="Some Checkbox" alignment="Left" x="27" y="5" width="100" height="18" textColor="#FFECEDEE" />
+		<button id="button" text="Some Button" x="150" y="5" width="100" height="18" onClick="OnSomeButton" backgroundColor="#FF2A2A2A" activeBackgroundColor="#FF3359EC" />
+		<button id="button" text="Exit" x="695" y="5" width="100" height="18" onClick="OnExitButton" backgroundColor="#FFBF2A2A" activeBackgroundColor="#FFFF4A4A" />
+		<textInput id="text_input" x="5" y="35" width="256" height="27" borderType="box" borderArcRadius="13" textColor="#FFA2A2A2" borderColor="#FF1A1A1A" activeBorderColor="#FF1A1A1A" backgroundColor="#FF1A1A1A" basicText="Text Input..." onSubmit="EnterPressed" />
+	</customView>
+</doc>

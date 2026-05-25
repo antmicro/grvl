@@ -77,6 +77,11 @@ namespace grvl {
         SDL_zero(event);
 
         while (SDL_PollEvent(&event)) {
+
+            if (event.type == SDL_TEXTINPUT) {
+                Manager::GetInstance().ProcessTextInput(event.text.text);
+            }
+
             if (event.type == SDL_QUIT) {
                 should_run = false;
             }
