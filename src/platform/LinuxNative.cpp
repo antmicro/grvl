@@ -626,7 +626,8 @@ namespace grvl {
     void LinuxNativeApp::HandleKeycode(uint32_t xkb_keycode, uint32_t evdev_keycode, bool pressed)
     {
         xkb_keysym_t keysym = xkb_state_key_get_one_sym(xkb_state, xkb_keycode);
-
+        const bool ctrl_pressed = xkb_state_mod_name_is_active(xkb_state, XKB_MOD_NAME_CTRL, XKB_STATE_MODS_EFFECTIVE);
+        
         if (pressed) switch (keysym) {
             case XKB_KEY_BackSpace:
             case XKB_KEY_Return:
@@ -658,6 +659,10 @@ namespace grvl {
                 break;
 
             default:
+                if (ctrl_pressed) {
+                    break;
+                }
+                
                 char* buffer;
                 size_t size = xkb_state_key_get_utf8(xkb_state, xkb_keycode, nullptr, 0);
 
