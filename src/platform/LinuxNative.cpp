@@ -715,11 +715,20 @@ namespace grvl {
                 {
                     libinput_event_keyboard* keyboard = libinput_event_get_keyboard_event(event);
                     uint32_t key = libinput_event_keyboard_get_key(keyboard);
-                    libinput_key_state state = libinput_event_keyboard_get_key_state(keyboard);
+                    bool pressed = libinput_event_keyboard_get_key_state(keyboard) == LIBINPUT_KEY_STATE_PRESSED;
+
+                    if (pressed) {
+                        if (key == KEY_NUMLOCK) leds ^= LIBINPUT_LED_NUM_LOCK;
+                        if (key == KEY_CAPSLOCK) leds ^= LIBINPUT_LED_CAPS_LOCK;
+                        if (key == KEY_SCROLLLOCK) leds ^= LIBINPUT_LED_SCROLL_LOCK;
+
+                        libinput_device* dev = libinput_event_get_device(event);
+                        libinput_device_led_update(dev, static_cast<libinput_led>(leds));
+                    }
 
                     // The '+8' is here to convert from the kernel/libinput's
                     // keycodes to the ones expected by xkbcommon
-                    HandleKeycode(key + 8, state == LIBINPUT_KEY_STATE_PRESSED);
+                    HandleKeycode(key + 8, pressed);
                     break;
                 }
 

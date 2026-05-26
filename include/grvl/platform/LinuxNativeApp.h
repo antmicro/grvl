@@ -74,6 +74,7 @@ namespace grvl {
         drmEventContext ev = {};
         struct libinput* li = nullptr;
         struct udev* ud = nullptr;
+        uint32_t leds = 0;
 
         int x = 0;
         int y = 0;
