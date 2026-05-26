@@ -21,6 +21,7 @@
 #include <unordered_set>
 #include <atomic>
 #include <thread>
+#include <mutex>
 
 class drm_screen;
 class framebuffer_screen;
@@ -50,7 +51,7 @@ namespace grvl {
 
         Queue<std::function<void()>> events;
         std::atomic<bool> thread_run;
-        std::thread cursor_thread, input_thread;
+        std::thread drm_thread, input_thread;
 
         struct {
             struct drm_mode_create_dumb dumb = {};
@@ -70,6 +71,10 @@ namespace grvl {
             std::atomic<int> y = 0;
             std::atomic<bool> pending = false;
         } cursor_state;
+
+        // to limit how often we draw we make sure the previous frame is shown before the next one starts rendering
+        // this is done using this mutex, the Render() method wait for it, and the drm_thread signals it.
+        std::mutex render_mutex;
 
         drmEventContext ev = {};
         struct libinput* li = nullptr;
@@ -99,6 +104,7 @@ namespace grvl {
         bool TryUsingDriver(const char* path, uint16_t width, uint16_t height, uint32_t refresh);
 
         void HandleKeycode(uint32_t keycode, bool pressed);
+        void HandleEvent(libinput_event* event);
         void HandleInput();
         void UpdateCursorPos();
         bool Setup() override;

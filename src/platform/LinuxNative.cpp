@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <pthread.h>
 #include <sched.h>
+#include <poll.h>
 
 #include <poll.h>
 #include <libdrm/drm.h>
@@ -170,6 +171,7 @@ namespace grvl {
     LinuxNativeApp::~LinuxNativeApp()
     {
         thread_run = false;
+        render_mutex.unlock();
 
         input_thread.join();
 
@@ -180,7 +182,7 @@ namespace grvl {
         xkb_keymap_unref(xkb_keymap);
         xkb_context_unref(xkb_ctx);
 
-        cursor_thread.join();
+        drm_thread.join();
         CloseDriver();
 
         grvl::grvl::Destroy();
@@ -550,10 +552,11 @@ namespace grvl {
         ev.page_flip_handler = PageFlipHandler;
 
         thread_run = true;
-        cursor_thread = std::thread([this] () -> void {
+        drm_thread = std::thread([this] () -> void {
             while (thread_run) {
                 CommitPlanes();
                 DRMWait();
+                render_mutex.unlock();
             }
         });
 
@@ -568,6 +571,11 @@ namespace grvl {
 
     void LinuxNativeApp::Render()
     {
+        if (!thread_run) {
+            return;
+        }
+
+        render_mutex.lock();
         Manager::GetInstance().MainLoopIteration();
     }
 
@@ -664,80 +672,92 @@ namespace grvl {
         });
     }
 
-    void LinuxNativeApp::HandleInput()
+    void LinuxNativeApp::HandleEvent(libinput_event* event)
     {
-        struct libinput_event* event;
+        auto type = libinput_event_get_type(event);
 
-        libinput_dispatch(li);
+        switch (type) {
 
-        while ((event = libinput_get_event(li)) != nullptr) {
-            auto type = libinput_event_get_type(event);
+            // Relative movement (e.g. mouse)
+            case LIBINPUT_EVENT_POINTER_MOTION:
+            {
+                libinput_event_pointer* pointer = libinput_event_get_pointer_event(event);
 
-            switch (type) {
+                x += libinput_event_pointer_get_dx(pointer);
+                y += libinput_event_pointer_get_dy(pointer);
 
-                // Relative movement (e.g. mouse)
-                case LIBINPUT_EVENT_POINTER_MOTION:
-                {
-                    libinput_event_pointer* pointer = libinput_event_get_pointer_event(event);
-
-                    x += libinput_event_pointer_get_dx(pointer);
-                    y += libinput_event_pointer_get_dy(pointer);
-
-                    UpdateCursorPos();
-                    break;
-                }
-
-                // Digitizers and touch controls (e.g. drawing tablets)
-                case LIBINPUT_EVENT_POINTER_MOTION_ABSOLUTE:
-                {
-                    libinput_event_pointer* pointer = libinput_event_get_pointer_event(event);
-
-                    x = libinput_event_pointer_get_absolute_x_transformed(pointer, width);
-                    y = libinput_event_pointer_get_absolute_y_transformed(pointer, height);
-
-                    UpdateCursorPos();
-                    break;
-                }
-
-                case LIBINPUT_EVENT_POINTER_BUTTON:
-                {
-                    libinput_event_pointer* pointer = libinput_event_get_pointer_event(event);
-                    uint32_t button = libinput_event_pointer_get_button(pointer);
-                    bool pressed = (libinput_event_pointer_get_button_state(pointer) == LIBINPUT_BUTTON_STATE_PRESSED);
-
-                    if (button == BTN_LEFT) {
-                        left_mouse_pressed = pressed;
-                    }
-                    break;
-                }
-
-                case LIBINPUT_EVENT_KEYBOARD_KEY:
-                {
-                    libinput_event_keyboard* keyboard = libinput_event_get_keyboard_event(event);
-                    uint32_t key = libinput_event_keyboard_get_key(keyboard);
-                    bool pressed = libinput_event_keyboard_get_key_state(keyboard) == LIBINPUT_KEY_STATE_PRESSED;
-
-                    if (pressed) {
-                        if (key == KEY_NUMLOCK) leds ^= LIBINPUT_LED_NUM_LOCK;
-                        if (key == KEY_CAPSLOCK) leds ^= LIBINPUT_LED_CAPS_LOCK;
-                        if (key == KEY_SCROLLLOCK) leds ^= LIBINPUT_LED_SCROLL_LOCK;
-
-                        libinput_device* dev = libinput_event_get_device(event);
-                        libinput_device_led_update(dev, static_cast<libinput_led>(leds));
-                    }
-
-                    // The '+8' is here to convert from the kernel/libinput's
-                    // keycodes to the ones expected by xkbcommon
-                    HandleKeycode(key + 8, pressed);
-                    break;
-                }
-
+                UpdateCursorPos();
+                break;
             }
 
-            libinput_event_destroy(event);
-            libinput_dispatch(li);
-        }
+            // Digitizers and touch controls (e.g. drawing tablets)
+            case LIBINPUT_EVENT_POINTER_MOTION_ABSOLUTE:
+            {
+                libinput_event_pointer* pointer = libinput_event_get_pointer_event(event);
 
+                x = libinput_event_pointer_get_absolute_x_transformed(pointer, width);
+                y = libinput_event_pointer_get_absolute_y_transformed(pointer, height);
+
+                UpdateCursorPos();
+                break;
+            }
+
+            case LIBINPUT_EVENT_POINTER_BUTTON:
+            {
+                libinput_event_pointer* pointer = libinput_event_get_pointer_event(event);
+                uint32_t button = libinput_event_pointer_get_button(pointer);
+                bool pressed = (libinput_event_pointer_get_button_state(pointer) == LIBINPUT_BUTTON_STATE_PRESSED);
+
+                if (button == BTN_LEFT) {
+                    left_mouse_pressed = pressed;
+                }
+                break;
+            }
+
+            case LIBINPUT_EVENT_KEYBOARD_KEY:
+            {
+                libinput_event_keyboard* keyboard = libinput_event_get_keyboard_event(event);
+                uint32_t key = libinput_event_keyboard_get_key(keyboard);
+                bool pressed = libinput_event_keyboard_get_key_state(keyboard) == LIBINPUT_KEY_STATE_PRESSED;
+
+                if (pressed) {
+                    if (key == KEY_NUMLOCK) leds ^= LIBINPUT_LED_NUM_LOCK;
+                    if (key == KEY_CAPSLOCK) leds ^= LIBINPUT_LED_CAPS_LOCK;
+                    if (key == KEY_SCROLLLOCK) leds ^= LIBINPUT_LED_SCROLL_LOCK;
+
+                    libinput_device* dev = libinput_event_get_device(event);
+                    libinput_device_led_update(dev, static_cast<libinput_led>(leds));
+                }
+
+                // The '+8' is here to convert from the kernel/libinput's
+                // keycodes to the ones expected by xkbcommon
+                HandleKeycode(key + 8, pressed);
+                break;
+            }
+
+        }
+    }
+
+    void LinuxNativeApp::HandleInput()
+    {
+        struct pollfd pfd;
+        pfd.fd = libinput_get_fd(li);
+        pfd.events = POLLIN;
+
+        while (true) {
+            // wait for up to 5ms
+            poll(&pfd, 1, 5);
+
+            libinput_dispatch(li);
+            struct libinput_event* event = libinput_get_event(li);
+
+            if (event == nullptr) {
+                break;
+            }
+
+            HandleEvent(event);
+            libinput_event_destroy(event);
+        }
     }
 
     void LinuxNativeApp::DrawMouseIcon(bool flag) {
