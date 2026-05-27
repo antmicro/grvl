@@ -103,7 +103,7 @@ namespace grvl {
         bool InitDriver(int fd, uint16_t width, uint16_t height, uint32_t refresh);
         bool TryUsingDriver(const char* path, uint16_t width, uint16_t height, uint32_t refresh);
 
-        void HandleKeycode(uint32_t keycode, bool pressed);
+        void HandleKeycode(uint32_t xkb_keycode, uint32_t evdev_keycode, bool pressed);
         void HandleEvent(libinput_event* event);
         void HandleInput();
         void UpdateCursorPos();

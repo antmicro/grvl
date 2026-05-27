@@ -615,9 +615,9 @@ namespace grvl {
         Manager::GetInstance().ProcessTouchPoint(left_mouse_pressed, x, y);
     }
 
-    void LinuxNativeApp::HandleKeycode(uint32_t keycode, bool pressed)
+    void LinuxNativeApp::HandleKeycode(uint32_t xkb_keycode, uint32_t evdev_keycode, bool pressed)
     {
-        xkb_keysym_t keysym = xkb_state_key_get_one_sym(xkb_state, keycode);
+        xkb_keysym_t keysym = xkb_state_key_get_one_sym(xkb_state, xkb_keycode);
 
         if (pressed) switch (keysym) {
             case XKB_KEY_BackSpace:
@@ -651,11 +651,11 @@ namespace grvl {
 
             default:
                 char* buffer;
-                size_t size = xkb_state_key_get_utf8(xkb_state, keycode, nullptr, 0);
+                size_t size = xkb_state_key_get_utf8(xkb_state, xkb_keycode, nullptr, 0);
 
                 if (size > 0) {
                     std::vector<char> buffer (size + 1);
-                    if (xkb_state_key_get_utf8(xkb_state, keycode, buffer.data(), buffer.size()) > 0) {
+                    if (xkb_state_key_get_utf8(xkb_state, xkb_keycode, buffer.data(), buffer.size()) > 0) {
 
                         // move the buffer to the handler
                         events.push([buffer = std::move(buffer)] () {
@@ -665,10 +665,10 @@ namespace grvl {
                 }
         }
 
-        xkb_state_update_key(xkb_state, keycode, pressed ? XKB_KEY_DOWN : XKB_KEY_UP);
+        xkb_state_update_key(xkb_state, xkb_keycode, pressed ? XKB_KEY_DOWN : XKB_KEY_UP);
 
-        events.push([pressed, keycode] () {
-            Manager::GetInstance().ProcessKeyInput(pressed, keycode);
+        events.push([pressed, evdev_keycode] () {
+            Manager::GetInstance().ProcessKeyInput(pressed, evdev_keycode);
         });
     }
 
@@ -717,13 +717,13 @@ namespace grvl {
             case LIBINPUT_EVENT_KEYBOARD_KEY:
             {
                 libinput_event_keyboard* keyboard = libinput_event_get_keyboard_event(event);
-                uint32_t key = libinput_event_keyboard_get_key(keyboard);
+                uint32_t evdev_key = libinput_event_keyboard_get_key(keyboard);
                 bool pressed = libinput_event_keyboard_get_key_state(keyboard) == LIBINPUT_KEY_STATE_PRESSED;
 
                 if (pressed) {
-                    if (key == KEY_NUMLOCK) leds ^= LIBINPUT_LED_NUM_LOCK;
-                    if (key == KEY_CAPSLOCK) leds ^= LIBINPUT_LED_CAPS_LOCK;
-                    if (key == KEY_SCROLLLOCK) leds ^= LIBINPUT_LED_SCROLL_LOCK;
+                    if (evdev_key == KEY_NUMLOCK) leds ^= LIBINPUT_LED_NUM_LOCK;
+                    if (evdev_key == KEY_CAPSLOCK) leds ^= LIBINPUT_LED_CAPS_LOCK;
+                    if (evdev_key == KEY_SCROLLLOCK) leds ^= LIBINPUT_LED_SCROLL_LOCK;
 
                     libinput_device* dev = libinput_event_get_device(event);
                     libinput_device_led_update(dev, static_cast<libinput_led>(leds));
@@ -731,7 +731,8 @@ namespace grvl {
 
                 // The '+8' is here to convert from the kernel/libinput's
                 // keycodes to the ones expected by xkbcommon
-                HandleKeycode(key + 8, pressed);
+                HandleKeycode(evdev_key + 8, evdev_key, pressed);
+                Manager::GetInstance().ProcessKeyInput(pressed, evdev_key);
                 break;
             }
 
