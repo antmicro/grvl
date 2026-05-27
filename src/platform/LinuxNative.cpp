@@ -135,9 +135,17 @@ static drmModeModeInfoPtr PickMode(drmModeConnectorPtr connector, const uint16_t
 const static struct libinput_interface interface = {
     .open_restricted = [] (const char* path, int flags, void* user) {
         const int fd = open(path, flags);
-        return fd < 0 ? -errno : fd;
+        if (fd < 0)
+            return -errno;
+
+        if (ioctl(fd, EVIOCGRAB, 1) < 0) {
+            perror("EVIOCGRAB");
+        }
+
+        return fd;
     },
     .close_restricted = [] (int fd, void* user) {
+        ioctl(fd, EVIOCGRAB, 0);
         close(fd);
     }
 };
