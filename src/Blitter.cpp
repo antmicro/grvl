@@ -58,27 +58,23 @@ namespace grvl {
     // Based on the ST documentation
     uint32_t Blend(uint32_t bcol, uint32_t icol)
     {
-        uint8_t alphai = (icol >> 24) & 0xFF;
-        uint8_t alphab = (bcol >> 24) & 0xFF;
+        Color fc = DecomposeColorFormat(icol, Format::ARGB8888);
+        Color bc = DecomposeColorFormat(bcol, Format::ARGB8888);
 
-        uint8_t alphamulti = ((alphai * alphab) / 255);
-        uint8_t alphar = alphai + alphab - alphamulti;
-        if(alphar == 0) {
+        uint8_t am = ((fc.a * bc.a) / 255);
+        uint8_t ar = fc.a + bc.a - am;
+
+        // Checking for zero here is much faster than checking if `fc.a == 0`
+        if (ar == 0) {
             return 0;
         }
 
-        uint32_t result;
-        uint8_t* resultb = (uint8_t*)&result;
-        uint8_t* icolb = (uint8_t*)&icol;
-        uint8_t* bcolb = (uint8_t*)&bcol;
+        fc.r = ((fc.r * fc.a) + (bc.r * bc.a) - (bc.r * am)) / ar;
+        fc.g = ((fc.g * fc.a) + (bc.g * bc.a) - (bc.g * am)) / ar;
+        fc.b = ((fc.b * fc.a) + (bc.b * bc.a) - (bc.b * am)) / ar;
+        fc.a = ar;
 
-        for(int i = 0; i < 3; i++) {
-            resultb[i] = ((icolb[i] * alphai) + (bcolb[i] * alphab) - (bcolb[i] * alphamulti)) / (alphar);
-        }
-
-        resultb[3] = alphar;
-
-        return result;
+        return fc.pack(Format::ARGB8888);
     }
 
     uint32_t LookupClt(uint8_t* mem, Format format, uint8_t* clt)
@@ -116,12 +112,17 @@ namespace grvl {
         return ConvertColorFormat(color, input, output);
     }
 
-    template <size_t stride>
+    template <size_t stride, bool transparency>
     static void PixelFormatConvert(uintptr_t imem, uintptr_t bmem, uintptr_t omem, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCLT)
     {
         uint32_t icol = 0;
         uint32_t bcol = 0;
         uint32_t ocol = 0;
+
+        // dummy case
+        if constexpr (stride == 0) {
+            return;
+        }
 
         if(GetFormatUsesColorLookup(ifmt)) {
             icol = LookupClt((uint8_t*)imem, ifmt, (uint8_t*)frontCLT);
@@ -132,7 +133,7 @@ namespace grvl {
             }
         }
 
-        if(bmem != 0) {
+        if constexpr (transparency) {
             if(GetFormatUsesColorLookup(bfmt)) {
                 bcol = LookupClt((uint8_t*)bmem, bfmt, (uint8_t*)backCLT);
             } else {
@@ -147,16 +148,16 @@ namespace grvl {
         memcpy((void*)omem, &ocol, stride);
     }
 
-    template <size_t ostride>
+    template <size_t ostride, bool transparency>
     static void FastBlitPixel(uintptr_t omem, uintptr_t imem, uintptr_t bmem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff,
         uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL)
     {
         const uint32_t istride = GetFormatStride(ifmt);
-        const uint32_t bstride = bmem == 0 ? 0 : GetFormatStride(bfmt);
+        const uint32_t bstride = transparency ? GetFormatStride(bfmt) : 0;
 
         for (uint32_t y = 0; y < rows; y++) {
             for (uint32_t x = 0; x < columns; x++) {
-                PixelFormatConvert<ostride>(imem, bmem, omem, ifmt, bfmt, ofmt, font_color, backCLT, frontCTL);
+                PixelFormatConvert<ostride, transparency>(imem, bmem, omem, ifmt, bfmt, ofmt, font_color, backCLT, frontCTL);
                 omem += ostride;
                 imem += istride;
                 bmem += bstride;
@@ -173,17 +174,24 @@ namespace grvl {
         uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL)
     {
         const uint32_t ostride = GetFormatStride(ofmt);
+        const bool blend = GetFormatAlphaChannel(ifmt) && (bmem != 0);
 
-        const BakedBlitFunc func[5] = {
-            FastBlitPixel<0>, // this is a dummy case
-            FastBlitPixel<1>,
-            FastBlitPixel<2>,
-            FastBlitPixel<3>,
-            FastBlitPixel<4>
+        const BakedBlitFunc func[10] = {
+            FastBlitPixel<0, false>, // this is a dummy case
+            FastBlitPixel<1, false>,
+            FastBlitPixel<2, false>,
+            FastBlitPixel<3, false>,
+            FastBlitPixel<4, false>,
+
+            FastBlitPixel<0, true>, // this is a dummy case
+            FastBlitPixel<1, true>,
+            FastBlitPixel<2, true>,
+            FastBlitPixel<3, true>,
+            FastBlitPixel<4, true>
         };
 
         // bake stride into the function so that memcpy call can be optimized away
-        func[ostride](omem, imem, bmem, columns, rows, ioff, boff, ooff, ifmt, bfmt, ofmt, font_color, backCLT, frontCTL);
+        func[ostride + blend * 5](omem, imem, bmem, columns, rows, ioff, boff, ooff, ifmt, bfmt, ofmt, font_color, backCLT, frontCTL);
     }
 
     void FallbackBlit(uintptr_t imem, uintptr_t bmem, uintptr_t omem,

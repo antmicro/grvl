@@ -31,16 +31,12 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
-struct Channels {
-    uint8_t r, g, b, a;
-};
-
-union Pixel {
-    Channels channels;
-    uint32_t data;
-};
-
 namespace grvl {
+
+    union Pixel {
+        Color channels;
+        uint32_t data;
+    };
 
     static uint32_t XYToOffset(uint32_t x, uint32_t y, uint32_t byteCount, uint32_t bytesPerPixel, uint32_t wholeImageWidth)
     {
