@@ -138,8 +138,8 @@ namespace grvl {
         return true;
     }
 
-    enum Label::TextHorizontalAlignment XMLSupport::ParseAlignmentOrDefault(XMLElement* element, const char* attributeName,
-                                                                            enum Label::TextHorizontalAlignment defaultValue)
+    HorizontalAlignment XMLSupport::ParseAlignmentOrDefault(XMLElement* element, const char* attributeName,
+                                                            HorizontalAlignment defaultValue)
     {
         const char* stylesheetValue;
 
@@ -152,13 +152,13 @@ namespace grvl {
 
         if(value != NULL && *value != 0) {
             if(strcmp("Center", value) == 0) {
-                return Label::Center;
+                return HorizontalAlignment::Center;
             }
             if(strcmp("Left", value) == 0) {
-                return Label::Left;
+                return HorizontalAlignment::Left;
             }
             if(strcmp("Right", value) == 0) {
-                return Label::Right;
+                return HorizontalAlignment::Right;
             }
         }
 

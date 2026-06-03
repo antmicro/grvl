@@ -47,7 +47,7 @@ namespace grvl {
         result->SetTextColor(result->GetForegroundColor());
         result->SetTextFont(man->GetFontPointer(XMLSupport::GetAttributeOrDefault(xmlElement, "font", "normal")));
         result->SetHorizontalAlignment(
-            XMLSupport::ParseAlignmentOrDefault(xmlElement, "alignment", Label::Center));
+            XMLSupport::ParseAlignmentOrDefault(xmlElement, "alignment", HorizontalAlignment::Center));
         result->SetVisible(XMLSupport::GetAttributeOrDefault(xmlElement, "visible", true));
 
         const char* format = xmlElement->Attribute("format");

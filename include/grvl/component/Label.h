@@ -17,6 +17,7 @@
 #ifndef GRVL_LABEL_H_
 #define GRVL_LABEL_H_
 
+#include <grvl/Alignment.h>
 #include <grvl/component/Component.h>
 #include <grvl/Font.h>
 #include <grvl/Painter.h>
@@ -48,15 +49,10 @@ namespace grvl {
     ///
     class Label : public Component {
     public:
-        enum TextHorizontalAlignment {
-            Left,
-            Right,
-            Center
-        };
 
     protected:
         std::string Text;
-        TextHorizontalAlignment HorizontalAlignment{TextHorizontalAlignment::Center};
+        HorizontalAlignment TextHorizontalAlignment{HorizontalAlignment::Center};
         Font* TextFont{nullptr};
         uint32_t TextColor{0};
 
@@ -68,10 +64,10 @@ namespace grvl {
         {
         }
 
-        Label(int32_t x, int32_t y, int32_t width, int32_t height, const char* text, TextHorizontalAlignment alignment)
+        Label(int32_t x, int32_t y, int32_t width, int32_t height, const char* text, HorizontalAlignment alignment)
             : Component(x, y, width, height)
             , Text(text)
-            , HorizontalAlignment(alignment)
+            , TextHorizontalAlignment(alignment)
         {
         }
 
@@ -82,7 +78,7 @@ namespace grvl {
 
         void SetTextColor(uint32_t color);
         void SetText(const char* text);
-        void SetHorizontalAlignment(TextHorizontalAlignment alignment);
+        void SetHorizontalAlignment(HorizontalAlignment alignment);
         void SetTextFont(Font* font);
 
         /// @return Label's text.
@@ -90,7 +86,7 @@ namespace grvl {
 
         uint32_t GetTextColor() const { return TextColor; }
 
-        TextHorizontalAlignment GetMode();
+        HorizontalAlignment GetMode();
         Font* GetTextFont();
 
         static Label* BuildFromXML(XMLElement* xmlElement);

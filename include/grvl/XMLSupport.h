@@ -17,8 +17,8 @@
 #ifndef GRVL_XMLSUPPORT_H_
 #define GRVL_XMLSUPPORT_H_
 
+#include <grvl/Alignment.h>
 #include <grvl/CallbackDefinition.h>
-#include <grvl/component/Label.h>
 
 #include <string>
 #include <unordered_map>
@@ -35,8 +35,8 @@ namespace grvl {
         static bool GetAttributeOrDefault(XMLElement* element, const char* attributeName, bool defaultValue);
         static const char* GetAttributeOrDefault(XMLElement* element, const char* attributeName, const char* defaultValue);
         static CallbackDefinition ParseCallback(const char* callbackDefinition);
-        static enum Label::TextHorizontalAlignment ParseAlignmentOrDefault(XMLElement* element, const char* attributeName,
-                                                                           enum Label::TextHorizontalAlignment defaultValue);
+        static HorizontalAlignment ParseAlignmentOrDefault(XMLElement* element, const char* attributeName,
+                                                                           HorizontalAlignment defaultValue);
         static bool TryGetAttribute(XMLElement* element, const char* attributeName, const char** value);
         static bool TryGetIntAttribute(XMLElement* element, const char* attributeName, int32_t* value);
         static uint32_t GetPositionInCollection(const std::string& collectionString);

@@ -38,14 +38,14 @@ namespace grvl {
         Text = std::string(text);
     }
 
-    void Label::SetHorizontalAlignment(TextHorizontalAlignment alignment)
+    void Label::SetHorizontalAlignment(HorizontalAlignment alignment)
     {
-        HorizontalAlignment = alignment;
+        TextHorizontalAlignment = alignment;
     }
 
-    Label::TextHorizontalAlignment Label::GetMode()
+    HorizontalAlignment Label::GetMode()
     {
-        return HorizontalAlignment;
+        return TextHorizontalAlignment;
     }
 
     Label* Label::BuildFromXML(XMLElement* xmlElement)
@@ -67,7 +67,7 @@ namespace grvl {
         result->SetTextFont(font);
 
         result->SetHorizontalAlignment(
-            XMLSupport::ParseAlignmentOrDefault(xmlElement, "alignment", Label::Center));
+            XMLSupport::ParseAlignmentOrDefault(xmlElement, "alignment", HorizontalAlignment::Center));
 
         return result;
     }
@@ -90,14 +90,14 @@ namespace grvl {
         int32_t TextWidth = TextFont->GetWidth(Text.c_str());
         uint16_t BeginX = 0;
         uint16_t BeginY = (Height / 2) + (TextFont->GetFontHeight() / 2);
-        switch(HorizontalAlignment) {
-            case Left:
+        switch(TextHorizontalAlignment) {
+            case HorizontalAlignment::Left:
                 BeginX = 3;
                 break;
-            case Right:
+            case HorizontalAlignment::Right:
                 BeginX = Width - TextWidth - 3;
                 break;
-            case Center:
+            case HorizontalAlignment::Center:
             default:
                 BeginX = (Width / 2) - (TextWidth / 2);
                 break;

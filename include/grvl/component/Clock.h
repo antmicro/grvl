@@ -68,7 +68,7 @@ namespace grvl {
         {
         }
 
-        Clock(int32_t x, int32_t y, int32_t width, int32_t height, TextHorizontalAlignment alignment)
+        Clock(int32_t x, int32_t y, int32_t width, int32_t height, HorizontalAlignment alignment)
             : Label(x, y, width, height, "", alignment)
             , isRunning(false)
             , lastCurrentTime(0)
