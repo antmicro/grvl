@@ -24,6 +24,24 @@
 #include <grvl/grvl.h>
 
 namespace grvl {
+    ButtonContentLayoutMode ParseButtonContentLayoutOrDefault(XMLElement* xmlElement, const char* attributeName, ButtonContentLayoutMode defaultValue)
+    {
+        const char* value = nullptr;
+        if(!XMLSupport::TryGetAttribute(xmlElement, attributeName, &value)) {
+            return defaultValue;
+        }
+
+        if(strcmp(value, "Inline") == 0) {
+            return ButtonContentLayoutMode::Inline;
+        }
+
+        if(strcmp(value, "Overlay") == 0) {
+            return ButtonContentLayoutMode::Overlay;
+        }
+
+        return defaultValue;
+    }
+
 
     Component* Button::Clone() const
     {
@@ -43,6 +61,26 @@ namespace grvl {
     Font* Button::GetIcoFont()
     {
         return IcoFont;
+    }
+
+    HorizontalAlignment Button::GetContentAlignment() const
+    {
+        return ContentAlignment;
+    }
+
+    ButtonContentLayoutMode Button::GetContentLayoutMode() const
+    {
+        return ContentLayoutMode;
+    }
+
+    int32_t Button::GetImageTextGap() const
+    {
+        return ImageTextGap;
+    }
+
+    int32_t Button::GetHorizontalPadding() const
+    {
+        return HorizontalPadding;
     }
 
     void Button::SetIcoChar(int16_t textIco)
@@ -92,6 +130,13 @@ namespace grvl {
         result->SetOnLongPressEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPress"))));
         result->SetOnLongPressRepeatEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPressRepeat"))));
 
+        result->SetContentAlignment(XMLSupport::ParseAlignmentOrDefault(xmlElement, "alignment", HorizontalAlignment::Center));
+        result->SetContentLayoutMode(ParseButtonContentLayoutOrDefault(xmlElement, "contentLayout", ButtonContentLayoutMode::Overlay));
+        if (result->ButtonFont) {
+            result->SetImageTextGap(XMLSupport::GetAttributeOrDefault(xmlElement, "imageTextGap", result->ButtonFont->GetCharWidth(' ')));
+        }
+        result->SetHorizontalPadding(XMLSupport::GetAttributeOrDefault(xmlElement, "padding", 0));
+
         return result;
     }
 
@@ -104,9 +149,11 @@ namespace grvl {
         int32_t RenderX = ParentRenderX + X;
         int32_t RenderY = ParentRenderY + Y;
 
+        // @TODO call content position only when it changes
+        CalculateContentLayout();
+
         DrawBackgroundItems(painter, RenderX, RenderY, Width, Height);
         DrawText(painter, RenderX, RenderY, Width, Height);
-
     }
 
     void Button::DrawBackgroundItems(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight)
@@ -135,8 +182,17 @@ namespace grvl {
 
         DrawBorderIfNecessary(painter, RenderX, RenderY, RenderWidth, RenderHeight);
 
-        if(!ButtonImage.IsEmpty()) {
+        if(layout.hasImage) {
+            const int32_t oldImageX = ButtonImage.GetX();
+            const int32_t oldImageY = ButtonImage.GetY();
+
+            if (ContentLayoutMode == ButtonContentLayoutMode::Inline) {
+                ButtonImage.SetPosition(layout.imageX, layout.imageY);
+            }
             ButtonImage.Draw(painter, RenderX, RenderY);
+            if (ContentLayoutMode == ButtonContentLayoutMode::Inline) {
+                ButtonImage.SetPosition(oldImageX, oldImageY);
+            }
         }
     }
 
@@ -153,35 +209,18 @@ namespace grvl {
             TempIcoColor = IcoColor;
         }
 
-        uint32_t TextLen = Text.length();
-        if(TextLen > 0 && ButtonFont != 0) {
-            uint16_t TextSize = ButtonFont->GetWidth(Text.c_str());
-            uint16_t BeginX = (Width / 2) - (TextSize / 2);
-            uint16_t BeginY = (Height / 2) + (ButtonFont->GetFontHeight() / 2) + TextTopOffset;
-
-            if(IcoChar != -1 && IcoFont != 0) {
-                BeginY += Height / 3;
-            }
-
-            painter.DisplayBoundedAntialiasedString(ButtonFont, ParentRenderX + BeginX,
-                                                    ParentRenderY + BeginY,
+        if(layout.hasText) {
+            painter.DisplayBoundedAntialiasedString(ButtonFont, ParentRenderX + layout.textX,
+                                                    ParentRenderY + layout.textY,
                                                     ParentRenderX, ParentRenderY,
                                                     Width,
                                                     Height,
                                                     Text.c_str(), TempTextColor);
         }
 
-        if(IcoChar != -1 && IcoFont != 0) {
-            static constexpr auto charPositionOffsetScale = 5;
-            uint16_t BeginX = (Width / 2) - (IcoFont->GetCharWidth((uint32_t)IcoChar) / 2);
-            uint16_t BeginY = (Height / 2) + (IcoFont->GetFontHeight() / 2);
-
-            if(TextLen > 0 && ButtonFont != 0) {
-                BeginY -= Height / charPositionOffsetScale;
-            }
-
-            painter.DisplayAntialiasedCharInBound(IcoFont, BeginX + ParentRenderX,
-                                                  BeginY + ParentRenderY,
+        if(layout.hasIco) {
+            painter.DisplayAntialiasedCharInBound(IcoFont, ParentRenderX + layout.icoX,
+                                                  ParentRenderY + layout.icoY,
                                                   ParentRenderX, ParentRenderY,
                                                   Width,
                                                   Height,
@@ -262,11 +301,87 @@ namespace grvl {
         }
     }
 
+    void Button::SetContentAlignment(HorizontalAlignment alignment)
+    {
+        ContentAlignment = alignment;
+    }
+
+    void Button::SetContentLayoutMode(ButtonContentLayoutMode mode)
+    {
+        ContentLayoutMode = mode;
+    }
+
+    void Button::SetImageTextGap(int32_t gap)
+    {
+        ImageTextGap = gap;
+    }
+
+    void Button::SetHorizontalPadding(int32_t padding)
+    {
+        HorizontalPadding = padding;
+    }
+
     void Button::PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder)
     {
         AbstractButton::PopulateJavaScriptObject(jsObjectBuilder);
         jsObjectBuilder.AddProperty("icoColor", Button::JSGetIcoColorWrapper, Button::JSSetIcoColorWrapper);
         jsObjectBuilder.AddProperty("activeIcoColor", Button::JSGetActiveIcoColorWrapper, Button::JSSetActiveIcoColorWrapper);
+    }
+
+    void Button::CalculateContentLayout()
+    {
+        layout.hasImage = !ButtonImage.IsEmpty();
+        layout.hasText = ButtonFont != nullptr && !Text.empty();
+        layout.hasIco = (IcoChar != -1) && (IcoFont != nullptr);
+
+        const int32_t imageWidth = layout.hasImage ? ButtonImage.GetWidth() : 0;
+        const int32_t imageHeight = (layout.hasImage ? ButtonImage.GetHeight() : 0) + TextTopOffset;
+        const int32_t textWidth = layout.hasText ? ButtonFont->GetWidth(Text.c_str()) : 0;
+        const int32_t textHeight = (layout.hasText ? ButtonFont->GetFontHeight() : 0) + TextTopOffset;
+        const int32_t icoWidth = layout.hasIco ? IcoFont->GetCharWidth((uint32_t)IcoChar) : 0;
+        const int32_t icoHeight = layout.hasIco ? IcoFont->GetFontHeight() : 0;
+
+        const auto alignedX = [this](int32_t contentWidth) {
+            switch(ContentAlignment) {
+                case HorizontalAlignment::Left:
+                    return HorizontalPadding;
+                case HorizontalAlignment::Right:
+                    return Width - contentWidth - HorizontalPadding;
+                case HorizontalAlignment::Center:
+                default:
+                    return (Width - contentWidth) / 2;
+            }
+        };
+
+        if (layout.hasImage && layout.hasText && ContentLayoutMode == ButtonContentLayoutMode::Inline) {
+            const int32_t contentWidth = imageWidth + ImageTextGap + textWidth;
+            const int32_t contentX = alignedX(contentWidth);
+
+            layout.imageX = contentX;
+            layout.textX = contentX + imageWidth + ImageTextGap;
+        } else {
+            layout.imageX = alignedX(imageWidth);
+            layout.textX = alignedX(textWidth);
+        }
+
+        if (layout.hasImage) {
+            layout.imageY = (Height - imageHeight) / 2;
+        }
+        if (layout.hasText) {
+            layout.textY = (Height + textHeight) / 2;
+        }
+        if (layout.hasIco) {
+            const int32_t icoYOffset = Height / 3;
+            layout.imageY += icoYOffset;
+            layout.textY += icoYOffset;
+
+            layout.icoX = alignedX(icoWidth);
+            layout.icoY = (Height + IcoFont->GetFontHeight()) / 2;
+            if (layout.hasText || (layout.hasImage && ContentLayoutMode == ButtonContentLayoutMode::Inline)) {
+                static constexpr auto charPositionOffsetScale = 5;
+                layout.icoY -= Height / charPositionOffsetScale;
+            }
+        }
     }
 
 } /* namespace grvl */

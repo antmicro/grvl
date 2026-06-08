@@ -17,6 +17,7 @@
 #ifndef GRVL_BUTTON_H_
 #define GRVL_BUTTON_H_
 
+#include <grvl/Alignment.h>
 #include <grvl/component/AbstractButton.h>
 #include <grvl/Font.h>
 #include <grvl/Painter.h>
@@ -27,6 +28,23 @@ using namespace tinyxml2;
 
 namespace grvl {
     class Manager;
+
+    enum class ButtonContentLayoutMode {
+        Overlay,
+        Inline,
+    };
+
+    struct ButtonContentLayout {
+        int32_t imageX{0};
+        int32_t imageY{0};
+        bool hasImage{false};
+        int32_t textX{0};
+        int32_t textY{0};
+        bool hasText{0};
+        int32_t icoX{0};
+        int32_t icoY{0};
+        bool hasIco{false};
+    };
 
     /// Represents rectangle button.
     ///
@@ -108,6 +126,10 @@ namespace grvl {
         void SetTextTopOffset(int32_t value);
         void SetImageCentered(bool isCentered);
         virtual void SetSize(int32_t width, int32_t height);
+        void SetContentAlignment(HorizontalAlignment alignment);
+        void SetContentLayoutMode(ButtonContentLayoutMode mode);
+        void SetImageTextGap(int32_t gap);
+        void SetHorizontalPadding(int32_t padding);
 
         void ClearIcoFont();
         void ClearIcoChar();
@@ -118,6 +140,10 @@ namespace grvl {
         uint32_t GetActiveTextColor();
         uint32_t GetActiveIcoColor() const;
         Font* GetIcoFont();
+        HorizontalAlignment GetContentAlignment() const;
+        ButtonContentLayoutMode GetContentLayoutMode() const;
+        int32_t GetImageTextGap() const;
+        int32_t GetHorizontalPadding() const;
 
         static Button* BuildFromXML(XMLElement* xmlElement);
 
@@ -140,9 +166,16 @@ namespace grvl {
         int16_t IcoChar;
         Font* IcoFont;
         bool imageCentered;
+        HorizontalAlignment ContentAlignment{HorizontalAlignment::Center};
+        ButtonContentLayoutMode ContentLayoutMode{ButtonContentLayoutMode::Overlay};
+        int32_t ImageTextGap{0};
+        int32_t HorizontalPadding{0};
+        ButtonContentLayout layout;
 
         virtual void DrawBackgroundItems(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight);
         virtual void DrawText(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight);
+
+        void CalculateContentLayout();
     };
 
 } /* namespace grvl */
