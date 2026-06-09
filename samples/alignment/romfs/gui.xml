@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doc>
+	<stylesheet></stylesheet>
+	<script src="callbacks.js" />
+	<customView id="home" backgroundColor="#FF0A0A0A">
+        <button id="exit" text="Exit" x="695" y="5" width="100" height="18" onClick="OnExitButton" backgroundColor="#FFBF2A2A" activeBackgroundColor="#FFFF4A4A" />
+
+		<!-- Label alignment examples -->
+
+        <label x="40"  y="20" width="720" height="30" text="Label alignment" textColor="#FFFFFFFF" alignment="Center" />
+        <label x="40"  y="60" width="220" height="30" text="Left aligned label" textColor="#FFFFFFFF" backgroundColor="#FF303030" alignment="Left" />
+        <label x="290" y="60" width="220" height="30" text="Center aligned label" textColor="#FFFFFFFF" backgroundColor="#FF303030" alignment="Center" />
+        <label x="540" y="60" width="220" height="30" text="Right aligned label" textColor="#FFFFFFFF" backgroundColor="#FF303030" alignment="Right" />
+
+		<!-- Label alignment wih overflowing text examples -->
+
+        <label x="40"  y="120" width="720" height="30" text="Label alignment with overflowing text" textColor="#FFFFFFFF" alignment="Center" />
+        <label x="40"  y="160" width="220" height="30" text="Left aligned label Left aligned label Left aligned label Left aligned label Left aligned label Left aligned label " textColor="#FFFFFFFF" backgroundColor="#FF303030" alignment="Left" />
+        <label x="290" y="160" width="220" height="30" text="Center aligned label Center aligned label Center aligned label Center aligned label Center aligned label Center aligned label " textColor="#FFFFFFFF" backgroundColor="#FF303030" alignment="Center" />
+        <label x="540" y="160" width="220" height="30" text="Right aligned label Right aligned label Right aligned label Right aligned label Right aligned label Right aligned label " textColor="#FFFFFFFF" backgroundColor="#FF303030" alignment="Right" />
+
+        <!-- Button alignment examples -->
+
+        <label  x="40"  y="220" width="720" height="30" text="Button alignment" textColor="#FFFFFFFF" />
+        <button x="40"  y="260" width="220" height="30" text="Left"   backgroundColor="#FF404040" activeBackgroundColor="#FF606060" alignment="Left" padding="10" />
+        <button x="290" y="260" width="220" height="30" text="Center" backgroundColor="#FF404040" activeBackgroundColor="#FF606060" alignment="Center" padding="10" />
+        <button x="540" y="260" width="220" height="30" text="Right"  backgroundColor="#FF404040" activeBackgroundColor="#FF606060" alignment="Right" padding="10" />
+
+        <!-- Button with text over image alignment examples -->
+
+        <label  x="40"  y="320" width="720" height="30" text="Button with text over centered image alignment"  textColor="#FFFFFFFF" />
+        <button x="40"  y="360" width="220" height="30" text="Left" image="img" backgroundColor="#FF404040" activeBackgroundColor="#FF606060" alignment="Left" padding="10" />
+        <button x="290" y="360" width="220" height="30" text="Center" image="img" backgroundColor="#FF404040" activeBackgroundColor="#FF606060" alignment="Center" padding="10" />
+        <button x="540" y="360" width="220" height="30" text="Right" image="img" backgroundColor="#FF404040" activeBackgroundColor="#FF606060" alignment="Right" padding="10" />
+
+        <!-- Button with text over positioned image alignment examples -->
+        
+        <label  x="40"  y="420" width="720" height="30" text="Button with text over positioned image alignment"  textColor="#FFFFFFFF" />
+        <button x="40"  y="460" width="220" height="30" text="Left" image="img" backgroundColor="#FF404040" activeBackgroundColor="#FF606060" alignment="Left" padding="10" image_x="20" image_y="0" />
+        <button x="290" y="460" width="220" height="30" text="Center" image="img" backgroundColor="#FF404040" activeBackgroundColor="#FF606060" alignment="Center" padding="10" image_x="20" image_y="0" />
+        <button x="540" y="460" width="220" height="30" text="Right" image="img" backgroundColor="#FF404040" activeBackgroundColor="#FF606060" alignment="Right" padding="10" image_x="20" image_y="0" />
+
+        <!-- Button with text inline with image alignment examples -->
+
+        <label  x="40"  y="520" width="720" height="30" text="Button with text inline image alignment"  textColor="#FFFFFFFF" />
+        <button x="40"  y="560" width="220" height="30" text="Left" image="img" backgroundColor="#FF404040" activeBackgroundColor="#FF606060" alignment="Left" padding="10" contentLayout="Inline" />
+        <button x="290" y="560" width="220" height="30" text="Center" image="img" backgroundColor="#FF404040" activeBackgroundColor="#FF606060" alignment="Center" padding="10" contentLayout="Inline" />
+        <button x="540" y="560" width="220" height="30" text="Right" image="img" backgroundColor="#FF404040" activeBackgroundColor="#FF606060" alignment="Right" padding="10" contentLayout="Inline" />
+
+        <!-- Button with text inline with image alignment and ico char examples -->
+
+        <label  x="40"  y="620" width="720" height="30" text="Button with text inline image with ico char alignment"  textColor="#FFFFFFFF" />
+        <button x="40"  y="660" width="220" height="60" text="Left" image="img" backgroundColor="#FF404040" activeBackgroundColor="#FF606060" alignment="Left" padding="10" contentLayout="Inline" icoChar="65" icoFont="normal" icoColor="#FFFF4A4A" />
+        <button x="290" y="660" width="220" height="60" text="Center" image="img" backgroundColor="#FF404040" activeBackgroundColor="#FF606060" alignment="Center" padding="10" contentLayout="Inline" icoChar="66" icoFont="normal" icoColor="#FFFF4A4A" />
+        <button x="540" y="660" width="220" height="60" text="Right" image="img" backgroundColor="#FF404040" activeBackgroundColor="#FF606060" alignment="Right" padding="10" contentLayout="Inline" icoChar="67" icoFont="normal" icoColor="#FFFF4A4A" />
+
+        <!-- Button with overflowing text inline with image alignment and ico char examples -->
+
+        <label  x="40"  y="740" width="720" height="30" text="Button with overflowing text inline image with ico char alignment"  textColor="#FFFFFFFF" />
+        <button x="40"  y="780" width="220" height="60" text="Left Left Left Left Left Left Left Left Left Left Left Left Left Left Left Left Left " image="img" backgroundColor="#FF404040" activeBackgroundColor="#FF606060" alignment="Left" padding="10" contentLayout="Inline" icoChar="65" icoFont="normal" icoColor="#FFFF4A4A" />
+        <button x="290" y="780" width="220" height="60" text="Center Center Center Center Center Center Center Center Center Center Center Center Center Center Center Center Center " image="img" backgroundColor="#FF404040" activeBackgroundColor="#FF606060" alignment="Center" padding="10" contentLayout="Inline" icoChar="66" icoFont="normal" icoColor="#FFFF4A4A" />
+        <button x="540" y="780" width="220" height="60" text="Right Right Right Right Right Right Right Right Right Right Right Right Right Right Right Right Right " image="img" backgroundColor="#FF404040" activeBackgroundColor="#FF606060" alignment="Right" padding="10" contentLayout="Inline" icoChar="67" icoFont="normal" icoColor="#FFFF4A4A" />
+
+
+	</customView>
+</doc>
