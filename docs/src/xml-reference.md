@@ -108,6 +108,10 @@ One of: `none`, `box`, `top`, `right`, `bottom`, `left`.
 * icoChar
 * icoFont
 * icoColor
+* alignment
+* contentLayout
+* imageTextGap
+* padding
 * onLongPress
 * onLongPressRepeat
 

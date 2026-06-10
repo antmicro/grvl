@@ -51,6 +51,17 @@
                     <xs:attribute name="text_top_offset" type="xs:integer"/>
                     <xs:attribute name="image_x" type="xs:integer"/>
                     <xs:attribute name="image_y" type="xs:integer"/>
+                    <xs:attribute name="alignment" type="alignmentType" />
+                    <xs:attribute name="contentLayout">
+                        <xs:simpleType>
+                            <xs:restriction base="xs:string">
+                                <xs:enumeration value="Overlay" />
+                                <xs:enumeration value="Inline"/>
+                            </xs:restriction>
+                        </xs:simpleType>
+                    </xs:atribute>
+                    <xs:attribute name="imageTextGap" type="xs:integer"/>
+                    <xs:attribute name="padding" type="xs:integer"/>
                     <xs:attribute name="onLongPress" type="functionType"/>
                     <xs:attribute name="onLongPressRepeat" type="functionType"/>
                 </xs:extension>
