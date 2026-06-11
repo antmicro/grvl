@@ -149,11 +149,15 @@ namespace grvl {
         int32_t RenderX = ParentRenderX + X;
         int32_t RenderY = ParentRenderY + Y;
 
-        // @TODO call content position only when it changes
+        // Consider calling this only when layout changes
         CalculateContentLayout();
+
+        painter.PushDrawingBoundsStackElement(RenderX, RenderY, RenderX + Width, RenderY + Height);
 
         DrawBackgroundItems(painter, RenderX, RenderY, Width, Height);
         DrawText(painter, RenderX, RenderY, Width, Height);
+
+        painter.PopDrawingBoundsStackElement();
     }
 
     void Button::DrawBackgroundItems(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight)

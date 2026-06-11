@@ -83,6 +83,8 @@ namespace grvl {
         int32_t RenderX = ParentRenderX + X;
         int32_t RenderY = ParentRenderY + Y;
 
+        painter.PushDrawingBoundsStackElement(RenderX, RenderY, RenderX + Width, RenderY + Height);
+
         if(BackgroundColor & alpha) {
             painter.FillRectangle(RenderX, RenderY, Width, Height, BackgroundColor);
         }
@@ -106,6 +108,8 @@ namespace grvl {
         painter.DisplayAntialiasedString(TextFont, RenderX + BeginX, RenderY + BeginY, Text.c_str(), TextColor);
 
         DrawBorderIfNecessary(painter, ParentRenderX + X, ParentRenderY + Y, Width, Height);
+
+        painter.PopDrawingBoundsStackElement();
     }
 
     void Label::SetTextFont(Font* font)
