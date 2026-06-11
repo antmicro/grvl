@@ -5,6 +5,7 @@ SAMPLE_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 BUILD_ALL=0
 BUILD_CLEAN=0
 BUILD_ONLY=0
+BUILD_TYPE=RelWithDebInfo
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -20,10 +21,15 @@ while [[ $# -gt 0 ]]; do
       BUILD_ONLY=1
       shift
       ;;
+    --debug)
+      BUILD_TYPE=Debug
+      shift
+      ;;
     --help)
       echo "sample.sh [--build|--clean|--help] --all|<sample_name>"
       echo " --build  Do not run the sample after building"
       echo " --clean  Do a clean build of the sample"
+      echo " --debug  Do a Debug build (default is RelWithDebInfo)"
       echo " --all    Build all samples"
       echo " --help   Print this help page and exit"
       exit 0
@@ -55,7 +61,7 @@ function sample() {
     fi
 
     set -e
-    cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -B $SAMPLE_PATH/build/ $SAMPLE_PATH
+    cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -B $SAMPLE_PATH/build/ $SAMPLE_PATH
     cmake --build $SAMPLE_PATH/build/ -j $(nproc)
 
     if [ ! "$BUILD_ONLY" -eq "1" ]; then
