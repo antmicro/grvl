@@ -28,8 +28,6 @@
 
 // NOLINTBEGIN
 
-#define max(x, y) (x < y ? y : x)
-
 namespace grvl {
 
     bool Painter::IsColorTransparent(uint32_t color)
@@ -210,7 +208,7 @@ namespace grvl {
             DrawAntialiasedPixel(currentX, currentY, color);
 
             DrawVLine(std::ceil(middleX - currentXOffset), std::ceil(middleY - currentYOffset), std::floor(currentYOffset * 2), color);
-            DrawVLine(std::floor(max(0, middleX + currentXOffset - 1)), std::ceil(middleY - currentYOffset), std::floor(currentYOffset * 2), color);
+            DrawVLine(std::floor(std::max(0.0f, middleX + currentXOffset - 1)), std::ceil(middleY - currentYOffset), std::floor(currentYOffset * 2), color);
 
             currentAngle -= angleDiff;
         } while (currentAngle > 0);
@@ -858,12 +856,12 @@ namespace grvl {
         }
 
         if (Xpos < CurrentDrawingBoundsStartX()) {
-            Width = max(0, static_cast<int32_t>(Width) - CurrentDrawingBoundsStartX() + Xpos);
+            Width = std::max(0, static_cast<int32_t>(Width) - CurrentDrawingBoundsStartX() + Xpos);
             Xpos = CurrentDrawingBoundsStartX();
         }
 
         if (Ypos < CurrentDrawingBoundsStartY()) {
-            Height = max(0, static_cast<int32_t>(Height) - CurrentDrawingBoundsStartY() + Ypos);
+            Height = std::max(0, static_cast<int32_t>(Height) - CurrentDrawingBoundsStartY() + Ypos);
             Ypos = CurrentDrawingBoundsStartY();
         }
 
@@ -1183,7 +1181,7 @@ namespace grvl {
             outputMem = font_dst + (uint32_t)(outBytes * ((GetXSize() * (y_dst)) + x_dst));
             NumberOfLines = height;
             PixelsPerLine = width;
-            inOffset = fontWidth - width + x_src;
+            inOffset = fontWidth - width;
             outOffset = GetXSize() - width;
         }
 
@@ -1390,7 +1388,7 @@ namespace grvl {
                 while(1) { // Check if another block can be merged
                     j = findNextBlock(bblocks, currentTransferPosition + mergedBlockHeight);
                     if(j > -1 && bblocks[j].y_position <= mergedBlockBeginY + mergedBlockHeight) {
-                        mergedBlockHeight = max(mergedBlockHeight,
+                        mergedBlockHeight = std::max(mergedBlockHeight,
                                                 bblocks[j].y_position + bblocks[j].height - mergedBlockBeginY);
                     } else {
                         break;
@@ -1549,55 +1547,52 @@ namespace grvl {
         DrawAntialiasedCharInBound(Font, Xpos, Ypos, CurrentDrawingBoundsStartX(), CurrentDrawingBoundsStartY(), CurrentDrawingBoundsWidth(), CurrentDrawingBoundsHeight(), Index, text_color);
     }
 
-    void Painter::DrawAntialiasedCharInBound(Font* Font, int16_t Xpos, int16_t Ypos, int16_t ParentX,
-                                             int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight, uint32_t Index,
-                                             uint32_t text_color) const
-    {
-        if (Xpos >= ParentX + ParentWidth || Ypos >= ParentY + ParentHeight) {
+
+    void Painter::DrawAntialiasedCharInBound(Font* Font, int16_t Xpos, int16_t Ypos,
+                                             int16_t ParentX, int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight,
+                                             uint32_t Index, uint32_t text_color) const
+{
+        if (ParentWidth <= 0 || ParentHeight <= 0) {
             return;
         }
 
         Glyph glyph = Font->GetGlyph(Index);
-
-        if(glyph.bitmap == nullptr) {
-            return; // Character doesn't exists
-        }
-
-        int32_t TopOffset = 0, BottomOffset = 0;
-
-        if(ParentHeight == 0) {
+        if (glyph.bitmap == nullptr || glyph.width <= 0 || glyph.height <= 0) {
             return;
         }
 
-        int16_t fontHeight = glyph.height;
-        int16_t charWidth = glyph.width;
+        const int32_t glyphX = static_cast<int32_t>(Xpos) + glyph.xoff;
+        const int32_t glyphY = static_cast<int32_t>(Ypos) + glyph.yoff;
+        const int32_t glyphRight = glyphX + glyph.width;
+        const int32_t glyphBottom = glyphY + glyph.height;
 
-        int offsetFromParentY = Ypos - ParentY;
+        const int32_t boundLeft = ParentX;
+        const int32_t boundTop = ParentY;
+        const int32_t boundRight = static_cast<int32_t>(ParentX) + ParentWidth;
+        const int32_t boundBottom = static_cast<int32_t>(ParentY) + ParentHeight;
 
-        if(ParentHeight < 0) {
-            TopOffset = -ParentHeight;
-            TopOffset = offsetFromParentY - TopOffset;
-            if(TopOffset > 0) {
-                TopOffset = 0;
-            } else {
-                TopOffset = -TopOffset;
-            }
-        } else if(ParentHeight <= offsetFromParentY + fontHeight) { // Bottom offset
-            BottomOffset = fontHeight - (ParentHeight - offsetFromParentY);
-        }
+        const int32_t clipLeft = std::max(glyphX, boundLeft);
+        const int32_t clipTop = std::max(glyphY, boundTop);
+        const int32_t clipRight = std::min(glyphRight, boundRight);
+        const int32_t clipBottom = std::min(glyphBottom, boundBottom);
 
-        if(TopOffset + BottomOffset >= fontHeight) {
+        if (clipLeft >= clipRight || clipTop >= clipBottom) {
             return;
         }
 
-        if (offsetFromParentY < -fontHeight) {
-            return;
-        }
+        const int32_t srcX = clipLeft - glyphX;
+        const int32_t srcY = clipTop - glyphY;
+        const int32_t clippedWidth = clipRight - clipLeft;
+        const int32_t clippedHeight = clipBottom - clipTop;
 
-        DmaMoveFont(
-            (uintptr_t)glyph.bitmap, GetActiveBuffer(), 0, 0, Xpos + glyph.xoff, Ypos + TopOffset + glyph.yoff, charWidth,
-            fontHeight, glyph.width, glyph.height, GetActiveBufferPixelFormat(), text_color);
+        DmaMoveFont(reinterpret_cast<uintptr_t>(glyph.bitmap), GetActiveBuffer(),
+                    srcX, srcY,
+                    clipLeft, clipTop, clippedWidth, clippedHeight,
+                    glyph.width, glyph.height,
+                    GetActiveBufferPixelFormat(),
+                    text_color);
     }
+
 
     void Painter::DisplayAntialiasedCharInBound(Font* Font, int16_t Xpos, int16_t Ypos, int16_t ParentX,
                                                 int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight, uint32_t index, uint32_t text_color) const
@@ -1623,8 +1618,8 @@ namespace grvl {
 
     void Painter::PushDrawingBoundsStackElement(int32_t startX, int32_t startY, int32_t endX, int32_t endY)
     {
-        startX = max(CurrentDrawingBoundsStartX(), startX);
-        startY = max(CurrentDrawingBoundsStartY(), startY);
+        startX = std::max(CurrentDrawingBoundsStartX(), startX);
+        startY = std::max(CurrentDrawingBoundsStartY(), startY);
         endX = std::min(CurrentDrawingBoundsEndX(), endX);
         endY = std::min(CurrentDrawingBoundsEndY(), endY);
 
