@@ -1034,7 +1034,7 @@ namespace grvl {
             height -= offset;
         }
 
-        if(y_dst + height >= CurrentDrawingBoundsEndY()){
+        if(y_dst + height > CurrentDrawingBoundsEndY()){
             height -= y_dst + height - CurrentDrawingBoundsEndY();
         }
 
@@ -1045,7 +1045,7 @@ namespace grvl {
             width -= offset;
         }
 
-        if(x_dst + width >= CurrentDrawingBoundsEndX()){
+        if(x_dst + width > CurrentDrawingBoundsEndX()){
             width -= x_dst + width - CurrentDrawingBoundsEndX();
         }
 
