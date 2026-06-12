@@ -1495,8 +1495,11 @@ namespace grvl {
     void Painter::DisplayBoundedAntialiasedString(Font* Font, int16_t Xpos, int16_t Ypos, int16_t ParentX,
                                                   int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight, const char* Text, uint32_t text_color) const
     {
+        const int32_t textWidth = Font->GetWidth(Text);
+        const int32_t textHeight = Font->GetFontHeight();
+
         if (Xpos >= CurrentDrawingBoundsEndX() || Ypos >= CurrentDrawingBoundsEndY() ||
-            Xpos < CurrentDrawingBoundsStartX() || Ypos < CurrentDrawingBoundsStartY()) {
+            Xpos + textWidth < CurrentDrawingBoundsStartX() || Ypos + textHeight < CurrentDrawingBoundsStartY()) {
             return;
         }
 
