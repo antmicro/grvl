@@ -15,4 +15,4 @@ target_link_libraries(char_bounding PRIVATE grvl)
 target_include_directories(char_bounding PRIVATE ./)
 target_sources(char_bounding PRIVATE main.cpp)
 
-#set_target_properties(char_bounding PROPERTIES OUTPUT_NAME "demo")
+set_target_properties(char_bounding PROPERTIES OUTPUT_NAME "demo")

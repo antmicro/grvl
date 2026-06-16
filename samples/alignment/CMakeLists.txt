@@ -15,4 +15,4 @@ target_link_libraries(alignment_poc PRIVATE grvl)
 target_include_directories(alignment_poc PRIVATE ./)
 target_sources(alignment_poc PRIVATE main.cpp)
 
-set_target_properties(alignment_poc PROPERTIES OUTPUT_NAME "alignment_poc")
+set_target_properties(alignment_poc PROPERTIES OUTPUT_NAME "demo")
