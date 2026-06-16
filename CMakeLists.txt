@@ -45,12 +45,9 @@ target_link_libraries(
          $<$<BOOL:${GRVL_LINUX_NATIVE}>:PkgConfig::XKBCOMMON>
 )
 
-if(GRVL_LINUX_NATIVE)
-  target_compile_definitions(grvl PUBLIC GRVL_LINUX_NATIVE)
-endif()
-
 if (NOT GRVL_ZEPHYR)
   add_executable(gbf EXCLUDE_FROM_ALL ${gbf_sources})
+
   target_link_libraries(gbf PRIVATE grvl)
 
   if(PROJECT_IS_TOP_LEVEL)
