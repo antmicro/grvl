@@ -53,6 +53,9 @@ static const uint32_t cursor_map[] = {
 };
 static const int cursor_map_width = 17;
 static const int cursor_map_height = 24;
+// pointer hostpot offset within the cursor_map
+static const int cursor_hotspot_x = 3;
+static const int cursor_hotspot_y = 3;
 // clang-format on
 
 static drmModeConnectorPtr PickConnector(int fd, drmModeResPtr resource)
@@ -380,6 +383,12 @@ namespace grvl {
         drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, encoder->crtc_id);
         drmModeAtomicAddProperty(req, cursor.plane, cursor.props.x, x);
         drmModeAtomicAddProperty(req, cursor.plane, cursor.props.y, y);
+        if (cursor.props.hotspot_x) {
+            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.hotspot_x, cursor_hotspot_x);
+        }
+        if (cursor.props.hotspot_y) {
+            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.hotspot_y, cursor_hotspot_y);
+        }
         drmModeAtomicAddProperty(req, primary.plane, primary.props.fb, primary.fb);
 
         uint32_t flags = DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_PAGE_FLIP_EVENT;
@@ -430,6 +439,21 @@ namespace grvl {
         }
 
         drmSetClientCap(fd, DRM_CLIENT_CAP_ATOMIC, 1);
+        if (ret != 0) {
+            printf("Failed to enable Atomic Modesetting!\n");
+            return false;
+        }
+
+        /*
+         * On virtualized drivers, e.g. virtio-gpu, cursor planes may be hidden
+         * unless userspace explicitly advertises that it understands cursor
+         * hotspots. Non-virtualized drivers may return EOPNOTSUPP that is fine,
+         * keep running and use the normal cursor-plane probing below.
+         */
+        ret = drmSetClientCap(fd, DRM_CLIENT_CAP_CURSOR_PLANE_HOTSPOT, 1);
+        if (ret != 0 && errno != EOPNOTSUPP) {
+            printf("Failed to enable cursor plane hotspot client cap: %s\n", strerror(errno));
+        }
 
         // Prepare DRM buffers for the mouse cursor
         cursor.dumb.width = 64;
@@ -454,6 +478,10 @@ namespace grvl {
                       cursor.offsets, &cursor.fb, 0);
 
         cursor.plane = FindPlaneByType(DRM_PLANE_TYPE_CURSOR);
+        if (!cursor.plane) {
+            printf("Failed to find DRM cursor plane!\n");
+            return false;
+        }
 
         // Prepare primary plane buffers
         primary.dumb.width = width;
@@ -504,6 +532,8 @@ namespace grvl {
         cursor.props.crtc = GetPropertyId(cursor.plane, "CRTC_ID");
         cursor.props.x = GetPropertyId(cursor.plane, "CRTC_X");
         cursor.props.y = GetPropertyId(cursor.plane, "CRTC_Y");
+        cursor.props.hotspot_x = GetPropertyId(cursor.plane, "HOTSPOT_X");
+        cursor.props.hotspot_y = GetPropertyId(cursor.plane, "HOTSPOT_Y");
 
         primary.props.fb = GetPropertyId(primary.plane, "FB_ID");
         primary.props.crtc = GetPropertyId(primary.plane, "CRTC_ID");
@@ -512,7 +542,13 @@ namespace grvl {
         drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, encoder->crtc_id);
         drmModeAtomicAddProperty(req, cursor.plane, cursor.props.x, 0);
         drmModeAtomicAddProperty(req, cursor.plane, cursor.props.y, 0);
-
+        if (cursor.props.hotspot_x) {
+            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.hotspot_x, cursor_hotspot_x);
+        }
+        if (cursor.props.hotspot_y) {
+            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.hotspot_y, cursor_hotspot_y);
+        }
+        
         uint32_t crtc_x, crtc_y, crtc_w, crtc_h, src_w, src_h, src_x, src_y;
 
         crtc_w = GetPropertyId(cursor.plane, "CRTC_W");

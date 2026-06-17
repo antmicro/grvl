@@ -58,7 +58,7 @@ namespace grvl {
             uint32_t fb;
             uint32_t plane;
             struct {
-                uint32_t fb, crtc, x, y;
+                uint32_t fb{0}, crtc{0}, x{0}, y{0}, hotspot_x{0}, hotspot_y{0};
             } props;
             void* map = nullptr;
             uint32_t handles[4] = {};
