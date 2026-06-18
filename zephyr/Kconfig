@@ -1,8 +1,21 @@
 config GRVL
-    bool "Grvl support"
+    bool "grvl support"
     default y
     select CPP
     help
         Graphics Rendering Visual Library (grvl) is an open source library
         for creating rich, modern, animated graphical user interfaces,
         developed for use on constrained devices like MCUs.
+
+config GRVL_HAS_STM32_DMA2D
+    bool
+    default y if HAS_STM32CUBE
+
+config GRVL_USE_STM32_DMA2D
+    bool "Use DMA2D acceleration"
+    default y
+    depends on GRVL_HAS_STM32_DMA2D
+    select USE_STM32_HAL_DMA2D
+    select USE_STM32_LL_DMA2D
+    help
+        Enable DMA2D hardware acceleration, this makes grvl much faster.
