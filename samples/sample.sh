@@ -55,6 +55,7 @@ function sample() {
     fi
 
     echo "Building sample '$1'..."
+    rm -f "$SAMPLE_PATH/build/demo" || true
 
     if [ "$BUILD_CLEAN" -eq "1" ] && [ -d "$SAMPLE_PATH/build" ]; then
         rm -rf "$SAMPLE_PATH/build"
@@ -63,6 +64,11 @@ function sample() {
     set -e
     cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -B $SAMPLE_PATH/build/ $SAMPLE_PATH
     cmake --build $SAMPLE_PATH/build/ -j $(nproc)
+
+    if [ ! -f "$SAMPLE_PATH/build/demo" ]; then
+        echo "Failed to build sample $SAMPLE_PATH, executable file not found!"
+        exit 1
+    fi
 
     if [ ! "$BUILD_ONLY" -eq "1" ]; then
         echo "Running sample '$1'..."
