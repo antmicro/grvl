@@ -52,16 +52,6 @@ if(GRVL_STATIC AND GRVL_SHARED)
   message(FATAL_ERROR "Building both shared and static library at the same time is not supported.")
 endif()
 
-if(GRVL_LINUX_NATIVE)
-  target_compile_definitions(grvl_options INTERFACE GRVL_LINUX_NATIVE_SUPPORT)
-  message(STATUS "GRVL Native Linux support ENABLED")
-endif()
-
-if(GRVL_LINUX_DESKTOP)
-  target_compile_definitions(grvl_options INTERFACE GRVL_LINUX_DESKTOP_SUPPORT)
-  message(STATUS "GRVL Desktop Linux support ENABLED")
-endif()
-
 if(GRVL_STATIC)
   set(BUILD_SHARED_LIBS OFF)
 elseif(GRVL_SHARED)

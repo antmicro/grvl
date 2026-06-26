@@ -27,6 +27,31 @@ file(
   CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/gbf/*.hpp"
                     "${CMAKE_CURRENT_SOURCE_DIR}/gbf/*.cpp")
 
+# Platform specific code is added separately
+list(FILTER sources EXCLUDE REGEX ".*/src/platform/.*")
+list(APPEND sources "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/Posix.cpp"
+                    "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/Application.cpp"
+                    "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/LinuxGeneric.cpp")
+
+if(GRVL_LINUX_NATIVE)
+  list(APPEND sources "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/LinuxNative.cpp")
+  target_compile_definitions(grvl_options INTERFACE GRVL_LINUX_NATIVE_SUPPORT)
+  message(STATUS "GRVL Native Linux support ENABLED")
+endif()
+
+if(GRVL_LINUX_DESKTOP)
+  list(APPEND sources "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/LinuxDesktop.cpp")
+  target_compile_definitions(grvl_options INTERFACE GRVL_LINUX_DESKTOP_SUPPORT)
+  message(STATUS "GRVL Desktop Linux support ENABLED")
+endif()
+
+if(GRVL_ZEPHYR)
+  list(APPEND sources "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/ZephyrApp.cpp")
+  list(APPEND sources "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/Dma2d.cpp")
+  target_compile_definitions(grvl_options INTERFACE GRVL_ZEPHYR_SUPPORT)
+  message(STATUS "GRVL Zephyr support ENABLED")
+endif()
+
 add_library(grvl ${sources} ${headers})
 set_target_properties(grvl PROPERTIES CXX_STANDARD 17
                                       CXX_EXTENSIONS OFF)
@@ -44,10 +69,6 @@ target_link_libraries(
          $<$<BOOL:${GRVL_LINUX_NATIVE}>:PkgConfig::LIBINPUT>
          $<$<BOOL:${GRVL_LINUX_NATIVE}>:PkgConfig::XKBCOMMON>
 )
-
-if (GRVL_ZEPHYR)
-  target_compile_definitions(grvl PUBLIC GRVL_ZEPHYR_SUPPORT)
-endif()
 
 if (NOT GRVL_ZEPHYR)
   add_executable(gbf EXCLUDE_FROM_ALL ${gbf_sources})

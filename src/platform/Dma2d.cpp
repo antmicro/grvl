@@ -1,7 +1,7 @@
 
 #include <grvl/grvl.h>
 
-#if CONFIG_GRVL_USE_STM32_DMA
+#if CONFIG_GRVL_USE_STM32_DMA2D
 #include <grvl/platform/Dma2d.h>
 #include <zephyr/logging/log.h>
 #include <grvl/Blitter.h>

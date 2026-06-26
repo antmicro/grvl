@@ -1,5 +1,4 @@
 
-#if defined(GRVL_ZEPHYR_SUPPORT)
 #include <grvl/platform/Dma2d.h>
 #include <grvl/platform/ZephyrApp.h>
 #include <zephyr/logging/log.h>
@@ -125,5 +124,3 @@ namespace grvl {
     }
 
 }
-
-#endif

@@ -1,6 +1,4 @@
 
-#if defined(GRVL_LINUX_DESKTOP_SUPPORT)
-
 #include <grvl/Manager.h>
 #include <grvl/platform/LinuxDesktopApp.h>
 
@@ -107,5 +105,3 @@ namespace grvl {
     }
 
 }
-
-#endif
