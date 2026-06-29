@@ -145,6 +145,7 @@ namespace grvl {
         int32_t GetImageTextGap() const;
         int32_t GetHorizontalPadding() const;
 
+        virtual void InitFromXML(tinyxml2::XMLElement* xmlElement);
         static Button* BuildFromXML(XMLElement* xmlElement);
 
         void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;

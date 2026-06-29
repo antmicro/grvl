@@ -93,50 +93,55 @@ namespace grvl {
         IcoChar = -1;
     }
 
-    Button* Button::BuildFromXML(XMLElement* xmlElement)
+    void Button::InitFromXML(tinyxml2::XMLElement* xmlElement)
     {
+        AbstractButton::InitFromXML(xmlElement);
+
         Manager* man = &Manager::GetInstance();
-        Button* result = new Button();
-
-        result->InitFromXML(xmlElement);
         static constexpr uint32_t noIco = 0xFFFFFFFF;
-        result->SetIcoChar(XMLSupport::GetAttributeOrDefault(xmlElement, "icoChar", noIco));
-        result->SetIcoFont(man->GetFontPointer(XMLSupport::GetAttributeOrDefault(xmlElement, "icoFont", "normal")));
+        SetIcoChar(XMLSupport::GetAttributeOrDefault(xmlElement, "icoChar", noIco));
+        SetIcoFont(man->GetFontPointer(XMLSupport::GetAttributeOrDefault(xmlElement, "icoFont", "normal")));
 
-        result->SetTextColor(XMLSupport::ParseColor(xmlElement, "textColor", "#ffffffff"));
-        result->SetActiveTextColor(XMLSupport::ParseColor(xmlElement, "activeTextColor", result->GetTextColor()));
-        result->SetIcoColor(XMLSupport::ParseColor(xmlElement, "icoColor", result->GetTextColor()));
-        result->SetActiveIcoColor(XMLSupport::ParseColor(xmlElement, "activeIcoColor", result->GetIcoColor()));
+        SetTextColor(XMLSupport::ParseColor(xmlElement, "textColor", "#ffffffff"));
+        SetActiveTextColor(XMLSupport::ParseColor(xmlElement, "activeTextColor", GetTextColor()));
+        SetIcoColor(XMLSupport::ParseColor(xmlElement, "icoColor", GetTextColor()));
+        SetActiveIcoColor(XMLSupport::ParseColor(xmlElement, "activeIcoColor", GetIcoColor()));
 
-        result->SetTextTopOffset(XMLSupport::GetAttributeOrDefault(xmlElement, "text_top_offset", (uint32_t)0));
+        SetTextTopOffset(XMLSupport::GetAttributeOrDefault(xmlElement, "text_top_offset", (uint32_t)0));
 
-        result->SetOnClickEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onClick"))));
+        SetOnClickEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onClick"))));
 
         const char* tempChar = xmlElement->Attribute("image");
         if(tempChar) {
             Image buttonImg(NULL, 0, 0, 0);
             man->BindImageContentToImage(tempChar, &buttonImg);
-            result->SetImage(buttonImg);
+            SetImage(buttonImg);
             int32_t imgX = XMLSupport::GetAttributeOrDefault(xmlElement, "image_x", (uint32_t)-1);
             int32_t imgY = XMLSupport::GetAttributeOrDefault(xmlElement, "image_y", (uint32_t)-1);
             if(imgX == -1 || imgY == -1) {
-                result->SetImageCentered(true);
-                imgX = result->GetWidth() / 2 - buttonImg.GetWidth() / 2;
-                imgY = result->GetHeight() / 2 - buttonImg.GetHeight() / 2;
+                SetImageCentered(true);
+                imgX = GetWidth() / 2 - buttonImg.GetWidth() / 2;
+                imgY = GetHeight() / 2 - buttonImg.GetHeight() / 2;
             }
-            result->SetImagePosition(imgX, imgY);
+            SetImagePosition(imgX, imgY);
         }
 
-        result->SetOnLongPressEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPress"))));
-        result->SetOnLongPressRepeatEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPressRepeat"))));
+        SetOnLongPressEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPress"))));
+        SetOnLongPressRepeatEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPressRepeat"))));
 
-        result->SetContentAlignment(XMLSupport::ParseAlignmentOrDefault(xmlElement, "alignment", HorizontalAlignment::Center));
-        result->SetContentLayoutMode(ParseButtonContentLayoutOrDefault(xmlElement, "contentLayout", ButtonContentLayoutMode::Overlay));
-        if (result->ButtonFont) {
-            result->SetImageTextGap(XMLSupport::GetAttributeOrDefault(xmlElement, "imageTextGap", result->ButtonFont->GetCharWidth(' ')));
+        SetContentAlignment(XMLSupport::ParseAlignmentOrDefault(xmlElement, "alignment", HorizontalAlignment::Center));
+        SetContentLayoutMode(ParseButtonContentLayoutOrDefault(xmlElement, "contentLayout", ButtonContentLayoutMode::Overlay));
+        if (ButtonFont) {
+            SetImageTextGap(XMLSupport::GetAttributeOrDefault(xmlElement, "imageTextGap", ButtonFont->GetCharWidth(' ')));
         }
-        result->SetHorizontalPadding(XMLSupport::GetAttributeOrDefault(xmlElement, "padding", 0));
+        SetHorizontalPadding(XMLSupport::GetAttributeOrDefault(xmlElement, "padding", 0));
 
+    }
+
+    Button* Button::BuildFromXML(XMLElement* xmlElement)
+    {
+        Button* result = new Button();
+        result->InitFromXML(xmlElement);
         return result;
     }
 
