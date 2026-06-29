@@ -8,7 +8,7 @@
 #include <grvl/platform/LinuxGenericApp.h>
 
 #define WIDTH 800
-#define HEIGHT 860
+#define HEIGHT 940
 
 int main()
 {

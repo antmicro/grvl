@@ -61,6 +61,13 @@
         <button x="290" y="780" width="220" height="60" text="Center Center Center Center Center Center Center Center Center Center Center Center Center Center Center Center Center " image="img" backgroundColor="#FF404040" activeBackgroundColor="#FF606060" alignment="Center" padding="10" contentLayout="Inline" icoChar="66" icoFont="normal" icoColor="#FFFF4A4A" />
         <button x="540" y="780" width="220" height="60" text="Right Right Right Right Right Right Right Right Right Right Right Right Right Right Right Right Right " image="img" backgroundColor="#FF404040" activeBackgroundColor="#FF606060" alignment="Right" padding="10" contentLayout="Inline" icoChar="67" icoFont="normal" icoColor="#FFFF4A4A" />
 
+        <!-- TextInput padding examples -->
+
+        <label  x="40"  y="860" width="720" height="30" text="TextInput padding"  textColor="#FFFFFFFF" />
+        <textInput x="40"  y="900" width="220" height="30" backgroundColor="#FF404040" padding="0" basicText="Padding 0" />
+        <textInput x="290" y="900" width="220" height="30" backgroundColor="#FF404040" padding="10" basicText="Padding 10" />
+        <textInput x="540" y="900" width="220" height="30" backgroundColor="#FF404040" padding="50" basicText="Padding 50" />
+
 
 	</customView>
 </doc>
