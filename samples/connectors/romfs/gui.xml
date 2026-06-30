@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doc>
+	<stylesheet></stylesheet>
+	<script src="callbacks.js" />
+
+	<prefab id="connectorItem" width="375" height="44"
+	        backgroundColor="#FF1B1B1B" activeBackgroundColor="#FF345A85"
+	        borderType="box" borderColor="#FF3A3A3A"
+	        onClick="SelectConnector" >
+		<label x="5" y="0" width="370" height="44" font="normal" text="" textColor="#FFF2F2F2" alignment="Left" onClick="SelectConnector" />
+	</prefab>
+
+	
+	<prefab id="modeItem" width="375" height="34" backgroundColor="#FF141414" borderType="box" borderColor="#FF303030">
+		<label x="5" y="0" width="370" height="34" font="small" textColor="#FFE0E0E0" alignment="Left" />
+	</prefab>
+
+	<customView id="home" backgroundColor="#FF0A0A0A">
+		<division x="0" y="0" width="1280" height="800" backgroundColor="#FF0A0A0A">
+			<button id="button" text="Exit" x="695" y="5" width="100" height="18" onClick="OnExitButton" backgroundColor="#FFBF2A2A" activeBackgroundColor="#FFFF4A4A" />
+  		
+    		<label x="20" y="18" width="760" height="32" text="Connected DRM displays" alignment="left" textColor="#FFFFFFFF" />
+
+    		<label x="20" y="70" width="375" height="28" text="Connectors" alignment="left" textColor="#FFFFFFFF" />
+    		<ListView id="connectorsList" x="20" y="108" width="375" height="460" verticalGap="4" backgroundColor="#FF101010" />
+    		<label id="modesTitle" x="415" y="70" width="365" height="28" text="Modes" font="normal" alignment="left" textColor="#FFFFFFFF" />
+    		<ListView id="modesList" x="415" y="108" width="365" height="460" verticalGap="4" backgroundColor="#FF101010" />
+		</division>
+	</customView>
+</doc>
