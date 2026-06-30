@@ -18,15 +18,37 @@
 #include <libdrm/drm_fourcc.h>
 
 #include <xkbcommon/xkbcommon.h>
-#include <unordered_set>
 #include <atomic>
-#include <thread>
 #include <mutex>
+#include <string>
+#include <thread>
+#include <unordered_set>
+#include <vector>
 
 class drm_screen;
 class framebuffer_screen;
 
 namespace grvl {
+
+    struct NativeDisplayMode {
+        std::string name;
+        uint16_t width = 0;
+        uint16_t height = 0;
+        uint32_t refresh = 0;
+        bool preferred = false;
+    };
+
+    struct NativeDisplay {
+        std::string drm_path;
+        uint32_t connector_id = 0;
+        uint32_t connector_type = 0;
+        uint32_t connector_type_id = 0;
+        uint16_t width = 0;
+        uint16_t height = 0;
+        uint32_t refresh = 0;
+        std::vector<NativeDisplayMode> modes;
+        bool built_in = false;
+    };
 
     // Linux "native" Application
     //
@@ -39,6 +61,8 @@ namespace grvl {
     // it is recomended to create the instance before the main render loop and only destroy it after the loop exits.
     class LinuxNativeApp : public PosixApp {
     private:
+        NativeDisplay selected_display;
+        bool has_selected_display = false;
 
         int fd = -1;
         int crtc_index = -1;
@@ -100,8 +124,8 @@ namespace grvl {
         uint32_t FindPlaneByType(uint32_t plane_type);
 
         void CloseDriver();
-        bool InitDriver(int fd, uint16_t width, uint16_t height, uint32_t refresh);
-        bool TryUsingDriver(const char* path, uint16_t width, uint16_t height, uint32_t refresh);
+        bool InitDriver(int fd, uint16_t width, uint16_t height, uint32_t refresh, uint32_t connector_id = 0);
+        bool TryUsingDriver(const char* path, uint16_t width, uint16_t height, uint32_t refresh, uint32_t connector_id = 0);
 
         void HandleKeycode(uint32_t xkb_keycode, uint32_t evdev_keycode, bool pressed);
         void HandleEvent(libinput_event* event);
@@ -113,7 +137,10 @@ namespace grvl {
     public:
 
         LinuxNativeApp(int width, int height, bool rotate_sideways = false);
+        LinuxNativeApp(const NativeDisplay& display, bool rotate_sideways = false);
         ~LinuxNativeApp() override;
+
+        static std::vector<NativeDisplay> EnumerateConnectedDisplays();
 
         void Render() override;
         void Swap() override;

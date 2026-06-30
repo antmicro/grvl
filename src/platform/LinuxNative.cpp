@@ -2,6 +2,8 @@
 #include <grvl/platform/LinuxNativeApp.h>
 #include <grvl/Manager.h>
 
+#include <algorithm>
+#include <glob.h>
 #include <regex>
 #include <filesystem>
 #include <fcntl.h>
@@ -57,7 +59,21 @@ static const int cursor_hotspot_x = 3;
 static const int cursor_hotspot_y = 3;
 // clang-format on
 
-static drmModeConnectorPtr PickConnector(int fd, drmModeResPtr resource)
+static bool IsBuiltInConnector(uint32_t connector_type)
+{
+    return connector_type == DRM_MODE_CONNECTOR_eDP ||
+           connector_type == DRM_MODE_CONNECTOR_LVDS || 
+           connector_type == DRM_MODE_CONNECTOR_DSI;
+}
+
+static bool IsUsableConnector(drmModeConnectorPtr connector)
+{
+    return connector != nullptr &&
+           connector->connection == DRM_MODE_CONNECTED &&
+           connector->count_modes > 0;
+}
+
+static drmModeConnectorPtr PickConnector(int fd, drmModeResPtr resource, uint32_t requested_connector_id = 0)
 {
     std::vector<drmModeConnectorPtr> connectors;
     int selected = -1;
@@ -66,19 +82,14 @@ static drmModeConnectorPtr PickConnector(int fd, drmModeResPtr resource)
         const auto connector = drmModeGetConnectorCurrent(fd, resource->connectors[i]);
         connectors.push_back(connector);
 
-        if (connector == nullptr) {
+        if (!IsUsableConnector(connector)) {
             continue;
         }
 
-        if (connector->count_modes == 0) {
+        if (requested_connector_id != 0 && connector->connector_id != requested_connector_id) {
             continue;
         }
 
-        if (connector->connection == DRM_MODE_DISCONNECTED) {
-            continue;
-        }
-
-        // we always select the "last" connector (first valid)
         selected = connectors.size() - 1;
         break;
     }
@@ -134,6 +145,28 @@ static drmModeModeInfoPtr PickMode(drmModeConnectorPtr connector, const uint16_t
     return nullptr;
 }
 
+static std::vector<std::string> GetDrmCardPaths()
+{
+    std::vector<std::string> paths;
+
+    const char* override_path = std::getenv("DRM_PATH");
+    if (override_path && override_path[0] != '\0') {
+        paths.emplace_back(override_path);
+    }
+
+    glob_t result = {};
+    if (glob("/dev/dri/card*", 0, nullptr, &result) == 0) {
+        for (size_t i = 0; i < result.gl_pathc; ++i) {
+            paths.emplace_back(result.gl_pathv[i]);
+        }
+    }
+    globfree(&result);
+
+    std::sort(paths.begin(), paths.end());
+    paths.erase(std::unique(paths.begin(), paths.end()), paths.end());
+    return paths;
+}
+
 const static struct libinput_interface interface = {
     .open_restricted = [] (const char* path, int flags, void* user) {
         const int fd = open(path, flags);
@@ -156,6 +189,70 @@ const static struct libinput_interface interface = {
 // implementation
 
 namespace grvl {
+    static NativeDisplayMode MakeNativeDisplayMode(const drmModeModeInfo& mode) 
+    {
+        NativeDisplayMode display_mode;
+        display_mode.name = std::string(mode.name, std::min(strlen(mode.name), static_cast<size_t>(DRM_DISPLAY_MODE_LEN)));
+        display_mode.width = mode.hdisplay;
+        display_mode.height = mode.vdisplay;
+        display_mode.refresh = mode.vrefresh;
+        display_mode.preferred = (mode.type & DRM_MODE_TYPE_PREFERRED) != 0;
+        return display_mode;
+    }
+
+    std::vector<NativeDisplay> LinuxNativeApp::EnumerateConnectedDisplays() 
+    {
+        std::vector<NativeDisplay> displays;
+
+        for (const auto& path : GetDrmCardPaths()) {
+            const int display_fd = open(path.c_str(), O_RDWR | O_CLOEXEC);
+            if (display_fd < 0) {
+                continue;
+            }
+
+            drmModeResPtr resources = drmModeGetResources(display_fd);
+            if (!resources) {
+                close(display_fd);
+                continue;
+            }
+
+            for (int i = 0; i < resources->count_connectors; ++i) {
+                drmModeConnectorPtr connector = drmModeGetConnectorCurrent(display_fd, resources->connectors[i]);
+
+                if (!IsUsableConnector(connector)) {
+                    drmModeFreeConnector(connector);
+                    continue;
+                }
+
+                const drmModeModeInfoPtr selected_mode = PickMode(connector, 0, 0, uint32_t(-1));
+                
+                NativeDisplay display;
+                display.drm_path = path;
+                display.connector_id = connector->connector_id;
+                display.connector_type = connector->connector_type;
+                display.connector_type_id = connector->connector_type_id;
+                display.built_in = IsBuiltInConnector(connector->connector_type);
+
+                for (int mode_index = 0; mode_index < connector->count_modes; ++mode_index) {
+                    display.modes.push_back(MakeNativeDisplayMode(connector->modes[mode_index]));
+                }
+
+                if (selected_mode != nullptr) {
+                    display.width = selected_mode->hdisplay;
+                    display.height = selected_mode->vdisplay;
+                    display.refresh = selected_mode->vrefresh;
+                    displays.push_back(std::move(display));
+                }
+
+                drmModeFreeConnector(connector);
+            }
+
+            drmModeFreeResources(resources);
+            close(display_fd);
+        }
+
+        return displays;  
+    }
 
     LinuxNativeApp::LinuxNativeApp(int width, int height, bool rotate_sideways)
         : PosixApp(width, height, rotate_sideways)
@@ -176,6 +273,13 @@ namespace grvl {
         }
         xkb_state = xkb_state_new(xkb_keymap);
 
+    }
+
+    LinuxNativeApp::LinuxNativeApp(const NativeDisplay& display, bool rotate_sideways)
+        : LinuxNativeApp::LinuxNativeApp(display.width, display.height, rotate_sideways)
+    {
+        selected_display = display;
+        has_selected_display = true;
     }
 
     LinuxNativeApp::~LinuxNativeApp()
@@ -299,7 +403,7 @@ namespace grvl {
         close(fd);
     }
 
-    bool LinuxNativeApp::InitDriver(int fd, uint16_t width, uint16_t height, uint32_t refresh)
+    bool LinuxNativeApp::InitDriver(int fd, uint16_t width, uint16_t height, uint32_t refresh, uint32_t connector_id)
     {
         this->fd = fd;
 
@@ -309,7 +413,7 @@ namespace grvl {
             return false;
         }
 
-        this->conn = PickConnector(fd, resource);
+        this->conn = PickConnector(fd, resource, connector_id);
         if (!conn) {
             printf("Unable to pick DRM connection!\n");
             return false;
@@ -338,12 +442,12 @@ namespace grvl {
         return true;
     }
 
-    bool LinuxNativeApp::TryUsingDriver(const char* path, uint16_t width, uint16_t height, uint32_t refresh)
+    bool LinuxNativeApp::TryUsingDriver(const char* path, uint16_t width, uint16_t height, uint32_t refresh, uint32_t connector_id)
     {
         if (path != nullptr && (strlen(path) != 0)) {
             int fh = open(path, O_RDWR);
             if (fh > 0) {
-                return InitDriver(fh, width, height, refresh);
+                return InitDriver(fh, width, height, refresh, connector_id);
             }
 
             printf("Failed to open '%s'!\n", path);
@@ -416,12 +520,19 @@ namespace grvl {
 
     bool LinuxNativeApp::Setup()
     {
-        const char* drivers[] = {
-            std::getenv("DRM_PATH"), "/dev/dri/card0", "/dev/dri/card1"
-        };
-
-        for (const char* path : drivers) {
-            if (TryUsingDriver(path, width, height, -1)) break;
+        if (has_selected_display) {
+            if (!TryUsingDriver(selected_display.drm_path.c_str(), selected_display.width, selected_display.height, selected_display.refresh, selected_display.connector_id)) {
+                return false;
+            }
+        } else {
+            for (const auto& path : GetDrmCardPaths()) {
+                if (TryUsingDriver(path.c_str(), width, height, -1)) break;
+            }
+        }
+        
+        if (fd < 0) {
+            printf("No usable DRM device found!\n");
+            return false;
         }
 
         ud = udev_new();
