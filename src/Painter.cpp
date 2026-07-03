@@ -527,6 +527,10 @@ namespace grvl {
 
     void Painter::DrawEllipse(int32_t Xpos, int32_t Ypos, int32_t XRadius, int32_t YRadius, uint32_t color) const
     {
+        if (IsColorTransparent(color)) {
+            return;
+        }
+
         int x = 0, y = -YRadius, err = 2 - 2 * XRadius, e2;
         float K = 0, rad1 = 0, rad2 = 0;
 
@@ -556,6 +560,10 @@ namespace grvl {
 
     void Painter::FillEllipse(int32_t Xpos, int32_t Ypos, int32_t XRadius, int32_t YRadius, uint32_t color) const
     {
+        if (IsColorTransparent(color)) {
+            return;
+        }
+        
         int x = 0, y = -YRadius, err = 2 - 2 * XRadius, e2;
         float K = 0, rad1 = 0, rad2 = 0;
 
@@ -592,6 +600,10 @@ namespace grvl {
 
     void Painter::DrawAntialiasedArc(int16_t Xpos, int16_t Ypos, int16_t Radius, float startAngle, float endAngle, int granularity, uint32_t color) const
     {
+        if (IsColorTransparent(color)) {
+            return;
+        }
+
         if(Radius == 0) {
             return;
         }
@@ -698,6 +710,10 @@ namespace grvl {
 
     void Painter::DrawHLine(int32_t Xpos, int32_t Ypos, int32_t Length, uint32_t text_color) const
     {
+        if (IsColorTransparent(text_color)) {
+            return;
+        }
+
         if(Ypos >= CurrentDrawingBoundsEndY() || Ypos < CurrentDrawingBoundsStartY() || Xpos >= CurrentDrawingBoundsEndX()) {
             return;
         }
@@ -730,6 +746,10 @@ namespace grvl {
 
     void Painter::DrawVLine(int32_t Xpos, int32_t Ypos, int32_t Length, uint32_t text_color) const
     {
+        if (IsColorTransparent(text_color)) {
+            return;
+        }
+
         if (Xpos < CurrentDrawingBoundsStartX() || Xpos >= CurrentDrawingBoundsEndX() || Ypos >= CurrentDrawingBoundsEndY()) {
             return;
         }
@@ -817,6 +837,10 @@ namespace grvl {
 
     void Painter::FillRoundRectangle(int32_t Xpos, int32_t Ypos, int32_t Width, int32_t Height, uint32_t text_color, float BorderArcRadius) const
     {
+        if (IsColorTransparent(text_color)) {
+            return;
+        }
+
         if (BorderArcRadius > Width / 2.0f || BorderArcRadius > Height / 2.0f) {
             return;
         }
@@ -851,6 +875,10 @@ namespace grvl {
 
     void Painter::DrawRectangle(int32_t Xpos, int32_t Ypos, int32_t Width, int32_t Height, uint32_t text_color) const
     {
+        if (IsColorTransparent(text_color)) {
+            return;
+        }
+
         if (Xpos >= CurrentDrawingBoundsEndX() || Ypos >= CurrentDrawingBoundsEndY()) {
             return;
         }
