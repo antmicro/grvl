@@ -119,7 +119,7 @@ namespace grvl {
 
         static void PageFlipHandler(int fd, unsigned int frame, unsigned int sec, unsigned int usec, void* app);
 
-        uint32_t GetPropertyId(uint32_t obj_id, const char* name);
+        uint32_t GetPropertyId(uint32_t obj_id, uint32_t obj_type, const char* name);
         uint32_t GetPlaneType(uint32_t plane_id);
         uint32_t FindPlaneByType(uint32_t plane_type);
 
