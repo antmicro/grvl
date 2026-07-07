@@ -39,7 +39,6 @@ namespace grvl {
                 parent->AddElement(element);
         }
 
-
         return parent;
     }
 
@@ -54,45 +53,45 @@ namespace grvl {
 
         painter.PushDrawingBoundsStackElement(RenderX, RenderY, RenderX + Width, RenderY + Height);
 
-        DrawBackgroundItems(painter, RenderX, RenderY, Width, Height);
-        DrawChildrenComponents(painter, RenderX, RenderY, Width, Height, 0);
+        DrawBackgroundItems(painter, RenderX, RenderY);
+        DrawChildrenComponents(painter, RenderX, RenderY);
 
         painter.PopDrawingBoundsStackElement();
     }
 
-    void Division::DrawBackgroundItems(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight)
+    void Division::DrawBackgroundItems(Painter& painter, int32_t RenderX, int32_t RenderY)
     {
-        FillBackground(painter, RenderX, RenderY, RenderWidth, RenderHeight);
-        DrawBorderIfNecessary(painter, RenderX, RenderY, RenderWidth, RenderHeight);
-        painter.AddBackgroundBlock(RenderY, RenderHeight, BackgroundColor);
+        FillBackground(painter, RenderX, RenderY);
+        DrawBorderIfNecessary(painter, RenderX, RenderY, Width, Height);
+        painter.AddBackgroundBlock(RenderY, Height, BackgroundColor);
     }
 
-    void Division::FillBackground(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight)
+    void Division::FillBackground(Painter& painter, int32_t RenderX, int32_t RenderY)
     {
         if ((BackgroundColor & 0xFF000000) == 0) {
             return;
         }
 
         if (BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
-            painter.FillRoundRectangle(RenderX, RenderY, RenderWidth, RenderHeight, BackgroundColor, BorderArcRadius);
+            painter.FillRoundRectangle(RenderX, RenderY, Width, Height, BackgroundColor, BorderArcRadius);
         } else {
-            painter.FillRectangle(RenderX, RenderY, RenderWidth, RenderHeight, BackgroundColor);
+            painter.FillRectangle(RenderX, RenderY, Width, Height, BackgroundColor);
         }
     }
 
-    void Division::DrawChildrenComponents(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight, int32_t verticalOffset)
+    void Division::DrawChildrenComponents(Painter& painter, int32_t RenderX, int32_t RenderY)
     {
         for (std::size_t i = 0; i < Elements.size(); ++i) {
-            DrawChildComponent(Elements[i], painter, RenderX, RenderY, RenderWidth, RenderHeight, verticalOffset);
+            DrawChildComponent(Elements[i], painter, RenderX, RenderY);
         }
     }
 
-    void Division::DrawChildComponent(Component* component, Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight, int32_t verticalOffset)
+    void Division::DrawChildComponent(Component* component, Painter& painter, int32_t RenderX, int32_t RenderY)
     {
-        if (RenderY + component->GetY() + component->GetHeight() + verticalOffset < RenderY) {
+        if (RenderY + component->GetY() + component->GetHeight() < RenderY) {
             return;
         }
-        component->Draw(painter, RenderX, RenderY + verticalOffset);
+        component->Draw(painter, RenderX, RenderY);
     }
 
 } /* namespace grvl */

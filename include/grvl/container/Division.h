@@ -39,10 +39,10 @@ namespace grvl {
         virtual void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY);
 
     private:
-        void DrawBackgroundItems(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight);
-        void FillBackground(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight);
-        void DrawChildrenComponents(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight, int32_t verticalOffset);
-        void DrawChildComponent(Component* component, Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight, int32_t verticalOffset);
+        void DrawBackgroundItems(Painter& painter, int32_t RenderX, int32_t RenderY);
+        void FillBackground(Painter& painter, int32_t RenderX, int32_t RenderY);
+        void DrawChildrenComponents(Painter& painter, int32_t RenderX, int32_t RenderY);
+        void DrawChildComponent(Component* component, Painter& painter, int32_t RenderX, int32_t RenderY);
     };
 
 } /* namespace grvl */
