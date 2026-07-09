@@ -79,7 +79,7 @@ static drmModeConnectorPtr PickConnector(int fd, drmModeResPtr resource, uint32_
     int selected = -1;
 
     for (int i = 0; i < resource->count_connectors; i++) {
-        const auto connector = drmModeGetConnectorCurrent(fd, resource->connectors[i]);
+        const auto connector = drmModeGetConnector(fd, resource->connectors[i]);
         connectors.push_back(connector);
 
         if (!IsUsableConnector(connector)) {
@@ -217,7 +217,7 @@ namespace grvl {
             }
 
             for (int i = 0; i < resources->count_connectors; ++i) {
-                drmModeConnectorPtr connector = drmModeGetConnectorCurrent(display_fd, resources->connectors[i]);
+                drmModeConnectorPtr connector = drmModeGetConnector(display_fd, resources->connectors[i]);
 
                 if (!IsUsableConnector(connector)) {
                     drmModeFreeConnector(connector);
