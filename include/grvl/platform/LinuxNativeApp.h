@@ -1,8 +1,9 @@
 #ifndef LINUXNATIVEAPP_H_
 #define LINUXNATIVEAPP_H_
 
-#include <unistd.h>
 #if defined(GRVL_LINUX_NATIVE_SUPPORT)
+
+#include <unistd.h>
 #include <grvl/platform/PosixApp.h>
 #include <grvl/Queue.h>
 #include <functional>
