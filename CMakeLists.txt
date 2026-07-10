@@ -35,24 +35,34 @@ list(APPEND sources "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/Posix.cpp"
 
 if(GRVL_LINUX_NATIVE)
   list(APPEND sources "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/LinuxNative.cpp")
-  target_compile_definitions(grvl_options INTERFACE GRVL_LINUX_NATIVE_SUPPORT)
   message(STATUS "GRVL Native Linux support ENABLED")
 endif()
 
 if(GRVL_LINUX_DESKTOP)
   list(APPEND sources "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/LinuxDesktop.cpp")
-  target_compile_definitions(grvl_options INTERFACE GRVL_LINUX_DESKTOP_SUPPORT)
   message(STATUS "GRVL Desktop Linux support ENABLED")
 endif()
 
 if(GRVL_ZEPHYR)
   list(APPEND sources "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/ZephyrApp.cpp")
   list(APPEND sources "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/Dma2d.cpp")
-  target_compile_definitions(grvl_options INTERFACE GRVL_ZEPHYR_SUPPORT)
   message(STATUS "GRVL Zephyr support ENABLED")
 endif()
 
 add_library(grvl ${sources} ${headers})
+
+if(GRVL_LINUX_NATIVE)
+  target_compile_definitions(grvl PUBLIC GRVL_LINUX_NATIVE_SUPPORT)
+endif()
+
+if(GRVL_LINUX_DESKTOP)
+  target_compile_definitions(grvl PUBLIC GRVL_LINUX_DESKTOP_SUPPORT)
+endif()
+
+if(GRVL_ZEPHYR)
+  target_compile_definitions(grvl PUBLIC GRVL_ZEPHYR_SUPPORT)
+endif()
+
 set_target_properties(grvl PROPERTIES CXX_STANDARD 17
                                       CXX_EXTENSIONS OFF)
 
