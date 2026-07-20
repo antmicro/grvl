@@ -203,6 +203,7 @@ namespace grvl {
         result->SetStateIndicatorWidth(XMLSupport::GetAttributeOrDefault(xmlElement, "stateIndicatorWidth", result->GetHeight()));
         result->SetStateIndicatorHeight(XMLSupport::GetAttributeOrDefault(xmlElement, "stateIndicatorHeight", result->GetHeight()));
         result->SetStateIndicatorArcRadius(XMLSupport::GetAttributeOrDefault(xmlElement, "stateIndicatorArcRadius", result->GetBorderArcRadius()));
+        result->SetSwitchState(XMLSupport::GetAttributeOrDefault(xmlElement, "state", false));
 
         return result;
     }
