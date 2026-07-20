@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doc>
+	<stylesheet></stylesheet>
+	<script src="callbacks.js" />
+
+	<customView id="home" backgroundColor="#FF0A0A0A">
+        <button id="exit" text="Exit" x="695" y="5" width="100" height="18" onClick="OnExitButton" backgroundColor="#FFBF2A2A" activeBackgroundColor="#FFFF4A4A" />
+
+        <image id="spinner" x="100" y="100" contentId="img" />
+
+        <label x="560" y="82" width="160" height="24" text="Static image" textColor="#ff60656b" font="normal" />
+        <image x="610" y="120" width="64" height="64" contentId="dummy" />
+
+        <label id="animation-label" x="190" y="82" width="160" height="24" text="Animation" textColor="#ff60656b" font="normal" />
+        <SwitchButton id="animation-switch"
+            x="350" y="72" width="92" height="42"
+            borderArcRadius="21" stateIndicatorWidth="34" stateIndicatorHeight="34" stateIndicatorArcRadius="17"
+            backgroundColor="#ffb8bec8" activeBackgroundColor="#ff2865c7" foregroundColor="#ffffffff" activeForegroundColor="#ffffffff"
+            state="true" onSwitchON="EnableAnimation" onSwitchOFF="DisableAnimation"/>
+
+        <label id="loop-label" x="190" y="158" width="160" height="24" text="Looping" textColor="#ff60656b" font="normal" />
+        <SwitchButton id="loop-switch"
+            x="350" y="148" width="92" height="42"
+            borderArcRadius="21" stateIndicatorWidth="34" stateIndicatorHeight="34" stateIndicatorArcRadius="17"
+            backgroundColor="#ffb8bec8" activeBackgroundColor="#ff2865c7" foregroundColor="#ffffffff" activeForegroundColor="#ffffffff"
+            state="true" onSwitchON="EnableLooping" onSwitchOFF="DisableLooping"/>
+
+        <Button id="trigger-button" x="190" y="232" width="252" height="54" text="Restart animation" textColor="#ffffffff" activeTextColor="#ffffffff" backgroundColor="#ff2865c7" activeBackgroundColor="#ff174a9b" borderArcRadius="8" onClick="TriggerAnimation"/>
+        <Button id="rotate-button" x="500" y="232" width="252" height="54" text="Rotate 90ccw (works once)" textColor="#ffffffff" activeTextColor="#ffffffff" backgroundColor="#ff2865c7" activeBackgroundColor="#ff174a9b" borderArcRadius="8" onClick="OnRotate90"/>
+    </customView>
+
+</doc>
