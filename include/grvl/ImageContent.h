@@ -27,13 +27,14 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <vector>
 
 namespace grvl {
 
     class ImageContent {
     public:
         ImageContent(const char* path, Format format = Format::ARGB8888);
-        ImageContent(uint8_t* pixels, int width, int height, int frames, Format format = Format::ARGB8888);
+        ImageContent(uint8_t* pixels, int width, int height, int frames, Format format = Format::ARGB8888, uint32_t frameDelay = 100);
         ImageContent(int32_t width, int32_t height, int32_t frames = 1, Format format = Format::ARGB8888);
         ImageContent(const ImageContent& content);
         ImageContent& operator=(const ImageContent& other);
@@ -50,9 +51,24 @@ namespace grvl {
             return data;
         }
 
+        uint8_t* GetFrameData(uint32_t frame)
+        {
+            return data + GetFrameDataLength() * frame;
+        }
+
+        const uint8_t* GetFrameData(uint32_t frame) const
+        {
+            return data + GetFrameDataLength() * frame;
+        }
+
         uint32_t GetDataLength() const
         {
             return GetWidth() * GetHeight() * GetNumberOfFrames() * GetBytesPerPixel();
+        }
+
+        uint32_t GetFrameDataLength() const
+        {
+            return GetWidth() * GetHeight() * GetBytesPerPixel();
         }
 
         uint16_t GetNumberOfFrames() const
@@ -102,7 +118,7 @@ namespace grvl {
 
         uint32_t GetPixelsPerLine() const
         {
-            return rotated ? height * frames : width;
+            return rotated ? height : width;
         }
 
         uintptr_t GetColorPalette() const
@@ -113,11 +129,30 @@ namespace grvl {
         void Transcode(Format format);
         void Rotate90();
 
+        bool IsAnimated() const
+        {
+            return frames > 1 && frameDurations.size() == static_cast<size_t>(frames);
+        }
+
+        uint32_t GetFrameDuration(uint32_t frame) const
+        {
+            if (frame >= frameDurations.size()) {
+                return 0;
+            }
+            return frameDurations[frame];
+        }
+
+        const std::vector<uint32_t>& GetFrameDurations() const
+        {
+            return frameDurations;
+        }
+
     private:
 
         uint8_t* data;
         int32_t width, height, frames;
         Format format;
+        std::vector<uint32_t> frameDurations;
         bool rotated = false;
 
     };

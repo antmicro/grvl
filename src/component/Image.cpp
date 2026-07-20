@@ -15,6 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <grvl/component/Image.h>
+#include <grvl/JSEngine.h>
 #include <grvl/Manager.h>
 #include <grvl/Painter.h>
 #include <grvl/XMLSupport.h>
@@ -31,6 +32,72 @@ namespace grvl {
 
         if(content && activeFrame < content->GetNumberOfFrames()) {
             ActiveFrame = activeFrame;
+            LastFrameChange = std::chrono::steady_clock::now();
+        }
+    }
+
+    uint32_t Image::GetActiveFrame() const
+    {
+        return ActiveFrame;
+    }
+
+    void Image::SetAnimationEnabled(bool enabled) 
+    {
+        AnimationEnabled = enabled;
+        LastFrameChange = std::chrono::steady_clock::now();
+    }
+
+    bool Image::IsAnimationEnabled() const
+    {
+        return AnimationEnabled && HasContent() && Delegate->Get()->IsAnimated();
+    }
+
+    void Image::SetAnimationLoop(bool loop)
+    {
+        AnimationLoop = loop;
+    }
+
+    bool Image::IsAnimationLoopEnabled() const
+    {
+        return AnimationLoop;
+    }
+
+    void Image::RestartAnimation()
+    {
+        ActiveFrame = 0;
+        AnimationEnabled = true;
+        LastFrameChange = std::chrono::steady_clock::now();
+    }
+
+    void Image::updateAnimation()
+    {
+        if (!IsAnimationEnabled()) {
+            return;
+        }
+
+        auto content = Delegate->Get();
+        auto now = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - LastFrameChange).count();
+
+        while (AnimationEnabled) {
+            const uint32_t duration = content->GetFrameDuration(ActiveFrame);
+            if (duration == 0 || elapsed < duration) {
+                break;
+            }
+
+            elapsed -= duration;
+            LastFrameChange += std::chrono::milliseconds(duration);
+
+            if (ActiveFrame + 1 < content->GetNumberOfFrames()) {
+                ++ActiveFrame;
+                continue;
+            }
+
+            if (AnimationLoop) {
+                ActiveFrame = 0;
+            } else {
+                AnimationEnabled = false;
+            }
         }
     }
 
@@ -65,12 +132,8 @@ namespace grvl {
         int32_t RenderX = ParentRenderX + X;
         int32_t RenderY = ParentRenderY + Y;
 
+        updateAnimation();
         painter.DrawImage(RenderX, RenderY, content, ActiveFrame);
-    }
-
-    uint32_t Image::GetActiveFrame() const
-    {
-        return ActiveFrame;
     }
 
     bool Image::IsEmpty() const
@@ -95,7 +158,33 @@ namespace grvl {
         RemoveDelegate();
 
         ActiveFrame = 0;
+        LastFrameChange = std::chrono::steady_clock::now();
         Delegate = delegate;
+    }
+
+    void Image::PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder)
+    {
+        Component::PopulateJavaScriptObject(jsObjectBuilder);
+
+        jsObjectBuilder
+            .AddProperty("activeFrame", Image::JSGetActiveFrameWrapper, Image::JSSetActiveFrameWrapper)
+            .AddProperty("animationEnabled", Image::JSGetAnimationEnabledWrapper, Image::JSSetAnimationEnabledWrapper)
+            .AddProperty("animationLoop", Image::JSGetAnimationLoopWrapper, Image::JSSetAnimationLoopWrapper)
+            .AttachMemberFunction("RestartAnimation", Image::JSRestartAnimationWrapper);
+    }
+
+    duk_ret_t Image::JSRestartAnimationWrapper(duk_context* ctx)
+    {
+        duk_push_this(ctx);
+        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
+
+        auto* image = static_cast<Image*>(duk_to_pointer(ctx, -1));
+
+        if(image) {
+            image->RestartAnimation();
+        }
+
+        return JSEngine::NO_RETURN_VALUE;
     }
 
 } /* namespace grvl */

@@ -26,6 +26,7 @@
 #define STBI_ONLY_JPEG
 #define STBI_ONLY_PNG
 #define STBI_ONLY_BMP
+#define STBI_ONLY_GIF
 
 #define STBI_FAILURE_USERMSG
 #define STB_IMAGE_IMPLEMENTATION
@@ -38,10 +39,6 @@ namespace grvl {
         uint32_t data;
     };
 
-    static uint32_t XYToOffset(uint32_t x, uint32_t y, uint32_t byteCount, uint32_t bytesPerPixel, uint32_t wholeImageWidth)
-    {
-        return (y * wholeImageWidth + x) * bytesPerPixel + byteCount;
-    }
 
     ImageContent::ImageContent(const char* path, Format format)
     {
@@ -51,9 +48,51 @@ namespace grvl {
             image_format = format;
         }
 
+        File file(path);
+        const std::vector<char> fileData = file.Read();
+        if(fileData.empty()) {
+            Log(ERROR, "Failed to read image %s", path);
+            this->data = nullptr;
+            this->width = 0;
+            this->height = 0;
+            this->frames = 0;
+            this->format = format;
+            this->frameDurations.clear();
+            return;
+        }
+
         int32_t file_channels;
         const int channels = GetFormatChannelCount(image_format);
-        this->data = stbi_load(path, &width, &height, &file_channels, channels);
+
+        int* gifDelays = nullptr;
+        int gifFrames = 0;
+        this->data = stbi_load_gif_from_memory(
+            reinterpret_cast<const stbi_uc*>(fileData.data()),
+            static_cast<int>(fileData.size()),
+            &gifDelays,
+            &width,
+            &height,
+            &gifFrames,
+            &file_channels,
+            channels);
+
+        if(this->data) {
+            this->frames = gifFrames;
+            frameDurations.reserve(gifFrames);
+            for(int frame = 0; frame < gifFrames; ++frame) {
+                frameDurations.push_back(gifDelays[frame] > 0 ? gifDelays[frame] : 100);
+            }
+            STBI_FREE(gifDelays);
+        } else {
+            this->data = stbi_load_from_memory(
+                reinterpret_cast<const stbi_uc*>(fileData.data()),
+                static_cast<int>(fileData.size()),
+                &width,
+                &height,
+                &file_channels,
+                channels);
+            this->frames = this->data ? 1 : 0;
+        }
 
         if (!this->data) {
             Log(ERROR, "Failed to load image %s: %s", path, stbi_failure_reason());
@@ -61,10 +100,10 @@ namespace grvl {
             this->height = 0;
             this->frames = 0;
             this->format = format;
+            this->frameDurations.clear();
             return;
         }
 
-        this->frames = 1;
         this->format = image_format;
 
         // grvl and STB use a different channel order, we swap them here
@@ -89,13 +128,15 @@ namespace grvl {
         Log(INFO, "Loaded %dx%d image %s as %s", width, height, path, GetFormatName(format));
     }
 
-    ImageContent::ImageContent(uint8_t* pixels, int width, int height, int frames, Format format)
+    ImageContent::ImageContent(uint8_t* pixels, int width, int height, int frames, Format format, uint32_t frameDelay)
     {
         this->data = pixels;
         this->width = width;
         this->height = height;
         this->frames = frames;
         this->format = format;
+        frameDurations.clear();
+        frameDurations.resize(frames, frameDelay);
     }
 
     ImageContent::ImageContent(int32_t width, int32_t height, int32_t frames, Format format)
@@ -105,6 +146,7 @@ namespace grvl {
         this->frames = frames;
         this->format = format;
         this->data = static_cast<uint8_t*>(malloc(this->GetDataLength()));
+        this->frameDurations.clear();
     }
 
     ImageContent::ImageContent(const ImageContent& other)
@@ -120,6 +162,7 @@ namespace grvl {
         frames = other.frames;
         format = other.format;
         rotated = other.rotated;
+        frameDurations = other.frameDurations;
     }
 
     ImageContent& ImageContent::operator=(const ImageContent& other)
@@ -140,6 +183,7 @@ namespace grvl {
         frames = other.frames;
         format = other.format;
         rotated = other.rotated;
+        frameDurations = other.frameDurations;
 
         return *this;
     }
@@ -178,30 +222,34 @@ namespace grvl {
         this->format = target;
     }
 
+    // Rotates image content CCW
+    //
+    // 0 1 2     2 5
+    // 3 4 5  => 1 4
+    //           0 3
     void ImageContent::Rotate90()
     {
         if(this->rotated) {
             return;
         }
 
-        uint8_t* bufferCopy = static_cast<uint8_t*>(malloc(GetDataLength()));
-        uint32_t bytesPerPixel = GetBytesPerPixel();
-        uint32_t wholeImageWidth = width * frames;
 
-        memcpy(bufferCopy, data, GetDataLength());
+        uint8_t* frame_copy = static_cast<uint8_t*>(malloc(GetFrameDataLength()));
+        uint32_t bytes_per_pixel = GetBytesPerPixel();
 
         for(uint32_t f = 0; f < frames; f++) {
+            uint8_t* frame_data = GetFrameData(f);
+            memcpy(frame_copy, frame_data, GetFrameDataLength());
+
             for(uint32_t y = 0; y < height; y++) {
                 for(uint32_t x = 0; x < width; x++) {
-                    for(uint32_t i = 0; i < bytesPerPixel; i++) {
-                        uint8_t value = bufferCopy[XYToOffset(f * width + x, y, i, bytesPerPixel, wholeImageWidth)];
-                        data[XYToOffset(f * height + y, width - x - 1, i, bytesPerPixel, height * frames)] = value;
-                    }
+                    uint32_t new_x = y;
+                    uint32_t new_y = width - x - 1;
+                    memcpy(frame_data + (new_y * height + new_x) * bytes_per_pixel, frame_copy + (y * width + x) * bytes_per_pixel, bytes_per_pixel);
                 }
             }
         }
-
-        free(bufferCopy);
+        free(frame_copy);
         this->rotated = true;
     }
 

@@ -20,7 +20,10 @@
 #include <grvl/component/Component.h>
 #include <grvl/ContentManager.h>
 #include <grvl/ImageContent.h>
+#include <grvl/JSObjectBuilder.h>
 #include <grvl/Painter.h>
+
+#include <chrono>
 
 using namespace tinyxml2;
 
@@ -45,6 +48,9 @@ namespace grvl {
             : Component()
             , ActiveFrame(0)
             , Delegate(nullptr)
+            , AnimationEnabled(true)
+            , AnimationLoop(true)
+            , LastFrameChange(std::chrono::steady_clock::now())
         {
         }
 
@@ -55,6 +61,16 @@ namespace grvl {
         void SetActiveFrame(uint32_t activeFrame);
 
         uint32_t GetActiveFrame() const;
+
+        void SetAnimationEnabled(bool enabled);
+
+        bool IsAnimationEnabled() const;
+
+        void SetAnimationLoop(bool loop);
+
+        bool IsAnimationLoopEnabled() const;
+
+        void RestartAnimation();
 
         ImageContent* GetContent()
         {
@@ -96,6 +112,18 @@ namespace grvl {
 
         bool IsEmpty() const;
 
+        void PopulateJavaScriptObject(JSObjectBuilder& jsObjectjsObjectBuilder) override;
+        GENERATE_DUK_UNSIGNED_INT_GETTER(Image, ActiveFrame, GetActiveFrame)
+        GENERATE_DUK_UNSIGNED_INT_SETTER(Image, ActiveFrame, SetActiveFrame)
+
+        GENERATE_DUK_BOOLEAN_GETTER(Image, AnimationEnabled, IsAnimationEnabled)
+        GENERATE_DUK_BOOLEAN_SETTER(Image, AnimationEnabled, SetAnimationEnabled)
+
+        GENERATE_DUK_BOOLEAN_GETTER(Image, AnimationLoop, IsAnimationLoopEnabled)
+        GENERATE_DUK_BOOLEAN_SETTER(Image, AnimationLoop, SetAnimationLoop)
+
+        static duk_ret_t JSRestartAnimationWrapper(duk_context* ctx);
+
         static Image* BuildFromXML(XMLElement* xmlElement);
 
         void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
@@ -104,6 +132,11 @@ namespace grvl {
         uint32_t ActiveFrame;
         std::shared_ptr<ImageDelegate> Delegate;
 
+        bool AnimationEnabled;
+        bool AnimationLoop;
+        std::chrono::steady_clock::time_point LastFrameChange;
+
+        void updateAnimation();
     };
 
 } /* namespace grvl */

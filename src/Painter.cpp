@@ -434,11 +434,11 @@ namespace grvl {
             return;
         }
 
-        uintptr_t address = reinterpret_cast<uintptr_t>(image->GetData());
+        uintptr_t address = reinterpret_cast<uintptr_t>(image->GetFrameData(frame));
 
         DmaMoveImage(
             address, GetActiveBuffer(), 0, 0, x, y, image->GetWidth(), image->GetHeight(),
-            image->GetPixelsPerLine(), image->GetNumberOfLines(), frame, image->GetNumberOfFrames(),
+            image->GetPixelsPerLine(), image->GetNumberOfLines(), 0, 1,
             image->GetColorFormat(), GetPixelFormat(), image->HasAlphaChannel(), image->GetColorPalette()
         );
     }
@@ -1050,7 +1050,7 @@ namespace grvl {
         uint32_t x_lcd_size = GetXSize();
         uint32_t y_lcd_size = GetYSize();
         uintptr_t inputMem = 0, outputMem = 0;
-        uint32_t NumberOfLines = 0, PixelsPerLine = 0, inOffset = 0, outOffset = 0, frameWidth = 0;
+        uint32_t NumberOfLines = 0, PixelsPerLine = 0, inOffset = 0, outOffset = 0;
 
         /* safety checks so that image is in drawing bounds */
         if(y_dst < CurrentDrawingBoundsStartY()){
@@ -1080,7 +1080,7 @@ namespace grvl {
         }
 
         if(IsRotated()) {
-            frameWidth = totalImageWidth / frames;
+            uint32_t frameWidth = totalImageWidth / frames;
             inputMem = img_src + inBytes * ((totalImageWidth * (totalImageHeight - width - x_src) + y_src + (activeFrame * frameWidth)));
             outputMem = fb_dst + outBytes * (y_lcd_size * (x_lcd_size - x_dst - width) + y_dst);
             NumberOfLines = width - x_src;
@@ -1088,8 +1088,10 @@ namespace grvl {
             inOffset = totalImageWidth - height;
             outOffset = y_lcd_size - height;
         } else {
-            frameWidth = totalImageWidth / frames;
-            inputMem = img_src + inBytes * ((totalImageWidth * y_src) + x_src + (frameWidth * activeFrame));
+            const size_t frameSize = static_cast<size_t>(totalImageWidth) * static_cast<size_t>(totalImageHeight);
+            const size_t frameOffset = static_cast<size_t>(activeFrame) * frameSize;
+            const size_t sourceOffset = frameOffset + static_cast<size_t>(totalImageWidth) * y_src + x_src;
+            inputMem = img_src + inBytes * sourceOffset;
             outputMem = fb_dst + outBytes * ((x_lcd_size * (y_dst)) + x_dst);
             NumberOfLines = height;
             PixelsPerLine = width;
