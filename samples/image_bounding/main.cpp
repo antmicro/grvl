@@ -41,6 +41,7 @@ int main(int argc, char** argv)
     
     grvl::ImageContent red_square(ROMFS_PATH "/images/red_square.png");
     grvl::ImageContent gray_square(ROMFS_PATH "/images/gray_square.png");
+    grvl::ImageContent spinner(ROMFS_PATH "/images/spinner.gif");
 
     manager.BuildFromXML(ROMFS_PATH "/gui.xml");
     manager.InitializationFinished();
@@ -53,47 +54,51 @@ int main(int argc, char** argv)
     constexpr int32_t width = 400;
     constexpr int32_t height = 300;
 
-    const auto drawSquare = [&](int32_t x, int32_t y) {
+    const auto drawSquare = [&](int32_t x, int32_t y, uint32_t frame) {
         manager.painter.DrawImage(x - 20, y - 20, &gray_square);
         manager.painter.PushDrawingBoundsStackElement(startX, startY, startX + width, startY + height);
         manager.painter.DrawImage(x - 20, y - 20, &red_square);
+        manager.painter.DrawImage(x - 50, y - 50, &spinner, frame);
         manager.painter.PopDrawingBoundsStackElement();
     };
 
+    auto start = std::chrono::steady_clock::now();
     while (app->ShouldRun()) {
         app->Render();
 
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count();
+        auto frame = (ms / 100) % spinner.GetNumberOfFrames();
         manager.painter.DrawRectangle(startX, startY, width, height, 0xFF00FF00);
 
-        drawSquare(startX - 80,         startY - 80);
-        drawSquare(startX,              startY - 80);
-        drawSquare(startX + width / 2,  startY - 80);
-        drawSquare(startX + width,      startY - 80);
-        drawSquare(startX + width + 80, startY - 80);
+        drawSquare(startX - 80,         startY - 80, frame);
+        drawSquare(startX,              startY - 80, frame);
+        drawSquare(startX + width / 2,  startY - 80, frame);
+        drawSquare(startX + width,      startY - 80, frame);
+        drawSquare(startX + width + 80, startY - 80, frame);
 
-        drawSquare(startX - 80,         startY);
-        drawSquare(startX,              startY);
-        drawSquare(startX + width / 2,  startY);
-        drawSquare(startX + width,      startY);
-        drawSquare(startX + width + 80, startY);
+        drawSquare(startX - 80,         startY, frame);
+        drawSquare(startX,              startY, frame);
+        drawSquare(startX + width / 2,  startY, frame);
+        drawSquare(startX + width,      startY, frame);
+        drawSquare(startX + width + 80, startY, frame);
 
-        drawSquare(startX - 80,         startY + height / 2);
-        drawSquare(startX,              startY + height / 2);
-        drawSquare(startX + width / 2,  startY + height / 2);
-        drawSquare(startX + width,      startY + height / 2);
-        drawSquare(startX + width + 80, startY + height / 2);
+        drawSquare(startX - 80,         startY + height / 2, frame);
+        drawSquare(startX,              startY + height / 2, frame);
+        drawSquare(startX + width / 2,  startY + height / 2, frame);
+        drawSquare(startX + width,      startY + height / 2, frame);
+        drawSquare(startX + width + 80, startY + height / 2, frame);
 
-        drawSquare(startX - 80,         startY + height);
-        drawSquare(startX,              startY + height);
-        drawSquare(startX + width / 2,  startY + height);
-        drawSquare(startX + width,      startY + height);
-        drawSquare(startX + width + 80, startY + height);
+        drawSquare(startX - 80,         startY + height, frame);
+        drawSquare(startX,              startY + height, frame);
+        drawSquare(startX + width / 2,  startY + height, frame);
+        drawSquare(startX + width,      startY + height, frame);
+        drawSquare(startX + width + 80, startY + height, frame);
 
-        drawSquare(startX - 80,         startY + height + 80);
-        drawSquare(startX,              startY + height + 80);
-        drawSquare(startX + width / 2,  startY + height + 80);
-        drawSquare(startX + width,      startY + height + 80);
-        drawSquare(startX + width + 80, startY + height + 80);
+        drawSquare(startX - 80,         startY + height + 80, frame);
+        drawSquare(startX,              startY + height + 80, frame);
+        drawSquare(startX + width / 2,  startY + height + 80, frame);
+        drawSquare(startX + width,      startY + height + 80, frame);
+        drawSquare(startX + width + 80, startY + height + 80, frame);
 
         app->Swap();
         app->Poll();
