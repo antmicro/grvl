@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doc>
+	<stylesheet></stylesheet>
+	<script src="callbacks.js" />
+	<customView id="home" backgroundColor="#FF0A0A0A">
+		<division x="0" y="0" width="800" height="600" backgroundColor="#FF0A0A0A">
+			<button id="button" text="Exit" x="695" y="5" width="100" height="18" onClick="OnExitButton" backgroundColor="#FFBF2A2A" activeBackgroundColor="#FFFF4A4A" />
+
+			<label x="40" y="560" width="720" height="18" text="Gray squares unbounded, over them red bounded squares, bounding box in green" alignment="Center" textColor="#FFECEDEE"  />
+		</division>
+	</customView>
+</doc>
