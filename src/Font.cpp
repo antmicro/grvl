@@ -218,7 +218,7 @@ namespace grvl {
             return it->second;
         }
 
-        grvl::Log("[WARN] No glyph found for U+%04x", unicode);
+        grvl::Log("[WARNING] No glyph found for U+%04x", unicode);
 
         // if all failes return anything
         Glyph g = GetFallback();
@@ -442,11 +442,9 @@ namespace grvl {
 
             }
 
-            printf("\r[INFO] Scanning %d/%d glyphs, found %d kernings", current, characters.size(), file_kernings.size());
+            grvl::Log("[INFO] Scanning %d/%d glyphs, found %d kernings", current, characters.size(), file_kernings.size());
             current ++;
         }
-
-        printf("\n");
 
         FontFileHeader header {};
         memcpy(header.magic, "grvlfnt", 8);

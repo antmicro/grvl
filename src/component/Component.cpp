@@ -59,9 +59,9 @@ namespace grvl {
                 constructor_fun fun = (constructor_fun)(list[i].fun);
                 return fun((XMLElement*)el);
             }
-        grvl::Log("Widget of type %s does not exist!", nm_lower);
+        grvl::Log("[ERROR] Widget of type %s does not exist!", nm_lower);
         for(i = 0; i < ComponentCount; i++)
-            grvl::Log("-- We have %d : %s", i, list[i].name);
+            grvl::Log("[INFO] -- We have %d : %s", i, list[i].name);
         return NULL;
     }
 

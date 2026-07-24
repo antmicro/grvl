@@ -101,7 +101,7 @@ static drmModeConnectorPtr PickConnector(int fd, drmModeResPtr resource, uint32_
     }
 
     if (selected == -1) {
-        printf("No valid DRM connectors found!\n");
+        grvl::grvl::Log("[ERROR] No valid DRM connectors found!");
         return nullptr;
     }
 
@@ -376,7 +376,7 @@ namespace grvl {
         drmModeFreePlaneResources(plane_res);
 
         if (!selected) {
-            printf("Failed to select DRM plane!\n");
+            grvl::grvl::Log("[ERROR] Failed to select DRM plane!");
         }
 
         return found_id;
@@ -409,25 +409,25 @@ namespace grvl {
 
         this->resource = drmModeGetResources(fd);
         if (!resource) {
-            printf("Unable to get DRM resources!\n");
+            grvl::grvl::Log("[ERROR] Unable to get DRM resources!");
             return false;
         }
 
         this->conn = PickConnector(fd, resource, connector_id);
         if (!conn) {
-            printf("Unable to pick DRM connection!\n");
+            grvl::grvl::Log("[ERROR] Unable to pick DRM connection!");
             return false;
         }
 
         this->mode = PickMode(conn, width, height, refresh);
         if (!mode) {
-            printf("Unable to pick DRM mode!\n");
+            grvl::grvl::Log("[ERROR] Unable to pick DRM mode!");
             return false;
         }
 
         this->encoder = drmModeGetEncoder(fd, conn->encoder_id);
         if (!encoder) {
-            printf("Unable to get DRM encoder!\n");
+            grvl::grvl::Log("[ERROR] Unable to get DRM encoder!");
             return false;
         }
 
@@ -450,7 +450,7 @@ namespace grvl {
                 return InitDriver(fh, width, height, refresh, connector_id);
             }
 
-            printf("Failed to open '%s'!\n", path);
+            grvl::grvl::Log("[ERROR] Failed to open '%s'!", path);
         }
 
         return false;
@@ -531,7 +531,7 @@ namespace grvl {
         }
         
         if (fd < 0) {
-            printf("No usable DRM device found!\n");
+            grvl::grvl::Log("[ERROR] No usable DRM device found!");
             return false;
         }
 
@@ -544,13 +544,13 @@ namespace grvl {
         // set drm caps
         int ret = drmSetClientCap(fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
         if (ret != 0) {
-            printf("Failed to enable Universal Planes!\n");
+            grvl::grvl::Log("[ERROR] Failed to enable Universal Planes!");
             return false;
         }
 
         drmSetClientCap(fd, DRM_CLIENT_CAP_ATOMIC, 1);
         if (ret != 0) {
-            printf("Failed to enable Atomic Modesetting!\n");
+            grvl::grvl::Log("[ERROR] Failed to enable Atomic Modesetting!");
             return false;
         }
 
@@ -562,7 +562,7 @@ namespace grvl {
          */
         ret = drmSetClientCap(fd, DRM_CLIENT_CAP_CURSOR_PLANE_HOTSPOT, 1);
         if (ret != 0 && errno != EOPNOTSUPP) {
-            printf("Failed to enable cursor plane hotspot client cap: %s\n", strerror(errno));
+            grvl::grvl::Log("[ERROR] Failed to enable cursor plane hotspot client cap: %s", strerror(errno));
         }
 
         // Prepare DRM buffers for the mouse cursor
@@ -577,7 +577,7 @@ namespace grvl {
         struct drm_mode_map_dumb mreq = {};
         mreq.handle = cursor.dumb.handle;
         if (drmIoctl(fd, DRM_IOCTL_MODE_MAP_DUMB, &mreq) < 0) {
-            printf("Failed to prepare dumb buffer for mapping!\n");
+            grvl::grvl::Log("[ERROR] Failed to prepare dumb buffer for mapping!");
             return false;
         }
 
@@ -589,7 +589,7 @@ namespace grvl {
 
         cursor.plane = FindPlaneByType(DRM_PLANE_TYPE_CURSOR);
         if (!cursor.plane) {
-            printf("Failed to find DRM cursor plane!\n");
+            grvl::grvl::Log("[ERROR] Failed to find DRM cursor plane!");
             return false;
         }
 
@@ -643,7 +643,7 @@ namespace grvl {
 
         uint32_t mode_blob = 0;
         if (drmModeCreatePropertyBlob(fd, mode, sizeof(*mode), &mode_blob) != 0) {
-            printf("Failed to create mode blob\n");
+            grvl::grvl::Log("[ERROR] Failed to create mode blob");
             return false;
         }
 
@@ -714,7 +714,7 @@ namespace grvl {
         uint32_t flags = DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_ATOMIC_ALLOW_MODESET;
         ret = drmModeAtomicCommit(fd, req, flags, nullptr);
         if (ret) {
-            printf("Atomic commit failed: %s\n", strerror(errno));
+            grvl::grvl::Log("[ERROR] Atomic commit failed: %s", strerror(errno));
             return false;
         }
         drmModeAtomicFree(req);

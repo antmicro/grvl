@@ -154,7 +154,7 @@ namespace grvl {
 
             gzFile file = gzopen(path, "r");
             if(file == nullptr) {
-                grvl::Log("No such file: %s", path);
+                grvl::Log("[ERROR] No such file: %s", path);
                 return -1;
             }
 

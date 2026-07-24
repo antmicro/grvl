@@ -902,7 +902,7 @@ namespace grvl {
                 painter.SetActiveBuffer(0);
                 if(ActiveScreen) {
 
-                    // printf("Drawing the active screen! (%d %d)\n", width, height - GetTotalHeadersHeight() - GetBottomPanelHeight());
+                    // grvl::Log("[TRACE] Drawing the active screen! (%d %d)\n", width, height - GetTotalHeadersHeight() - GetBottomPanelHeight());
 
                     ActiveScreen->SetSize(width, height - GetTotalHeadersHeight() - GetBottomPanelHeight());
                     ActiveScreen->Draw(painter, 0, GetTotalHeadersHeight());
@@ -1417,7 +1417,7 @@ namespace grvl {
                     if(Screen) {
                         AddScreen(Screen);
 
-                        printf("Added screen for CustomView\n");
+                        grvl::grvl::Log("[INFO] Added screen for CustomView");
                     }
                     nextElement = nextElement->NextSiblingElement("customView");
                 }
