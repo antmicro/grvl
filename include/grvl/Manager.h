@@ -62,6 +62,8 @@ using namespace tinyxml2;
 
 namespace grvl {
 
+    using FontLoader = std::function<void(const std::string& name)>;
+
     /// grvl manager class.
     ///
     /// This class is used as an entry point for all
@@ -347,6 +349,9 @@ namespace grvl {
         /// @param requestCallback Pointer to the method to call.
         Manager& SetExternalContentRequestCallback(ContentManager::ContentCallback requestCallback);
         Manager& SetCancelExternalContentRequestCallback(ContentManager::ContentCallback cancelRequestCallback);
+
+        Manager& SetFontCallback(const FontLoader& callback);
+
         Painter painter; // TODO
 
         Component* FindElementInTheActiveScreenById(const char* id);
@@ -401,6 +406,7 @@ namespace grvl {
         ContentManager contentManager;
         float initialTransparency, desiredTransparency, currentTransparency;
         uint64_t fadeBeginTimestamp, fadeEndTimestamp;
+        FontLoader font_callback = [] (const std::string& font) { /* do nothing */ };
 
         Mutex DrawMutex {};
 

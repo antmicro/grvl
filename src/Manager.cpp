@@ -527,16 +527,32 @@ namespace grvl {
         KeyMappingContainer[mask] = k;
     }
 
+    Manager& Manager::SetFontCallback(const FontLoader& callback)
+    {
+        font_callback = callback;
+        return *this;
+    }
+
     Font* Manager::GetFontFromContainer(const char* name) const
     {
-        if(name == NULL || *name == 0) {
-            return NULL;
+        if(name == nullptr || *name == 0) {
+            return nullptr;
         }
-        FontContainerMap::const_iterator searchFont = FontContainer.find(name);
-        if(searchFont != FontContainer.end()) {
-            return searchFont->second;
+
+        auto it = FontContainer.find(name);
+
+        if (it == FontContainer.end()) {
+
+            // notify callback, it then has a chance to load the font
+            font_callback(name);
+            it = FontContainer.find(name);
         }
-        return NULL;
+
+        if (it != FontContainer.end()) {
+            return it->second;
+        }
+
+        return nullptr;
     }
 
     Font* Manager::GetDefaultFontFromContainer() const
