@@ -61,7 +61,7 @@ namespace grvl {
     void Slider::SetValueRange(float min, float max)
     {
         if (static_cast<double>(max - min) < EPSILON) {
-            grvl::Log("[WARNING] Ignoring invalid Slider value range (%f..%f)", min, max);
+            Log(WARN, "Ignoring invalid Slider value range (%f..%f)", min, max);
             return;
         }
 
@@ -91,7 +91,7 @@ namespace grvl {
     void Slider::SetDivision(uint8_t value)
     {
         if (value == 0) {
-            grvl::Log("[WARNING] Ignoring slider division equal 0");
+            Log(WARN, "Ignoring slider division equal 0");
         }
         division = value;
         CalculateStep();
@@ -456,7 +456,7 @@ namespace grvl {
             result->SetSliderType(SliderScaleType::LIST);
         } else { // fallback to continuous scale as a default
             if (strcmp(typeName, "Continuous") != 0) { // but warn about invalid type
-                grvl::Log("[WARNING] Ignoring invalid value given for slider type (%s)", typeName);
+                Log(WARN, "Ignoring invalid value given for slider type (%s)", typeName);
             }
 
             result->SetSliderType(SliderScaleType::CONTINUOUS);

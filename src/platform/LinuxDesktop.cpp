@@ -25,7 +25,7 @@ namespace grvl {
     {
 
         if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-            grvl::grvl::Log("[ERROR] SDL_Init() Failed: %s", SDL_GetError());
+            Log(ERROR, "SDL_Init() Failed: %s", SDL_GetError());
             return false;
         }
 
@@ -37,7 +37,7 @@ namespace grvl {
         }
 
         if (!renderer) {
-            grvl::grvl::Log("[ERROR] SDL_CreateRenderer() Failed: %s", SDL_GetError());
+            Log(ERROR, "SDL_CreateRenderer() Failed: %s", SDL_GetError());
             return false;
         }
 

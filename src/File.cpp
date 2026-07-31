@@ -138,7 +138,7 @@ namespace grvl {
             const auto it = files->find(name);
 
             if (it == files->end()) {
-                grvl::Log("[ERROR] No such filesystem entry: %s", name.c_str());
+                Log(ERROR, "No such filesystem entry: %s", name.c_str());
                 return -1;
             }
 
@@ -154,7 +154,7 @@ namespace grvl {
 
             gzFile file = gzopen(path, "r");
             if(file == nullptr) {
-                grvl::Log("[ERROR] No such file: %s", path);
+                Log(ERROR, "No such file: %s", path);
                 return -1;
             }
 
@@ -173,7 +173,7 @@ namespace grvl {
 
             FILE* file = fopen(path, "rb");
             if(file == nullptr) {
-                grvl::Log("[ERROR] No such file: %s", path);
+                Log(ERROR, "No such file: %s", path);
                 return -1;
             }
 
@@ -198,7 +198,7 @@ namespace grvl {
         if (storage == NORMAL) {
             FILE* file = fopen(path, "wb");
             if(file == nullptr) {
-                grvl::Log("[ERROR] No such file: %s", path);
+                Log(ERROR, "No such file: %s", path);
                 return -1;
             }
 

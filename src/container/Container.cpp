@@ -210,7 +210,7 @@ namespace grvl {
                 if(strcmp(pid, "") == 0) {
                     sprintf(pid, "(unnamed)");
                 }
-                grvl::Log("[WARNING] Element \"%s\" inside \"%s\" misplaced", elid, pid);
+                Log(WARN, "Element \"%s\" inside \"%s\" misplaced", elid, pid);
             }
         }
     }

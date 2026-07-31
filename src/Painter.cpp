@@ -563,7 +563,7 @@ namespace grvl {
         if (IsColorTransparent(color)) {
             return;
         }
-        
+
         int x = 0, y = -YRadius, err = 2 - 2 * XRadius, e2;
         float K = 0, rad1 = 0, rad2 = 0;
 
@@ -1236,7 +1236,7 @@ namespace grvl {
             if(with_background) {
                 backMem = (uintptr_t)BackgroundImage->GetContentData() + y_position * backgroundBPP;
                 if((y_position + height) > BackgroundImage->GetHeight()) {
-                    grvl::Log("[ERROR] Background is smaller than the surface!");
+                    Log(ERROR, "Background is smaller than the surface!");
                 }
             }
 
@@ -1253,7 +1253,7 @@ namespace grvl {
                 backMem = (uintptr_t)BackgroundImage->GetContentData()
                     + (y_position * BackgroundImage->GetWidth() * backgroundBPP);
                 if((y_position + height) > BackgroundImage->GetHeight()) {
-                    grvl::Log("[ERROR] Background is smaller than the surface!");
+                    Log(ERROR, "Background is smaller than the surface!");
                 }
             } else {
                 backMem = 0;

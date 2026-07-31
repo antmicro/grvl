@@ -23,172 +23,173 @@
 
 #include <sys/mman.h>
 
-// Adawaita default cursor
-// CC-BY-SA
-// clang-format off
-static const uint32_t cursor_map[] = {
-  0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-  0x00000000, 0x00000000, 0x02000000, 0x45f0f0f0, 0x03000000, 0x01000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-  0x00000000, 0x01000000, 0x09000000, 0xf7fdfdfd, 0x4bdddddd, 0x04000000, 0x01000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-  0x00000000, 0x02000000, 0x15000000, 0xffffffff, 0xf7f2f2f2, 0x4ed4d4d4, 0x04000000, 0x01000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-  0x00000000, 0x03000000, 0x1a000000, 0xffffffff, 0xff3c3c3c, 0xf7f1f1f1, 0x50d6d6d6, 0x04000000, 0x01000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-  0x00000000, 0x03000000, 0x1b000000, 0xffffffff, 0xff000000, 0xff3c3c3c, 0xf7f1f1f1, 0x50d6d6d6, 0x04000000, 0x01000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-  0x00000000, 0x03000000, 0x1b000000, 0xffffffff, 0xff000000, 0xff000000, 0xff3c3c3c, 0xf7f1f1f1, 0x50d6d6d6, 0x04000000, 0x01000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-  0x00000000, 0x03000000, 0x1b000000, 0xffffffff, 0xff000000, 0xff000000, 0xff000000, 0xff3c3c3c, 0xf7f1f1f1, 0x50d6d6d6, 0x04000000, 0x01000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-  0x00000000, 0x03000000, 0x1b000000, 0xffffffff, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff3c3c3c, 0xf7f1f1f1, 0x50d6d6d6, 0x04000000, 0x01000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
-  0x00000000, 0x03000000, 0x1b000000, 0xffffffff, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff3c3c3c, 0xf7f1f1f1, 0x50d6d6d6, 0x04000000, 0x01000000, 0x00000000, 0x00000000, 0x00000000,
-  0x00000000, 0x03000000, 0x1b000000, 0xffffffff, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff3c3c3c, 0xf7f1f1f1, 0x50d6d6d6, 0x04000000, 0x01000000, 0x00000000, 0x00000000,
-  0x00000000, 0x03000000, 0x1b000000, 0xffffffff, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff3c3c3c, 0xf7f1f1f1, 0x50d6d6d6, 0x04000000, 0x01000000, 0x00000000,
-  0x00000000, 0x03000000, 0x1b000000, 0xffffffff, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff3c3c3c, 0xf7f1f1f1, 0x50d6d6d6, 0x04000000, 0x01000000,
-  0x00000000, 0x03000000, 0x1b000000, 0xffffffff, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xfdc3c3c3, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xf8fcfcfc, 0x4cdadada, 0x03000000,
-  0x00000000, 0x03000000, 0x1b000000, 0xffffffff, 0xff000000, 0xff000000, 0xff414141, 0xff404040, 0xff000000, 0xff4d4d4d, 0xe8dfdfdf, 0x5f000000, 0x59000000, 0x54000000, 0x3f000000, 0x1a000000, 0x05000000,
-  0x00000000, 0x03000000, 0x1b000000, 0xffffffff, 0xff000000, 0xff414141, 0xfcf6f6f6, 0xf7c0c0c0, 0xff000000, 0xff010101, 0xf7dddddd, 0x65a4a4a4, 0x1e000000, 0x1a000000, 0x15000000, 0x09000000, 0x03000000,
-  0x00000000, 0x03000000, 0x1b000000, 0xffffffff, 0xff3d3d3d, 0xf9efefef, 0x907c7c7c, 0xf4ebebeb, 0xff323232, 0xff000000, 0xfe626262, 0xcde1e1e1, 0x0e000000, 0x04000000, 0x02000000, 0x01000000, 0x00000000,
-  0x00000000, 0x03000000, 0x1b000000, 0xffffffff, 0xf9f0f0f0, 0x827e7e7e, 0x43000000, 0xa5b2b2b2, 0xf9a9a9a9, 0xff000000, 0xff070707, 0xf8ebebeb, 0x3eb5b5b5, 0x03000000, 0x01000000, 0x00000000, 0x00000000,
-  0x00000000, 0x03000000, 0x1a000000, 0xf9fafafa, 0x7f818181, 0x30000000, 0x1e000000, 0x46333333, 0xf8f2f2f2, 0xff1f1f1f, 0xff000000, 0xfd797979, 0xb7dedede, 0x09000000, 0x01000000, 0x00000000, 0x00000000,
-  0x00000000, 0x02000000, 0x15000000, 0x6f939393, 0x2d000000, 0x11000000, 0x0a000000, 0x21000000, 0xb4c2c2c2, 0xfb909090, 0xff000000, 0xff101010, 0xf9f6f6f6, 0x19474747, 0x02000000, 0x00000000, 0x00000000,
-  0x00000000, 0x01000000, 0x09000000, 0x19000000, 0x0d000000, 0x04000000, 0x03000000, 0x11000000, 0x52515151, 0xf9f2f2f2, 0xff1f1f1f, 0xff202020, 0xfaf5f5f5, 0x1e333333, 0x03000000, 0x00000000, 0x00000000,
-  0x00000000, 0x00000000, 0x02000000, 0x05000000, 0x03000000, 0x01000000, 0x01000000, 0x07000000, 0x23000000, 0x99a5a5a5, 0xfaf5f5f5, 0xfaf5f5f5, 0x96a7a7a7, 0x17000000, 0x02000000, 0x00000000, 0x00000000,
-  0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x02000000, 0x0f000000, 0x31000000, 0x530f0f0f, 0x52101010, 0x31000000, 0x0e000000, 0x01000000, 0x00000000, 0x00000000,
-  0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x01000000, 0x04000000, 0x0e000000, 0x17000000, 0x17000000, 0x0e000000, 0x04000000, 0x00000000, 0x00000000, 0x00000000,
-};
-static const int cursor_map_width = 17;
-static const int cursor_map_height = 24;
-// pointer hostpot offset within the cursor_map
-static const int cursor_hotspot_x = 3;
-static const int cursor_hotspot_y = 3;
-// clang-format on
+namespace grvl {
 
-static bool IsBuiltInConnector(uint32_t connector_type)
-{
-    return connector_type == DRM_MODE_CONNECTOR_eDP ||
-           connector_type == DRM_MODE_CONNECTOR_LVDS ||
-           connector_type == DRM_MODE_CONNECTOR_DSI;
-}
+    // Adawaita default cursor
+    // CC-BY-SA
+    // clang-format off
+    static const uint32_t cursor_map[] = {
+      0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+      0x00000000, 0x00000000, 0x02000000, 0x45f0f0f0, 0x03000000, 0x01000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+      0x00000000, 0x01000000, 0x09000000, 0xf7fdfdfd, 0x4bdddddd, 0x04000000, 0x01000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+      0x00000000, 0x02000000, 0x15000000, 0xffffffff, 0xf7f2f2f2, 0x4ed4d4d4, 0x04000000, 0x01000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+      0x00000000, 0x03000000, 0x1a000000, 0xffffffff, 0xff3c3c3c, 0xf7f1f1f1, 0x50d6d6d6, 0x04000000, 0x01000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+      0x00000000, 0x03000000, 0x1b000000, 0xffffffff, 0xff000000, 0xff3c3c3c, 0xf7f1f1f1, 0x50d6d6d6, 0x04000000, 0x01000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+      0x00000000, 0x03000000, 0x1b000000, 0xffffffff, 0xff000000, 0xff000000, 0xff3c3c3c, 0xf7f1f1f1, 0x50d6d6d6, 0x04000000, 0x01000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+      0x00000000, 0x03000000, 0x1b000000, 0xffffffff, 0xff000000, 0xff000000, 0xff000000, 0xff3c3c3c, 0xf7f1f1f1, 0x50d6d6d6, 0x04000000, 0x01000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+      0x00000000, 0x03000000, 0x1b000000, 0xffffffff, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff3c3c3c, 0xf7f1f1f1, 0x50d6d6d6, 0x04000000, 0x01000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+      0x00000000, 0x03000000, 0x1b000000, 0xffffffff, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff3c3c3c, 0xf7f1f1f1, 0x50d6d6d6, 0x04000000, 0x01000000, 0x00000000, 0x00000000, 0x00000000,
+      0x00000000, 0x03000000, 0x1b000000, 0xffffffff, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff3c3c3c, 0xf7f1f1f1, 0x50d6d6d6, 0x04000000, 0x01000000, 0x00000000, 0x00000000,
+      0x00000000, 0x03000000, 0x1b000000, 0xffffffff, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff3c3c3c, 0xf7f1f1f1, 0x50d6d6d6, 0x04000000, 0x01000000, 0x00000000,
+      0x00000000, 0x03000000, 0x1b000000, 0xffffffff, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff3c3c3c, 0xf7f1f1f1, 0x50d6d6d6, 0x04000000, 0x01000000,
+      0x00000000, 0x03000000, 0x1b000000, 0xffffffff, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xff000000, 0xfdc3c3c3, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xf8fcfcfc, 0x4cdadada, 0x03000000,
+      0x00000000, 0x03000000, 0x1b000000, 0xffffffff, 0xff000000, 0xff000000, 0xff414141, 0xff404040, 0xff000000, 0xff4d4d4d, 0xe8dfdfdf, 0x5f000000, 0x59000000, 0x54000000, 0x3f000000, 0x1a000000, 0x05000000,
+      0x00000000, 0x03000000, 0x1b000000, 0xffffffff, 0xff000000, 0xff414141, 0xfcf6f6f6, 0xf7c0c0c0, 0xff000000, 0xff010101, 0xf7dddddd, 0x65a4a4a4, 0x1e000000, 0x1a000000, 0x15000000, 0x09000000, 0x03000000,
+      0x00000000, 0x03000000, 0x1b000000, 0xffffffff, 0xff3d3d3d, 0xf9efefef, 0x907c7c7c, 0xf4ebebeb, 0xff323232, 0xff000000, 0xfe626262, 0xcde1e1e1, 0x0e000000, 0x04000000, 0x02000000, 0x01000000, 0x00000000,
+      0x00000000, 0x03000000, 0x1b000000, 0xffffffff, 0xf9f0f0f0, 0x827e7e7e, 0x43000000, 0xa5b2b2b2, 0xf9a9a9a9, 0xff000000, 0xff070707, 0xf8ebebeb, 0x3eb5b5b5, 0x03000000, 0x01000000, 0x00000000, 0x00000000,
+      0x00000000, 0x03000000, 0x1a000000, 0xf9fafafa, 0x7f818181, 0x30000000, 0x1e000000, 0x46333333, 0xf8f2f2f2, 0xff1f1f1f, 0xff000000, 0xfd797979, 0xb7dedede, 0x09000000, 0x01000000, 0x00000000, 0x00000000,
+      0x00000000, 0x02000000, 0x15000000, 0x6f939393, 0x2d000000, 0x11000000, 0x0a000000, 0x21000000, 0xb4c2c2c2, 0xfb909090, 0xff000000, 0xff101010, 0xf9f6f6f6, 0x19474747, 0x02000000, 0x00000000, 0x00000000,
+      0x00000000, 0x01000000, 0x09000000, 0x19000000, 0x0d000000, 0x04000000, 0x03000000, 0x11000000, 0x52515151, 0xf9f2f2f2, 0xff1f1f1f, 0xff202020, 0xfaf5f5f5, 0x1e333333, 0x03000000, 0x00000000, 0x00000000,
+      0x00000000, 0x00000000, 0x02000000, 0x05000000, 0x03000000, 0x01000000, 0x01000000, 0x07000000, 0x23000000, 0x99a5a5a5, 0xfaf5f5f5, 0xfaf5f5f5, 0x96a7a7a7, 0x17000000, 0x02000000, 0x00000000, 0x00000000,
+      0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x02000000, 0x0f000000, 0x31000000, 0x530f0f0f, 0x52101010, 0x31000000, 0x0e000000, 0x01000000, 0x00000000, 0x00000000,
+      0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x01000000, 0x04000000, 0x0e000000, 0x17000000, 0x17000000, 0x0e000000, 0x04000000, 0x00000000, 0x00000000, 0x00000000,
+    };
+    static const int cursor_map_width = 17;
+    static const int cursor_map_height = 24;
+    // pointer hostpot offset within the cursor_map
+    static const int cursor_hotspot_x = 3;
+    static const int cursor_hotspot_y = 3;
+    // clang-format on
 
-static bool IsUsableConnector(drmModeConnectorPtr connector)
-{
-    return connector != nullptr &&
-           connector->connection == DRM_MODE_CONNECTED &&
-           connector->count_modes > 0;
-}
-
-static drmModeConnectorPtr PickConnector(int fd, drmModeResPtr resource, uint32_t requested_connector_id = 0)
-{
-    std::vector<drmModeConnectorPtr> connectors;
-    int selected = -1;
-
-    for (int i = 0; i < resource->count_connectors; i++) {
-        const auto connector = drmModeGetConnector(fd, resource->connectors[i]);
-        connectors.push_back(connector);
-
-        if (!IsUsableConnector(connector)) {
-            continue;
-        }
-
-        if (requested_connector_id != 0 && connector->connector_id != requested_connector_id) {
-            continue;
-        }
-
-        selected = connectors.size() - 1;
-        break;
+    static bool IsBuiltInConnector(uint32_t connector_type)
+    {
+        return connector_type == DRM_MODE_CONNECTOR_eDP ||
+               connector_type == DRM_MODE_CONNECTOR_LVDS ||
+               connector_type == DRM_MODE_CONNECTOR_DSI;
     }
 
-    for (size_t i = 0; i < connectors.size(); i++) {
-        if (i != selected) {
-            drmModeFreeConnector(connectors[i]);
+    static bool IsUsableConnector(drmModeConnectorPtr connector)
+    {
+        return connector != nullptr &&
+               connector->connection == DRM_MODE_CONNECTED &&
+               connector->count_modes > 0;
+    }
+
+    static drmModeConnectorPtr PickConnector(int fd, drmModeResPtr resource, uint32_t requested_connector_id = 0)
+    {
+        std::vector<drmModeConnectorPtr> connectors;
+        int selected = -1;
+
+        for (int i = 0; i < resource->count_connectors; i++) {
+            const auto connector = drmModeGetConnector(fd, resource->connectors[i]);
+            connectors.push_back(connector);
+
+            if (!IsUsableConnector(connector)) {
+                continue;
+            }
+
+            if (requested_connector_id != 0 && connector->connector_id != requested_connector_id) {
+                continue;
+            }
+
+            selected = connectors.size() - 1;
+            break;
         }
-    }
 
-    if (selected == -1) {
-        grvl::grvl::Log("[ERROR] No valid DRM connectors found!");
-        return nullptr;
-    }
-
-    return connectors[selected];
-}
-
-static drmModeModeInfoPtr PickMode(drmModeConnectorPtr connector, const uint16_t width, const uint16_t height, const uint32_t refresh)
-{
-    size_t pixels = 0;
-    drmModeModeInfoPtr preferred = nullptr, highest = nullptr;
-
-    for (int i = 0; i < connector->count_modes; i++) {
-        const auto mode = &connector->modes[i];
-        if (width == mode->hdisplay && height == mode->vdisplay) {
-            if (refresh == -1 || refresh == mode->vrefresh) {
-                return mode;
+        for (size_t i = 0; i < connectors.size(); i++) {
+            if (i != selected) {
+                drmModeFreeConnector(connectors[i]);
             }
         }
 
-        if (mode->type & DRM_MODE_TYPE_PREFERRED) {
-            preferred = mode;
+        if (selected == -1) {
+            Log(ERROR, "No valid DRM connectors found!");
+            return nullptr;
         }
 
-        const size_t size = mode->vdisplay * mode->hdisplay;
-
-        // pick the mode with the highest resolution
-        if (size > pixels) {
-            pixels = size;
-            highest = mode;
-        }
+        return connectors[selected];
     }
 
-    if (preferred) {
-        return preferred;
-    }
+    static drmModeModeInfoPtr PickMode(drmModeConnectorPtr connector, const uint16_t width, const uint16_t height, const uint32_t refresh)
+    {
+        size_t pixels = 0;
+        drmModeModeInfoPtr preferred = nullptr, highest = nullptr;
 
-    if (highest) {
-        return highest;
-    }
+        for (int i = 0; i < connector->count_modes; i++) {
+            const auto mode = &connector->modes[i];
+            if (width == mode->hdisplay && height == mode->vdisplay) {
+                if (refresh == -1 || refresh == mode->vrefresh) {
+                    return mode;
+                }
+            }
 
-    return nullptr;
-}
+            if (mode->type & DRM_MODE_TYPE_PREFERRED) {
+                preferred = mode;
+            }
 
-static std::vector<std::string> GetDrmCardPaths()
-{
-    std::vector<std::string> paths;
+            const size_t size = mode->vdisplay * mode->hdisplay;
 
-    const char* override_path = std::getenv("DRM_PATH");
-    if (override_path && override_path[0] != '\0') {
-        paths.emplace_back(override_path);
-    }
-
-    glob_t result = {};
-    if (glob("/dev/dri/card*", 0, nullptr, &result) == 0) {
-        for (size_t i = 0; i < result.gl_pathc; ++i) {
-            paths.emplace_back(result.gl_pathv[i]);
-        }
-    }
-    globfree(&result);
-
-    std::sort(paths.begin(), paths.end());
-    paths.erase(std::unique(paths.begin(), paths.end()), paths.end());
-    return paths;
-}
-
-const static struct libinput_interface interface = {
-    .open_restricted = [] (const char* path, int flags, void* user) {
-        const int fd = open(path, flags);
-        if (fd < 0)
-            return -errno;
-
-        if (ioctl(fd, EVIOCGRAB, 1) < 0) {
-            perror("EVIOCGRAB");
+            // pick the mode with the highest resolution
+            if (size > pixels) {
+                pixels = size;
+                highest = mode;
+            }
         }
 
-        return fd;
-    },
-    .close_restricted = [] (int fd, void* user) {
-        ioctl(fd, EVIOCGRAB, 0);
-        close(fd);
+        if (preferred) {
+            return preferred;
+        }
+
+        if (highest) {
+            return highest;
+        }
+
+        return nullptr;
     }
-};
+
+    static std::vector<std::string> GetDrmCardPaths()
+    {
+        std::vector<std::string> paths;
+
+        const char* override_path = std::getenv("DRM_PATH");
+        if (override_path && override_path[0] != '\0') {
+            paths.emplace_back(override_path);
+        }
+
+        glob_t result = {};
+        if (glob("/dev/dri/card*", 0, nullptr, &result) == 0) {
+            for (size_t i = 0; i < result.gl_pathc; ++i) {
+                paths.emplace_back(result.gl_pathv[i]);
+            }
+        }
+        globfree(&result);
+
+        std::sort(paths.begin(), paths.end());
+        paths.erase(std::unique(paths.begin(), paths.end()), paths.end());
+        return paths;
+    }
+
+    const static struct libinput_interface interface = {
+        .open_restricted = [] (const char* path, int flags, void* user) {
+            const int fd = open(path, flags);
+            if (fd < 0)
+                return -errno;
+
+            if (ioctl(fd, EVIOCGRAB, 1) < 0) {
+                perror("EVIOCGRAB");
+            }
+
+            return fd;
+        },
+        .close_restricted = [] (int fd, void* user) {
+            ioctl(fd, EVIOCGRAB, 0);
+            close(fd);
+        }
+    };
 
 
 // implementation
 
-namespace grvl {
     static NativeDisplayMode MakeNativeDisplayMode(const drmModeModeInfo& mode)
     {
         NativeDisplayMode display_mode;
@@ -376,7 +377,7 @@ namespace grvl {
         drmModeFreePlaneResources(plane_res);
 
         if (!selected) {
-            grvl::grvl::Log("[ERROR] Failed to select DRM plane!");
+            Log(ERROR, "Failed to select DRM plane!");
         }
 
         return found_id;
@@ -409,25 +410,25 @@ namespace grvl {
 
         this->resource = drmModeGetResources(fd);
         if (!resource) {
-            grvl::grvl::Log("[ERROR] Unable to get DRM resources!");
+            Log(ERROR, "Unable to get DRM resources!");
             return false;
         }
 
         this->conn = PickConnector(fd, resource, connector_id);
         if (!conn) {
-            grvl::grvl::Log("[ERROR] Unable to pick DRM connection!");
+            Log(ERROR, "Unable to pick DRM connection!");
             return false;
         }
 
         this->mode = PickMode(conn, width, height, refresh);
         if (!mode) {
-            grvl::grvl::Log("[ERROR] Unable to pick DRM mode!");
+            Log(ERROR, "Unable to pick DRM mode!");
             return false;
         }
 
         this->encoder = drmModeGetEncoder(fd, conn->encoder_id);
         if (!encoder) {
-            grvl::grvl::Log("[ERROR] Unable to get DRM encoder!");
+            Log(ERROR, "Unable to get DRM encoder!");
             return false;
         }
 
@@ -450,7 +451,7 @@ namespace grvl {
                 return InitDriver(fh, width, height, refresh, connector_id);
             }
 
-            grvl::grvl::Log("[ERROR] Failed to open '%s'!", path);
+            Log(ERROR, "Failed to open '%s'!", path);
         }
 
         return false;
@@ -531,7 +532,7 @@ namespace grvl {
         }
 
         if (fd < 0) {
-            grvl::grvl::Log("[ERROR] No usable DRM device found!");
+            Log(ERROR, "No usable DRM device found!");
             return false;
         }
 
@@ -544,13 +545,13 @@ namespace grvl {
         // set drm caps
         int ret = drmSetClientCap(fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
         if (ret != 0) {
-            grvl::grvl::Log("[ERROR] Failed to enable Universal Planes!");
+            Log(ERROR, "Failed to enable Universal Planes!");
             return false;
         }
 
         drmSetClientCap(fd, DRM_CLIENT_CAP_ATOMIC, 1);
         if (ret != 0) {
-            grvl::grvl::Log("[ERROR] Failed to enable Atomic Modesetting!");
+            Log(ERROR, "Failed to enable Atomic Modesetting!");
             return false;
         }
 
@@ -563,10 +564,10 @@ namespace grvl {
 #ifdef DRM_CLIENT_CAP_CURSOR_PLANE_HOTSPOT
         ret = drmSetClientCap(fd, DRM_CLIENT_CAP_CURSOR_PLANE_HOTSPOT, 1);
         if (ret != 0 && errno != EOPNOTSUPP) {
-            grvl::grvl::Log("[ERROR] Failed to enable cursor plane hotspot client cap: %s", strerror(errno));
+            Log(ERROR, "Failed to enable cursor plane hotspot client cap: %s", strerror(errno));
         }
 #else
-        grvl::grvl::Log("[ERROR] DRM cursor plane hotspot not supported!");
+        Log(ERROR, "DRM cursor plane hotspot not supported!");
 #endif
 
         // Prepare DRM buffers for the mouse cursor
@@ -581,7 +582,7 @@ namespace grvl {
         struct drm_mode_map_dumb mreq = {};
         mreq.handle = cursor.dumb.handle;
         if (drmIoctl(fd, DRM_IOCTL_MODE_MAP_DUMB, &mreq) < 0) {
-            grvl::grvl::Log("[ERROR] Failed to prepare dumb buffer for mapping!");
+            Log(ERROR, "Failed to prepare dumb buffer for mapping!");
             return false;
         }
 
@@ -593,7 +594,7 @@ namespace grvl {
 
         cursor.plane = FindPlaneByType(DRM_PLANE_TYPE_CURSOR);
         if (!cursor.plane) {
-            grvl::grvl::Log("[ERROR] Failed to find DRM cursor plane!");
+            Log(ERROR, "Failed to find DRM cursor plane!");
             return false;
         }
 
@@ -647,7 +648,7 @@ namespace grvl {
 
         uint32_t mode_blob = 0;
         if (drmModeCreatePropertyBlob(fd, mode, sizeof(*mode), &mode_blob) != 0) {
-            grvl::grvl::Log("[ERROR] Failed to create mode blob");
+            Log(ERROR, "Failed to create mode blob");
             return false;
         }
 
@@ -718,7 +719,7 @@ namespace grvl {
         uint32_t flags = DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_ATOMIC_ALLOW_MODESET;
         ret = drmModeAtomicCommit(fd, req, flags, nullptr);
         if (ret) {
-            grvl::grvl::Log("[ERROR] Atomic commit failed: %s", strerror(errno));
+            Log(ERROR, "Atomic commit failed: %s", strerror(errno));
             return false;
         }
         drmModeAtomicFree(req);

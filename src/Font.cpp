@@ -127,7 +127,7 @@ namespace grvl {
         File file(path);
 
         if (!file.Exists()) {
-            grvl::Log("[ERROR] Unable to load font file %s (no such file)", path);
+            Log(ERROR, "Unable to load font file %s (no such file)", path);
             return;
         }
 
@@ -136,7 +136,7 @@ namespace grvl {
         uint8_t* start = data;
 
         if (buffer.size() < sizeof(FontFileHeader)) {
-            grvl::Log("[ERROR] Font file %s too short", path);
+            Log(ERROR, "Font file %s too short", path);
             return;
         }
 
@@ -145,7 +145,7 @@ namespace grvl {
         data += sizeof(header);
 
         if (memcmp(header.magic, "grvlfnt\0", 8) != 0 || header.version != 0) {
-            grvl::Log("[ERROR] Font file %s has invalid header", path);
+            Log(ERROR, "Font file %s has invalid header", path);
             return;
         }
 
@@ -155,11 +155,11 @@ namespace grvl {
         int32_t version = BigEndian32(header.version);
 
         if (version != 0) {
-            grvl::Log("[ERROR] Baked font %s has unknown version %d!", path, version);
+            Log(ERROR, "Baked font %s has unknown version %d!", path, version);
             return;
         }
 
-        grvl::Log("[INFO] Loading baked font %s (height %dpx), %ld glyphs, %ld kernings", path, height, entry_count, kerning_count);
+        Log(INFO, "Loading baked font %s (height %dpx), %ld glyphs, %ld kernings", path, height, entry_count, kerning_count);
 
         for (int64_t i = 0; i < entry_count; i ++) {
 
@@ -200,7 +200,7 @@ namespace grvl {
 
         }
 
-        grvl::Log("[INFO] Loaded font file %s (%d kerning entries, %d glyphs)", path, kerning_count, entry_count);
+        Log(INFO, "Loaded font file %s (%d kerning entries, %d glyphs)", path, kerning_count, entry_count);
 
     }
 
@@ -218,7 +218,7 @@ namespace grvl {
             return it->second;
         }
 
-        grvl::Log("[WARNING] No glyph found for U+%04x", unicode);
+        Log(WARN, "No glyph found for U+%04x", unicode);
 
         // if all failes return anything
         Glyph g = GetFallback();
@@ -247,7 +247,7 @@ namespace grvl {
         File file(path);
 
         if (!file.Exists()) {
-            grvl::Log("[ERROR] No such font file %s", path);
+            Log(ERROR, "No such font file %s", path);
             return;
         }
 
@@ -258,13 +258,13 @@ namespace grvl {
         auto* info = new ::stbtt_fontinfo();
 
         if (stbtt_InitFont(info, data(), 0) != 1) {
-            grvl::Log("[ERROR] Unable to load font file %s", path);
+            Log(ERROR, "Unable to load font file %s", path);
             delete info;
             return;
         }
 
         m_info = info;
-        grvl::Log("[INFO] Loaded font file %s (%ld bytes)", path, size());
+        Log(INFO, "Loaded font file %s (%ld bytes)", path, size());
     }
 
     TrueTypeData::~TrueTypeData()
@@ -421,8 +421,8 @@ namespace grvl {
             }
         }
 
-        grvl::Log("[INFO] Exported %d glyphs", glyphs.size());
-        grvl::Log("[INFO] Generating kerning table...", glyphs.size());
+        Log(INFO, "Exported %d glyphs", glyphs.size());
+        Log(INFO, "Generating kerning table...", glyphs.size());
 
         for (Character prev : characters) {
             for (Character next : characters) {
@@ -442,7 +442,7 @@ namespace grvl {
 
             }
 
-            grvl::Log("[INFO] Scanning %d/%d glyphs, found %d kernings", current, characters.size(), file_kernings.size());
+            Log(INFO, "Scanning %d/%d glyphs, found %d kernings", current, characters.size(), file_kernings.size());
             current ++;
         }
 

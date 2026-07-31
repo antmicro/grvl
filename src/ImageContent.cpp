@@ -56,7 +56,7 @@ namespace grvl {
         this->data = stbi_load(path, &width, &height, &file_channels, channels);
 
         if (!this->data) {
-            grvl::Log("[ERROR] Failed to load image %s: %s", path, stbi_failure_reason());
+            Log(ERROR, "Failed to load image %s: %s", path, stbi_failure_reason());
             this->width = 0;
             this->height = 0;
             this->frames = 0;
@@ -86,7 +86,7 @@ namespace grvl {
         // if the format could not have been loaded directly we perform transcoding
         Transcode(format);
 
-        grvl::Log("[INFO] Loaded %dx%d image %s as %s", width, height, path, GetFormatName(format));
+        Log(INFO, "Loaded %dx%d image %s as %s", width, height, path, GetFormatName(format));
     }
 
     ImageContent::ImageContent(uint8_t* pixels, int width, int height, int frames, Format format)

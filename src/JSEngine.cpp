@@ -36,7 +36,7 @@ namespace grvl {
     {
         ctx = duk_create_heap(nullptr, nullptr, nullptr, nullptr, nullptr);
         if (!ctx) {
-            grvl::grvl::Log("[FATAL] Failed to create a Duktape heap.");
+            Log(ERROR, "Failed to create a Duktape heap.");
             exit(1);
         }
         duk_push_heap_stash(ctx);
@@ -126,7 +126,7 @@ namespace grvl {
 
         if (duk_peval(ctx) != 0)
         {
-            grvl::Log("[ERROR] Error occurred while parsing JavaScript code: %s", duk_safe_to_string(ctx, -1));
+            Log(ERROR, "Error occurred while parsing JavaScript code: %s", duk_safe_to_string(ctx, -1));
             duk_pop(ctx);
             return false;
         }
@@ -150,7 +150,7 @@ namespace grvl {
     void JSEngine::ExecutePreparedJavaScriptFunctionCall(const char* functionName, int numOfArgs)
     {
         if (duk_pcall(ctx, numOfArgs) != 0) {
-            grvl::Log("[ERROR] Error while trying to execute JavaScript function call %s: %s", functionName, duk_safe_to_string(ctx, -1));
+            Log(ERROR, "Error while trying to execute JavaScript function call %s: %s", functionName, duk_safe_to_string(ctx, -1));
         }
         duk_pop(ctx);
     }
@@ -237,7 +237,7 @@ namespace grvl {
     duk_ret_t JSEngine::Print(duk_context* ctx)
     {
         const char* log = duk_to_string(ctx, 0);
-        grvl::Log("%s", log);
+        Log(INFO, "[JS] %s", log);
 
         return NO_RETURN_VALUE;
     }

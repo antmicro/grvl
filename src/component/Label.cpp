@@ -62,7 +62,7 @@ namespace grvl {
         const auto* fontName = XMLSupport::GetAttributeOrDefault(xmlElement, "font", "normal");
         Font* font = man->GetFontPointer(fontName);
         if(!font){
-            grvl::Log("[WARNING] Setting invalid label font %s, the label isn't going to be drawn", fontName);
+            Log(WARN, "Setting invalid label font %s, the label isn't going to be drawn", fontName);
         }
         result->SetTextFont(font);
 

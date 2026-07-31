@@ -306,7 +306,7 @@ namespace grvl {
                 }
             }
         }
-        grvl::Log("[ERROR] Screen \"%s\" does not exist!", activeScreenId);
+        Log(ERROR, "Screen \"%s\" does not exist!", activeScreenId);
         return *this;
     }
 
@@ -555,7 +555,7 @@ namespace grvl {
                 return searchFont->second;
             }
         }
-        grvl::Log("[ERROR] Default font doesn't exist.");
+        Log(ERROR, "Default font doesn't exist.");
         return NULL;
     }
 
@@ -568,12 +568,12 @@ namespace grvl {
         }
 
         if (!font && (strcmp(fontName, "normal") != 0)) {
-            grvl::Log("[WARNING] Font \"%s\" doesn't exist. Using \"normal\"!", fontName);
+            Log(WARN, "Font \"%s\" doesn't exist. Using \"normal\"!", fontName);
             font = GetFontFromContainer("normal");
         }
 
         if(!font) {
-            grvl::Log("[WARNING] Font \"normal\" doesn't exist. Using default font!");
+            Log(WARN, "Font \"normal\" doesn't exist. Using default font!");
             font = GetDefaultFontFromContainer();
         }
 
@@ -910,7 +910,7 @@ namespace grvl {
                 painter.SetActiveBuffer(0);
                 if(ActiveScreen) {
 
-                    // grvl::Log("[TRACE] Drawing the active screen! (%d %d)\n", width, height - GetTotalHeadersHeight() - GetBottomPanelHeight());
+                    // Log(TRACE, "Drawing the active screen! (%d %d)\n", width, height - GetTotalHeadersHeight() - GetBottomPanelHeight());
 
                     ActiveScreen->SetSize(width, height - GetTotalHeadersHeight() - GetBottomPanelHeight());
                     ActiveScreen->Draw(painter, 0, GetTotalHeadersHeight());
@@ -1266,7 +1266,7 @@ namespace grvl {
                     AddFontToFontContainer(fname, new GrvlBakedFont(c_font_path));
                 }
             } else {
-                grvl::Log("[WARNING] Font \"%s\" of size %d mapping to \"%s\" already loaded", flname, size, fname);
+                Log(WARN, "Font \"%s\" of size %d mapping to \"%s\" already loaded", flname, size, fname);
             }
             nextElement = nextElement->NextSiblingElement("font-style");
         }
@@ -1424,8 +1424,7 @@ namespace grvl {
                     AbstractView* Screen = CustomView::BuildFromXML(nextElement);
                     if(Screen) {
                         AddScreen(Screen);
-
-                        grvl::grvl::Log("[INFO] Added screen for CustomView");
+                        Log(INFO, "Added screen for CustomView");
                     }
                     nextElement = nextElement->NextSiblingElement("customView");
                 }
@@ -1449,11 +1448,11 @@ namespace grvl {
                 }
             }
         } else { // Parsing failed
-            grvl::Log("[ERROR] XML parsing failed.");
+            Log(ERROR, "XML parsing failed.");
             doc.Clear();
             return -1;
         }
-        grvl::Log("[INFO] Parsing done.");
+        Log(INFO, "Parsing done.");
         doc.Clear();
         if(GetScreen("start"))
             SetActiveScreen("start", 0);
