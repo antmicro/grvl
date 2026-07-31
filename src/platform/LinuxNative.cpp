@@ -62,7 +62,7 @@ static const int cursor_hotspot_y = 3;
 static bool IsBuiltInConnector(uint32_t connector_type)
 {
     return connector_type == DRM_MODE_CONNECTOR_eDP ||
-           connector_type == DRM_MODE_CONNECTOR_LVDS || 
+           connector_type == DRM_MODE_CONNECTOR_LVDS ||
            connector_type == DRM_MODE_CONNECTOR_DSI;
 }
 
@@ -189,7 +189,7 @@ const static struct libinput_interface interface = {
 // implementation
 
 namespace grvl {
-    static NativeDisplayMode MakeNativeDisplayMode(const drmModeModeInfo& mode) 
+    static NativeDisplayMode MakeNativeDisplayMode(const drmModeModeInfo& mode)
     {
         NativeDisplayMode display_mode;
         display_mode.name = std::string(mode.name, std::min(strlen(mode.name), static_cast<size_t>(DRM_DISPLAY_MODE_LEN)));
@@ -200,7 +200,7 @@ namespace grvl {
         return display_mode;
     }
 
-    std::vector<NativeDisplay> LinuxNativeApp::EnumerateConnectedDisplays() 
+    std::vector<NativeDisplay> LinuxNativeApp::EnumerateConnectedDisplays()
     {
         std::vector<NativeDisplay> displays;
 
@@ -225,7 +225,7 @@ namespace grvl {
                 }
 
                 const drmModeModeInfoPtr selected_mode = PickMode(connector, 0, 0, uint32_t(-1));
-                
+
                 NativeDisplay display;
                 display.drm_path = path;
                 display.connector_id = connector->connector_id;
@@ -251,7 +251,7 @@ namespace grvl {
             close(display_fd);
         }
 
-        return displays;  
+        return displays;
     }
 
     LinuxNativeApp::LinuxNativeApp(int width, int height, bool rotate_sideways)
@@ -529,7 +529,7 @@ namespace grvl {
                 if (TryUsingDriver(path.c_str(), width, height, -1)) break;
             }
         }
-        
+
         if (fd < 0) {
             grvl::grvl::Log("[ERROR] No usable DRM device found!");
             return false;
@@ -560,10 +560,14 @@ namespace grvl {
          * hotspots. Non-virtualized drivers may return EOPNOTSUPP that is fine,
          * keep running and use the normal cursor-plane probing below.
          */
+#ifdef DRM_CLIENT_CAP_CURSOR_PLANE_HOTSPOT
         ret = drmSetClientCap(fd, DRM_CLIENT_CAP_CURSOR_PLANE_HOTSPOT, 1);
         if (ret != 0 && errno != EOPNOTSUPP) {
             grvl::grvl::Log("[ERROR] Failed to enable cursor plane hotspot client cap: %s", strerror(errno));
         }
+#else
+        grvl::grvl::Log("[ERROR] DRM cursor plane hotspot not supported!");
+#endif
 
         // Prepare DRM buffers for the mouse cursor
         cursor.dumb.width = 64;
@@ -671,7 +675,7 @@ namespace grvl {
         if (cursor.props.hotspot_y) {
             drmModeAtomicAddProperty(req, cursor.plane, cursor.props.hotspot_y, cursor_hotspot_y);
         }
-        
+
         uint32_t crtc_x, crtc_y, crtc_w, crtc_h, src_w, src_h, src_x, src_y;
 
         crtc_w = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "CRTC_W");
