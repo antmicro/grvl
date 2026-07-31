@@ -24,6 +24,7 @@
 #include <string.h>
 #include <sys/time.h>
 #include <grvl/Format.h>
+#include <grvl/Log.h>
 
 #include <duktape.h>
 
@@ -43,10 +44,13 @@ namespace grvl {
         DmaFillFunction fill;
         DmaBlitFunction blit;
         DmaBlitCltFunction blit_clt;
+        Logger logger;
 
         void (*set_layer_pointer)(uintptr_t addr);
         void (*wait_for_vsync)();
         void (*flipping_completed)();
+
+        [[deprecated("Use .logger")]]
         void (*gui_printf)(const char* text, va_list argList);
         uint64_t (*get_timestamp)(void);
     } gui_callbacks_t;
@@ -59,8 +63,43 @@ namespace grvl {
         static void Init(gui_callbacks_t* n_callbacks);
         static void Destroy();
         static gui_callbacks_t* Callbacks();
-        static void Log(const char* text, ...);
+
+        template <typename... Args>
+        static void Log(const char* text, Args... args);
     };
+
+    template <typename... Args>
+    inline void Log(LogLevel level, const char* text, Args... args)
+    {
+        static auto CallUserPrint = [] (LogLevel level, const char* format, ...) {
+            va_list list;
+            int bytes = 0;
+
+            // get required buffer size
+            va_start(list, format);
+            bytes = vsnprintf(NULL, 0, format, list) + 1;
+            va_end(list);
+
+            char buffer[bytes];
+
+            // format message
+            va_start(list, format);
+            vsnprintf(buffer, bytes, format, list);
+            va_end(list);
+
+            // call the user callback
+            grvl::Callbacks()->logger(level, buffer);
+        };
+
+        CallUserPrint(level, text, args...);
+    }
+
+    // `grvl::grvl::Log(const char*, Args...)` is a legacy function, use `grvl::Log(LogLevel, const char*, Args...)`
+    template <typename... Args>
+    void grvl::Log(const char* text, Args... args)
+    {
+        ::grvl::Log(INFO, text, args...);
+    }
 
 } /* namespace grvl */
 
