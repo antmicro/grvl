@@ -15,10 +15,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <unordered_set>
+#include <string>
 
-#include <grvl.h>
-#include <Font.h>
-#include <File.h>
+#include <grvl/grvl.h>
+#include <grvl/Font.h>
+#include <grvl/File.h>
 
 struct Args
 {
@@ -79,7 +80,7 @@ static uint32_t ParseUnicode(const std::string& str)
         }
     }
 
-    return stoi(cstr, nullptr, base);
+    return std::stoi(cstr, nullptr, base);
 }
 
 static Range ParseRange(const std::string& str)
@@ -145,7 +146,7 @@ static void LoadSourceFile(std::vector<Range>& ranges, const char* path)
         codepoints.insert(unicode.code);
     }
 
-    grvl::grvl::Log("[INFO] Source file contains %ld unique codepoints.", codepoints.size());
+    grvl::Log(grvl::INFO, "Source file contains %ld unique codepoints.", codepoints.size());
 
     for (uint32_t codepoint : codepoints) {
         ranges.emplace_back(codepoint, codepoint);
@@ -186,16 +187,19 @@ static void ParseNext(Config& cfg, Args& args)
             continue;
         }
 
-        grvl::grvl::Log("[ERROR] Invalid argument '%s', expected option.", args.Next());
+        grvl::Log(grvl::ERROR, "Invalid argument '%s', expected option.", args.Next());
         cfg.invalid = true;
         return;
 
     }
+
+    // check required arguments
+    if (cfg.ttf_path == nullptr) cfg.invalid = true;
+    if (cfg.font_size == -1) cfg.invalid = true;
 }
 
 int main(int argc, const char* argv[])
 {
-
     grvl::gui_callbacks_t callbacks {};
     grvl::grvl::Init(&callbacks);
 
@@ -203,62 +207,62 @@ int main(int argc, const char* argv[])
     Args args {argv, 1, argc};
     ParseNext(cfg, args);
 
-    if (cfg.invalid) {
-        grvl::grvl::Log("[INFO] Usage: gbf [OPTION]...");
-        grvl::grvl::Log("[INFO] Use '--help' for a list of options.");
-        return 1;
-    }
-
     if (cfg.help) {
-        grvl::grvl::Log("Usage: gbf [OPTION]...");
-        grvl::grvl::Log("Create GBF files from TTFs");
+        printf("Usage: gbf [OPTION]...\n");
+        printf("Create GBF files from TTFs\n");
 
-        grvl::grvl::Log("\nRequired options:");
-        grvl::grvl::Log("  --ttf <path>     : Source TTF file path");
-        grvl::grvl::Log("  --size <size>    : Size of the baked font");
+        printf("\nRequired options:\n");
+        printf("  --ttf <path>     : Source TTF file path\n");
+        printf("  --size <size>    : Size of the baked font\n");
 
-        grvl::grvl::Log("\nOther options:");
-        grvl::grvl::Log("  --help           : Print this help page and exit");
-        grvl::grvl::Log("  --gbf <path>     : Output path, by default './out.gbf' is used");
-        grvl::grvl::Log("  --range <ranges> : Range (or ranges) of Unicodes to bake");
-        grvl::grvl::Log("  --source <file>  : Use a file as reference for Unicodes to bake");
+        printf("\nOther options:\n");
+        printf("  --help           : Print this help page and exit\n");
+        printf("  --gbf <path>     : Output path, by default './out.gbf' is used\n");
+        printf("  --range <ranges> : Range (or ranges) of Unicodes to bake\n");
+        printf("  --source <file>  : Use a file as reference for Unicodes to bake\n");
 
-        grvl::grvl::Log("\nRange format:");
-        grvl::grvl::Log("  A comma separated list of ranges, each range can be");
-        grvl::grvl::Log("  expressed as one of the following expressions:\n");
+        printf("\nRange format:\n");
+        printf("  A comma separated list of ranges, each range can be\n");
+        printf("  expressed as one of the following expressions:\n\n");
 
-        grvl::grvl::Log("  <int>-<int>      : Inclusive range, <int> can be a decimal, hex (0x), or Unicode (U+)");
-        grvl::grvl::Log("  <int>            : Include one specific codepoint");
-        grvl::grvl::Log("  ascii            : Same as '0x20-0x78'");
-        grvl::grvl::Log("  bmp              : Include the Unicode Basic Multilingual Plane");
-        grvl::grvl::Log("  smp              : Include the Unicode Supplementary Multilingual Plane");
-        grvl::grvl::Log("  sip              : Include the Unicode Supplementary Ideographic Plane");
-        grvl::grvl::Log("  tip              : Include the Unicode Tertiary Ideographic Plane");
-        grvl::grvl::Log("  ssp              : Include the Unicode Supplement­ary Special-purpose Plane");
-        grvl::grvl::Log("  all              : Include the all Unicode characters");
+        printf("  <int>-<int>      : Inclusive range, <int> can be a decimal, hex (0x), or Unicode (U+)\n");
+        printf("  <int>            : Include one specific codepoint\n");
+        printf("  ascii            : Same as '0x20-0x78'\n");
+        printf("  bmp              : Include the Unicode Basic Multilingual Plane\n");
+        printf("  smp              : Include the Unicode Supplementary Multilingual Plane\n");
+        printf("  sip              : Include the Unicode Supplementary Ideographic Plane\n");
+        printf("  tip              : Include the Unicode Tertiary Ideographic Plane\n");
+        printf("  ssp              : Include the Unicode Supplementary Special-purpose Plane\n");
+        printf("  all              : Include all Unicode characters\n");
 
-        grvl::grvl::Log("\nExamples:");
-        grvl::grvl::Log("  gbf --ttf ./my_font.ttf --size 18");
-        grvl::grvl::Log("  gbf --ttf ./my_font.ttf --size 11 --range ascii,0x100-0x200 --gbf ./my_font.gbf");
-        grvl::grvl::Log("  gbf --ttf ./my_font.ttf --size 11 --source ./translation.txt --gbf ./my_font.gbf");
+        printf("\nExamples:\n");
+        printf("  gbf --ttf ./my_font.ttf --size 18\n");
+        printf("  gbf --ttf ./my_font.ttf --size 11 --range ascii,0x100-0x200 --gbf ./my_font.gbf\n");
+        printf("  gbf --ttf ./my_font.ttf --size 11 --source ./translation.txt --gbf ./my_font.gbf\n");
         return 0;
     }
 
+    if (cfg.invalid) {
+        grvl::Log(grvl::INFO, "Usage: gbf [OPTION]...");
+        grvl::Log(grvl::INFO, "Use '--help' for a list of options.");
+        return 1;
+    }
+
     if (cfg.ranges.empty()) {
-        grvl::grvl::Log("[INFO] Explicit range not given, using Basic Multilingual Plane.");
+        grvl::Log(grvl::INFO, "Explicit range not given, using Basic Multilingual Plane.");
         cfg.ranges.push_back({' ', 0xFFFF});
     }
 
     auto data = std::make_shared<grvl::TrueTypeData>(cfg.ttf_path);
     grvl::TrueTypeFont ttf {data, cfg.font_size};
 
-    grvl::grvl::Log("[INFO] Rasterizing...");
+    grvl::Log(grvl::INFO, "Rasterizing...");
 
     for (const Range& range : cfg.ranges) {
         ttf.Preload(range.start, range.end);
     }
 
-    grvl::grvl::Log("[INFO] Exporting...");
+    grvl::Log(grvl::INFO, "Exporting...");
     ttf.Save(cfg.gbf_path);
 
     FILE* file = fopen(cfg.gbf_path, "rb");
@@ -266,7 +270,7 @@ int main(int argc, const char* argv[])
     size_t bytes = ftell(file);
     fclose(file);
 
-    grvl::grvl::Log("[INFO] Done! Baked font saved to %s (%ld bytes)", cfg.gbf_path, bytes);
+    grvl::Log(grvl::INFO, "Done! Baked font saved to %s (%ld bytes)", cfg.gbf_path, bytes);
 
     return 0;
 
