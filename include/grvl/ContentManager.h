@@ -65,6 +65,8 @@ namespace grvl {
     class ContentManager {
     public:
 
+        using LoaderCallback = std::function<void(const std::string&)>;
+
         virtual ~ContentManager() = default;
 
         /// Updates all users of the image with the given name
@@ -73,10 +75,15 @@ namespace grvl {
         /// Used by Image component to get a ImageContent delegate
         std::shared_ptr<ImageDelegate> RequestImage(const std::string& name);
 
+        /// Sets a function that gets called for each missing image name, it can then load that image in
+        void SetLoaderCallback(const LoaderCallback& callback);
+
         /// Get an image delegate without loading if it is missing
         std::shared_ptr<ImageDelegate> GetByName(const std::string& name);
 
     private:
+
+        LoaderCallback loader_callback = [] (const std::string& path) { /* do nothing */ };
 
         // mapping of resource handles to resource delegates
         std::unordered_map<std::string, std::shared_ptr<ImageDelegate>> content_registry;

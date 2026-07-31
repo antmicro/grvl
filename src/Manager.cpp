@@ -229,6 +229,12 @@ namespace grvl {
         return *this;
     }
 
+    Manager& Manager::SetLoaderCallback(const ContentManager::LoaderCallback& callback)
+    {
+        contentManager.SetLoaderCallback(callback);
+        return *this;
+    }
+
     Manager::~Manager()
     {
         Screens.clear();

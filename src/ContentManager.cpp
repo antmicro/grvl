@@ -28,6 +28,10 @@ namespace grvl {
     {
         auto delegate = GetByName(name);
 
+        if (!delegate->HasContent()) {
+            loader_callback(name);
+        }
+
         return delegate;
     }
 
@@ -41,6 +45,11 @@ namespace grvl {
         }
 
         return it->second;
+    }
+
+    void ContentManager::SetLoaderCallback(const LoaderCallback& callback)
+    {
+        this->loader_callback = callback;
     }
 
 } /* namespace grvl */
