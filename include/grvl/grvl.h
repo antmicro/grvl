@@ -63,9 +63,6 @@ namespace grvl {
         static void Init(gui_callbacks_t* n_callbacks);
         static void Destroy();
         static gui_callbacks_t* Callbacks();
-
-        template <typename... Args>
-        static void Log(const char* text, Args... args);
     };
 
     template <typename... Args>
@@ -92,13 +89,6 @@ namespace grvl {
         };
 
         CallUserPrint(level, text, args...);
-    }
-
-    // `grvl::grvl::Log(const char*, Args...)` is a legacy function, use `grvl::Log(LogLevel, const char*, Args...)`
-    template <typename... Args>
-    void grvl::Log(const char* text, Args... args)
-    {
-        ::grvl::Log(INFO, text, args...);
     }
 
 } /* namespace grvl */
