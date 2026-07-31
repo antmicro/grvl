@@ -46,7 +46,7 @@ namespace grvl {
 
         const char* tempChar = xmlElement->Attribute("image");
         if(tempChar) {
-            Image buttonImg(NULL, 0, 0, 0);
+            Image buttonImg {};
             man->BindImageContentToImage(tempChar, &buttonImg);
             result->SetImage(buttonImg);
             int32_t imgX = XMLSupport::GetAttributeOrDefault(xmlElement, "image_x", (uint32_t)-1);

@@ -113,7 +113,7 @@ namespace grvl {
 
         const char* tempChar = xmlElement->Attribute("image");
         if(tempChar) {
-            Image buttonImg(NULL, 0, 0, 0);
+            Image buttonImg {};
             man->BindImageContentToImage(tempChar, &buttonImg);
             SetImage(buttonImg);
             int32_t imgX = XMLSupport::GetAttributeOrDefault(xmlElement, "image_x", (uint32_t)-1);
@@ -249,9 +249,7 @@ namespace grvl {
 
     void Button::SetImagePosition(int32_t x, int32_t y)
     {
-        if(!ButtonImage.IsEmpty()) {
-            ButtonImage.SetPosition(x, y);
-        }
+        ButtonImage.SetPosition(x, y);
     }
 
     void Button::SetTextTopOffset(int32_t value)
@@ -304,9 +302,6 @@ namespace grvl {
         if(Width != width || Height != height) {
             Width = width;
             Height = height;
-            if(imageCentered) {
-                ButtonImage.SetPosition(width / 2 - ButtonImage.GetWidth() / 2, height / 2 - ButtonImage.GetHeight() / 2);
-            }
         }
     }
 
@@ -390,6 +385,10 @@ namespace grvl {
                 static constexpr auto charPositionOffsetScale = 5;
                 layout.icoY -= Height / charPositionOffsetScale;
             }
+        }
+
+        if(imageCentered) {
+            ButtonImage.SetPosition(Width / 2 - ButtonImage.GetWidth() / 2, Height / 2 - ButtonImage.GetHeight() / 2);
         }
     }
 

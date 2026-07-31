@@ -27,7 +27,9 @@ namespace grvl {
 
     void Image::SetActiveFrame(uint32_t activeFrame)
     {
-        if(Content && activeFrame < Content->GetNumberOfFrames()) {
+        ImageContent* content = GetContent();
+
+        if(content && activeFrame < content->GetNumberOfFrames()) {
             ActiveFrame = activeFrame;
         }
     }
@@ -35,32 +37,35 @@ namespace grvl {
     Image* Image::BuildFromXML(XMLElement* xmlElement)
     {
         Manager* man = &Manager::GetInstance();
-        const char* type;
+        const char* name;
         Image* result = new Image();
         result->InitFromXML(xmlElement);
 
-        if(XMLSupport::TryGetAttribute(xmlElement, "contentId", &type)) {
-            man->BindImageContentToImage(type, result);
+        if(XMLSupport::TryGetAttribute(xmlElement, "contentId", &name)) {
+            man->BindImageContentToImage(name, result);
         }
         return result;
     }
 
     void Image::Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY)
     {
-        if(!Visible || Width <= 0 || Height <= 0)
-            return;
+        if(!Visible) return;
 
-        if(!Content || Content->IsEmpty()) {
-            if(!imageContentRequested) {
-                painter.GetContentManager()->RequestBinding(this);
-            }
+        ImageContent* content = GetContent();
+        if (content == nullptr) return;
+
+        int w = content->GetWidth();
+        int h = content->GetHeight();
+        SetSize(w, h);
+
+        if (w <= 0 || h <= 0) {
             return;
         }
 
         int32_t RenderX = ParentRenderX + X;
         int32_t RenderY = ParentRenderY + Y;
 
-        painter.DrawImage(RenderX, RenderY, Content, ActiveFrame);
+        painter.DrawImage(RenderX, RenderY, content, ActiveFrame);
     }
 
     uint32_t Image::GetActiveFrame() const
@@ -68,50 +73,29 @@ namespace grvl {
         return ActiveFrame;
     }
 
-    bool Image::IsImageContentPending() const
-    {
-        return imageContentRequested;
-    }
-
     bool Image::IsEmpty() const
     {
-        return !bindingRegistered && (!Content || Content->IsEmpty());
+        const ImageContent* content = GetContent();
+        return !content || content->IsEmpty();
     }
 
-    void Image::DeleteAndReplaceImageContent(ImageContent* content)
+    void Image::RemoveDelegate()
     {
-        if(content) {
-            delete Content;
-        }
-        ReplaceImageContent(content);
-    }
-
-    void Image::DeleteAndCleanImageContent()
-    {
-        if(Content) {
-            delete Content;
-            CleanImageContent();
-        }
-    }
-
-    void Image::CleanImageContent()
-    {
-        Content = NULL;
         Width = 0;
         Height = 0;
+        Delegate = nullptr;
     }
 
-    void Image::ReplaceImageContent(ImageContent* content)
+    void Image::ReplaceDelegate(const std::shared_ptr<ImageDelegate>& delegate)
     {
-        Content = content;
-        imageContentRequested = false;
-        if(content != NULL) {
-            Width = content->GetWidth();
-            Height = content->GetHeight();
-        } else {
-            Width = 0;
-            Height = 0;
+        if (Delegate == delegate) {
+            return;
         }
+
+        RemoveDelegate();
+
+        ActiveFrame = 0;
+        Delegate = delegate;
     }
 
 } /* namespace grvl */

@@ -148,16 +148,12 @@ namespace grvl {
 
     void ListItem::PrepareContent(ContentManager* contentManager)
     {
-        if(!ButtonImage.IsEmpty() && ButtonImage.GetContent() == NULL && !ButtonImage.IsImageContentPending()) {
-            contentManager->RequestBinding(&ButtonImage);
-        }
+        // We can re-load the ButtonImage here
     }
 
     void ListItem::CancelPreparingContent(ContentManager* contentManager)
     {
-        if(!ButtonImage.IsEmpty() && ButtonImage.IsImageContentPending()) {
-            contentManager->CancelRequest(&ButtonImage);
-        }
+        // We can un-load the ButtonImage here
     }
 
     void ListItem::SetDescription(const char* desc)

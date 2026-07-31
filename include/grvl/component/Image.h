@@ -44,23 +44,8 @@ namespace grvl {
         Image()
             : Component()
             , ActiveFrame(0)
-            , Content(NULL)
-            , bindingRegistered(false)
-            , imageContentRequested(false)
+            , Delegate(nullptr)
         {
-        }
-
-        Image(ImageContent* content, uint32_t x = 0, uint32_t y = 0, uint32_t activeFrame = 0)
-            : Component(x, y, 0, 0)
-            , ActiveFrame(activeFrame)
-            , Content(content)
-            , bindingRegistered(false)
-            , imageContentRequested(false)
-        {
-            if(content != NULL) {
-                Width = content->GetWidth();
-                Height = content->GetHeight();
-            }
         }
 
         Image(const Image& other) = default;
@@ -73,42 +58,43 @@ namespace grvl {
 
         ImageContent* GetContent()
         {
-            return Content;
+            return HasContent() ? Delegate->Get() : nullptr;
         }
 
-        // Deletes the old imageContent and sets the new one
-        void DeleteAndReplaceImageContent(ImageContent* content);
-        // Changes the pointer only
-        void ReplaceImageContent(ImageContent* content);
-        void DeleteAndCleanImageContent();
-        void CleanImageContent();
+        const ImageContent* GetContent() const
+        {
+            return HasContent() ? Delegate->Get() : nullptr;
+        }
+
+        bool HasContent() const
+        {
+            return Delegate && Delegate->HasContent();
+        }
+
+        void ReplaceDelegate(const std::shared_ptr<ImageDelegate>& delegate);
+        void RemoveDelegate();
 
         uint8_t* GetContentData() const
         {
-            if (Content) return Content->GetData();
-            return 0;
+            return HasContent() ? Delegate->Get()->GetData() : nullptr;
         }
 
         uint32_t GetContentBytesPerPixel() const
         {
-            if(Content) return Content->GetBytesPerPixel();
-            return 0;
+            return HasContent() ? Delegate->Get()->GetBytesPerPixel() : 0;
         }
 
         Format GetContentColorFormat() const
         {
-            if(Content) return Content->GetColorFormat();
-            return Format::ARGB8888;
+            return HasContent() ? Delegate->Get()->GetColorFormat() : Format::ARGB8888;
         }
 
         bool GetContentAlpha() const
         {
-            if(!Content) return false;
-            return Content->HasAlphaChannel();
+            return HasContent() ? Delegate->Get()->HasAlphaChannel() : false;
         }
 
         bool IsEmpty() const;
-        bool IsImageContentPending() const;
 
         static Image* BuildFromXML(XMLElement* xmlElement);
 
@@ -116,14 +102,8 @@ namespace grvl {
 
     private:
         uint32_t ActiveFrame;
-        ImageContent* Content;
+        std::shared_ptr<ImageDelegate> Delegate;
 
-        bool bindingRegistered; // Binding request has already been sent
-        bool imageContentRequested; // Waiting for content to be filled by ContentManager
-
-        friend void ContentManager::BindImageContentToImage(const std::string& contentName, Image* image);
-        friend void ContentManager::CancelRequest(Image* image);
-        friend void ContentManager::RequestBinding(Image* image);
     };
 
 } /* namespace grvl */

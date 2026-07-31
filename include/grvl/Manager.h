@@ -346,10 +346,7 @@ namespace grvl {
 
         /// Registers method that is called when request for external content is issued by the library.
         ///
-        /// @param requestCallback Pointer to the method to call.
-        Manager& SetExternalContentRequestCallback(ContentManager::ContentCallback requestCallback);
-        Manager& SetCancelExternalContentRequestCallback(ContentManager::ContentCallback cancelRequestCallback);
-
+        /// @param callback Pointer to the method to call.
         Manager& SetFontCallback(const FontLoader& callback);
 
         Painter painter; // TODO

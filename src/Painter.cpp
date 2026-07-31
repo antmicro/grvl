@@ -1476,8 +1476,7 @@ namespace grvl {
 
     void Painter::SetBackgroundImage(const std::string& resource)
     {
-        // TODO:
-        contentManager->BindImageContentToImage(resource, BackgroundImage);
+        BackgroundImage->ReplaceDelegate(contentManager->RequestImage(resource));
     }
 
     void Painter::SetBackgroundImage(Image* image)

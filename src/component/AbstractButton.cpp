@@ -47,9 +47,6 @@ namespace grvl {
 
     void AbstractButton::SetImage(const Image& image)
     {
-        if(image.IsEmpty()) {
-            return;
-        }
         ButtonImage = image;
     }
 

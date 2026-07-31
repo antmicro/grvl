@@ -19,154 +19,28 @@
 
 namespace grvl {
 
-    void ContentManager::UpdateContent(std::string& name, ImageContent* ic)
+    void ContentManager::RegisterContent(const std::string& name, ImageContent* ic)
     {
-        BindingsToRemove bindingsToErase;
-        ImageBindingMap::iterator it = MissingContent.begin();
-        while(it != MissingContent.end()) {
-            if(it->second.length() == name.length() && strcmp(it->second.c_str(), name.c_str()) == 0) {
-                it->first->ReplaceImageContent(ic);
-                bindingsToErase.push_back(it);
-            }
-            it++;
-        }
-
-        // Solves STL incompatibility
-        while(!bindingsToErase.empty()) {
-            MissingContent.erase(bindingsToErase.back());
-            bindingsToErase.pop_back();
-        }
+        GetByName(name)->Set(ic);
     }
 
-    void ContentManager::AddInternalImageContent(std::string& name, ImageContent* ic)
+    std::shared_ptr<ImageDelegate> ContentManager::RequestImage(const std::string& name)
     {
-        InternalImageContainer[name] = ic;
+        auto delegate = GetByName(name);
+
+        return delegate;
     }
 
-    void ContentManager::AddExternalImageContent(std::string& name, ImageContent* ic)
+    std::shared_ptr<ImageDelegate> ContentManager::GetByName(const std::string& name)
     {
-        ExternalImageContainer[name] = ic;
+        auto it = content_registry.find(name);
 
-        // Check if request for the content is pending
-        for(PendingRequestsVector::iterator it = PendingRequests.end() - 1; it >= PendingRequests.begin(); it--) {
-            if(it->length() == name.length() && strcmp(it->c_str(), name.c_str()) == 0) {
-                UpdateContent(name, ic);
-
-                // Remove request from the list
-                PendingRequests.erase(it);
-                break;
-            }
-        }
-    }
-
-    bool ContentManager::TryToFindInInternalContent(const std::string& contentName, Image* image)
-    {
-        ImageContentMap::const_iterator searchLocalContainer = InternalImageContainer.find(contentName);
-        if(searchLocalContainer != InternalImageContainer.end()) {
-            image->ReplaceImageContent(searchLocalContainer->second);
-            return true;
-        }
-        return false;
-    }
-    bool ContentManager::TryToFindInExternalContent(const std::string& contentName, Image* image)
-    {
-        ImageContentMap::const_iterator searchExternalContainer = ExternalImageContainer.find(contentName);
-        if(searchExternalContainer != ExternalImageContainer.end()) {
-            image->ReplaceImageContent(searchExternalContainer->second);
-            return true;
-        }
-        return false;
-    }
-
-    void ContentManager::BindImageContentToImage(const std::string& contentName, Image* image)
-    {
-        bool contentBinded = false;
-
-        // Check internal image content container
-        contentBinded = TryToFindInInternalContent(contentName, image);
-
-        // Check external image container
-        if(!contentBinded) {
-            contentBinded = TryToFindInExternalContent(contentName, image);
+        if (it == content_registry.end()) {
+            auto [iterator, _] = content_registry.emplace(name, std::make_shared<ImageDelegate>());
+            it = iterator;
         }
 
-        // If image content is not available add request
-        // Check if image is already registered
-        ImageBindingMap::iterator it = MissingContent.find(image);
-        if(contentBinded && it != MissingContent.end()) {
-            MissingContent.erase(it); // remove pending request
-        } else if(!contentBinded && it == MissingContent.end()) {
-            MissingContent[image] = contentName;
-        }
-
-        if(!contentBinded) {
-            image->bindingRegistered = true;
-        }
-    }
-
-    void ContentManager::RequestBinding(Image* image)
-    {
-        std::string requestedContentName = MissingContent[image];
-        if(requestedContentName.length() == 0) {
-            return;
-        }
-
-        // Check if not pending already
-        for(PendingRequestsVector::iterator it = PendingRequests.begin(); it < PendingRequests.end(); ++it) {
-            if(strcmp(it->c_str(), requestedContentName.c_str()) == 0) {
-                image->imageContentRequested = true;
-                return;
-            }
-        }
-
-        PendingRequests.push_back(requestedContentName);
-        image->imageContentRequested = true;
-
-        // Register the request
-        if(RequestContentCallback) {
-            RequestContentCallback(requestedContentName);
-        }
-    }
-
-    void ContentManager::CancelRequest(Image* image)
-    {
-        std::string requestedContentName = MissingContent[image];
-
-        if(requestedContentName.length() == 0) {
-            return;
-        }
-
-        // Check if not pending already
-        int numberOfImagesWaitingForBinding = 0;
-        PendingRequestsVector::iterator requestToErase;
-        for(PendingRequestsVector::iterator it = PendingRequests.begin(); it < PendingRequests.end(); ++it) {
-            if(strcmp(it->c_str(), requestedContentName.c_str()) == 0) {
-                numberOfImagesWaitingForBinding += 1;
-                requestToErase = it;
-            }
-        }
-
-        if(numberOfImagesWaitingForBinding == 1) {
-            CancelRequestCallback(requestedContentName);
-            PendingRequests.erase(requestToErase);
-            image->imageContentRequested = false;
-        }
-    }
-
-    void ContentManager::SetRequestCallback(ContentCallback requestCallback)
-    {
-        if(requestCallback == NULL) {
-            return;
-        }
-        RequestContentCallback = requestCallback;
-    }
-
-    void ContentManager::SetCancelRequestCallback(ContentCallback cancelRequestCallback)
-    {
-        if(cancelRequestCallback == NULL) {
-            return;
-        }
-        CancelRequestCallback = cancelRequestCallback;
+        return it->second;
     }
 
 } /* namespace grvl */

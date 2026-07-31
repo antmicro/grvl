@@ -229,18 +229,6 @@ namespace grvl {
         return *this;
     }
 
-    Manager& Manager::SetExternalContentRequestCallback(ContentManager::ContentCallback requestCallback)
-    {
-        contentManager.SetRequestCallback(requestCallback);
-        return *this;
-    }
-
-    Manager& Manager::SetCancelExternalContentRequestCallback(ContentManager::ContentCallback cancelRequestCallback)
-    {
-        contentManager.SetCancelRequestCallback(cancelRequestCallback);
-        return *this;
-    }
-
     Manager::~Manager()
     {
         Screens.clear();
@@ -459,17 +447,15 @@ namespace grvl {
         if(painter.IsRotated())
             if(!image->IsRotated())
                 image->Rotate90();
-        if(IsInitializationFinished()) {
-            contentManager.AddExternalImageContent(name, image);
-        } else {
-            contentManager.AddInternalImageContent(name, image);
-        }
+
+        contentManager.RegisterContent(name, image);
+
         return *this;
     }
 
     Manager& Manager::BindImageContentToImage(const std::string& contentName, Image* image)
     {
-        contentManager.BindImageContentToImage(contentName, image);
+        image->ReplaceDelegate(contentManager.RequestImage(contentName));
         return *this;
     }
 

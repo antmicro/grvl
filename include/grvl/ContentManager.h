@@ -20,51 +20,66 @@
 #include <unordered_map>
 #include <vector>
 #include <string>
+#include <memory>
+#include <functional>
+
+#include <grvl/ImageContent.h>
 
 namespace grvl {
+
     class Image;
     class ImageContent;
+
+    /// Represents a managed image resource, the ContentManager can freely swap the underlying ImageContent pointer
+    /// thus this object should be queried for it each time it is used.
+    class ImageDelegate {
+    public:
+
+        constexpr void Set(ImageContent* ptr)
+        {
+            if (ptr == content) return;
+            if (content) delete content;
+            this->content = ptr;
+        }
+
+        constexpr ImageContent* Get() const
+        {
+            return content;
+        }
+
+        constexpr bool HasContent() const
+        {
+            return content != nullptr;
+        }
+
+        ~ImageDelegate()
+        {
+            Set(nullptr);
+        }
+
+    private:
+        ImageContent* content = nullptr;
+    };
 
     /// Represents manager for shared resources, e.g., image contents.
     class ContentManager {
     public:
-        ContentManager()
-            : RequestContentCallback(NULL)
-            , CancelRequestCallback(NULL)
-        {
-        }
 
         virtual ~ContentManager() = default;
 
-        typedef std::unordered_map<std::string, ImageContent*> ImageContentMap;
-        typedef std::unordered_map<Image*, std::string> ImageBindingMap;
-        typedef ImageBindingMap::iterator ImageBindingIterator;
-        typedef std::vector<ImageBindingIterator> BindingsToRemove;
-        typedef std::vector<std::string> PendingRequestsVector;
+        /// Updates all users of the image with the given name
+        void RegisterContent(const std::string& name, ImageContent* ic);
 
-        typedef void (*ContentCallback)(const std::string& contentName);
+        /// Used by Image component to get a ImageContent delegate
+        std::shared_ptr<ImageDelegate> RequestImage(const std::string& name);
 
-        void AddInternalImageContent(std::string& name, ImageContent* ic);
-        void AddExternalImageContent(std::string& name, ImageContent* ic);
-        void BindImageContentToImage(const std::string& contentName, Image* image);
-
-        bool TryToFindInInternalContent(const std::string& contentName, Image* image);
-        bool TryToFindInExternalContent(const std::string& contentName, Image* image);
-
-        void RequestBinding(Image* image);
-        void CancelRequest(Image* image);
-
-        void SetRequestCallback(ContentCallback requestCallback);
-        void SetCancelRequestCallback(ContentCallback cancelRequestCallback);
+        /// Get an image delegate without loading if it is missing
+        std::shared_ptr<ImageDelegate> GetByName(const std::string& name);
 
     private:
-        ImageContentMap InternalImageContainer; // Can not be deleted
-        ImageContentMap ExternalImageContainer; // Can be deleted
-        ImageBindingMap MissingContent;
-        PendingRequestsVector PendingRequests;
-        ContentCallback RequestContentCallback, CancelRequestCallback;
 
-        void UpdateContent(std::string& name, ImageContent* ic);
+        // mapping of resource handles to resource delegates
+        std::unordered_map<std::string, std::shared_ptr<ImageDelegate>> content_registry;
     };
 
 } /* namespace grvl */
