@@ -26,8 +26,9 @@ int main()
 
     auto ttf = std::make_shared<grvl::TrueTypeData>(ROMFS_PATH "/fonts/Roboto.ttf.gz");
 
-    // fonts
-    manager.AddFontToFontContainer("normal", new grvl::TrueTypeFont(ttf, 16));
+    manager.SetFontCallback([ttf] (const std::string& name) {
+        grvl::Manager::GetInstance().AddFontToFontContainer(name, new grvl::TrueTypeFont(ttf, 16));
+    });
 
     manager.BuildFromXML(ROMFS_PATH "/gui.xml");
     manager.InitializationFinished();

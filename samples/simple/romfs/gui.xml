@@ -15,9 +15,9 @@
 		<division id="sidePanel" x="0" y="0" width="200" height="472" borderColor="#FFff0000" borderType="right" >
 			<label id="currentTime" text="Tue 12 Nov 08:49 AM" font="mona14" alignment="Left" x="10" y="10" width="100" height="30" textColor="#FFFFFFFF"/>
 			<division id="sidePanelCalendar" x="10" y="60" width="200" height="440" >
-				<button id="left" image="light_gray_left_vector" x="0" y="0" width="24" height="24" borderColor="#FF2E2E2E" borderType="box" onClick="ChangeMonthCallback('-1')" />
+				<button id="left" image="left" x="0" y="0" width="24" height="24" borderColor="#FF2E2E2E" borderType="box" onClick="ChangeMonthCallback('-1')" />
 				<label id="currentMonthLabel" text="November 2024" font="mona14" x="24" y="0" width="130" height="24" textColor="#FFFFFFFF"/>
-				<button id="right" image="light_gray_right_vector" x="158" y="0" width="24" height="24" borderColor="#FF2E2E2E" borderType="box" onClick="ChangeMonthCallback('1')" />
+				<button id="right" image="right" x="158" y="0" width="24" height="24" borderColor="#FF2E2E2E" borderType="box" onClick="ChangeMonthCallback('1')" />
 				<button id="mon" text="M" font="mona12" x="-7"  y="50" width="28" height="10" textColor="#FF9EA2A6" />
 				<button id="tue" text="T" font="mona12" x="21"  y="50" width="28" height="10" textColor="#FF9EA2A6" />
 				<button id="wed" text="W" font="mona12" x="49"  y="50" width="28" height="10" textColor="#FF9EA2A6" />

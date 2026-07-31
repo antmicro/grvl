@@ -33,15 +33,25 @@ int main()
     manager.AddFontToFontContainer("mona14", new grvl::TrueTypeFont(ttf, 16));
     manager.AddFontToFontContainer("mona16", new grvl::TrueTypeFont(ttf, 18));
 
-    grvl::Format fmt = grvl::Format::ARGB8888;
+    manager.SetLoaderCallback([] (const std::string& name) {
+
+        std::string resource = name;
+
+        // let's load wifi later to check if that will work
+        if (name == "wifi") {
+            return;
+        }
+
+        // ... and first load 'left' in place of 'right', to check if replacing works
+        if (name == "left") {
+            resource = "right";
+        }
+
+        std::string path = ROMFS_PATH "/images/" + resource + ".png";
+        grvl::Manager::GetInstance().AddImageContentToContainer(name, new grvl::ImageContent(path.c_str(), grvl::Format::ARGB8888));
+    });
 
     // images
-    manager.AddImageContentToContainer("dots", new grvl::ImageContent(ROMFS_PATH "/images/dots.png", fmt));
-    manager.AddImageContentToContainer("light_gray_left_vector", new grvl::ImageContent(ROMFS_PATH "/images/left.png", fmt));
-    manager.AddImageContentToContainer("light_gray_right_vector", new grvl::ImageContent(ROMFS_PATH "/images/right.png", fmt));
-    manager.AddImageContentToContainer("signal", new grvl::ImageContent(ROMFS_PATH "/images/signal.png", fmt));
-    manager.AddImageContentToContainer("wifi", new grvl::ImageContent(ROMFS_PATH "/images/wifi.png", fmt));
-    manager.AddImageContentToContainer("battery", new grvl::ImageContent(ROMFS_PATH "/images/battery.png", fmt));
     manager.BuildFromXML(ROMFS_PATH "/gui.xml");
     manager.InitializationFinished();
     manager.SetActiveScreen("home", 0);
@@ -51,6 +61,12 @@ int main()
     const uint64_t runtime = 10'000'000; // us
     const uint64_t start = ChronoGetTimestamp();
     int frames = 0;
+
+    // draw one frame here to make sure nothing breaks when drawing without all images being loaded
+    app->Render();
+
+    manager.AddImageContentToContainer("wifi", new grvl::ImageContent(ROMFS_PATH "/images/wifi.png", grvl::Format::ARGB8888)); // load image after it is alredy in use
+    manager.AddImageContentToContainer("left", new grvl::ImageContent(ROMFS_PATH "/images/left.png", grvl::Format::ARGB8888)); // replace existing image
 
     while (app->ShouldRun()) {
         frames ++;
