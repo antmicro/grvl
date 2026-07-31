@@ -90,10 +90,14 @@ namespace grvl {
         callbacks.set_layer_pointer = Application::SetFramebuffer;
         callbacks.get_timestamp = GetTimestamp;
 
-        callbacks.gui_printf = [] (const char *text, va_list argList) {
-            char buffer[256];
-            vsnprintf(buffer, sizeof(buffer), text, argList);
-            LOG_INF("%s", buffer);
+        callbacks.logger = [] (LogLevel level, const char* text) {
+            if (level == TRACE) { LOG_DBG("%s", text); return; }
+            if (level == INFO) { LOG_INF("%s", text); return; }
+            if (level == WARN) { LOG_WRN("%s", text); return; }
+            if (level == ERROR) { LOG_ERR("%s", text); return; }
+
+            LOG_WRN_ONCE("Got unknown log level from grvl!?");
+            LOG_ERR("(invalid) %s", text);
         };
     }
 

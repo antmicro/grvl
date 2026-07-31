@@ -6,12 +6,6 @@
 
 // callbacks
 
-static void PrintfNewline(const char* text, va_list argList)
-{
-    vprintf(text, argList);
-    printf("\n");
-}
-
 static uint64_t ChronoGetTimestamp()
 {
     auto duration = std::chrono::system_clock::now().time_since_epoch();
@@ -30,7 +24,6 @@ namespace grvl {
     void PosixApp::SetCallbacks(gui_callbacks_t& callbacks)
     {
         Application::SetCallbacks(callbacks);
-        callbacks.gui_printf = PrintfNewline;
         callbacks.get_timestamp = ChronoGetTimestamp;
     }
 

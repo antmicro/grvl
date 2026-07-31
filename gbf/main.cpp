@@ -20,12 +20,6 @@
 #include <Font.h>
 #include <File.h>
 
-static void PrintfNewline(const char* text, va_list argList)
-{
-    vprintf(text, argList);
-    printf("\n");
-}
-
 struct Args
 {
     const char** argv;
@@ -203,7 +197,6 @@ int main(int argc, const char* argv[])
 {
 
     grvl::gui_callbacks_t callbacks {};
-    callbacks.gui_printf = PrintfNewline;
     grvl::grvl::Init(&callbacks);
 
     Config cfg;
