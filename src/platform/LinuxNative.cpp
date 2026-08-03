@@ -549,7 +549,7 @@ namespace grvl {
             return false;
         }
 
-        drmSetClientCap(fd, DRM_CLIENT_CAP_ATOMIC, 1);
+        ret = drmSetClientCap(fd, DRM_CLIENT_CAP_ATOMIC, 1);
         if (ret != 0) {
             Log(ERROR, "Failed to enable Atomic Modesetting!");
             return false;
