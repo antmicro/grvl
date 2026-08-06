@@ -172,11 +172,13 @@ namespace grvl {
     const static struct libinput_interface interface = {
         .open_restricted = [] (const char* path, int flags, void* user) {
             const int fd = open(path, flags);
-            if (fd < 0)
+            if (fd < 0) {
+                Log(WARN, "Can't open '%s': %s", path, strerror(errno));
                 return -errno;
+            }
 
             if (ioctl(fd, EVIOCGRAB, 1) < 0) {
-                perror("EVIOCGRAB");
+                Log(WARN, "Call to ioctl EVIOCGRAB failed for file descriptor %d: %s", fd, strerror(errno));
             }
 
             return fd;
@@ -377,7 +379,7 @@ namespace grvl {
         drmModeFreePlaneResources(plane_res);
 
         if (!selected) {
-            Log(ERROR, "Failed to select DRM plane!");
+            Log(ERROR, "Failed to select DRM plane matching type %x!", plane_type);
         }
 
         return found_id;
@@ -495,16 +497,22 @@ namespace grvl {
         int y = cursor_state.y.load();
 
         drmModeAtomicReq *req = drmModeAtomicAlloc();
-        drmModeAtomicAddProperty(req, cursor.plane, cursor.props.fb, cursor.fb);
-        drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, encoder->crtc_id);
-        drmModeAtomicAddProperty(req, cursor.plane, cursor.props.x, x);
-        drmModeAtomicAddProperty(req, cursor.plane, cursor.props.y, y);
-        if (cursor.props.hotspot_x) {
-            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.hotspot_x, cursor_hotspot_x);
+
+        if (cursor.plane) {
+            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.fb, cursor.fb);
+            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, encoder->crtc_id);
+            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.x, x);
+            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.y, y);
+
+            if (cursor.props.hotspot_x) {
+                drmModeAtomicAddProperty(req, cursor.plane, cursor.props.hotspot_x, cursor_hotspot_x);
+            }
+
+            if (cursor.props.hotspot_y) {
+                drmModeAtomicAddProperty(req, cursor.plane, cursor.props.hotspot_y, cursor_hotspot_y);
+            }
         }
-        if (cursor.props.hotspot_y) {
-            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.hotspot_y, cursor_hotspot_y);
-        }
+
         drmModeAtomicAddProperty(req, primary.plane, primary.props.fb, primary.fb);
 
         uint32_t flags = DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_PAGE_FLIP_EVENT;
@@ -608,9 +616,9 @@ namespace grvl {
                       cursor.offsets, &cursor.fb, 0);
 
         cursor.plane = FindPlaneByType(DRM_PLANE_TYPE_CURSOR);
+
         if (!cursor.plane) {
             Log(ERROR, "Failed to find DRM cursor plane!");
-            return false;
         }
 
         // Prepare primary plane buffers
@@ -670,55 +678,56 @@ namespace grvl {
         drmModeAtomicAddProperty(req, conn->connector_id, connector_crtc, encoder->crtc_id);
         drmModeAtomicAddProperty(req, encoder->crtc_id, crtc_active, 1);
         drmModeAtomicAddProperty(req, encoder->crtc_id, crtc_mode_id, mode_blob);
-        // Set up cursor request
-        cursor.props.fb = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "FB_ID");
-        cursor.props.crtc = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "CRTC_ID");
-        cursor.props.x = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "CRTC_X");
-        cursor.props.y = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "CRTC_Y");
-        cursor.props.hotspot_x = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "HOTSPOT_X");
-        cursor.props.hotspot_y = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "HOTSPOT_Y");
 
         primary.props.fb = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "FB_ID");
         primary.props.crtc = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "CRTC_ID");
 
-        drmModeAtomicAddProperty(req, cursor.plane, cursor.props.fb, cursor.fb);
-        drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, encoder->crtc_id);
-        drmModeAtomicAddProperty(req, cursor.plane, cursor.props.x, 0);
-        drmModeAtomicAddProperty(req, cursor.plane, cursor.props.y, 0);
-        if (cursor.props.hotspot_x) {
-            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.hotspot_x, cursor_hotspot_x);
+        // Set up cursor request
+        if (cursor.plane) {
+            cursor.props.fb = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "FB_ID");
+            cursor.props.crtc = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "CRTC_ID");
+            cursor.props.x = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "CRTC_X");
+            cursor.props.y = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "CRTC_Y");
+            cursor.props.hotspot_x = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "HOTSPOT_X");
+            cursor.props.hotspot_y = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "HOTSPOT_Y");
+
+            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.fb, cursor.fb);
+            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, encoder->crtc_id);
+            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.x, 0);
+            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.y, 0);
+            if (cursor.props.hotspot_x) {
+                drmModeAtomicAddProperty(req, cursor.plane, cursor.props.hotspot_x, cursor_hotspot_x);
+            }
+            if (cursor.props.hotspot_y) {
+                drmModeAtomicAddProperty(req, cursor.plane, cursor.props.hotspot_y, cursor_hotspot_y);
+            }
+
+            uint32_t crtc_w = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "CRTC_W");
+            uint32_t crtc_h = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "CRTC_H");
+            uint32_t src_w = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "SRC_W");
+            uint32_t src_h = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "SRC_H");
+            uint32_t src_x = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "SRC_X");
+            uint32_t src_y = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "SRC_Y");
+
+            drmModeAtomicAddProperty(req, cursor.plane, crtc_w, 64);
+            drmModeAtomicAddProperty(req, cursor.plane, crtc_h, 64);
+
+            drmModeAtomicAddProperty(req, cursor.plane, src_x, 0);
+            drmModeAtomicAddProperty(req, cursor.plane, src_y, 0);
+
+            drmModeAtomicAddProperty(req, cursor.plane, src_w, 64 << 16);
+            drmModeAtomicAddProperty(req, cursor.plane, src_h, 64 << 16);
         }
-        if (cursor.props.hotspot_y) {
-            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.hotspot_y, cursor_hotspot_y);
-        }
-
-        uint32_t crtc_x, crtc_y, crtc_w, crtc_h, src_w, src_h, src_x, src_y;
-
-        crtc_w = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "CRTC_W");
-        crtc_h = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "CRTC_H");
-        src_w = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "SRC_W");
-        src_h = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "SRC_H");
-        src_x = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "SRC_X");
-        src_y = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "SRC_Y");
-
-        drmModeAtomicAddProperty(req, cursor.plane, crtc_w, 64);
-        drmModeAtomicAddProperty(req, cursor.plane, crtc_h, 64);
-
-        drmModeAtomicAddProperty(req, cursor.plane, src_x, 0);
-        drmModeAtomicAddProperty(req, cursor.plane, src_y, 0);
-
-        drmModeAtomicAddProperty(req, cursor.plane, src_w, 64 << 16);
-        drmModeAtomicAddProperty(req, cursor.plane, src_h, 64 << 16);
 
         // add primary plane to the same request
-        crtc_x = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "CRTC_X");
-        crtc_y = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "CRTC_Y");
-        crtc_w = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "CRTC_W");
-        crtc_h = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "CRTC_H");
-        src_w = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "SRC_W");
-        src_h = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "SRC_H");
-        src_x = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "SRC_X");
-        src_y = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "SRC_Y");
+        uint32_t crtc_x = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "CRTC_X");
+        uint32_t crtc_y = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "CRTC_Y");
+        uint32_t crtc_w = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "CRTC_W");
+        uint32_t crtc_h = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "CRTC_H");
+        uint32_t src_w = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "SRC_W");
+        uint32_t src_h = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "SRC_H");
+        uint32_t src_x = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "SRC_X");
+        uint32_t src_y = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "SRC_Y");
 
         drmModeAtomicAddProperty(req, primary.plane, primary.props.crtc, encoder->crtc_id);
         drmModeAtomicAddProperty(req, primary.plane, primary.props.fb, primary.fb);
