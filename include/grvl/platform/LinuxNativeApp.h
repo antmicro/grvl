@@ -125,8 +125,8 @@ namespace grvl {
         uint32_t FindPlaneByType(uint32_t plane_type);
 
         void CloseDriver();
-        bool InitDriver(int fd, uint16_t width, uint16_t height, uint32_t refresh, uint32_t connector_id = 0);
-        bool TryUsingDriver(const char* path, uint16_t width, uint16_t height, uint32_t refresh, uint32_t connector_id = 0);
+        bool InitDriver(int fd, uint16_t width, uint16_t height, uint32_t refresh, int requested_connector_id = -1);
+        bool TryUsingDriver(const char* path, uint16_t width, uint16_t height, uint32_t refresh, int requested_connector_id = -1);
 
         void HandleKeycode(uint32_t xkb_keycode, uint32_t evdev_keycode, bool pressed);
         void HandleEvent(libinput_event* event);

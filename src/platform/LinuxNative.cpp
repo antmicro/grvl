@@ -75,7 +75,7 @@ namespace grvl {
                connector->count_modes > 0;
     }
 
-    static drmModeConnectorPtr PickConnector(int fd, drmModeResPtr resource, uint32_t requested_connector_id = 0)
+    static drmModeConnectorPtr PickConnector(int fd, drmModeResPtr resource, int requested_connector_id = -1)
     {
         std::vector<drmModeConnectorPtr> connectors;
         int selected = -1;
@@ -88,7 +88,7 @@ namespace grvl {
                 continue;
             }
 
-            if (requested_connector_id != 0 && connector->connector_id != requested_connector_id) {
+            if ((requested_connector_id >= 0) && (connector->connector_id != requested_connector_id)) {
                 continue;
             }
 
@@ -404,7 +404,7 @@ namespace grvl {
         close(fd);
     }
 
-    bool LinuxNativeApp::InitDriver(int fd, uint16_t width, uint16_t height, uint32_t refresh, uint32_t connector_id)
+    bool LinuxNativeApp::InitDriver(int fd, uint16_t width, uint16_t height, uint32_t refresh, int requested_connector_id)
     {
         this->fd = fd;
 
@@ -414,7 +414,7 @@ namespace grvl {
             return false;
         }
 
-        this->conn = PickConnector(fd, resource, connector_id);
+        this->conn = PickConnector(fd, resource, requested_connector_id);
         if (!conn) {
             Log(ERROR, "Unable to pick DRM connection!");
             return false;
@@ -443,12 +443,12 @@ namespace grvl {
         return true;
     }
 
-    bool LinuxNativeApp::TryUsingDriver(const char* path, uint16_t width, uint16_t height, uint32_t refresh, uint32_t connector_id)
+    bool LinuxNativeApp::TryUsingDriver(const char* path, uint16_t width, uint16_t height, uint32_t refresh, int requested_connector_id)
     {
         if (path != nullptr && (strlen(path) != 0)) {
             int fh = open(path, O_RDWR);
             if (fh > 0) {
-                return InitDriver(fh, width, height, refresh, connector_id);
+                return InitDriver(fh, width, height, refresh, requested_connector_id);
             }
 
             Log(ERROR, "Failed to open '%s'!", path);
