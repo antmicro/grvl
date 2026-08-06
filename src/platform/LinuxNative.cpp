@@ -420,6 +420,11 @@ namespace grvl {
             return false;
         }
 
+        if (drmSetMaster(fd) != 0) {
+            Log(ERROR, "Unable to aquire DRM master control!");
+            return false;
+        }
+
         this->mode = PickMode(conn, width, height, refresh);
         if (!mode) {
             Log(ERROR, "Unable to pick DRM mode!");
@@ -447,11 +452,18 @@ namespace grvl {
     {
         if (path != nullptr && (strlen(path) != 0)) {
             int fh = open(path, O_RDWR);
-            if (fh > 0) {
-                return InitDriver(fh, width, height, refresh, requested_connector_id);
+
+            if (fh < 0) {
+                Log(ERROR, "Failed to open device '%s'!", path);
+                return false;
             }
 
-            Log(ERROR, "Failed to open '%s'!", path);
+            if (!InitDriver(fh, width, height, refresh, requested_connector_id)) {
+                Log(ERROR, "Failed to initialize DRM using device '%s'!", path);
+                return false;
+            }
+
+            return true;
         }
 
         return false;
@@ -521,17 +533,20 @@ namespace grvl {
 
     bool LinuxNativeApp::Setup()
     {
+        bool driver_found = false;
+
         if (has_selected_display) {
-            if (!TryUsingDriver(selected_display.drm_path.c_str(), selected_display.width, selected_display.height, selected_display.refresh, selected_display.connector_id)) {
-                return false;
+            if (TryUsingDriver(selected_display.drm_path.c_str(), selected_display.width, selected_display.height, selected_display.refresh, selected_display.connector_id)) {
+                driver_found = true;
             }
-        } else {
-            for (const auto& path : GetDrmCardPaths()) {
-                if (TryUsingDriver(path.c_str(), width, height, -1)) break;
+        } else for (const auto& path : GetDrmCardPaths()) {
+            if (TryUsingDriver(path.c_str(), width, height, -1)) {
+                driver_found = true;
+                break;
             }
         }
 
-        if (fd < 0) {
+        if (!driver_found) {
             Log(ERROR, "No usable DRM device found!");
             return false;
         }
