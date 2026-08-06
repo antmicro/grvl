@@ -23,12 +23,23 @@
 #include <ctype.h>
 #include <stdint.h>
 #include <string>
+#include <memory>
 #include <array>
 #include <chrono>
 
 namespace grvl {
 
     using PerfClock = std::chrono::steady_clock;
+
+    // free() functor for c_unique_ptr
+    struct c_deleter {
+        template <typename T>
+        void operator()(T* ptr) const { free(ptr); }
+    };
+
+    // a std::unique_ptr that calls free() not delete
+    template <typename T>
+    using c_unique_ptr = std::unique_ptr<T, c_deleter>;
 
     template <typename T>
     static inline void string_to_lower(T& s)

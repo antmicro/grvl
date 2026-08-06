@@ -35,6 +35,7 @@ list(APPEND sources "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/Posix.cpp"
 
 if(GRVL_LINUX_NATIVE)
   list(APPEND sources "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/LinuxNative.cpp")
+  list(APPEND sources "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/DrmLease.cpp")
   message(STATUS "GRVL Native Linux support ENABLED")
 endif()
 
@@ -78,6 +79,8 @@ target_link_libraries(
          $<$<BOOL:${GRVL_LINUX_NATIVE}>:PkgConfig::LIBUDEV>
          $<$<BOOL:${GRVL_LINUX_NATIVE}>:PkgConfig::LIBINPUT>
          $<$<BOOL:${GRVL_LINUX_NATIVE}>:PkgConfig::XKBCOMMON>
+         $<$<BOOL:${GRVL_LINUX_NATIVE}>:PkgConfig::XCBRANDR>
+         $<$<BOOL:${GRVL_LINUX_NATIVE}>:PkgConfig::XCB>
 )
 
 if (NOT GRVL_ZEPHYR)

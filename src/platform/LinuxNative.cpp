@@ -1,6 +1,7 @@
 
 #include <grvl/platform/LinuxNativeApp.h>
 #include <grvl/Manager.h>
+#include <grvl/platform/DrmLease.h>
 
 #include <algorithm>
 #include <glob.h>
@@ -406,9 +407,9 @@ namespace grvl {
         close(fd);
     }
 
-    bool LinuxNativeApp::InitDriver(int fd, uint16_t width, uint16_t height, uint32_t refresh, int requested_connector_id)
+    bool LinuxNativeApp::InitDriver(int driver, uint16_t width, uint16_t height, uint32_t refresh, int requested_connector_id)
     {
-        this->fd = fd;
+        this->fd = driver;
 
         this->resource = drmModeGetResources(fd);
         if (!resource) {
@@ -423,8 +424,32 @@ namespace grvl {
         }
 
         if (drmSetMaster(fd) != 0) {
-            Log(ERROR, "Unable to aquire DRM master control!");
-            return false;
+            Log(WARN, "Unable to aquire DRM master control!");
+            const int lease_fd = LeaseDriver(fd, conn->connector_id);
+
+            drmModeFreeResources(resource);
+            resource = nullptr;
+            drmModeFreeConnector(conn);
+            conn = nullptr;
+
+            close(fd);
+            this->fd = lease_fd;
+
+            if (this->fd < 0) {
+                return false;
+            }
+
+            this->resource = drmModeGetResources(fd);
+            if (!resource) {
+                Log(ERROR, "Unable to get DRM resources!");
+                return false;
+            }
+
+            this->conn = PickConnector(fd, resource, requested_connector_id);
+            if (!conn) {
+                Log(ERROR, "Unable to pick DRM connection!");
+                return false;
+            }
         }
 
         this->mode = PickMode(conn, width, height, refresh);

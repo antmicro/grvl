@@ -15,6 +15,14 @@ if (GRVL_LINUX_NATIVE)
   get_target_property(lib_xkbcommon_includes PkgConfig::LIBDRM INTERFACE_INCLUDE_DIRECTORIES)
   message(STATUS "XKBCOMMON includes: ${lib_xkbcommon_includes}")
 
+  pkg_check_modules(XCB REQUIRED IMPORTED_TARGET xcb)
+  get_target_property(lib_xcb_includes PkgConfig::XCB INTERFACE_INCLUDE_DIRECTORIES)
+  message(STATUS "XCB includes: ${lib_xcb_includes}")
+
+  pkg_check_modules(XCBRANDR REQUIRED IMPORTED_TARGET xcb-randr)
+  get_target_property(lib_xcbrandr_includes PkgConfig::XCBRANDR INTERFACE_INCLUDE_DIRECTORIES)
+  message(STATUS "XCBRANDR includes: ${lib_xcbrandr_includes}")
+
   pkg_check_modules(LIBINPUT REQUIRED IMPORTED_TARGET libinput)
   get_target_property(lib_libinput_includes PkgConfig::LIBINPUT INTERFACE_INCLUDE_DIRECTORIES)
   message(STATUS "LIBINPUT includes: ${lib_libinput_includes}")
