@@ -24,6 +24,28 @@
 #include <iostream>
 #include <vector>
 
+static void* guarded_realloc(void* udata, void* ptr, duk_size_t size)
+{
+    if (size == 0) {
+        if (ptr) {
+            free(ptr);
+        }
+        return nullptr;
+    }
+    return realloc(ptr, size);
+}
+
+static void* guarded_malloc(void* udata, duk_size_t size)
+{
+    if (size == 0) size = 4;
+    return malloc(size);
+}
+
+static void guarded_free(void* udata, void* ptr)
+{
+    free(ptr);
+}
+
 namespace grvl {
 
     void JSEngine::Initialize()
@@ -34,7 +56,7 @@ namespace grvl {
 
     void JSEngine::InitializeDukContext()
     {
-        ctx = duk_create_heap(nullptr, nullptr, nullptr, nullptr, nullptr);
+        ctx = duk_create_heap(guarded_malloc, guarded_realloc, guarded_free, nullptr, nullptr);
         if (!ctx) {
             Log(ERROR, "Failed to create a Duktape heap.");
             exit(1);
