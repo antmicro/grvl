@@ -1514,13 +1514,13 @@ namespace grvl {
     }
 
     void Painter::DisplayAntialiasedString(Font* Font, int16_t Xpos, int16_t Ypos, const char* Text,
-                                           uint32_t text_color) const
+                                           uint32_t text_color, uint32_t background) const
     {
-        InnerDisplayAntialiasedString(Font, Xpos, Ypos, Text, text_color, false, CurrentDrawingBoundsStartX(), CurrentDrawingBoundsStartY(), CurrentDrawingBoundsWidth(), CurrentDrawingBoundsHeight());
+        InnerDisplayAntialiasedString(Font, Xpos, Ypos, Text, text_color, false, CurrentDrawingBoundsStartX(), CurrentDrawingBoundsStartY(), CurrentDrawingBoundsWidth(), CurrentDrawingBoundsHeight(), background);
     }
 
     void Painter::DisplayBoundedAntialiasedString(Font* Font, int16_t Xpos, int16_t Ypos, int16_t ParentX,
-                                                  int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight, const char* Text, uint32_t text_color) const
+                                                  int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight, const char* Text, uint32_t text_color, uint32_t background) const
     {
         const int32_t textWidth = Font->GetWidth(Text);
         const int32_t textHeight = Font->GetFontHeight();
@@ -1530,11 +1530,11 @@ namespace grvl {
             return;
         }
 
-        InnerDisplayAntialiasedString(Font, Xpos, Ypos, Text, text_color, true, ParentX, ParentY, ParentWidth, ParentHeight);
+        InnerDisplayAntialiasedString(Font, Xpos, Ypos, Text, text_color, true, ParentX, ParentY, ParentWidth, ParentHeight, background);
     }
 
     void Painter::InnerDisplayAntialiasedString(Font* Font, int16_t Xpos, int16_t Ypos, const char* Text, uint32_t text_color, bool bound, int16_t ParentX,
-                                                int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight) const
+                                                int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight, uint32_t background) const
     {
         uint32_t prev_unicode = 0;
 
@@ -1550,9 +1550,9 @@ namespace grvl {
             }
 
             if(bound) {
-                DisplayAntialiasedCharInBound(Font, Xpos, Ypos, ParentX, ParentY, ParentWidth, ParentHeight, unicode.code, text_color);
+                DisplayAntialiasedCharInBound(Font, Xpos, Ypos, ParentX, ParentY, ParentWidth, ParentHeight, unicode.code, text_color, background);
             } else {
-                DisplayAntialiasedChar(Font, Xpos, Ypos, unicode.code, text_color);
+                DisplayAntialiasedChar(Font, Xpos, Ypos, unicode.code, text_color, background);
             }
 
             Xpos += glyph.advance;
@@ -1565,21 +1565,21 @@ namespace grvl {
     }
 
     void Painter::DisplayAntialiasedChar(Font* Font, uint16_t Xpos, uint16_t Ypos, uint32_t Index,
-                                         uint32_t text_color) const
+                                         uint32_t text_color, uint32_t background) const
     {
-        DrawAntialiasedChar(Font, Xpos, Ypos, Index, text_color);
+        DrawAntialiasedChar(Font, Xpos, Ypos, Index, text_color, background);
     }
 
     void Painter::DrawAntialiasedChar(Font* Font, int16_t Xpos, int16_t Ypos, uint32_t Index,
-                                      uint32_t text_color) const
+                                      uint32_t text_color, uint32_t background) const
     {
-        DrawAntialiasedCharInBound(Font, Xpos, Ypos, CurrentDrawingBoundsStartX(), CurrentDrawingBoundsStartY(), CurrentDrawingBoundsWidth(), CurrentDrawingBoundsHeight(), Index, text_color);
+        DrawAntialiasedCharInBound(Font, Xpos, Ypos, CurrentDrawingBoundsStartX(), CurrentDrawingBoundsStartY(), CurrentDrawingBoundsWidth(), CurrentDrawingBoundsHeight(), Index, text_color, background);
     }
 
 
     void Painter::DrawAntialiasedCharInBound(Font* Font, int16_t Xpos, int16_t Ypos,
                                              int16_t ParentX, int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight,
-                                             uint32_t Index, uint32_t text_color) const
+                                             uint32_t Index, uint32_t text_color, uint32_t background) const
 {
         if (ParentWidth <= 0 || ParentHeight <= 0) {
             return;
@@ -1614,6 +1614,10 @@ namespace grvl {
         const int32_t clippedWidth = clipRight - clipLeft;
         const int32_t clippedHeight = clipBottom - clipTop;
 
+        if (background != 0) {
+            FillRectangle(clipLeft - 1, clipTop - 1, clippedWidth + 2, clippedHeight + 2, background);
+        }
+
         DmaMoveFont(reinterpret_cast<uintptr_t>(glyph.bitmap), GetActiveBuffer(),
                     srcX, srcY,
                     clipLeft, clipTop, clippedWidth, clippedHeight,
@@ -1624,10 +1628,10 @@ namespace grvl {
 
 
     void Painter::DisplayAntialiasedCharInBound(Font* Font, int16_t Xpos, int16_t Ypos, int16_t ParentX,
-                                                int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight, uint32_t index, uint32_t text_color) const
+                                                int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight, uint32_t index, uint32_t text_color, uint32_t background) const
     {
         DrawAntialiasedCharInBound(
-            Font, Xpos, Ypos, ParentX, ParentY, ParentWidth, ParentHeight, index, text_color);
+            Font, Xpos, Ypos, ParentX, ParentY, ParentWidth, ParentHeight, index, text_color, background);
     }
 
     void Painter::SetContentManager(ContentManager* cm)
