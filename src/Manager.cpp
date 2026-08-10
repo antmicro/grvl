@@ -19,6 +19,8 @@
 #include <grvl/ParsingUtils.h>
 
 #include <cassert>
+#include <iomanip>
+#include <sstream>
 #include <grvl/JSEngine.h>
 #include <grvl/File.h>
 
@@ -923,6 +925,8 @@ namespace grvl {
             }
         }
 
+        DrawOverlay();
+
         painter.SetActiveBuffer(0);
 
         if(TopPanel && TopPanel->IsVisible() && GetGlobalTopPanelVisibility()) {
@@ -974,6 +978,43 @@ namespace grvl {
 
         painter.FlipSynchronizeBuffers();
         flips++;
+    }
+
+    void Manager::DrawOverlay()
+    {
+
+        auto ftos = [] (float value, int precision) -> std::string {
+            std::stringstream stream;
+            stream << std::fixed << std::setprecision(precision) << value;
+            return stream.str();
+        };
+
+        if (perf.overlay == Performance::NONE) {
+            return;
+        }
+
+        Font* font = GetFontPointer("normal");
+        const uint32_t fg = Color { 200, 200, 255, 255 }.pack(Format::ARGB8888);
+        const uint32_t bg = Color { 0, 0, 0, 20 }.pack(Format::ARGB8888);
+
+        const float ns_to_ms = 1.0 / 1000'000.0;
+
+        std::string res = std::to_string(GetWidth()) + "x" + std::to_string(GetHeight());
+        painter.DrawString(font, 4, 20, "FPS: " + std::to_string(perf.fps) + " (~" +  ftos(perf.mspt, 2) + "ms/t) " + res, fg, bg);
+
+        if (perf.overlay == Performance::MINIMAL) {
+            return;
+        }
+
+        size_t script_ns = perf.script_times.avg();
+        size_t draw_ns = perf.draw_times.avg();
+        size_t swap_ns = perf.swap_times.avg();
+
+        painter.DrawString(font, 4, 40, "J: " + ftos(script_ns * ns_to_ms, 4) + "ms", fg, bg); // events, JS, etc.
+        painter.DrawString(font, 4, 60, "D: " + ftos(draw_ns * ns_to_ms, 4) + "ms", fg, bg); // main drawing
+        painter.DrawString(font, 4, 80, "S: " + ftos(swap_ns * ns_to_ms, 4) + "ms", fg, bg); // time spent between MainLoopIteration() calls (includes Swaping time)
+        painter.DrawString(font, 4, 100, "T: " + ftos((script_ns + draw_ns + swap_ns) * ns_to_ms, 4) + "ms", fg, bg); // total time spent per frame
+
     }
 
     void Manager::ApplyTransparency()
@@ -1189,8 +1230,9 @@ namespace grvl {
         static constexpr auto dotRadiusDefault = 5;
         touchAreaModificator = (int32_t)XMLSupport::GetAttributeOrDefault(
             ConfigNode, "touchRegionModificator", (uint32_t)0);
-        dotColor = (int32_t)XMLSupport::GetAttributeOrDefault(ConfigNode, "dotColor", (uint32_t)0);
-        dotActiveColor = (int32_t)XMLSupport::GetAttributeOrDefault(ConfigNode, "dotActiveColor", (uint32_t)0);
+
+        dotColor = XMLSupport::ParseColor(ConfigNode, "dotColor", "#00000000");
+        dotActiveColor = XMLSupport::ParseColor(ConfigNode, "dotActiveColor", "#00000000");
         dotDistance = (int32_t)XMLSupport::GetAttributeOrDefault(ConfigNode, "dotDistance", (uint32_t)dotDistanceDefault);
         dotRadius = (int32_t)XMLSupport::GetAttributeOrDefault(ConfigNode, "dotRadius", (uint32_t)dotRadiusDefault);
         dotYPos = (int32_t)XMLSupport::GetAttributeOrDefault(ConfigNode, "dotYPos", (uint32_t)0);
@@ -1532,7 +1574,31 @@ namespace grvl {
         ProcessEvents();
 
         // redraw
+        Stopwatch watch {};
         Draw();
+        watch.stop();
+
+        size_t script_time = perf.js_time_this_frame;
+        perf.js_time_this_frame = 0;
+
+        perf.script_times.put(script_time);
+        perf.draw_times.put(watch.get());
+
+        perf.prev_frame_end = watch.end;
+        perf.frame_count ++;
+        perf.since_checkpoint ++;
+
+        float elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(watch.end - perf.prev_checkpoint).count();
+
+        if (elapsed >= 1000) {
+            perf.prev_checkpoint = watch.end;
+
+            perf.fps = perf.since_checkpoint;
+            perf.since_checkpoint = 0;
+
+            perf.mspt = (perf.fps == 0) ? 0 : (elapsed / perf.fps);
+        }
+
     }
 
     void Manager::ProcessEvents()

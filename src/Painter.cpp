@@ -1513,6 +1513,11 @@ namespace grvl {
         }
     }
 
+    void Painter::DrawString(Font* Font, int16_t Xpos, int16_t Ypos, const std::string& Text, uint32_t text_color, uint32_t background) const
+    {
+        DisplayAntialiasedString(Font, Xpos, Ypos, Text.c_str(), text_color, background);
+    }
+
     void Painter::DisplayAntialiasedString(Font* Font, int16_t Xpos, int16_t Ypos, const char* Text,
                                            uint32_t text_color, uint32_t background) const
     {

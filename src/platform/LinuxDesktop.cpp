@@ -54,6 +54,8 @@ namespace grvl {
 
     void LinuxDesktopApp::Swap()
     {
+        Stopwatch watch {};
+
         void* pixels = 0;
         int pitch;
 
@@ -67,6 +69,8 @@ namespace grvl {
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, texture, nullptr, nullptr);
         SDL_RenderPresent(renderer);
+
+        Manager::GetInstance().perf.swap_times.put(watch.stop());
     }
 
     void LinuxDesktopApp::Poll()

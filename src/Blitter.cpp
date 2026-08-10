@@ -148,7 +148,7 @@ namespace grvl {
             ocol = icol;
         }
 
-        ocol = FastConvertPixel<4>(&ocol, Format::ARGB8888, ofmt);
+        ocol = FastConvertPixel<sizeof(ocol), Format::ARGB8888, ofmt>(&ocol);
         memcpy((void*)omem, &ocol, ostride);
     }
 

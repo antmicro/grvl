@@ -758,6 +758,8 @@ namespace grvl {
 
     void LinuxNativeApp::Swap()
     {
+        Stopwatch watch {};
+
         const uint32_t row_bytes = width * 4;
         auto* dst = static_cast<uint8_t*>(primary.map);
         auto* src = reinterpret_cast<const uint8_t*>(framebuffer);
@@ -772,6 +774,8 @@ namespace grvl {
                 memcpy(dst, src, row_bytes);
             }
         }
+
+        Manager::GetInstance().perf.swap_times.put(watch.stop());
     }
 
     void LinuxNativeApp::Poll()

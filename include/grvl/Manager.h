@@ -46,6 +46,7 @@
 #include <grvl/Mutex.h>
 #include <grvl/Painter.h>
 #include <grvl/Queue.h>
+#include <grvl/Misc.h>
 #include <grvl/XMLSupport.h>
 
 #include <tinyxml2.h>
@@ -57,10 +58,38 @@
 #include <map>
 #include <unordered_map>
 #include <vector>
+#include <chrono>
 
 using namespace tinyxml2;
 
 namespace grvl {
+
+    struct Performance {
+
+        static constexpr int samples = 128;
+
+        enum Overlay {
+            NONE,
+            MINIMAL,
+            FULL
+        };
+
+        Overlay overlay = NONE;
+        size_t frame_count = 0;
+        size_t since_checkpoint = 0;
+
+        size_t fps = 0;
+        float mspt = 0;
+        size_t js_time_this_frame = 0;
+
+        SimpleRing<uint32_t, samples> draw_times;
+        SimpleRing<uint32_t, samples> script_times;
+        SimpleRing<uint32_t, samples> swap_times;
+
+        std::chrono::time_point<PerfClock> prev_frame_end = PerfClock::now();
+        std::chrono::time_point<PerfClock> prev_checkpoint = PerfClock::now();
+
+    };
 
     using FontLoader = std::function<void(const std::string& name)>;
 
@@ -351,6 +380,7 @@ namespace grvl {
         Manager& SetFontCallback(const FontLoader& callback);
 
         Painter painter; // TODO
+        Performance perf;
 
         Component* FindElementInTheActiveScreenById(const char* id);
 
@@ -421,6 +451,8 @@ namespace grvl {
         void ShowPopup();
 
         void ApplyTransparency();
+
+        void DrawOverlay();
 
         Event::CallbackPointer GetCallbackFromContainer(const std::string& name) const;
     };

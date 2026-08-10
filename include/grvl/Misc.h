@@ -23,8 +23,12 @@
 #include <ctype.h>
 #include <stdint.h>
 #include <string>
+#include <array>
+#include <chrono>
 
 namespace grvl {
+
+    using PerfClock = std::chrono::steady_clock;
 
     template <typename T>
     static inline void string_to_lower(T& s)
@@ -35,6 +39,67 @@ namespace grvl {
             i++;
         }
     }
+
+    struct Stopwatch {
+
+        using Point = std::chrono::time_point<PerfClock>;
+
+        Point begin;
+        Point end;
+
+        Stopwatch() {
+            end = begin = PerfClock::now();
+        }
+
+        size_t stop() {
+            end = PerfClock::now();
+            return get();
+        }
+
+        template <typename Unit = std::chrono::nanoseconds>
+        size_t get() const {
+            return std::chrono::duration_cast<Unit>(end - begin).count();
+        }
+
+    };
+
+    template <typename T, size_t S>
+    class SimpleRing
+    {
+        std::array<T, S> buffer;
+        size_t index = 0;
+
+    public:
+
+        SimpleRing() {
+            for (T& v : buffer) {
+                v = 0;
+            }
+        }
+
+        void put(const T& value) {
+            buffer[index] = value;
+
+            index++;
+            if (index >= S) {
+                index = 0;
+            }
+        }
+
+        uint64_t sum() const {
+            uint64_t total = 0;
+            for (auto i : buffer) total += i;
+            return total;
+        }
+
+        uint64_t avg() const {
+            return static_cast<uint64_t>(sum() / static_cast<float>(S));
+        }
+
+        const std::array<T, S>& view() const {
+            return buffer;
+        }
+    };
 
     int32_t Clamp(int32_t val, int32_t left, int32_t right);
 

@@ -185,6 +185,8 @@ namespace grvl {
 
         void DrawHLine(int32_t Xpos, int32_t Ypos, int32_t Length, uint32_t text_color) const;
 
+        void DrawString(Font* Font, int16_t Xpos, int16_t Ypos, const std::string& Text, uint32_t text_color, uint32_t background = 0) const;
+
         void DisplayAntialiasedString(Font* Font, int16_t Xpos, int16_t Ypos, const char* Text, uint32_t text_color, uint32_t background = 0) const;
         void DisplayAntialiasedChar(Font* Font, uint16_t Xpos, uint16_t Ypos, uint32_t Index, uint32_t text_color, uint32_t background = 0) const;
         void DrawAntialiasedChar(Font* Font, int16_t Xpos, int16_t Ypos, uint32_t Index, uint32_t text_color, uint32_t background = 0) const;

@@ -6,7 +6,7 @@
 #include <zephyr/dt-bindings/input/input-event-codes.h>
 
 // TODO: rename to 'grvl' - can't do it now as it conflicts with the demo
-LOG_MODULE_REGISTER(lib_grvl, CONFIG_APP_LOG_LEVEL);
+LOG_MODULE_REGISTER(lib_grvl, LOG_LEVEL_INF);
 
 static void ZephyrInputCallback(input_event *evt, void *user_data) {
     static_cast<grvl::ZephyrApp*>(grvl::Application::GetInstance())->HandleInput(evt);
@@ -119,7 +119,9 @@ namespace grvl {
 
     void ZephyrApp::Swap()
     {
-       display_write(display_device, 0, 0, &display_descriptor, framebuffer);
+        Stopwatch watch {};
+        display_write(display_device, 0, 0, &display_descriptor, framebuffer);
+        Manager::GetInstance().perf.swap_times.put(watch.stop());
     }
 
     void ZephyrApp::Poll()

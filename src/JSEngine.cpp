@@ -171,10 +171,14 @@ namespace grvl {
 
     void JSEngine::ExecutePreparedJavaScriptFunctionCall(const char* functionName, int numOfArgs)
     {
+        Stopwatch watch {};
+
         if (duk_pcall(ctx, numOfArgs) != 0) {
             Log(ERROR, "Error while trying to execute JavaScript function call %s: %s", functionName, duk_safe_to_string(ctx, -1));
         }
         duk_pop(ctx);
+
+        Manager::GetInstance().perf.js_time_this_frame += watch.stop();
     }
 
     void JSEngine::ExecuteJavaScriptCallback(const char* functionName, void* caller, const Event::ArgVector& args)

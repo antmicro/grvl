@@ -10,7 +10,7 @@
 
 #include <soc.h>
 
-LOG_MODULE_REGISTER(dma2d, CONFIG_APP_LOG_LEVEL);
+LOG_MODULE_REGISTER(dma2d, LOG_LEVEL_INF);
 
 static DMA2D_HandleTypeDef hal_dma2d;
 static bool dma_in_progress = true;
