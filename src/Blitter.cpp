@@ -107,12 +107,16 @@ namespace grvl {
     template <size_t stride, typename T>
     static uint32_t FastConvertPixel(const T* data, Format input, Format output)
     {
+        if constexpr (stride == 0) {
+            return 0;
+        }
+
         uint32_t color = 0;
         memcpy(&color, data, stride);
         return ConvertColorFormat(color, input, output);
     }
 
-    template <size_t stride, bool transparency>
+    template <bool transparency, size_t istride, size_t bstride, size_t ostride>
     static void PixelFormatConvert(uintptr_t imem, uintptr_t bmem, uintptr_t omem, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCLT)
     {
         uint32_t icol = 0;
@@ -120,14 +124,14 @@ namespace grvl {
         uint32_t ocol = 0;
 
         // dummy case
-        if constexpr (stride == 0) {
+        if constexpr (istride == 0 || ostride == 0) {
             return;
         }
 
         if(GetFormatUsesColorLookup(ifmt)) {
             icol = LookupClt((uint8_t*)imem, ifmt, (uint8_t*)frontCLT);
         } else {
-            icol = FastConvertPixel<stride>((const unsigned char*)imem, ifmt, Format::ARGB8888);
+            icol = FastConvertPixel<istride>((const unsigned char*)imem, ifmt, Format::ARGB8888);
             if((ifmt == Format::A8) || (ifmt == Format::AXXX8888)) {
                 icol = (icol & 0xff000000) | (font_color & 0x00ffffff);
             }
@@ -137,27 +141,24 @@ namespace grvl {
             if(GetFormatUsesColorLookup(bfmt)) {
                 bcol = LookupClt((uint8_t*)bmem, bfmt, (uint8_t*)backCLT);
             } else {
-                bcol = FastConvertPixel<stride>((const unsigned char*)bmem, bfmt, Format::ARGB8888);
+                bcol = FastConvertPixel<bstride>((const unsigned char*)bmem, bfmt, Format::ARGB8888);
             }
             ocol = Blend(bcol, icol);
         } else {
             ocol = icol;
         }
 
-        ocol = FastConvertPixel<stride>(&ocol, Format::ARGB8888, ofmt);
-        memcpy((void*)omem, &ocol, stride);
+        ocol = FastConvertPixel<4>(&ocol, Format::ARGB8888, ofmt);
+        memcpy((void*)omem, &ocol, ostride);
     }
 
-    template <size_t ostride, bool transparency>
-    static void FastBlitPixel(uintptr_t omem, uintptr_t imem, uintptr_t bmem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff,
+    template <bool transparency, size_t istride, size_t bstride, size_t ostride>
+    static void FastBlitPixel_tibo(uintptr_t omem, uintptr_t imem, uintptr_t bmem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff,
         uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL)
     {
-        const uint32_t istride = GetFormatStride(ifmt);
-        const uint32_t bstride = transparency ? GetFormatStride(bfmt) : 0;
-
         for (uint32_t y = 0; y < rows; y++) {
             for (uint32_t x = 0; x < columns; x++) {
-                PixelFormatConvert<ostride, transparency>(imem, bmem, omem, ifmt, bfmt, ofmt, font_color, backCLT, frontCTL);
+                PixelFormatConvert<transparency, istride, bstride, ostride>(imem, bmem, omem, ifmt, bfmt, ofmt, font_color, backCLT, frontCTL);
                 omem += ostride;
                 imem += istride;
                 bmem += bstride;
@@ -169,29 +170,74 @@ namespace grvl {
         }
     }
 
+    template <bool transparency, size_t istride, size_t bstride>
+    static void FastBlitPixel_tib(uintptr_t omem, uintptr_t imem, uintptr_t bmem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff,
+        uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL)
+    {
+        const uint32_t ostride = GetFormatStride(ofmt);
+
+        const BakedBlitFunc func[5] = {
+            FastBlitPixel_tibo<transparency, istride, bstride, 0>,
+            FastBlitPixel_tibo<transparency, istride, bstride, 1>,
+            FastBlitPixel_tibo<transparency, istride, bstride, 2>,
+            FastBlitPixel_tibo<transparency, istride, bstride, 3>,
+            FastBlitPixel_tibo<transparency, istride, bstride, 4>
+        };
+
+        // bake stride into the function so that memcpy call can be optimized away
+        func[ostride](omem, imem, bmem, columns, rows, ioff, boff, ooff, ifmt, bfmt, ofmt, font_color, backCLT, frontCTL);
+    }
+
+    template <bool transparency, size_t istride>
+    static void FastBlitPixel_ti(uintptr_t omem, uintptr_t imem, uintptr_t bmem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff,
+        uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL)
+    {
+        const uint32_t bstride = transparency ? GetFormatStride(bfmt) : 0;
+
+        const BakedBlitFunc func[5] = {
+            FastBlitPixel_tib<transparency, istride, 0>,
+            FastBlitPixel_tib<transparency, istride, 1>,
+            FastBlitPixel_tib<transparency, istride, 2>,
+            FastBlitPixel_tib<transparency, istride, 3>,
+            FastBlitPixel_tib<transparency, istride, 4>
+        };
+
+        func[bstride](omem, imem, bmem, columns, rows, ioff, boff, ooff, ifmt, bfmt, ofmt, font_color, backCLT, frontCTL);
+    }
+
+    template <bool transparency>
+    static void FastBlitPixel_t(uintptr_t omem, uintptr_t imem, uintptr_t bmem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff,
+        uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL)
+    {
+        const uint32_t istride = GetFormatStride(ifmt);
+
+        const BakedBlitFunc func[5] = {
+            FastBlitPixel_ti<transparency, 0>,
+            FastBlitPixel_ti<transparency, 1>,
+            FastBlitPixel_ti<transparency, 2>,
+            FastBlitPixel_ti<transparency, 3>,
+            FastBlitPixel_ti<transparency, 4>
+        };
+
+        func[istride](omem, imem, bmem, columns, rows, ioff, boff, ooff, ifmt, bfmt, ofmt, font_color, backCLT, frontCTL);
+    }
+
     void FallbackBlitClt(uintptr_t imem, uintptr_t bmem, uintptr_t omem,
         uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff,
         uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL)
     {
         const uint32_t ostride = GetFormatStride(ofmt);
+        const uint32_t istride = GetFormatStride(ifmt);
         const bool blend = GetFormatAlphaChannel(ifmt) && (bmem != 0);
 
-        const BakedBlitFunc func[10] = {
-            FastBlitPixel<0, false>, // this is a dummy case
-            FastBlitPixel<1, false>,
-            FastBlitPixel<2, false>,
-            FastBlitPixel<3, false>,
-            FastBlitPixel<4, false>,
-
-            FastBlitPixel<0, true>, // this is a dummy case
-            FastBlitPixel<1, true>,
-            FastBlitPixel<2, true>,
-            FastBlitPixel<3, true>,
-            FastBlitPixel<4, true>
+        const BakedBlitFunc func[2] = {
+            FastBlitPixel_t<false>,
+            FastBlitPixel_t<true>
         };
 
-        // bake stride into the function so that memcpy call can be optimized away
-        func[ostride + blend * 5](omem, imem, bmem, columns, rows, ioff, boff, ooff, ifmt, bfmt, ofmt, font_color, backCLT, frontCTL);
+        // we will now jump though a chain of functions lookups in a effort to bake strides into the functions at compile time
+        // so that memcpy call can be optimized away instead of making a call to glibc
+        func[blend](omem, imem, bmem, columns, rows, ioff, boff, ooff, ifmt, bfmt, ofmt, font_color, backCLT, frontCTL);
     }
 
     void FallbackBlit(uintptr_t imem, uintptr_t bmem, uintptr_t omem,
