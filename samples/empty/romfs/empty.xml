@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doc>
+	<guiConfig debugDot="1"/>
+	<customView id="home" backgroundColor="#FF4444ff"/>
+</doc>

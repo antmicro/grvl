@@ -1,0 +1,152 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Benjamin Jurewicz <bjurewicz@internships.antmicro.com>
+Date: Thu, 23 Jul 2026 00:00:00 +0200
+Subject: [PATCH] zvfs: fix Picolibc FILE descriptor abstraction
+
+Picolibc expects FILE to contain libc-specific callbacks and state, but
+zvfs_fdopen() currently returns a pointer to an internal fdtable entry.
+Consequently, stdio operations interpret fdtable fields as callbacks and
+attempt to execute invalid addresses.
+
+Allocate and initialize a buffered Picolibc FILE object for ZVFS-backed
+descriptors, and recover the stored descriptor in fileno().
+
+Signed-off-by: Benjamin Jurewicz <bjurewicz@internships.antmicro.com>
+---
+ lib/os/zvfs/zvfs_fdtable.c | 91 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 91 insertions(+)
+
+diff --git a/lib/os/zvfs/zvfs_fdtable.c b/lib/os/zvfs/zvfs_fdtable.c
+index fbf55c77a1b..bdc93f8acc3 100644
+--- a/lib/os/zvfs/zvfs_fdtable.c
++++ b/lib/os/zvfs/zvfs_fdtable.c
+@@ -16,9 +16,14 @@
+  */
+ 
+ #include <errno.h>
++#include <stdlib.h>
+ #include <string.h>
+ #include <stdio.h>
+ 
++#ifdef CONFIG_PICOLIBC
++#include <stdio-bufio.h>
++#endif
++
+ #include <zephyr/kernel.h>
+ #include <zephyr/sys/fdtable.h>
+ #include <zephyr/sys/speculation.h>
+@@ -427,25 +432,111 @@ int zvfs_close(int fd)
+ 	return res;
+ }
+ 
++#ifdef CONFIG_PICOLIBC
++off_t zvfs_lseek(int fd, off_t offset, int whence);
++
++static ssize_t picolibc_zvfs_read(int fd, void *buf, size_t size)
++{
++	return zvfs_read(fd, buf, size, NULL);
++}
++
++static ssize_t picolibc_zvfs_write(int fd, const void *buf, size_t size)
++{
++	return zvfs_write(fd, buf, size, NULL);
++}
++
++static int picolibc_mode_flags(const char *mode)
++{
++	int flags = 0;
++
++	if (mode == NULL) {
++		return 0;
++	}
++
++	switch (mode[0]) {
++	case 'r':
++		flags = __SRD;
++		break;
++	case 'w':
++	case 'a':
++		flags = __SWR;
++		break;
++	default:
++		return 0;
++	}
++
++	if (strchr(mode, '+') != NULL) {
++		flags = __SRD | __SWR;
++	}
++
++	return flags;
++}
++#endif
++
+ FILE *zvfs_fdopen(int fd, const char *mode)
+ {
++#ifdef CONFIG_PICOLIBC
++	struct __file_bufio *stream;
++#else
+ 	ARG_UNUSED(mode);
++#endif
+ 
+ 	if (_check_fd(fd) < 0) {
+ 		return NULL;
+ 	}
+ 
++#ifdef CONFIG_PICOLIBC
++	stream = malloc(sizeof(*stream) + BUFSIZ);
++	if (stream == NULL) {
++		errno = ENOMEM;
++		return NULL;
++	}
++
++	*stream = (struct __file_bufio)FDEV_SETUP_BUFIO(
++		fd, (char *)(stream + 1), BUFSIZ, picolibc_zvfs_read, picolibc_zvfs_write,
++		zvfs_lseek, zvfs_close, picolibc_mode_flags(mode), __BFALL);
++
++#ifdef __STDIO_BUFIO_LOCKING
++	__bufio_lock_init(&stream->xfile.cfile.file);
++#endif
++
++	return &stream->xfile.cfile.file;
++#else
+ 	return (FILE *)&fdtable[fd];
++#endif
+ }
+ 
+ int zvfs_fileno(FILE *file)
+ {
++#ifdef CONFIG_PICOLIBC
++	const struct __file_bufio *stream;
++	int fd;
++
++	if (file == stdin) {
++		return 0;
++	}
++	if (file == stdout) {
++		return 1;
++	}
++	if (file == stderr) {
++		return 2;
++	}
++
++	stream = (const struct __file_bufio *)file;
++	fd = POINTER_TO_INT(stream->ptr);
++	if (_check_fd(fd) < 0) {
++		return -1;
++	}
++
++	return fd;
++#else
+ 	if (!IS_ARRAY_ELEMENT(fdtable, file)) {
+ 		errno = EBADF;
+ 		return -1;
+ 	}
+ 
+ 	return (struct fd_entry *)file - fdtable;
++#endif
+ }
+ 
+ int zvfs_fstat(int fd, struct zvfs_stat *buf)
+-- 
+2.50.1
+

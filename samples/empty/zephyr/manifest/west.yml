@@ -1,0 +1,18 @@
+manifest:
+  remotes:
+    - name: zephyrproject-rtos
+      url-base: https://github.com/zephyrproject-rtos
+    - name: antmicro
+      url-base: https://github.com/antmicro
+  projects:
+    - name: zephyr
+      remote: zephyrproject-rtos
+      revision: 3a6406439c5a7c55e932df21df4aa290e0fb7751
+      import:
+        name-allowlist:
+          - cmsis_6
+          - hal_stm32
+    - name: grvl
+      path: modules/grvl
+      url: https://github.com/antmicro/grvl.git
+      revision: HEAD~0

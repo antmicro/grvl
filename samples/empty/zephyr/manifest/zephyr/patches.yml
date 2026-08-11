@@ -1,0 +1,17 @@
+checkout-command: git checkout .
+clean-command: git clean -d -f -x
+patches:
+- author: Benjamin Jurewicz
+  date: '2026-07-23'
+  email: bjurewicz@internships.antmicro.com
+  module: zephyr
+  path: zvfs-fix-picolibc-FILE-fd-abstraction.patch
+  sha256sum: 466babaa24b0aecd8a9426a4128b7cc42967fc5207e0e2564034d2c0b366d15d
+  upstreamable: true
+- author: Maksymilian Goryszewski
+  date: '2026-04-24'
+  email: mgoryszewski@internships.antmicro.com
+  module: zephyr
+  path: change-memory-region-used-by-malloc.patch
+  sha256sum: 135c291db4200cfe73464c8c532c2190b2ebad9d798aef6a217a101168e01161
+  upstreamable: false

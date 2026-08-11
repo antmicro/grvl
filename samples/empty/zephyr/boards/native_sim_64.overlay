@@ -1,0 +1,4 @@
+&sdl_dc {
+	height = <480>;
+	width = <800>;
+};
