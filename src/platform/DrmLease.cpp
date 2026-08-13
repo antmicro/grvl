@@ -1,20 +1,20 @@
 
-#include <grvl/grvl.h>
 #include <grvl/Misc.h>
+#include <grvl/grvl.h>
 
-#include <cstring>
-#include <cerrno>
-#include <xcb/randr.h>
-#include <xcb/xcb.h>
-#include <vector>
-#include <unordered_map>
-#include <functional>
+#include "grvl/platform/DrmLease.h"
 #include <algorithm>
-#include <unistd.h>
+#include <cerrno>
+#include <cstring>
+#include <functional>
+#include <memory>
 #include <string>
 #include <sys/stat.h>
-#include <memory>
-#include "grvl/platform/DrmLease.h"
+#include <unistd.h>
+#include <unordered_map>
+#include <vector>
+#include <xcb/randr.h>
+#include <xcb/xcb.h>
 
 namespace grvl {
 
@@ -28,15 +28,17 @@ namespace grvl {
         std::string name;
         int score;
 
-        const char* str() const {
+        const char* str() const
+        {
             return name.c_str();
         }
     };
 
-    static bool GetDrmDeviceNumber(int fd, dev_t& device) {
+    static bool GetDrmDeviceNumber(int fd, dev_t& device)
+    {
         struct stat info {};
 
-        if (fstat(fd, &info) != 0) {
+        if(fstat(fd, &info) != 0) {
             Log(ERROR, "Failed to identify DRM device for file descriptor %d: %s", fd, strerror(errno));
             return false;
         }
@@ -45,49 +47,51 @@ namespace grvl {
         return true;
     }
 
-    static int GetUseCount(const std::unordered_map<xcb_randr_crtc_t, int>& counts, xcb_randr_crtc_t crtc) {
+    static int GetUseCount(const std::unordered_map<xcb_randr_crtc_t, int>& counts, xcb_randr_crtc_t crtc)
+    {
         auto it = counts.find(crtc);
 
-        if (it == counts.end()) {
+        if(it == counts.end()) {
             return 0;
         }
 
         return it->second;
     }
 
-    static xcb_randr_crtc_t PickCrtc(xcb_connection_t* connection, const std::unordered_map<xcb_randr_crtc_t, int>& counts, const xcb_randr_get_output_info_reply_t* info) {
-        if (info->crtc != XCB_NONE) {
+    static xcb_randr_crtc_t PickCrtc(xcb_connection_t* connection, const std::unordered_map<xcb_randr_crtc_t, int>& counts, const xcb_randr_get_output_info_reply_t* info)
+    {
+        if(info->crtc != XCB_NONE) {
             return (GetUseCount(counts, info->crtc) == 1) ? info->crtc : XCB_NONE;
         }
 
         xcb_randr_crtc_t* crtcs = xcb_randr_get_output_info_crtcs(info);
 
-        for (int i = 0; i < info->num_crtcs; i++) {
-            if (GetUseCount(counts, crtcs[i]) == 0) return crtcs[i];
+        for(int i = 0; i < info->num_crtcs; i++) {
+            if(GetUseCount(counts, crtcs[i]) == 0)
+                return crtcs[i];
         }
 
         return XCB_NONE;
     }
 
-
-    static int GetConnectorId(xcb_connection_t* connection, xcb_randr_output_t output, xcb_atom_t atom) {
-        if (atom == XCB_ATOM_NONE) {
+    static int GetConnectorId(xcb_connection_t* connection, xcb_randr_output_t output, xcb_atom_t atom)
+    {
+        if(atom == XCB_ATOM_NONE) {
             return -1;
         }
 
         xcb_randr_get_output_property_reply_t* reply = xcb_randr_get_output_property_reply(
             connection,
             xcb_randr_get_output_property(connection, output, atom, XCB_ATOM_NONE, 0, 1, false, false),
-            nullptr
-        );
+            nullptr);
 
-        if (!reply) {
+        if(!reply) {
             return -1;
         }
 
         int id = -1;
 
-        if (reply->format == 32 && reply->num_items == 1 && xcb_randr_get_output_property_data_length(reply) >= 4) {
+        if(reply->format == 32 && reply->num_items == 1 && xcb_randr_get_output_property_data_length(reply) >= 4) {
             memcpy(&id, xcb_randr_get_output_property_data(reply), sizeof(id));
         }
 
@@ -95,14 +99,14 @@ namespace grvl {
         return id;
     }
 
-    static xcb_atom_t GetAtom(xcb_connection_t* connection, const char* name) {
+    static xcb_atom_t GetAtom(xcb_connection_t* connection, const char* name)
+    {
         xcb_intern_atom_reply_t* reply = xcb_intern_atom_reply(
             connection,
             xcb_intern_atom(connection, true, strlen(name), name),
-            nullptr
-        );
+            nullptr);
 
-        if (!reply) {
+        if(!reply) {
             return XCB_ATOM_NONE;
         }
 
@@ -111,51 +115,50 @@ namespace grvl {
         return atom;
     }
 
-    static std::vector<RandrOutput> GetOutputs(xcb_connection_t* connection, const std::function<int(const RandrOutput&)>& judge) {
+    static std::vector<RandrOutput> GetOutputs(xcb_connection_t* connection, const std::function<int(const RandrOutput&)>& judge)
+    {
         xcb_atom_t atom = GetAtom(connection, "CONNECTOR_ID");
 
         std::unordered_map<xcb_randr_crtc_t, int> counts;
         std::vector<RandrOutput> results;
         xcb_screen_iterator_t it = xcb_setup_roots_iterator(xcb_get_setup(connection));
 
-        while (it.rem) {
+        while(it.rem) {
 
             xcb_window_t root = it.data->root;
 
             auto* resources = xcb_randr_get_screen_resources_current_reply(
                 connection,
                 xcb_randr_get_screen_resources_current(connection, root),
-                nullptr
-            );
+                nullptr);
 
-            if (!resources) {
+            if(!resources) {
                 xcb_screen_next(&it);
                 continue;
             }
 
             xcb_randr_output_t* outputs = xcb_randr_get_screen_resources_current_outputs(resources);
 
-            for (int i = 0; i < resources->num_outputs; i ++) {
+            for(int i = 0; i < resources->num_outputs; i++) {
 
                 xcb_randr_output_t output = outputs[i];
 
                 auto* info = xcb_randr_get_output_info_reply(
                     connection,
                     xcb_randr_get_output_info(connection, output, resources->config_timestamp),
-                    nullptr
-                );
+                    nullptr);
 
-                if (!info) {
+                if(!info) {
                     continue;
                 }
 
-                if (info->connection != XCB_RANDR_CONNECTION_CONNECTED) {
+                if(info->connection != XCB_RANDR_CONNECTION_CONNECTED) {
                     free(info);
                     continue;
                 }
 
                 int name_len = xcb_randr_get_output_info_name_length(info);
-                const char* buffer = (const char *) xcb_randr_get_output_info_name(info);
+                const char* buffer = (const char*)xcb_randr_get_output_info_name(info);
 
                 char name[name_len + 1];
                 memcpy(name, buffer, name_len);
@@ -166,16 +169,16 @@ namespace grvl {
                 result.name = name;
                 result.output = output;
                 result.connector_id = GetConnectorId(connection, output, atom);
-                result.info = c_unique_ptr<xcb_randr_get_output_info_reply_t> {info};
+                result.info = c_unique_ptr<xcb_randr_get_output_info_reply_t> { info };
                 result.score = judge(result);
 
-                counts[info->crtc] ++;
+                counts[info->crtc]++;
 
                 results.push_back(std::move(result));
             }
 
             // second pass to pick CRTCs
-            for (RandrOutput& result : results) {
+            for(RandrOutput& result : results) {
                 result.crtc = PickCrtc(connection, counts, result.info.get());
             }
 
@@ -183,7 +186,7 @@ namespace grvl {
             xcb_screen_next(&it);
         }
 
-        std::sort(results.begin(), results.end(), [] (const RandrOutput& l, const RandrOutput& r) {
+        std::sort(results.begin(), results.end(), [](const RandrOutput& l, const RandrOutput& r) {
             return l.score > r.score;
         });
 
@@ -192,22 +195,23 @@ namespace grvl {
 
     // implementation
 
-    int LeaseDriver(int driver_fd, uint32_t preferred_connector_id) {
+    int LeaseDriver(int driver_fd, uint32_t preferred_connector_id)
+    {
         dev_t driver_device;
-        if (!GetDrmDeviceNumber(driver_fd, driver_device)) {
+        if(!GetDrmDeviceNumber(driver_fd, driver_device)) {
             return -1;
         }
 
         int default_screen = 0;
         xcb_connection_t* connection = xcb_connect(nullptr, &default_screen);
 
-        if (!connection || xcb_connection_has_error(connection)) {
+        if(!connection || xcb_connection_has_error(connection)) {
             Log(ERROR, "Can't connect to X11");
             return -1;
         }
 
         const xcb_query_extension_reply_t* extension = xcb_get_extension_data(connection, &xcb_randr_id);
-        if (!extension || !extension->present) {
+        if(!extension || !extension->present) {
             Log(ERROR, "RandR extension not supported");
             return -1;
         }
@@ -215,15 +219,14 @@ namespace grvl {
         xcb_randr_query_version_reply_t* version = xcb_randr_query_version_reply(
             connection,
             xcb_randr_query_version(connection, 1, 6),
-            nullptr
-        );
+            nullptr);
 
-        if (!version) {
+        if(!version) {
             Log(ERROR, "Failed to query XRandR version");
             return -1;
         }
 
-        if ((version->major_version < 1) || (version->major_version == 1 && version->minor_version < 6)) {
+        if((version->major_version < 1) || (version->major_version == 1 && version->minor_version < 6)) {
             Log(ERROR, "XRandR version >= 1.6 required, but not supported");
             free(version);
             return -1;
@@ -233,21 +236,20 @@ namespace grvl {
 
         // Consider all outputs but first try the ones matching the given preferred_connector_id, by sorting them
         // in descending order by the score returned by the given scoring function
-        std::vector<RandrOutput> outputs = GetOutputs(connection, [preferred = preferred_connector_id] (const RandrOutput& output) {
+        std::vector<RandrOutput> outputs = GetOutputs(connection, [preferred = preferred_connector_id](const RandrOutput& output) {
             return output.connector_id == preferred ? 100 : 0;
         });
 
-        for (int i = 0; i < outputs.size(); i ++) {
+        for(int i = 0; i < outputs.size(); i++) {
             const RandrOutput& output = outputs.at(i);
             xcb_randr_lease_t id = xcb_generate_id(connection);
 
             xcb_randr_create_lease_reply_t* reply = xcb_randr_create_lease_reply(
-                    connection,
-                    xcb_randr_create_lease(connection, output.root, id, 1, 1, &output.crtc, &output.output),
-                    nullptr
-            );
+                connection,
+                xcb_randr_create_lease(connection, output.root, id, 1, 1, &output.crtc, &output.output),
+                nullptr);
 
-            if (!reply) {
+            if(!reply) {
                 Log(ERROR, "Failed to lease output #%d '%s' (DRM connector: %d): XRandR failed to create a lease", i, output.str(), output.connector_id);
                 continue;
             }
@@ -255,24 +257,26 @@ namespace grvl {
             int lease_fd = -1;
             int* fds = xcb_randr_create_lease_reply_fds(connection, reply);
 
-            if (fds) {
-                if (reply->nfd >= 1) lease_fd = fds[0];
-                for (int i = 1; i < reply->nfd; i++) close(fds[i]);
+            if(fds) {
+                if(reply->nfd >= 1)
+                    lease_fd = fds[0];
+                for(int i = 1; i < reply->nfd; i++)
+                    close(fds[i]);
             }
             free(reply);
 
-            if (lease_fd < 0) {
+            if(lease_fd < 0) {
                 Log(ERROR, "Failed to lease output #%d '%s' (DRM connector: %d): No file descriptor returned", i, output.str(), output.connector_id);
                 continue;
             }
 
             dev_t lease_device;
-            if (!GetDrmDeviceNumber(lease_fd, lease_device)) {
+            if(!GetDrmDeviceNumber(lease_fd, lease_device)) {
                 close(lease_fd);
                 continue;
             }
 
-            if (lease_device != driver_device) {
+            if(lease_device != driver_device) {
                 Log(INFO, "Ignoring XRandR output #%d '%s' (DRM connector: %d): lease belongs to another DRM device", i, output.str(), output.connector_id);
                 close(lease_fd);
                 continue;
@@ -283,7 +287,7 @@ namespace grvl {
             return lease_fd;
         }
 
-        if (!outputs.empty()) {
+        if(!outputs.empty()) {
             Log(ERROR, "XRandR outputs found, but none could be leased!");
         } else {
             Log(ERROR, "No leasable XRandR outputs found!");
