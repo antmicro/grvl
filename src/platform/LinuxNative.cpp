@@ -388,23 +388,32 @@ namespace grvl {
 
     void LinuxNativeApp::CloseDriver()
     {
-        if (fd == -1) {
+        if (fd < 0) {
             return;
         }
 
         if (resource) {
             drmModeFreeResources(resource);
+            resource = nullptr;
         }
 
         if (conn) {
             drmModeFreeConnector(conn);
+            conn = nullptr;
         }
 
         if (encoder) {
             drmModeFreeEncoder(encoder);
+            encoder = nullptr;
         }
 
-        close(fd);
+        mode = nullptr;
+        crtc_index = -1;
+
+        if (fd >= 0) {
+            close(fd);
+            fd = -1;
+        }
     }
 
     bool LinuxNativeApp::InitDriver(int driver, uint16_t width, uint16_t height, uint32_t refresh, int requested_connector_id)
@@ -414,12 +423,14 @@ namespace grvl {
         this->resource = drmModeGetResources(fd);
         if (!resource) {
             Log(ERROR, "Unable to get DRM resources!");
+            CloseDriver();
             return false;
         }
 
         this->conn = PickConnector(fd, resource, requested_connector_id);
         if (!conn) {
             Log(ERROR, "Unable to pick DRM connection!");
+            CloseDriver();
             return false;
         }
 
@@ -442,12 +453,14 @@ namespace grvl {
             this->resource = drmModeGetResources(fd);
             if (!resource) {
                 Log(ERROR, "Unable to get DRM resources!");
+                CloseDriver();
                 return false;
             }
 
             this->conn = PickConnector(fd, resource, requested_connector_id);
             if (!conn) {
                 Log(ERROR, "Unable to pick DRM connection!");
+                CloseDriver();
                 return false;
             }
         }
@@ -455,12 +468,14 @@ namespace grvl {
         this->mode = PickMode(conn, width, height, refresh);
         if (!mode) {
             Log(ERROR, "Unable to pick DRM mode!");
+            CloseDriver();
             return false;
         }
 
         this->encoder = drmModeGetEncoder(fd, conn->encoder_id);
         if (!encoder) {
             Log(ERROR, "Unable to get DRM encoder!");
+            CloseDriver();
             return false;
         }
 
