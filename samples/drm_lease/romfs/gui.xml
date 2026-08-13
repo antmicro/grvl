@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doc>
+    <stylesheet></stylesheet>
+    <script src="callbacks.js" />
+
+    <customView id="home" backgroundColor="#FF000000">
+        <label id="title"
+               x="20" y="18" width="760" height="28"
+               text="GRVL DRM Lease Test"
+               alignment="Left" textColor="#FFFFFFFF" />
+
+        <label id="description"
+               x="20" y="50" width="760" height="24"
+               text="GRVL is rendering this physical display while X keeps GPU access through a DRM lease."
+               alignment="Left" textColor="#FFD0D0D0" />
+
+        <textInput id="text_input"
+                   x="20" y="92" width="520" height="34"
+                   borderType="box" borderArcRadius="13"
+                   textColor="#FFECEDEE"
+                   borderColor="#FF1A1A1A" activeBorderColor="#FF3359EC"
+                   backgroundColor="#FF1A1A1A"
+                   basicText="Type here to test keyboard input..."
+                   onTextInput="OnTextInput" onSubmit="OnTextSubmit" />
+
+        <button id="exit_button"
+                text="Exit"
+                x="560" y="92" width="100" height="34"
+                onClick="OnExitButton"
+                backgroundColor="#FFBF2A2A" activeBackgroundColor="#FFFF4A4A" />
+
+        <label id="input_status"
+               x="20" y="140" width="760" height="24"
+               text="Type above to verify keyboard input; click Exit to verify pointer input."
+               alignment="Left" textColor="#FFA2A2A2" />
+    </customView>
+</doc>
