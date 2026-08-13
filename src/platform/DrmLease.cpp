@@ -3,6 +3,7 @@
 #include <grvl/Misc.h>
 
 #include <cstring>
+#include <cerrno>
 #include <xcb/randr.h>
 #include <xcb/xcb.h>
 #include <vector>
@@ -11,6 +12,7 @@
 #include <algorithm>
 #include <unistd.h>
 #include <string>
+#include <sys/stat.h>
 #include <memory>
 #include "grvl/platform/DrmLease.h"
 
@@ -30,6 +32,18 @@ namespace grvl {
             return name.c_str();
         }
     };
+
+    static bool GetDrmDeviceNumber(int fd, dev_t& device) {
+        struct stat info {};
+
+        if (fstat(fd, &info) != 0) {
+            Log(ERROR, "Failed to identify DRM device for file descriptor %d: %s", fd, strerror(errno));
+            return false;
+        }
+
+        device = info.st_rdev;
+        return true;
+    }
 
     static int GetUseCount(const std::unordered_map<xcb_randr_crtc_t, int>& counts, xcb_randr_crtc_t crtc) {
         auto it = counts.find(crtc);
@@ -179,6 +193,11 @@ namespace grvl {
     // implementation
 
     int LeaseDriver(int driver_fd, uint32_t preferred_connector_id) {
+        dev_t driver_device;
+        if (!GetDrmDeviceNumber(driver_fd, driver_device)) {
+            return -1;
+        }
+
         int default_screen = 0;
         xcb_connection_t* connection = xcb_connect(nullptr, &default_screen);
 
@@ -244,6 +263,18 @@ namespace grvl {
 
             if (lease_fd < 0) {
                 Log(ERROR, "Failed to lease output #%d '%s' (DRM connector: %d): No file descriptor returned", i, output.str(), output.connector_id);
+                continue;
+            }
+
+            dev_t lease_device;
+            if (!GetDrmDeviceNumber(lease_fd, lease_device)) {
+                close(lease_fd);
+                continue;
+            }
+
+            if (lease_device != driver_device) {
+                Log(INFO, "Ignoring XRandR output #%d '%s' (DRM connector: %d): lease belongs to another DRM device", i, output.str(), output.connector_id);
+                close(lease_fd);
                 continue;
             }
 
