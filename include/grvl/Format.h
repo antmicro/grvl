@@ -35,6 +35,26 @@ namespace grvl {
         AXXX8888 = 10,
     };
 
+    template <template<Format> typename F, typename... Args>
+    constexpr void static_format_lookup(Format format, Args... args)
+    {
+        switch (format) {
+
+            case Format::ARGB8888: F<Format::ARGB8888>{}(args...); break;
+            case Format::RGB888: F<Format::RGB888>{}(args...); break;
+            case Format::RGB565: F<Format::RGB565>{}(args...); break;
+            case Format::ARGB1555: F<Format::ARGB1555>{}(args...); break;
+            case Format::ARGB4444: F<Format::ARGB4444>{}(args...); break;
+            case Format::L8: F<Format::L8>{}(args...); break;
+            case Format::AL44: F<Format::AL44>{}(args...); break;
+            case Format::AL88: F<Format::AL88>{}(args...); break;
+            case Format::A8: F<Format::A8>{}(args...); break;
+            case Format::ARGB6666: F<Format::ARGB6666>{}(args...); break;
+            case Format::AXXX8888: F<Format::AXXX8888>{}(args...); break;
+
+        }
+    }
+
     struct Color {
         uint8_t r = 0;
         uint8_t g = 0;

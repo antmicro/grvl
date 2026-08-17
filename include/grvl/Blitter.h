@@ -27,7 +27,6 @@ namespace grvl {
         uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL);
 
     uint32_t Blend(uint32_t bcol, uint32_t icol);
-    uint32_t LookupClt(uint8_t* mem, Format format, uint8_t* clt);
 
     void FallbackBlitClt(uintptr_t imem, uintptr_t bmem, uintptr_t omem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff,
         uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL);
