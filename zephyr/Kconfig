@@ -11,6 +11,12 @@ config GRVL_HAS_STM32_DMA2D
     bool
     default y if HAS_STM32CUBE
 
+config GRVL_ENABLE_DEFAULT_BLITTER
+    bool "Use default blitter"
+    default n
+    help
+        Enable the default blitter implemented in C++.
+
 config GRVL_USE_STM32_DMA2D
     bool "Use DMA2D acceleration"
     default y

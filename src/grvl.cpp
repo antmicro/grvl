@@ -68,9 +68,9 @@ namespace grvl {
             n_callbacks->blit_clt = UseBlitAsBlitClt;
         }
 
-        if (n_callbacks->fill == nullptr) n_callbacks->fill = FallbackFill;
-        if (n_callbacks->blit == nullptr) n_callbacks->blit = FallbackBlit;
-        if (n_callbacks->blit_clt == nullptr) n_callbacks->blit_clt = FallbackBlitClt;
+        if (n_callbacks->fill == nullptr) n_callbacks->fill = GetFillFunction();
+        if (n_callbacks->blit == nullptr) n_callbacks->blit = GetBlitFunction();
+        if (n_callbacks->blit_clt == nullptr) n_callbacks->blit_clt = GetBlitCltFunction();
 
         // those should probably be set for grvl to be usefull but let's not crash if they are not
         if (n_callbacks->set_layer_pointer == nullptr) n_callbacks->set_layer_pointer = NoOpSetLayerPointer;

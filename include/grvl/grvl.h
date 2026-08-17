@@ -25,20 +25,11 @@
 #include <sys/time.h>
 #include <grvl/Format.h>
 #include <grvl/Log.h>
+#include <grvl/Blitter.h>
 
 #include <duktape.h>
 
 namespace grvl {
-
-    using DmaFillFunction = void (*) (uintptr_t dst, uint32_t xs, uint32_t ys, uint32_t offset, uint32_t color_index, Format pixel_format);
-
-    using DmaBlitFunction = void (*) (uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem, uint32_t PixelPerLine,
-                              uint32_t NumberOfLine, uint32_t inOffset, uint32_t backgroundOffset, uint32_t outOffset,
-                              Format inPixelFormat, Format backgroundPixelFormat, Format outPixelFormat, uint32_t frontColor);
-
-    using DmaBlitCltFunction = void (*) (uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem, uint32_t PixelPerLine,
-                              uint32_t NumberOfLine, uint32_t inOffset, uint32_t backgroundOffset, uint32_t outOffset,
-                              Format inPixelFormat, Format backgroundPixelFormat, Format outPixelFormat, uint32_t frontColor, uintptr_t backCLT, uintptr_t frontCTL);
 
     typedef struct {
         DmaFillFunction fill;

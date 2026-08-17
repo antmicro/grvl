@@ -19,9 +19,17 @@
 #include <grvl/ImageContent.h>
 #include <grvl/grvl.h>
 
+// unless stated otherwise enable default blitter
+#ifndef __ZEPHYR__
+#ifndef CONFIG_GRVL_ENABLE_DEFAULT_BLITTER
+#define CONFIG_GRVL_ENABLE_DEFAULT_BLITTER 1
+#endif
+#endif
+
 namespace grvl {
 
-    uint32_t FormatToDma2d(Format format) {
+    uint32_t FormatToDma2d(Format format)
+    {
         if (format == Format::ARGB8888) return 0x00000000;
         if (format == Format::RGB888) return 0x00000001;
         if (format == Format::RGB565) return 0x00000002;
@@ -36,24 +44,6 @@ namespace grvl {
 
         return 0;
     }
-
-    /*
-     * Fallback Blitter
-     */
-
-    void UseBlitAsBlitClt(uintptr_t imem, uintptr_t bmem, uintptr_t omem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff,
-        uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL)
-    {
-        // we ignore those and use color index directly as brightness
-        // this is fine in most cases (e.g. when we load the image from file)
-        (void) backCLT;
-        (void) frontCTL;
-
-        grvl::Callbacks()->blit(imem, bmem, omem, columns, rows, ioff, boff, ooff, ifmt, bfmt, ofmt, font_color);
-    }
-
-    using BakedFillFunc = void (*) (uint8_t* dst, uint32_t color, uint32_t columns, uint32_t rows, uint32_t offset);
-    using BakedBlitFunc = void (*) (uintptr_t omem, uintptr_t imem, uintptr_t bmem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff, uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL);
 
     // Based on the ST documentation
     uint32_t Blend(uint32_t bcol, uint32_t icol)
@@ -76,6 +66,26 @@ namespace grvl {
 
         return fc.pack(Format::ARGB8888);
     }
+
+    void UseBlitAsBlitClt(uintptr_t imem, uintptr_t bmem, uintptr_t omem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff,
+        uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL)
+    {
+        // we ignore those and use color index directly as brightness
+        // this is fine in most cases (e.g. when we load the image from file)
+        (void) backCLT;
+        (void) frontCTL;
+
+        grvl::Callbacks()->blit(imem, bmem, omem, columns, rows, ioff, boff, ooff, ifmt, bfmt, ofmt, font_color);
+    }
+
+#if CONFIG_GRVL_ENABLE_DEFAULT_BLITTER
+
+    /*
+     * Default Blitter
+     */
+
+    using BakedFillFunc = void (*) (uint8_t* dst, uint32_t color, uint32_t columns, uint32_t rows, uint32_t offset);
+    using BakedBlitFunc = void (*) (uintptr_t omem, uintptr_t imem, uintptr_t bmem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff, uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL);
 
     template <Format format>
     static uint32_t LookupClt(uint8_t* mem, uint8_t* clt)
@@ -235,7 +245,7 @@ namespace grvl {
 
     };
 
-    void FallbackBlitClt(uintptr_t imem, uintptr_t bmem, uintptr_t omem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff, uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL)
+    static void DefaultBlitClt(uintptr_t imem, uintptr_t bmem, uintptr_t omem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff, uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL)
     {
         const bool blend = GetFormatAlphaChannel(ifmt) && (bmem != 0);
 
@@ -248,15 +258,15 @@ namespace grvl {
         blit(omem, imem, bmem, columns, rows, ioff, boff, ooff, ifmt, bfmt, ofmt, font_color, backCLT, frontCTL);
     }
 
-    void FallbackBlit(uintptr_t imem, uintptr_t bmem, uintptr_t omem,
+    void DefaultBlit(uintptr_t imem, uintptr_t bmem, uintptr_t omem,
         uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff,
         uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color)
     {
-        FallbackBlitClt(imem, bmem, omem, columns, rows, ioff, boff, ooff, ifmt, bfmt, ofmt, font_color, 0, 0);
+        DefaultBlitClt(imem, bmem, omem, columns, rows, ioff, boff, ooff, ifmt, bfmt, ofmt, font_color, 0, 0);
     }
 
     /*
-     * Fallback Filler
+     * Default Filler
      */
 
     template <size_t stride>
@@ -277,7 +287,7 @@ namespace grvl {
     }
 
 
-    void FallbackFill(uintptr_t dst, uint32_t columns, uint32_t rows, uint32_t offset, uint32_t color_index, Format pixel_format)
+    static void DefaultFill(uintptr_t dst, uint32_t columns, uint32_t rows, uint32_t offset, uint32_t color_index, Format pixel_format)
     {
         const uint32_t color = ConvertColorFormat(color_index, Format::ARGB8888, pixel_format);
         const uint32_t stride = GetFormatStride(pixel_format);
@@ -290,6 +300,47 @@ namespace grvl {
         };
 
         func[stride - 1]((uint8_t*) dst, color, columns, rows, offset);
+    }
+
+#endif
+
+    /*
+     * Fallback
+     */
+
+    static void FallbackFill(uintptr_t dst, uint32_t columns, uint32_t rows, uint32_t offset, uint32_t color_index, Format fmt) {}
+    static void FallbackBlit(uintptr_t imem, uintptr_t bmem, uintptr_t omem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff,  uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t fcol) {}
+    static void FallbackBlitClt(uintptr_t imem, uintptr_t bmem, uintptr_t omem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff, uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t bctl, uintptr_t fctl) {}
+
+    /*
+     * Getters
+     */
+
+    DmaFillFunction GetFillFunction()
+    {
+#if CONFIG_GRVL_ENABLE_DEFAULT_BLITTER
+        return DefaultFill;
+#else
+        return FallbackFill;
+#endif
+    }
+
+    DmaBlitFunction GetBlitFunction()
+    {
+#if CONFIG_GRVL_ENABLE_DEFAULT_BLITTER
+        return DefaultBlit;
+#else
+        return FallbackBlit;
+#endif
+    }
+
+    DmaBlitCltFunction GetBlitCltFunction()
+    {
+#if CONFIG_GRVL_ENABLE_DEFAULT_BLITTER
+        return DefaultBlitClt;
+#else
+        return FallbackBlitClt;
+#endif
     }
 
 }
