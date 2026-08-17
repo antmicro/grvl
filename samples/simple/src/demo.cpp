@@ -27,11 +27,13 @@ int main()
     auto ttf = std::make_shared<grvl::TrueTypeData>(ROMFS_PATH "/fonts/Roboto.ttf.gz");
 
     // fonts
-    manager.AddFontToFontContainer("normal", new grvl::TrueTypeFont(ttf, 10));
+    manager.AddFontToFontContainer("normal", new grvl::TrueTypeFont(ttf, 20));
     manager.AddFontToFontContainer("mona10", new grvl::TrueTypeFont(ttf, 12));
     manager.AddFontToFontContainer("mona12", new grvl::TrueTypeFont(ttf, 14));
     manager.AddFontToFontContainer("mona14", new grvl::TrueTypeFont(ttf, 16));
     manager.AddFontToFontContainer("mona16", new grvl::TrueTypeFont(ttf, 18));
+
+    manager.perf.overlay = grvl::Performance::FULL;
 
     manager.SetLoaderCallback([] (const std::string& name) {
 
@@ -72,10 +74,6 @@ int main()
         frames ++;
 
         app->Render();
-
-        // draw directly over the framebuffer
-        grvl::Font* font = manager.GetFontFromContainer("mona16");
-        manager.painter.DisplayAntialiasedString(font, 2, 16, "Hello Overlay!", 0xffff0000);
 
         grvl::JSEngine::MakeJavaScriptFunctionCall("UpdateCurrentTime");
         grvl::JSEngine::MakeJavaScriptFunctionCall("UpdatePositionOfCurrentTimeLine");
