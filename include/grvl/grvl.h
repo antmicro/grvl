@@ -40,9 +40,6 @@ namespace grvl {
         void (*set_layer_pointer)(uintptr_t addr);
         void (*wait_for_vsync)();
         void (*flipping_completed)();
-
-        [[deprecated("Use .logger")]]
-        void (*gui_printf)(const char* text, va_list argList);
         uint64_t (*get_timestamp)(void);
     } gui_callbacks_t;
 

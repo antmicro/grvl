@@ -542,9 +542,6 @@ namespace grvl {
 
     void VerticalScrollView::CheckPlacement()
     {
-        if(!grvl::Callbacks()->gui_printf) {
-            return;
-        }
         if(header) {
             header->CheckPlacement();
         }

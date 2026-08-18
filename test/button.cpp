@@ -15,17 +15,10 @@ duk_ret_t SimpleJavascriptCallback(duk_context* ctx)
     return 0;
 }
 
-static void PrintfNewline(const char* text, va_list argList)
-{
-    vprintf(text, argList);
-    printf("\n");
-}
-
 TEST_CASE("Button Component", "[component]")
 {
 
     gui_callbacks_t callbacks {};
-    callbacks.gui_printf = PrintfNewline;
     grvl::grvl::Init(&callbacks);
 
     Manager::Initialize(50, 50, 4, false);
@@ -73,7 +66,6 @@ TEST_CASE("Checkbox Component", "[component]")
 {
 
     gui_callbacks_t callbacks {};
-    callbacks.gui_printf = PrintfNewline;
     grvl::grvl::Init(&callbacks);
 
     Manager::Initialize(50, 50, 4, false);

@@ -40,26 +40,11 @@ namespace grvl {
         }
 
         if (n_callbacks->logger == nullptr) {
-            if (n_callbacks->gui_printf == nullptr) {
 
-                // used standard print if there is no callback set
-                n_callbacks->logger = [] (LogLevel level, const char* message) {
-                    printf("%s: %s\n", LogLevelToString(level), message);
-                };
-            } else {
-
-                // route to the old callback if it is set
-                n_callbacks->logger = [] (LogLevel level, const char* message) {
-                    static auto CallLegacyPrint = [] (const char* format, ...) {
-                        va_list list;
-                        va_start(list, format);
-                        grvl::Callbacks()->gui_printf(format, list);
-                        va_end(list);
-                    };
-
-                    CallLegacyPrint("%s: %s\n", LogLevelToString(level), message);
-                };
-            }
+            // use standard print if there is no callback set
+            n_callbacks->logger = [] (LogLevel level, const char* message) {
+                printf("%s: %s\n", LogLevelToString(level), message);
+            };
         }
 
         // this avoids a terrible performance regression for users that did not define blit_clt but require

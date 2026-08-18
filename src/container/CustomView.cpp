@@ -212,10 +212,6 @@ namespace grvl {
 
     void CustomView::CheckPlacement()
     {
-        if(!grvl::Callbacks()->gui_printf) {
-            return;
-        }
-
         if(header) {
             header->CheckPlacement();
         }
