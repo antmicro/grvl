@@ -40,6 +40,8 @@ if(GRVL_BUILT_WITH_LINUX_NATIVE)
   pkg_check_modules(LIBUDEV REQUIRED IMPORTED_TARGET libudev)
   pkg_check_modules(LIBINPUT REQUIRED IMPORTED_TARGET libinput)
   pkg_check_modules(XKBCOMMON REQUIRED IMPORTED_TARGET xkbcommon)
+  pkg_check_modules(XCBRANDR REQUIRED IMPORTED_TARGET xcb-randr)
+  pkg_check_modules(XCB REQUIRED IMPORTED_TARGET xcb)
 endif()
 
 set_and_check(@CMAKE_PROJECT_NAME@_INCLUDE_DIRS "@PACKAGE_INCLUDE_INSTALL_DIR@")
