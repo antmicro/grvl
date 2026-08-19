@@ -23,7 +23,7 @@ namespace grvl {
 
     class JSObject {
     public:
-        static constexpr const char* C_OBJECT_POINTER_KEY{"ptr"};
+        static constexpr const char* C_OBJECT_POINTER_KEY { "ptr" };
     };
 
 } /* namespace grvl */

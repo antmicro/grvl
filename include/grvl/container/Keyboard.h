@@ -18,9 +18,9 @@
 #define GRVL_KEYBOARD_H_
 
 #include <grvl/Event.h>
-#include <grvl/container/Popup.h>
-#include <grvl/component/TextInput.h>
 #include <grvl/XMLSupport.h>
+#include <grvl/component/TextInput.h>
+#include <grvl/container/Popup.h>
 
 #include <array>
 #include <stdint.h>
@@ -30,10 +30,14 @@ namespace grvl {
     class Keyboard : public Popup {
     public:
         Keyboard()
-            : Popup{} {}
+            : Popup {}
+        {
+        }
 
         Keyboard(int32_t x, int32_t y, int32_t width, int32_t height)
-            : Popup{x, y, width, height} {}
+            : Popup { x, y, width, height }
+        {
+        }
 
         static Keyboard* BuildFromXML(XMLElement* xmlElement);
 
@@ -45,7 +49,7 @@ namespace grvl {
         void SetAutoPopup(bool value) { autoPopup = value; }
 
     private:
-        TextInput* currentDestinationInput{nullptr};
+        TextInput* currentDestinationInput { nullptr };
         bool autoPopup = true;
     };
 

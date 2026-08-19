@@ -17,8 +17,8 @@
 #ifndef GRVL_CANVAS_H_
 #define GRVL_CANVAS_H_
 
-#include <grvl/component/Component.h>
 #include <grvl/Painter.h>
+#include <grvl/component/Component.h>
 #include <grvl/grvl.h>
 
 namespace grvl {
@@ -29,7 +29,9 @@ namespace grvl {
         Canvas() = default;
 
         Canvas(int32_t x, int32_t y, int32_t width, int32_t height)
-            : Component{x, y, width, height} {}
+            : Component { x, y, width, height }
+        {
+        }
 
         Canvas(const Canvas& other) = default;
         Canvas& operator=(const Canvas& other) = default;

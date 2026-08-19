@@ -17,11 +17,11 @@
 #ifndef GRVL_FILE_H_
 #define GRVL_FILE_H_
 
-#include <stdint.h>
-#include <unordered_map>
-#include <string>
-#include <vector>
 #include <cstring>
+#include <stdint.h>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 namespace grvl {
 

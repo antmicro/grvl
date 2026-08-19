@@ -26,7 +26,7 @@ namespace grvl {
         ScrollPanel() = default;
 
         ScrollPanel(int32_t x, int32_t y, int32_t width, int32_t height)
-            : VerticalScrollView{x, y, width, height}
+            : VerticalScrollView { x, y, width, height }
         {
         }
 

@@ -17,8 +17,8 @@
 #ifndef GRVL_LISTITEM_H_
 #define GRVL_LISTITEM_H_
 
-#include <grvl/component/AbstractButton.h>
 #include <grvl/Font.h>
+#include <grvl/component/AbstractButton.h>
 
 #include <tinyxml2.h>
 
@@ -118,15 +118,15 @@ namespace grvl {
         void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
 
     protected:
-        std::string Description{};
-        Font* DescriptionFont{nullptr};
-        uint32_t DescriptionColor{COLOR_ARGB8888_LIGHTGRAY};
-        uint32_t ActiveDescriptionColor{COLOR_ARGB8888_BLACK};
-        Image AdditionalImge{};
-        Component* Parent{nullptr};
+        std::string Description {};
+        Font* DescriptionFont { nullptr };
+        uint32_t DescriptionColor { COLOR_ARGB8888_LIGHTGRAY };
+        uint32_t ActiveDescriptionColor { COLOR_ARGB8888_BLACK };
+        Image AdditionalImge {};
+        Component* Parent { nullptr };
 
         // This image is used to make rounding corners. It should be an antialiased circle.
-        Image roundingImage{};
+        Image roundingImage {};
         static ItemType ParseListItemTypeOrDefault(const char* value, ItemType defaultValue);
     };
 

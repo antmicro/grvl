@@ -17,10 +17,10 @@
 #ifndef GRVL_VERTICALSCROLLVIEW_H_
 #define GRVL_VERTICALSCROLLVIEW_H_
 
-#include <grvl/container/AbstractView.h>
-#include <grvl/component/ListItem.h>
 #include <grvl/Mutex.h>
 #include <grvl/Painter.h>
+#include <grvl/component/ListItem.h>
+#include <grvl/container/AbstractView.h>
 
 namespace grvl {
 
@@ -28,14 +28,15 @@ namespace grvl {
     ///
     class VerticalScrollView : public AbstractView {
     public:
-
         VerticalScrollView()
             : AbstractView()
-        {}
+        {
+        }
 
         VerticalScrollView(int32_t x, int32_t y, int32_t width, int32_t height)
             : AbstractView(x, y, width, height)
-        {}
+        {
+        }
 
         void AddElement(Component* component) override;
         void RemoveElement(const char* elementId) override;
@@ -82,32 +83,32 @@ namespace grvl {
         GENERATE_DUK_INT_SETTER(VerticalScrollView, Scroll, SetScrollingValue)
 
     protected:
-        int32_t Scroll{0};
-        int32_t ScrollMax{0};
-        int32_t ScrollChange{0};
-        int32_t prevDeltaY{0};
-        int32_t prevDeltaX{0};
-        int32_t itemsHeight{0};
-        int8_t animation{0};
-        float dSpeed{0};
-        uint32_t ElementColor{COLOR_ARGB8888_BROWN};
-        uint32_t SplitLineColor{COLOR_ARGB8888_TRANSPARENT};
-        uint64_t scrollingTimestamp{0};
-        bool scrollingEnabled{false};
-        bool overscrollBarEnabled{false};
-        bool scrollingByFinger{false};
-        int32_t overscrollBarSize{50};
-        int32_t currentOverscrollBarSize{0};
-        uint32_t overscrollBarColor{COLOR_ARGB8888_LIGHTGRAY};
-        uint8_t currentSample{0};
+        int32_t Scroll { 0 };
+        int32_t ScrollMax { 0 };
+        int32_t ScrollChange { 0 };
+        int32_t prevDeltaY { 0 };
+        int32_t prevDeltaX { 0 };
+        int32_t itemsHeight { 0 };
+        int8_t animation { 0 };
+        float dSpeed { 0 };
+        uint32_t ElementColor { COLOR_ARGB8888_BROWN };
+        uint32_t SplitLineColor { COLOR_ARGB8888_TRANSPARENT };
+        uint64_t scrollingTimestamp { 0 };
+        bool scrollingEnabled { false };
+        bool overscrollBarEnabled { false };
+        bool scrollingByFinger { false };
+        int32_t overscrollBarSize { 50 };
+        int32_t currentOverscrollBarSize { 0 };
+        uint32_t overscrollBarColor { COLOR_ARGB8888_LIGHTGRAY };
+        uint8_t currentSample { 0 };
         int32_t speedSamples[3];
-        uint64_t scrollIndicatorTimestamp{0};
-        uint32_t scrollIndicatorColor{0};
-        uint8_t scrollIndicatorOpacity{0};
-        ImageContent* scrollIndicatorImage{nullptr};
+        uint64_t scrollIndicatorTimestamp { 0 };
+        uint32_t scrollIndicatorColor { 0 };
+        uint8_t scrollIndicatorOpacity { 0 };
+        ImageContent* scrollIndicatorImage { nullptr };
 
-        Mutex ClearWhileDrawMutex{};
-        Mutex ClearWhileTouchMutex{};
+        Mutex ClearWhileDrawMutex {};
+        Mutex ClearWhileTouchMutex {};
 
         virtual void AdjustScrollViewHeight(Component* child);
 

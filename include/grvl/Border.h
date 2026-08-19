@@ -18,8 +18,8 @@
 #define GRVL_BORDER_H_
 
 #include <cstdint>
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
 
 namespace grvl {
 
@@ -37,14 +37,13 @@ namespace grvl {
         static BorderTypeBits ParseBorderTypeFromString(const std::string& BorderType);
 
     private:
-        inline static std::unordered_map<std::string, BorderTypeBits> BORDER_TYPE_BITS_MAPPINGS
-        {
-            {"none", BorderTypeBits::NONE},
-            {"box", BorderTypeBits::BOX},
-            {"top", BorderTypeBits::TOP},
-            {"right", BorderTypeBits::RIGHT},
-            {"bottom", BorderTypeBits::BOTTOM},
-            {"left", BorderTypeBits::LEFT}
+        inline static std::unordered_map<std::string, BorderTypeBits> BORDER_TYPE_BITS_MAPPINGS {
+            { "none", BorderTypeBits::NONE },
+            { "box", BorderTypeBits::BOX },
+            { "top", BorderTypeBits::TOP },
+            { "right", BorderTypeBits::RIGHT },
+            { "bottom", BorderTypeBits::BOTTOM },
+            { "left", BorderTypeBits::LEFT }
         };
     };
 

@@ -17,10 +17,10 @@
 #ifndef GRVL_KEYBOARD_KEY_H_
 #define GRVL_KEYBOARD_KEY_H_
 
-#include <grvl/component/Button.h>
 #include <grvl/Event.h>
 #include <grvl/JSObjectBuilder.h>
 #include <grvl/Painter.h>
+#include <grvl/component/Button.h>
 
 #include <tinyxml2.h>
 
@@ -33,10 +33,14 @@ namespace grvl {
     class KeyboardKey : public Button {
     public:
         KeyboardKey()
-            : Button{} {}
+            : Button {}
+        {
+        }
 
         KeyboardKey(int32_t x, int32_t y, int32_t width, int32_t height)
-            : Button{x, y, width, height} {}
+            : Button { x, y, width, height }
+        {
+        }
 
         void SetParentKeyboard(Keyboard* keyboard);
         Keyboard* GetParentKeyboard() const { return parentKeyboard; }
@@ -55,13 +59,13 @@ namespace grvl {
         static KeyboardKey* BuildFromXML(XMLElement* xmlElement);
 
     protected:
-        Keyboard* parentKeyboard{nullptr};
-        std::string secondaryText{};
-        Font* secondaryTextFont{nullptr};
-        uint32_t secondaryTextColor{0};
-        uint32_t activeSecondaryTextColor{0};
+        Keyboard* parentKeyboard { nullptr };
+        std::string secondaryText {};
+        Font* secondaryTextFont { nullptr };
+        uint32_t secondaryTextColor { 0 };
+        uint32_t activeSecondaryTextColor { 0 };
 
-        unsigned int currentTextValueIndex{0};
+        unsigned int currentTextValueIndex { 0 };
 
         void DrawText(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight) override;
     };

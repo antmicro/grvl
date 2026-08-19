@@ -17,17 +17,17 @@
 #ifndef GRVL_ICO_H_
 #define GRVL_ICO_H_
 
-#include <grvl/component/Component.h>
 #include <grvl/Font.h>
 #include <grvl/Painter.h>
+#include <grvl/component/Component.h>
 
 namespace grvl {
 
     /// Represents single-character icon.
     class Ico : public Component {
     protected:
-        int32_t IcoChar{-1};
-        Font* IcoFont{nullptr};
+        int32_t IcoChar { -1 };
+        Font* IcoFont { nullptr };
 
     public:
         Ico() = default;

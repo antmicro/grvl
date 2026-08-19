@@ -19,10 +19,10 @@
 
 #include <grvl/Definitions.h>
 #include <grvl/File.h>
+#include <grvl/Format.h>
 #include <grvl/Misc.h>
 #include <grvl/Painter.h>
 #include <grvl/grvl.h>
-#include <grvl/Format.h>
 
 #include <stdint.h>
 #include <stdio.h>
@@ -136,7 +136,7 @@ namespace grvl {
 
         uint32_t GetFrameDuration(uint32_t frame) const
         {
-            if (frame >= frameDurations.size()) {
+            if(frame >= frameDurations.size()) {
                 return 0;
             }
             return frameDurations[frame];
@@ -148,13 +148,11 @@ namespace grvl {
         }
 
     private:
-
         uint8_t* data;
         int32_t width, height, frames;
         Format format;
         std::vector<uint32_t> frameDurations;
         bool rotated = false;
-
     };
 
     /// Convert the pointed to pixel to a color, in the specific output format

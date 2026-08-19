@@ -19,8 +19,8 @@
 
 #include <functional>
 #include <stdint.h>
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace grvl {
 
@@ -56,7 +56,9 @@ namespace grvl {
         }
 
         Event(CallbackFunction eventCallback)
-            : eventCallback{std::move(eventCallback)} {}
+            : eventCallback { std::move(eventCallback) }
+        {
+        }
 
         Event& operator=(const Event& Obj);
 

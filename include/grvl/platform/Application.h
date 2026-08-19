@@ -16,7 +16,6 @@ namespace grvl {
     // it is recomended to create the instance before the main render loop and only destroy it after the loop exits.
     class Application {
     protected:
-
         int width = 100;
         int height = 100;
         bool sideways = false;
@@ -31,7 +30,6 @@ namespace grvl {
         virtual bool Setup() = 0;
 
     public:
-
         static void Init(Application* app);
         static Application* GetInstance();
 
@@ -53,7 +51,6 @@ namespace grvl {
         // Check if the application should exit the main loop and terminate,
         // for example due to the user closing the application window.
         virtual bool ShouldRun() const;
-
     };
 }
 

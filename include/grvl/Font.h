@@ -17,11 +17,11 @@
 #ifndef GRVL_Font_H_
 #define GRVL_Font_H_
 
-#include <stdint.h>
 #include <memory>
+#include <stdint.h>
+#include <string>
 #include <unordered_map>
 #include <vector>
-#include <string>
 
 struct stbtt_fontinfo;
 
@@ -37,7 +37,8 @@ namespace grvl {
         int16_t advance; // offset to the next character
 
         /// Get the number of bytes used by bitmap
-        constexpr uint32_t bytes() const {
+        constexpr uint32_t bytes() const
+        {
             return width * height;
         }
     };
@@ -51,7 +52,6 @@ namespace grvl {
     /// Represents font loaded into memory.
     class Font {
     public:
-
         Font() = default;
         Font(const Font& other) = delete;
         Font(Font&& other) = default;
@@ -77,10 +77,8 @@ namespace grvl {
         Glyph GetFallback();
 
     protected:
-
         std::unordered_map<uint32_t, Glyph> glyphs;
         int16_t height = 0;
-
     };
 
     /// Wraps a TTF file data.
@@ -108,7 +106,6 @@ namespace grvl {
         std::vector<char> m_buffer;
         std::string m_path;
         ::stbtt_fontinfo* m_info;
-
     };
 
     /// Class for loading of .TTF fonts.
@@ -120,7 +117,6 @@ namespace grvl {
     /// This font can be resized, and the file overhead shared between multiple instances.
     class TrueTypeFont : public Font {
     public:
-
         /// The given TrueTypeData must be valid for the entire lifetime of TrueTypeFont
         TrueTypeFont(const std::shared_ptr<const TrueTypeData>& data, int size);
 
@@ -134,12 +130,10 @@ namespace grvl {
         int8_t GetKerning(uint32_t leftCode, uint32_t rightCode) const override;
 
     private:
-
         float GetCodepointAdvance(int unicode, float scale) const;
 
         std::shared_ptr<const TrueTypeData> ttf;
         float scale;
-
     };
 
     /// Class for loading .GBF fonts.
@@ -150,16 +144,13 @@ namespace grvl {
     /// This font can't be resized.
     class GrvlBakedFont : public Font {
     public:
-
         GrvlBakedFont(const char* path);
 
         Glyph GetGlyph(uint32_t unicode) override;
         int8_t GetKerning(uint32_t leftCode, uint32_t rightCode) const override;
 
     private:
-
         std::unordered_map<uint64_t, int8_t> kernings;
-
     };
 
     /// Query information about Unicode codepoint from a UTF-8 pointer

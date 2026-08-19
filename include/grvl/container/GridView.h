@@ -17,9 +17,9 @@
 #ifndef GRVL_GRIDVIEW_H_
 #define GRVL_GRIDVIEW_H_
 
-#include <grvl/container/GridRow.h>
 #include <grvl/Manager.h>
 #include <grvl/Painter.h>
+#include <grvl/container/GridRow.h>
 #include <grvl/container/VerticalScrollView.h>
 
 #include <tinyxml2.h>
@@ -90,10 +90,10 @@ namespace grvl {
         static GridView* BuildFromXML(XMLElement* xmlElement);
 
     protected:
-        uint32_t ElementWidth{0};
-        uint32_t ElementHeight{0};
-        uint32_t HorizontalOffset{0};
-        uint32_t VerticalOffset{0};
+        uint32_t ElementWidth { 0 };
+        uint32_t ElementHeight { 0 };
+        uint32_t HorizontalOffset { 0 };
+        uint32_t VerticalOffset { 0 };
     };
 
 } /* namespace grvl */

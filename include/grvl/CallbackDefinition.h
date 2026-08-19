@@ -24,7 +24,7 @@
 namespace grvl {
 
     struct CallbackDefinition {
-        std::string functionName{""};
+        std::string functionName { "" };
         Event::ArgVector args;
     };
 

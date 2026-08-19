@@ -62,11 +62,11 @@ namespace grvl {
         TouchState GetState() const;
 
     private:
-        TouchState state{TouchState::Idle};
-        int32_t startX{0};
-        int32_t startY{0};
-        int32_t deltaX{0};
-        int32_t deltaY{0};
+        TouchState state { TouchState::Idle };
+        int32_t startX { 0 };
+        int32_t startY { 0 };
+        int32_t deltaX { 0 };
+        int32_t deltaY { 0 };
     };
 
 } /* namespace grvl */

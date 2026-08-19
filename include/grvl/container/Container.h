@@ -17,9 +17,9 @@
 #ifndef GRVL_CONTAINER_H_
 #define GRVL_CONTAINER_H_
 
+#include <grvl/Painter.h>
 #include <grvl/component/Component.h>
 #include <grvl/component/Image.h>
-#include <grvl/Painter.h>
 
 #include <tinyxml2.h>
 #include <vector>
@@ -72,11 +72,11 @@ namespace grvl {
 
     protected:
         std::vector<Component*> Elements;
-        Image* BackgroundImage{nullptr};
-        Component* lastActiveChild{nullptr};
+        Image* BackgroundImage { nullptr };
+        Component* lastActiveChild { nullptr };
         bool childDropped;
 
-        bool isSelection{false};
+        bool isSelection { false };
 
         virtual void InitFromXML(XMLElement* xmlElement);
 

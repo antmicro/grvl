@@ -17,25 +17,31 @@
 #ifndef GRVL_SEPARATOR_H_
 #define GRVL_SEPARATOR_H_
 
-#include <grvl/component/Component.h>
 #include <grvl/XMLSupport.h>
+#include <grvl/component/Component.h>
 
 #include <cstdint>
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
 
 namespace grvl {
 
     class Separator : public Component {
     public:
         Separator()
-            : Component{} {}
+            : Component {}
+        {
+        }
 
         Separator(int32_t x, int32_t y, int32_t width, int32_t height)
-            : Component{x, y, width, height} {}
+            : Component { x, y, width, height }
+        {
+        }
 
         Separator(const Separator& Other)
-            : Component{Other} {}
+            : Component { Other }
+        {
+        }
 
         static Separator* BuildFromXML(XMLElement* xmlElement);
 

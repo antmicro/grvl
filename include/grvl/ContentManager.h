@@ -17,11 +17,11 @@
 #ifndef GRVL_CONTENTMANAGER_H_
 #define GRVL_CONTENTMANAGER_H_
 
+#include <functional>
+#include <memory>
+#include <string>
 #include <unordered_map>
 #include <vector>
-#include <string>
-#include <memory>
-#include <functional>
 
 #include <grvl/ImageContent.h>
 
@@ -34,11 +34,12 @@ namespace grvl {
     /// thus this object should be queried for it each time it is used.
     class ImageDelegate {
     public:
-
         constexpr void Set(ImageContent* ptr)
         {
-            if (ptr == content) return;
-            if (content) delete content;
+            if(ptr == content)
+                return;
+            if(content)
+                delete content;
             this->content = ptr;
         }
 
@@ -64,7 +65,6 @@ namespace grvl {
     /// Represents manager for shared resources, e.g., image contents.
     class ContentManager {
     public:
-
         using LoaderCallback = std::function<void(const std::string&)>;
 
         virtual ~ContentManager() = default;
@@ -82,8 +82,7 @@ namespace grvl {
         std::shared_ptr<ImageDelegate> GetByName(const std::string& name);
 
     private:
-
-        LoaderCallback loader_callback = [] (const std::string& path) { /* do nothing */ };
+        LoaderCallback loader_callback = [](const std::string& path) { /* do nothing */ };
 
         // mapping of resource handles to resource delegates
         std::unordered_map<std::string, std::shared_ptr<ImageDelegate>> content_registry;

@@ -17,13 +17,12 @@
 #ifndef GRVL_GRAPH_H_
 #define GRVL_GRAPH_H_
 
-#include <grvl/component/Component.h>
 #include <grvl/Painter.h>
+#include <grvl/component/Component.h>
 
 #include <tinyxml2.h>
 
 #include <limits>
-
 
 using namespace tinyxml2;
 
@@ -34,7 +33,7 @@ namespace grvl {
         Graph() = default;
 
         Graph(int32_t x, int32_t y, int32_t width, int32_t height)
-            : Component{x, y, width, height}
+            : Component { x, y, width, height }
         {
         }
 
@@ -65,26 +64,26 @@ namespace grvl {
         static duk_ret_t JSClearDataWrapper(duk_context* ctx);
 
     private:
-        uint32_t HorizontalPadding{0};
-        uint32_t TopPadding{0};
-        uint32_t BottomPadding{0};
+        uint32_t HorizontalPadding { 0 };
+        uint32_t TopPadding { 0 };
+        uint32_t BottomPadding { 0 };
 
-        uint32_t TextVerticalOffset{0};
-        uint32_t TextColor{0};
-        Font* TextFont{nullptr};
+        uint32_t TextVerticalOffset { 0 };
+        uint32_t TextColor { 0 };
+        Font* TextFont { nullptr };
 
         bool HasGradientBackground() const { return GradientStartColor != 0 && GradientEndColor != 0; }
 
-        uint32_t GradientStartColor{0};
-        uint32_t GradientEndColor{0};
+        uint32_t GradientStartColor { 0 };
+        uint32_t GradientEndColor { 0 };
 
-        std::vector<float> graphData{};
+        std::vector<float> graphData {};
 
         struct CubicSpline {
-            std::vector<float> a{};
-            std::vector<float> b{};
-            std::vector<float> c{};
-            std::vector<float> d{};
+            std::vector<float> a {};
+            std::vector<float> b {};
+            std::vector<float> c {};
+            std::vector<float> d {};
 
             bool valid() const { return !a.empty() && !b.empty() && !c.empty() && !d.empty(); }
         };
@@ -92,14 +91,14 @@ namespace grvl {
         CubicSpline CubicSplineInterpolation(const std::vector<float>& dataValues);
         float EvaluateSplineCurve(float x);
 
-        CubicSpline cubicSpline{};
+        CubicSpline cubicSpline {};
 
-        float graphMinValue{std::numeric_limits<float>::max()};
-        float graphMaxValue{std::numeric_limits<float>::lowest()};
+        float graphMinValue { std::numeric_limits<float>::max() };
+        float graphMaxValue { std::numeric_limits<float>::lowest() };
 
         struct Point {
-            int32_t x{0};
-            int32_t y{0};
+            int32_t x { 0 };
+            int32_t y { 0 };
         };
 
         void DrawBackgroundItems(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight);

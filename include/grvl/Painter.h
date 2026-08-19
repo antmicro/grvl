@@ -17,13 +17,13 @@
 #ifndef GRVL_PAINTER_H_
 #define GRVL_PAINTER_H_
 
-#include <grvl/Format.h>
 #include <grvl/Font.h>
+#include <grvl/Format.h>
 
+#include <array>
+#include <stdint.h>
 #include <string>
 #include <vector>
-#include <stdint.h>
-#include <array>
 
 namespace grvl {
     class Image;
@@ -94,10 +94,10 @@ namespace grvl {
         uint8_t GetSwapperValue() const; // temporary
 
         struct DrawingBounds {
-            int32_t startX{0};
-            int32_t startY{0};
-            int32_t endX{0};
-            int32_t endY{0};
+            int32_t startX { 0 };
+            int32_t startY { 0 };
+            int32_t endX { 0 };
+            int32_t endY { 0 };
         };
 
         void ResetDrawingBounds();
@@ -121,8 +121,7 @@ namespace grvl {
         void FlipBuffers();
         void FlipSynchronizeBuffers();
 
-        enum class CircleQuarter : unsigned int
-        {
+        enum class CircleQuarter : unsigned int {
             TOP_LEFT = 0,
             TOP_RIGHT = 1,
             BOTTOM_RIGHT = 2,
@@ -228,8 +227,8 @@ namespace grvl {
         layer_t backLayerPointers[4];
         uint32_t backgroundColor;
         uint32_t XSize, YSize;
-        std::array<DrawingBounds, 16> drawingBoundsStack{};
-        std::size_t drawingBoundsStackIndex{0};
+        std::array<DrawingBounds, 16> drawingBoundsStack {};
+        std::size_t drawingBoundsStackIndex { 0 };
         uint8_t VisibleBuffer, ActiveBuffer;
         Image* BackgroundImage;
         ContentManager* contentManager;

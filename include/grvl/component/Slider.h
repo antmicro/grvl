@@ -17,13 +17,13 @@
 #ifndef GRVL_SLIDER_H_
 #define GRVL_SLIDER_H_
 
-#include <grvl/component/Component.h>
-#include <grvl/component/Image.h>
 #include <grvl/Painter.h>
 #include <grvl/XMLSupport.h>
+#include <grvl/component/Component.h>
+#include <grvl/component/Image.h>
 
-#include <tinyxml2.h>
 #include <string>
+#include <tinyxml2.h>
 
 using namespace tinyxml2;
 
@@ -156,30 +156,30 @@ namespace grvl {
         void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
 
     protected:
-        uint32_t BarColor{COLOR_ARGB8888_LIGHTGRAY};
-        uint32_t ActiveBarColor{COLOR_ARGB8888_GRAY};
-        uint32_t ScrollColor{COLOR_ARGB8888_LIGHTBLUE};
-        uint32_t ActiveScrollColor{COLOR_ARGB8888_BLUE};
-        uint32_t FrameColor{COLOR_ARGB8888_BLACK};
-        uint32_t SelectedFrameColor{COLOR_ARGB8888_BLACK};
-        uint32_t ScrollLength{0};
+        uint32_t BarColor { COLOR_ARGB8888_LIGHTGRAY };
+        uint32_t ActiveBarColor { COLOR_ARGB8888_GRAY };
+        uint32_t ScrollColor { COLOR_ARGB8888_LIGHTBLUE };
+        uint32_t ActiveScrollColor { COLOR_ARGB8888_BLUE };
+        uint32_t FrameColor { COLOR_ARGB8888_BLACK };
+        uint32_t SelectedFrameColor { COLOR_ARGB8888_BLACK };
+        uint32_t ScrollLength { 0 };
         // Min value in buisiness logic domain
-        float MinValue{0};
+        float MinValue { 0 };
         // Max value in buisiness logic domain
-        float MaxValue{0};
+        float MaxValue { 0 };
         // Current value normalised to 0..1 scale
-        float Position{0};
+        float Position { 0 };
         // Current value in buisiness logic domain
-        float Value{0};
+        float Value { 0 };
         // Value reported by onValueChange event
-        float ReportedValue{0};
-        Image ScrollImage{};
-        Event onValueChange{};
-        uint64_t PreviousValueUpdateTimestamp{0};
-        bool KeepBoundaries{false};
+        float ReportedValue { 0 };
+        Image ScrollImage {};
+        Event onValueChange {};
+        uint64_t PreviousValueUpdateTimestamp { 0 };
+        bool KeepBoundaries { false };
 
-        SliderScaleType ScaleType{SliderScaleType::CONTINUOUS};
-        uint8_t division{1};
+        SliderScaleType ScaleType { SliderScaleType::CONTINUOUS };
+        uint8_t division { 1 };
         uint32_t step;
 
         Font* SliderFont;

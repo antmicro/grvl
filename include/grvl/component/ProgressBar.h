@@ -17,8 +17,8 @@
 #ifndef GRVL_PROGRESSBAR_H_
 #define GRVL_PROGRESSBAR_H_
 
-#include <grvl/component/Component.h>
 #include <grvl/Painter.h>
+#include <grvl/component/Component.h>
 
 #include <tinyxml2.h>
 
@@ -65,7 +65,7 @@ namespace grvl {
         GENERATE_DUK_FLOAT_SETTER(ProgressBar, ProgressValue, SetProgressValue)
 
     protected:
-        float ProgressValue{0.0f};
+        float ProgressValue { 0.0f };
         virtual void InitFromXML(XMLElement* xmlElement);
     };
 

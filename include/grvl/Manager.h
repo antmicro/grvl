@@ -17,6 +17,11 @@
 #ifndef GRVL_MANAGER_H_
 #define GRVL_MANAGER_H_
 
+#include <grvl/Misc.h>
+#include <grvl/Mutex.h>
+#include <grvl/Painter.h>
+#include <grvl/Queue.h>
+#include <grvl/XMLSupport.h>
 #include <grvl/component/Button.h>
 #include <grvl/component/Checkbox.h>
 #include <grvl/component/CircleProgressBar.h>
@@ -43,22 +48,17 @@
 #include <grvl/container/ScrollPanel.h>
 #include <grvl/container/VerticalScrollView.h>
 #include <grvl/grvl.h>
-#include <grvl/Mutex.h>
-#include <grvl/Painter.h>
-#include <grvl/Queue.h>
-#include <grvl/Misc.h>
-#include <grvl/XMLSupport.h>
 
 #include <tinyxml2.h>
 
+#include <chrono>
+#include <map>
 #include <math.h>
+#include <string>
 #include <time.h>
 #include <unistd.h>
-#include <string>
-#include <map>
 #include <unordered_map>
 #include <vector>
-#include <chrono>
 
 using namespace tinyxml2;
 
@@ -88,7 +88,6 @@ namespace grvl {
 
         std::chrono::time_point<PerfClock> prev_frame_end = PerfClock::now();
         std::chrono::time_point<PerfClock> prev_checkpoint = PerfClock::now();
-
     };
 
     using FontLoader = std::function<void(const std::string& name)>;
@@ -401,8 +400,8 @@ namespace grvl {
 
         std::vector<Division*> Prefabs;
 
-        Keyboard* keyboard{nullptr};
-        TextInput* activeInput{nullptr};
+        Keyboard* keyboard { nullptr };
+        TextInput* activeInput { nullptr };
         std::vector<Popup*> PopupsContainer;
         Panel* TopPanel;
         Panel* BottomPanel;
@@ -434,7 +433,7 @@ namespace grvl {
         ContentManager contentManager;
         float initialTransparency, desiredTransparency, currentTransparency;
         uint64_t fadeBeginTimestamp, fadeEndTimestamp;
-        FontLoader font_callback = [] (const std::string& font) { /* do nothing */ };
+        FontLoader font_callback = [](const std::string& font) { /* do nothing */ };
 
         Mutex DrawMutex {};
 

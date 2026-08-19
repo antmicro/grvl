@@ -17,8 +17,8 @@
 #ifndef GRVL_GRIDROW_H_
 #define GRVL_GRIDROW_H_
 
-#include <grvl/container/Container.h>
 #include <grvl/Painter.h>
+#include <grvl/container/Container.h>
 
 #include <tinyxml2.h>
 
@@ -44,8 +44,10 @@ namespace grvl {
 
         GridRow(const GridRow& other)
             : Container(other)
-            , ElementWidth{other.ElementWidth}
-            , HorizontalOffset{other.HorizontalOffset} {}
+            , ElementWidth { other.ElementWidth }
+            , HorizontalOffset { other.HorizontalOffset }
+        {
+        }
 
         GridRow& operator=(const GridRow& other);
 
@@ -63,9 +65,9 @@ namespace grvl {
         void SetHorizontalOffset(int32_t horizontalOffset);
 
     protected:
-        int32_t ElementWidth{0};
-        int32_t HorizontalOffset{0};
-        bool ignoreTouchModificator{false};
+        int32_t ElementWidth { 0 };
+        int32_t HorizontalOffset { 0 };
+        bool ignoreTouchModificator { false };
 
         void ReorderElements();
     };

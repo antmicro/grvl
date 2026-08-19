@@ -5,9 +5,9 @@
 
 #include <cstdint>
 
-#include <zephyr/input/input.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/display.h>
+#include <zephyr/input/input.h>
 #include <zephyr/linker/devicetree_regions.h>
 
 namespace grvl {
@@ -38,8 +38,7 @@ namespace grvl {
         bool Setup() override;
 
     public:
-
-        void HandleInput(input_event *evt);
+        void HandleInput(input_event* evt);
 
         ZephyrApp(const device* display, bool rotate_sideways = false);
         ~ZephyrApp() override;
@@ -47,7 +46,6 @@ namespace grvl {
         void Render() override;
         void Swap() override;
         void Poll() override;
-
     };
 
 }

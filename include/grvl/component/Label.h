@@ -18,9 +18,9 @@
 #define GRVL_LABEL_H_
 
 #include <grvl/Alignment.h>
-#include <grvl/component/Component.h>
 #include <grvl/Font.h>
 #include <grvl/Painter.h>
+#include <grvl/component/Component.h>
 
 #include <duktape.h>
 #include <tinyxml2.h>
@@ -49,12 +49,11 @@ namespace grvl {
     ///
     class Label : public Component {
     public:
-
     protected:
         std::string Text;
-        HorizontalAlignment TextHorizontalAlignment{HorizontalAlignment::Center};
-        Font* TextFont{nullptr};
-        uint32_t TextColor{0};
+        HorizontalAlignment TextHorizontalAlignment { HorizontalAlignment::Center };
+        Font* TextFont { nullptr };
+        uint32_t TextColor { 0 };
 
     public:
         Label() = default;

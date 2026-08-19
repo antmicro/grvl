@@ -18,9 +18,9 @@
 #define GRVL_BUTTON_H_
 
 #include <grvl/Alignment.h>
-#include <grvl/component/AbstractButton.h>
 #include <grvl/Font.h>
 #include <grvl/Painter.h>
+#include <grvl/component/AbstractButton.h>
 
 #include <tinyxml2.h>
 
@@ -35,15 +35,15 @@ namespace grvl {
     };
 
     struct ButtonContentLayout {
-        int32_t imageX{0};
-        int32_t imageY{0};
-        bool hasImage{false};
-        int32_t textX{0};
-        int32_t textY{0};
-        bool hasText{0};
-        int32_t icoX{0};
-        int32_t icoY{0};
-        bool hasIco{false};
+        int32_t imageX { 0 };
+        int32_t imageY { 0 };
+        bool hasImage { false };
+        int32_t textX { 0 };
+        int32_t textY { 0 };
+        bool hasText { 0 };
+        int32_t icoX { 0 };
+        int32_t icoY { 0 };
+        bool hasIco { false };
     };
 
     /// Represents rectangle button.
@@ -159,18 +159,18 @@ namespace grvl {
         GENERATE_DUK_UNSIGNED_INT_SETTER(Button, ActiveIcoColor, SetActiveIcoColor)
 
     protected:
-        uint32_t TextColor{COLOR_ARGB8888_TRANSPARENT};
-        uint32_t ActiveTextColor{COLOR_ARGB8888_TRANSPARENT};
-        uint32_t IcoColor{COLOR_ARGB8888_TRANSPARENT};
-        uint32_t ActiveIcoColor{COLOR_ARGB8888_TRANSPARENT};
-        int32_t TextTopOffset{0};
+        uint32_t TextColor { COLOR_ARGB8888_TRANSPARENT };
+        uint32_t ActiveTextColor { COLOR_ARGB8888_TRANSPARENT };
+        uint32_t IcoColor { COLOR_ARGB8888_TRANSPARENT };
+        uint32_t ActiveIcoColor { COLOR_ARGB8888_TRANSPARENT };
+        int32_t TextTopOffset { 0 };
         int16_t IcoChar;
         Font* IcoFont;
         bool imageCentered;
-        HorizontalAlignment ContentAlignment{HorizontalAlignment::Center};
-        ButtonContentLayoutMode ContentLayoutMode{ButtonContentLayoutMode::Overlay};
-        int32_t ImageTextGap{0};
-        int32_t HorizontalPadding{0};
+        HorizontalAlignment ContentAlignment { HorizontalAlignment::Center };
+        ButtonContentLayoutMode ContentLayoutMode { ButtonContentLayoutMode::Overlay };
+        int32_t ImageTextGap { 0 };
+        int32_t HorizontalPadding { 0 };
         ButtonContentLayout layout;
 
         virtual void DrawBackgroundItems(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight);

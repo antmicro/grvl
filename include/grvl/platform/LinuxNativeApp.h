@@ -3,28 +3,28 @@
 
 #if defined(GRVL_LINUX_NATIVE_SUPPORT)
 
-#include <unistd.h>
-#include <grvl/platform/PosixApp.h>
-#include <grvl/Queue.h>
 #include <functional>
+#include <grvl/Queue.h>
+#include <grvl/platform/PosixApp.h>
+#include <unistd.h>
 
 #include <libdrm/drm.h>
 #include <libdrm/drm_mode.h>
 
-#include <xf86drm.h>
-#include <xf86drmMode.h>
 #include <libinput.h>
 #include <libudev.h>
+#include <xf86drm.h>
+#include <xf86drmMode.h>
 
 #include <libdrm/drm_fourcc.h>
 
-#include <xkbcommon/xkbcommon.h>
 #include <atomic>
 #include <mutex>
 #include <string>
 #include <thread>
 #include <unordered_set>
 #include <vector>
+#include <xkbcommon/xkbcommon.h>
 
 class drm_screen;
 class framebuffer_screen;
@@ -83,7 +83,7 @@ namespace grvl {
             uint32_t fb;
             uint32_t plane;
             struct {
-                uint32_t fb{0}, crtc{0}, x{0}, y{0}, hotspot_x{0}, hotspot_y{0};
+                uint32_t fb { 0 }, crtc { 0 }, x { 0 }, y { 0 }, hotspot_x { 0 }, hotspot_y { 0 };
             } props;
             void* map = nullptr;
             uint32_t handles[4] = {};
@@ -135,8 +135,8 @@ namespace grvl {
         bool Setup() override;
         void CommitPlanes();
         void DRMWait();
-    public:
 
+    public:
         LinuxNativeApp(int width, int height, bool rotate_sideways = false);
         LinuxNativeApp(const NativeDisplay& display, bool rotate_sideways = false);
         ~LinuxNativeApp() override;
@@ -152,7 +152,6 @@ namespace grvl {
         // @remark
         // Can be called both before and after this object is passed to Application::Init().
         void DrawMouseIcon(bool draw_mouse = true);
-
     };
 }
 

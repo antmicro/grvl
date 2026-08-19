@@ -21,8 +21,8 @@
 #include <grvl/CallbackDefinition.h>
 
 #include <string>
-#include <unordered_map>
 #include <tinyxml2.h>
+#include <unordered_map>
 
 using namespace tinyxml2;
 
@@ -36,7 +36,7 @@ namespace grvl {
         static const char* GetAttributeOrDefault(XMLElement* element, const char* attributeName, const char* defaultValue);
         static CallbackDefinition ParseCallback(const char* callbackDefinition);
         static HorizontalAlignment ParseAlignmentOrDefault(XMLElement* element, const char* attributeName,
-                                                                           HorizontalAlignment defaultValue);
+                                                           HorizontalAlignment defaultValue);
         static bool TryGetAttribute(XMLElement* element, const char* attributeName, const char** value);
         static bool TryGetIntAttribute(XMLElement* element, const char* attributeName, int32_t* value);
         static uint32_t GetPositionInCollection(const std::string& collectionString);

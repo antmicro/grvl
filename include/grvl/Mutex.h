@@ -23,7 +23,6 @@ namespace grvl {
 
     class Mutex {
     public:
-
         Mutex();
         ~Mutex();
         Mutex(const Mutex& mutex);
@@ -33,21 +32,16 @@ namespace grvl {
         void unlock();
 
     private:
-
         pthread_mutex_t m;
-
     };
 
     class Guard {
     public:
-
         Guard(Mutex& m);
         ~Guard();
 
     private:
-
         Mutex& m;
-
     };
 
 }

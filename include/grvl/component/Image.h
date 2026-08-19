@@ -17,11 +17,11 @@
 #ifndef GRVL_IMAGE_H_
 #define GRVL_IMAGE_H_
 
-#include <grvl/component/Component.h>
 #include <grvl/ContentManager.h>
 #include <grvl/ImageContent.h>
 #include <grvl/JSObjectBuilder.h>
 #include <grvl/Painter.h>
+#include <grvl/component/Component.h>
 
 #include <chrono>
 

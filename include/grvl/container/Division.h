@@ -30,7 +30,9 @@ namespace grvl {
         Division() = default;
 
         Division(int32_t x, int32_t y, int32_t width, int32_t height)
-            : Container{x, y, width, height} {}
+            : Container { x, y, width, height }
+        {
+        }
 
         Component* Clone() const override;
 

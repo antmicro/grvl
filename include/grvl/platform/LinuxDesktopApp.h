@@ -23,7 +23,6 @@ namespace grvl {
     // it is recomended to create the instance before the main render loop and only destroy it after the loop exits.
     class LinuxDesktopApp : public PosixApp {
     private:
-
         SDL_Texture* texture = nullptr;
         SDL_Window* window = nullptr;
         SDL_Renderer* renderer = nullptr;
@@ -33,7 +32,6 @@ namespace grvl {
         bool Setup() override;
 
     public:
-
         LinuxDesktopApp(int width, int height, bool rotate_sideways = false);
         ~LinuxDesktopApp() override;
 
@@ -46,7 +44,6 @@ namespace grvl {
         // @remark
         // Must be called before this object is passed to Application::Init().
         void SetTitle(const char* title);
-
     };
 
 }

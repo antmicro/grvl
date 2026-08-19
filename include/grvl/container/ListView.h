@@ -17,8 +17,8 @@
 #ifndef GRVL_LISTVIEW_H_
 #define GRVL_LISTVIEW_H_
 
-#include <grvl/component/ListItem.h>
 #include <grvl/Painter.h>
+#include <grvl/component/ListItem.h>
 #include <grvl/container/VerticalScrollView.h>
 #include <string>
 
@@ -85,7 +85,7 @@ namespace grvl {
         static ListView* BuildFromXML(XMLElement* xmlElement);
 
     private:
-        uint32_t verticalGap{0};
+        uint32_t verticalGap { 0 };
     };
 
 } /* namespace grvl */

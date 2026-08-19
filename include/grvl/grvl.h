@@ -17,15 +17,15 @@
 #ifndef GRVL_GRVL_H_
 #define GRVL_GRVL_H_
 
+#include <grvl/Blitter.h>
+#include <grvl/Format.h>
+#include <grvl/Log.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
-#include <grvl/Format.h>
-#include <grvl/Log.h>
-#include <grvl/Blitter.h>
 
 #include <duktape.h>
 
@@ -59,7 +59,7 @@ namespace grvl {
     template <typename... Args>
     inline void Log(LogLevel level, const char* text, Args... args)
     {
-        static auto CallUserPrint = [] (LogLevel level, const char* format, ...) {
+        static auto CallUserPrint = [](LogLevel level, const char* format, ...) {
             va_list list;
             int bytes = 0;
 

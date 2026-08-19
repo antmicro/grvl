@@ -17,10 +17,10 @@
 #ifndef GRVL_ABSTRACTBUTTON_H_
 #define GRVL_ABSTRACTBUTTON_H_
 
-#include <grvl/component/Component.h>
 #include <grvl/Font.h>
-#include <grvl/component/Image.h>
 #include <grvl/Painter.h>
+#include <grvl/component/Component.h>
+#include <grvl/component/Image.h>
 #include <grvl/grvl.h>
 
 namespace grvl {
@@ -37,7 +37,6 @@ namespace grvl {
 
         AbstractButton(const AbstractButton& Obj);
         AbstractButton& operator=(const AbstractButton& Obj);
-
 
         bool IsEmpty() const;
 
@@ -57,9 +56,9 @@ namespace grvl {
         GENERATE_DUK_STRING_SETTER(AbstractButton, Text, SetText)
 
     protected:
-        std::string Text{};
-        Image ButtonImage{};
-        Font* ButtonFont{nullptr};
+        std::string Text {};
+        Image ButtonImage {};
+        Font* ButtonFont { nullptr };
 
         virtual void InitFromXML(XMLElement* xmlElement);
     };

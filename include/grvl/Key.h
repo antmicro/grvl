@@ -17,9 +17,9 @@
 #ifndef GRVL_KEY_H_
 #define GRVL_KEY_H_
 
-#include <grvl/component/Component.h>
 #include <grvl/Event.h>
 #include <grvl/XMLSupport.h>
+#include <grvl/component/Component.h>
 
 #include <stdint.h>
 #include <string>

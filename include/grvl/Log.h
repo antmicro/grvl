@@ -26,16 +26,21 @@ namespace grvl {
     };
 
     // Please, C++26, deliver us from this!
-    constexpr const char* LogLevelToString(LogLevel level) {
-        if (level == TRACE) return "TRACE";
-        if (level == INFO) return "INFO";
-        if (level == WARN) return "WARN";
-        if (level == ERROR) return "ERROR";
+    constexpr const char* LogLevelToString(LogLevel level)
+    {
+        if(level == TRACE)
+            return "TRACE";
+        if(level == INFO)
+            return "INFO";
+        if(level == WARN)
+            return "WARN";
+        if(level == ERROR)
+            return "ERROR";
 
         return "INVALID";
     }
 
-    using Logger = void(*)(LogLevel level, const char* buffer);
+    using Logger = void (*)(LogLevel level, const char* buffer);
 
 }
 

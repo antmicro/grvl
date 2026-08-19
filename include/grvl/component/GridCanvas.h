@@ -17,8 +17,8 @@
 #ifndef GRVL_GRID_CANVAS_H_
 #define GRVL_GRID_CANVAS_H_
 
-#include <grvl/component/Canvas.h>
 #include <grvl/XMLSupport.h>
+#include <grvl/component/Canvas.h>
 
 namespace grvl {
 
@@ -28,7 +28,9 @@ namespace grvl {
         GridCanvas() = default;
 
         GridCanvas(int32_t x, int32_t y, int32_t width, int32_t height)
-            : Canvas{x, y, width, height} {}
+            : Canvas { x, y, width, height }
+        {
+        }
 
         static GridCanvas* BuildFromXML(XMLElement* xmlElement);
 
@@ -38,8 +40,8 @@ namespace grvl {
         void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
 
     private:
-        int32_t horizontalGridElementWidth{0};
-        int32_t horizontalGridElementHeight{0};
+        int32_t horizontalGridElementWidth { 0 };
+        int32_t horizontalGridElementHeight { 0 };
 
         void DrawBackgroundItems(Painter& painter, int32_t renderX, int32_t renderY, int32_t renderWidth, int32_t renderHeight);
         void DrawForegroundItems(Painter& painter, int32_t renderX, int32_t renderY, int32_t renderWidth, int32_t renderHeight);

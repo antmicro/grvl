@@ -39,31 +39,31 @@ namespace grvl {
 #define WIDGET1(id, name) WIDGET2(id, name)
 #define WIDGET(name) WIDGET1(__COUNTER__, name)
 
-#define GENERATE_DUK_GETTER(class, property_name, getter_func_name, duk_push_func_name)              \
-    static duk_ret_t JSGet##property_name##Wrapper(duk_context* ctx)                                 \
-    {                                                                                                \
-        duk_push_this(ctx);                                                                          \
-        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);                                \
-        class* component = static_cast<class*>(duk_to_pointer(ctx, -1));                             \
-        if (component) {                                                                             \
-            duk_push_func_name(ctx, component->getter_func_name());                                  \
-            return 1;                                                                                \
-        }                                                                                            \
-                                                                                                     \
-        return 0;                                                                                    \
+#define GENERATE_DUK_GETTER(class, property_name, getter_func_name, duk_push_func_name) \
+    static duk_ret_t JSGet##property_name##Wrapper(duk_context* ctx)                    \
+    {                                                                                   \
+        duk_push_this(ctx);                                                             \
+        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);                   \
+        class* component = static_cast<class*>(duk_to_pointer(ctx, -1));                \
+        if(component) {                                                                 \
+            duk_push_func_name(ctx, component->getter_func_name());                     \
+            return 1;                                                                   \
+        }                                                                               \
+                                                                                        \
+        return 0;                                                                       \
     }
 
-#define GENERATE_DUK_SETTER(class, property_name, setter_func_name, duk_get_func_name)               \
-    static duk_ret_t JSSet##property_name##Wrapper(duk_context* ctx)                                 \
-    {                                                                                                \
-        duk_push_this(ctx);                                                                          \
-        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);                                \
-        class* component = static_cast<class*>(duk_to_pointer(ctx, -1));                             \
-        if (component) {                                                                             \
-            component->setter_func_name(duk_get_func_name(ctx, 0));                                  \
-        }                                                                                            \
-                                                                                                     \
-        return 0;                                                                                    \
+#define GENERATE_DUK_SETTER(class, property_name, setter_func_name, duk_get_func_name) \
+    static duk_ret_t JSSet##property_name##Wrapper(duk_context* ctx)                   \
+    {                                                                                  \
+        duk_push_this(ctx);                                                            \
+        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);                  \
+        class* component = static_cast<class*>(duk_to_pointer(ctx, -1));               \
+        if(component) {                                                                \
+            component->setter_func_name(duk_get_func_name(ctx, 0));                    \
+        }                                                                              \
+                                                                                       \
+        return 0;                                                                      \
     }
 
 #define GENERATE_DUK_STRING_GETTER(class, property_name, getter_func_name) GENERATE_DUK_GETTER(class, property_name, getter_func_name, duk_push_string)
@@ -77,17 +77,17 @@ namespace grvl {
 #define GENERATE_DUK_FLOAT_GETTER(class, property_name, getter_func_name) GENERATE_DUK_GETTER(class, property_name, getter_func_name, duk_push_number)
 #define GENERATE_DUK_FLOAT_SETTER(class, property_name, setter_func_name) GENERATE_DUK_SETTER(class, property_name, setter_func_name, duk_to_number)
 
-#define GENERATE_DUK_MEMBER_FUNCTION(class, func_name)                             \
-    static duk_ret_t JS##func_name##Wrapper(duk_context* ctx)                      \
-    {                                                                              \
-        duk_push_this(ctx);                                                        \
-        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);              \
-        class* component = static_cast<class*>(duk_to_pointer(ctx, -1));           \
-        if (component) {                                                           \
-            component->func_name();                                                \
-        }                                                                          \
-                                                                                   \
-        return 0;                                                                  \
+#define GENERATE_DUK_MEMBER_FUNCTION(class, func_name)                   \
+    static duk_ret_t JS##func_name##Wrapper(duk_context* ctx)            \
+    {                                                                    \
+        duk_push_this(ctx);                                              \
+        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);    \
+        class* component = static_cast<class*>(duk_to_pointer(ctx, -1)); \
+        if(component) {                                                  \
+            component->func_name();                                      \
+        }                                                                \
+                                                                         \
+        return 0;                                                        \
     }
 
     typedef struct {
@@ -115,12 +115,12 @@ namespace grvl {
         };
 
         Component()
-            : uniqueID{AssignUniqueID()}
+            : uniqueID { AssignUniqueID() }
         {
         }
 
         Component(int32_t x, int32_t y, int32_t width, int32_t height)
-            : uniqueID{AssignUniqueID()}
+            : uniqueID { AssignUniqueID() }
             , X(x)
             , Y(y)
             , Height(height)
@@ -191,8 +191,8 @@ namespace grvl {
         virtual void Hide();
         virtual void Show();
 
-        virtual void PrepareContent(ContentManager* contentManager) {}
-        virtual void CancelPreparingContent(ContentManager* contentManager) {}
+        virtual void PrepareContent(ContentManager* contentManager) { }
+        virtual void CancelPreparingContent(ContentManager* contentManager) { }
 
         virtual void OnPress();
         virtual void OnRelease();
@@ -267,52 +267,52 @@ namespace grvl {
     protected:
         uint64_t AssignUniqueID();
 
-        inline static uint64_t firstAvailableUniqueID{0};
-        uint64_t uniqueID{0};
+        inline static uint64_t firstAvailableUniqueID { 0 };
+        uint64_t uniqueID { 0 };
 
-        std::string ID{};
-        std::string parentID{};
+        std::string ID {};
+        std::string parentID {};
 
-        int32_t X{0};
-        int32_t Y{0};
-        int32_t Height{0};
-        int32_t Width{0};
+        int32_t X { 0 };
+        int32_t Y { 0 };
+        int32_t Height { 0 };
+        int32_t Width { 0 };
 
-        uint32_t ForegroundColor{COLOR_ARGB8888_GRAY};
-        uint32_t ActiveForegroundColor{COLOR_ARGB8888_GRAY};
-        uint32_t BackgroundColor{COLOR_ARGB8888_TRANSPARENT};
-        uint32_t ActiveBackgroundColor{COLOR_ARGB8888_TRANSPARENT};
+        uint32_t ForegroundColor { COLOR_ARGB8888_GRAY };
+        uint32_t ActiveForegroundColor { COLOR_ARGB8888_GRAY };
+        uint32_t BackgroundColor { COLOR_ARGB8888_TRANSPARENT };
+        uint32_t ActiveBackgroundColor { COLOR_ARGB8888_TRANSPARENT };
 
-        ComponentState State{ComponentState::Off};
-        bool isFocused{false};
-        Event onPress{};
-        Event onRelease{};
-        Event onClick{};
-        bool touchActive{false};
-        bool childDroppedTouch{false};
-        Touch::TouchResponse previousResponse{Touch::TouchNotApplicable};
-        uint64_t TouchActivatedTimestamp{0};
-        bool longTouchActive{false};
-        Event onLongPress{};
-        Event onLongPressRepeat{};
+        ComponentState State { ComponentState::Off };
+        bool isFocused { false };
+        Event onPress {};
+        Event onRelease {};
+        Event onClick {};
+        bool touchActive { false };
+        bool childDroppedTouch { false };
+        Touch::TouchResponse previousResponse { Touch::TouchNotApplicable };
+        uint64_t TouchActivatedTimestamp { 0 };
+        bool longTouchActive { false };
+        Event onLongPress {};
+        Event onLongPressRepeat {};
 
-        bool Visible{true};
+        bool Visible { true };
 
         std::unordered_map<std::string, std::string> metadata;
 
         virtual void DrawBorderIfNecessary(Painter& painter, int32_t StartX, int32_t StartY, int32_t BorderWidth, int32_t BorderHeight);
 
-        uint32_t BorderColor{COLOR_ARGB8888_TRANSPARENT};
-        uint32_t ActiveBorderColor{COLOR_ARGB8888_TRANSPARENT};
-        BorderTypeBits BorderType{BorderTypeBits::NONE};
-        uint32_t BorderArcRadius{0};
+        uint32_t BorderColor { COLOR_ARGB8888_TRANSPARENT };
+        uint32_t ActiveBorderColor { COLOR_ARGB8888_TRANSPARENT };
+        BorderTypeBits BorderType { BorderTypeBits::NONE };
+        uint32_t BorderArcRadius { 0 };
 
         virtual Touch::TouchResponse ProcessMove(int32_t StartX, int32_t StartY, int32_t DeltaX, int32_t DeltaY);
         Touch::TouchResponse OnMoveCase(const Touch& tp, int32_t ParentX, int32_t ParentY);
 
         virtual void InitFromXML(tinyxml2::XMLElement* xmlElement);
 
-        void* JavascriptObject{nullptr};
+        void* JavascriptObject { nullptr };
     };
 
 } /* namespace grvl */

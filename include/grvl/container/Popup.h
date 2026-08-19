@@ -17,9 +17,9 @@
 #ifndef GRVL_POPUP_H_
 #define GRVL_POPUP_H_
 
-#include <grvl/container/Container.h>
-#include <grvl/component/Label.h>
 #include <grvl/Painter.h>
+#include <grvl/component/Label.h>
+#include <grvl/container/Container.h>
 
 #include <tinyxml2.h>
 
@@ -81,8 +81,8 @@ namespace grvl {
         void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
 
     protected:
-        Label* Message{nullptr};
-        uint64_t PopupTimestamp{0};
+        Label* Message { nullptr };
+        uint64_t PopupTimestamp { 0 };
     };
 
 } /* namespace grvl */

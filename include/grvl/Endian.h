@@ -18,26 +18,26 @@
 #define GRVL_ENDIAN_H_
 
 #if (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)) || defined(__BIG_ENDIAN__)
-#    define GRVL_BIG_ENDIAN true
+#define GRVL_BIG_ENDIAN true
 #else
-#    define GRVL_BIG_ENDIAN false
+#define GRVL_BIG_ENDIAN false
 #endif
 
 namespace grvl {
 
     constexpr uint16_t ByteSwap16(uint16_t x)
     {
-        return (((uint16_t) (x & 0xFF) << 8) | (x >> 8));
+        return (((uint16_t)(x & 0xFF) << 8) | (x >> 8));
     }
 
     constexpr uint32_t ByteSwap32(uint32_t x)
     {
-        return (((uint32_t) ByteSwap16(x & 0xFFFF) << 16) | ByteSwap16(x >> 16));
+        return (((uint32_t)ByteSwap16(x & 0xFFFF) << 16) | ByteSwap16(x >> 16));
     }
 
     constexpr uint64_t ByteSwap64(uint64_t x)
     {
-        return (((uint64_t) ByteSwap32(x & 0xFFFFFFFF) << 32) | ByteSwap32(x >> 32));
+        return (((uint64_t)ByteSwap32(x & 0xFFFFFFFF) << 32) | ByteSwap32(x >> 32));
     }
 
     /// Native to Big Endian or Big Endian to Native, 16 bit

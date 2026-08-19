@@ -17,10 +17,10 @@
 #ifndef GRVL_SWITCHBUTTON_H_
 #define GRVL_SWITCHBUTTON_H_
 
-#include <grvl/component/AbstractButton.h>
 #include <grvl/Event.h>
 #include <grvl/JSObjectBuilder.h>
 #include <grvl/Painter.h>
+#include <grvl/component/AbstractButton.h>
 
 #include <tinyxml2.h>
 
@@ -94,14 +94,14 @@ namespace grvl {
         virtual void DrawActiveState(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY, int32_t RenderWidth, int32_t RenderHeight);
         virtual void DrawInactiveState(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY, int32_t RenderWidth, int32_t RenderHeight);
 
-        bool switchState{false};
-        bool previousSwitchState{false};
-        Event onSwitchON{};
-        Event onSwitchOFF{};
+        bool switchState { false };
+        bool previousSwitchState { false };
+        Event onSwitchON {};
+        Event onSwitchOFF {};
 
-        uint32_t stateIndicatorWidth{0};
-        uint32_t stateIndicatorHeight{0};
-        uint32_t stateIndicatorArcRadius{0};
+        uint32_t stateIndicatorWidth { 0 };
+        uint32_t stateIndicatorHeight { 0 };
+        uint32_t stateIndicatorArcRadius { 0 };
 
         virtual Touch::TouchResponse ProcessMove(int32_t StartX, int32_t StartY, int32_t DeltaX, int32_t DeltaY);
     };

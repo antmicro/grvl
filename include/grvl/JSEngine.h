@@ -18,9 +18,9 @@
 #define GRVL_JSENGINE_H_
 
 #include <grvl/CallbackDefinition.h>
-#include <grvl/component/Component.h>
 #include <grvl/Event.h>
 #include <grvl/JSObject.h>
+#include <grvl/component/Component.h>
 #include <grvl/grvl.h>
 
 #include <duktape.h>
@@ -58,8 +58,8 @@ namespace grvl {
         static duk_ret_t GetBottomPanel(duk_context* ctx);
         static duk_ret_t GetPrefabById(duk_context* ctx);
 
-        static constexpr duk_ret_t NO_RETURN_VALUE{0};
-        static constexpr duk_ret_t RETURN_VALUE_PRESENT{1};
+        static constexpr duk_ret_t NO_RETURN_VALUE { 0 };
+        static constexpr duk_ret_t RETURN_VALUE_PRESENT { 1 };
 
     private:
         static void InitializeDukContext(gui_callbacks_t* n_callbacks);
@@ -77,7 +77,7 @@ namespace grvl {
         static void ExecutePreparedJavaScriptFunctionCall(const char* functionName, int numOfArgs);
 
         static void PushRemeberedObjectsArray(duk_context* ctx);
-        static constexpr const char* STASH_REMEBERED_OBJECTS_KEY{"rememberedObjects"};
+        static constexpr const char* STASH_REMEBERED_OBJECTS_KEY { "rememberedObjects" };
     };
 
 } /* namespace grvl */

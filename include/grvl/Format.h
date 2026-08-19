@@ -35,23 +35,44 @@ namespace grvl {
         AXXX8888 = 10,
     };
 
-    template <template<Format> typename F, typename... Args>
+    template <template <Format> typename F, typename... Args>
     constexpr void static_format_lookup(Format format, Args... args)
     {
-        switch (format) {
+        switch(format) {
 
-            case Format::ARGB8888: F<Format::ARGB8888>{}(args...); break;
-            case Format::RGB888: F<Format::RGB888>{}(args...); break;
-            case Format::RGB565: F<Format::RGB565>{}(args...); break;
-            case Format::ARGB1555: F<Format::ARGB1555>{}(args...); break;
-            case Format::ARGB4444: F<Format::ARGB4444>{}(args...); break;
-            case Format::L8: F<Format::L8>{}(args...); break;
-            case Format::AL44: F<Format::AL44>{}(args...); break;
-            case Format::AL88: F<Format::AL88>{}(args...); break;
-            case Format::A8: F<Format::A8>{}(args...); break;
-            case Format::ARGB6666: F<Format::ARGB6666>{}(args...); break;
-            case Format::AXXX8888: F<Format::AXXX8888>{}(args...); break;
-
+            case Format::ARGB8888:
+                F<Format::ARGB8888> {}(args...);
+                break;
+            case Format::RGB888:
+                F<Format::RGB888> {}(args...);
+                break;
+            case Format::RGB565:
+                F<Format::RGB565> {}(args...);
+                break;
+            case Format::ARGB1555:
+                F<Format::ARGB1555> {}(args...);
+                break;
+            case Format::ARGB4444:
+                F<Format::ARGB4444> {}(args...);
+                break;
+            case Format::L8:
+                F<Format::L8> {}(args...);
+                break;
+            case Format::AL44:
+                F<Format::AL44> {}(args...);
+                break;
+            case Format::AL88:
+                F<Format::AL88> {}(args...);
+                break;
+            case Format::A8:
+                F<Format::A8> {}(args...);
+                break;
+            case Format::ARGB6666:
+                F<Format::ARGB6666> {}(args...);
+                break;
+            case Format::AXXX8888:
+                F<Format::AXXX8888> {}(args...);
+                break;
         }
     }
 
@@ -63,20 +84,30 @@ namespace grvl {
 
         constexpr uint32_t pack(Format format) const
         {
-            switch (format) {
+            switch(format) {
 
-                case Format::ARGB8888: return (a << 24) | (r << 16) | (g << 8) | (b);
-                case Format::RGB888: return (r << 16) | (g << 8) | (b);
-                case Format::RGB565: return ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
-                case Format::ARGB1555: return ((a >> 7) << 15) | ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3);
-                case Format::ARGB4444: return ((a >> 4) << 12) | ((r >> 4) << 8) | ((g >> 4) << 4) | (b >> 4);
-                case Format::L8: return r;
-                case Format::AL44: return (r >> 4) | (a & 0xf0);
-                case Format::AL88: return r | (a << 8);
-                case Format::A8: return a;
-                case Format::ARGB6666: return ((a >> 2) << 18) | ((r >> 2) << 12) | ((g >> 2) << 6) | (b >> 2);
-                case Format::AXXX8888: return a << 24;
-
+                case Format::ARGB8888:
+                    return (a << 24) | (r << 16) | (g << 8) | (b);
+                case Format::RGB888:
+                    return (r << 16) | (g << 8) | (b);
+                case Format::RGB565:
+                    return ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
+                case Format::ARGB1555:
+                    return ((a >> 7) << 15) | ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3);
+                case Format::ARGB4444:
+                    return ((a >> 4) << 12) | ((r >> 4) << 8) | ((g >> 4) << 4) | (b >> 4);
+                case Format::L8:
+                    return r;
+                case Format::AL44:
+                    return (r >> 4) | (a & 0xf0);
+                case Format::AL88:
+                    return r | (a << 8);
+                case Format::A8:
+                    return a;
+                case Format::ARGB6666:
+                    return ((a >> 2) << 18) | ((r >> 2) << 12) | ((g >> 2) << 6) | (b >> 2);
+                case Format::AXXX8888:
+                    return a << 24;
             }
 
             // invalid format?
@@ -93,17 +124,17 @@ namespace grvl {
     };
 
     constexpr inline FormatInfo format_descriptors[] = {
-        {4, 4, true,  false, "ARGB8888"},
-        {3, 3, false, false, "RGB888"},
-        {2, 3, false, false, "RGB565"},
-        {2, 4, true,  false, "ARGB1555"},
-        {2, 4, true,  false, "ARGB4444"},
-        {1, 1, false, true,  "L8"},
-        {1, 2, true,  true,  "AL44"},
-        {2, 2, true,  true,  "AL88"},
-        {1, 1, true,  false, "A8"},
-        {3, 4, true,  false, "ARGB6666"},
-        {4, 1, true,  false, "AXXX8888"},
+        { 4, 4, true, false, "ARGB8888" },
+        { 3, 3, false, false, "RGB888" },
+        { 2, 3, false, false, "RGB565" },
+        { 2, 4, true, false, "ARGB1555" },
+        { 2, 4, true, false, "ARGB4444" },
+        { 1, 1, false, true, "L8" },
+        { 1, 2, true, true, "AL44" },
+        { 2, 2, true, true, "AL88" },
+        { 1, 1, true, false, "A8" },
+        { 3, 4, true, false, "ARGB6666" },
+        { 4, 1, true, false, "AXXX8888" },
     };
 
     // Get format information object
@@ -154,7 +185,7 @@ namespace grvl {
         // first we decompose the color using the input format
         // then recombine it using output format, this avoids having to write a full-graph of conversions
 
-        switch (format) {
+        switch(format) {
 
             case Format::ARGB8888:
                 r = (color & 0x00ff0000) >> 16;
@@ -226,10 +257,10 @@ namespace grvl {
                 break;
 
             case Format::ARGB6666:
-                r = ((color & 0b000000'111111'000000'000000) >> (2*6)) << 2;
-                g = ((color & 0b000000'000000'111111'000000) >> (1*6)) << 2;
-                b = ((color & 0b000000'000000'000000'111111) >> (0*6)) << 2;
-                a = ((color & 0b111111'000000'000000'000000) >> (3*6)) << 2;
+                r = ((color & 0b000000'111111'000000'000000) >> (2 * 6)) << 2;
+                g = ((color & 0b000000'000000'111111'000000) >> (1 * 6)) << 2;
+                b = ((color & 0b000000'000000'000000'111111) >> (0 * 6)) << 2;
+                a = ((color & 0b111111'000000'000000'000000) >> (3 * 6)) << 2;
                 r |= (r >> 6);
                 g |= (g >> 6);
                 b |= (b >> 6);
@@ -239,17 +270,15 @@ namespace grvl {
             case Format::AXXX8888:
                 a = (color & 0xff000000) >> 24;
                 break;
-
         }
 
-        return {r, g, b, a};
-
+        return { r, g, b, a };
     }
 
     // Convert color from one format to another
     constexpr uint32_t ConvertColorFormat(uint32_t color, Format input, Format output)
     {
-        if (input == output) {
+        if(input == output) {
             return color;
         }
 

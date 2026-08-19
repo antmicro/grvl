@@ -17,12 +17,12 @@
 #ifndef GRVL_Queue_H_
 #define GRVL_Queue_H_
 
-#include <grvl/grvl.h>
 #include <grvl/Mutex.h>
+#include <grvl/grvl.h>
 
 #include <optional>
-#include <stdint.h>
 #include <queue>
+#include <stdint.h>
 
 namespace grvl {
 
@@ -41,14 +41,14 @@ namespace grvl {
     template <class T>
     void Queue<T>::push(const T& element)
     {
-        Guard lock {m};
+        Guard lock { m };
         elementsQueue.push(element);
     }
 
     template <class T>
     std::optional<T> Queue<T>::pop()
     {
-        Guard lock {m};
+        Guard lock { m };
 
         if(elementsQueue.empty()) {
             return std::nullopt;

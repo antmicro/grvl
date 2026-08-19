@@ -31,10 +31,14 @@ namespace grvl {
     class Checkbox : public SwitchButton {
     public:
         Checkbox()
-            : SwitchButton{} {}
+            : SwitchButton {}
+        {
+        }
 
         Checkbox(int32_t x, int32_t y, int32_t width, int32_t height)
-            : SwitchButton{x, y, width, height} {}
+            : SwitchButton { x, y, width, height }
+        {
+        }
 
         Component* Clone() const override;
 
