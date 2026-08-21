@@ -259,7 +259,7 @@ namespace grvl {
 
     uint32_t Button::GetTextColor()
     {
-        return ForegroundColor;
+        return TextColor;
     }
 
     uint32_t Button::GetActiveTextColor()
