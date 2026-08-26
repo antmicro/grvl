@@ -283,17 +283,17 @@ namespace grvl {
         if(!Screens.empty()) {
             AbstractView* NewScreen;
 
-            for(uint32_t i = 0; i < Screens.size(); i++) {
-                if(strcmp(Screens[i]->GetID(), activeScreenId) == 0) {
+            for(AbstractView* screen : Screens) {
+                if(screen->GetId() == activeScreenId) {
                     if(ActiveScreen) {
                         ActiveScreen->ClearTouch();
                         ActiveScreen->PrepareToClose();
                     }
 
-                    NewScreen = Screens[i];
+                    NewScreen = screen;
                     NewScreen->PrepareToOpen();
 
-                    Screens[i]->CheckPlacement();
+                    screen->CheckPlacement();
                     if(direction != 0 && ScrollingDuration > 0) {
                         Animate(ActiveScreen, NewScreen, direction);
                     } else {
@@ -584,14 +584,13 @@ namespace grvl {
 
     AbstractView* Manager::GetScreen(const char* id)
     {
-        AbstractView* Screen = NULL;
-        for(uint32_t i = 0; i < Screens.size(); i++) {
-            if(strcmp(Screens[i]->GetID(), id) == 0) {
-                Screen = Screens[i];
-                break;
+        for(AbstractView* screen : Screens) {
+            if(screen->GetId() == id) {
+                return screen;
             }
         }
-        return Screen;
+
+        return nullptr;
     }
 
     AbstractView* Manager::GetScreen(int id)
@@ -607,60 +606,58 @@ namespace grvl {
         return CurrentPopup;
     }
 
-    void Manager::ShowPopup(const char* Style, const char* Message)
+    Popup* Manager::OpenPopup(const char* name)
     {
-        Popup* tempPopup = GetPopupFromContainer(Style);
-        if(CurrentPopup != NULL && tempPopup != CurrentPopup) {
-            return; // TODO: implement popup queue
+        // consider removing the handling of this edge case
+        if (name == nullptr) {
+            name = "";
         }
-        CurrentPopup = tempPopup;
 
-        if(CurrentPopup) {
-            CurrentPopup->SetMessage(Message);
+        Popup* popup = GetPopupFromContainer(name);
+
+        if (popup == nullptr) {
+            Log(ERROR, "popup definition '%s' not found!", name);
+            return nullptr;
+        }
+
+        if(CurrentPopup != nullptr && popup != CurrentPopup) {
+            Log(WARN, "Another popup already present!");
+            return nullptr; // TODO: implement popup queue
+        }
+
+        return CurrentPopup = popup;
+    }
+
+    void Manager::ShowPopup(const char* Name, const char* Message)
+    {
+        if (Popup* popup = OpenPopup(Name)) {
+            popup->SetMessage(Message);
             ShowPopup();
         }
     }
 
-    void Manager::ShowPopup(const char* Style)
+    void Manager::ShowPopup(const char* Name)
     {
-        Popup* tempPopup = GetPopupFromContainer(Style);
-        if(CurrentPopup != NULL && tempPopup != CurrentPopup) {
-            return; // TODO: implement popup queue
-        }
-        CurrentPopup = tempPopup;
-
-        if(CurrentPopup) {
+        if (Popup* popup = OpenPopup(Name)) {
             ShowPopup();
         }
     }
 
-    void Manager::ShowPopup(const char* Style, uint32_t milliseconds)
+    void Manager::ShowPopup(const char* Name, uint32_t milliseconds)
     {
-        Popup* tempPopup = GetPopupFromContainer(Style);
-        if(CurrentPopup != NULL && tempPopup != CurrentPopup) {
-            return; // TODO: implement popup queue
-        }
-        CurrentPopup = tempPopup;
-
-        if(CurrentPopup) {
+        if (Popup* popup = OpenPopup(Name)) {
             timeoutedPopupMode = true;
-            CurrentPopup->SetTimestamp(grvl::Callbacks()->get_timestamp() + milliseconds);
+            popup->SetTimestamp(grvl::Callbacks()->get_timestamp() + milliseconds);
             ShowPopup();
         }
     }
 
-    void Manager::ShowPopup(const char* Style, const char* Message, uint32_t milliseconds)
+    void Manager::ShowPopup(const char* Name, const char* Message, uint32_t milliseconds)
     {
-        Popup* tempPopup = GetPopupFromContainer(Style);
-        if(CurrentPopup != NULL && tempPopup != CurrentPopup) {
-            return; // TODO: implement popup queue
-        }
-        CurrentPopup = tempPopup;
-
-        if(CurrentPopup) {
+        if (Popup* popup = OpenPopup(Name)) {
             timeoutedPopupMode = true;
-            CurrentPopup->SetTimestamp(grvl::Callbacks()->get_timestamp() + milliseconds);
-            CurrentPopup->SetMessage(Message);
+            popup->SetTimestamp(grvl::Callbacks()->get_timestamp() + milliseconds);
+            popup->SetMessage(Message);
             ShowPopup();
         }
     }
@@ -1093,19 +1090,19 @@ namespace grvl {
         return LoadingImage;
     }
 
-    Popup* Manager::GetPopupFromContainer(const char* name)
+    Popup* Manager::GetPopupFromContainer(std::string_view id)
     {
-        if(!name) {
-            return NULL;
+        if (id.empty()) {
+            return nullptr;
         }
-        Popup* TempPopup = NULL;
-        for(uint32_t i = 0; i < PopupsContainer.size(); i++) {
-            if(strcmp(PopupsContainer[i]->GetID(), name) == 0) {
-                TempPopup = PopupsContainer[i];
-                break;
+
+        for (Popup* popup : PopupsContainer) {
+            if(popup->GetId() == id) {
+                return popup;
             }
         }
-        return TempPopup;
+
+        return nullptr;
     }
 
     void Manager::ProcessTouchPoint(bool touched, uint32_t touchX, uint32_t touchY)
@@ -1531,15 +1528,13 @@ namespace grvl {
 
     Division* Manager::GetPrefabByID(const char* PrefabID)
     {
-        Division* found{nullptr};
         for (auto& prefab : Prefabs) {
-            if (strcmp(prefab->GetID(), PrefabID) == 0) {
-                found = prefab;
-                break;
+            if (prefab->GetId() == PrefabID) {
+                return prefab;
             }
         }
 
-        return found;
+        return nullptr;
     }
 
     Manager& Manager::SetLogoImage(const Image& logo)
@@ -1632,25 +1627,28 @@ namespace grvl {
 
     void Manager::ResetScreens()
     {
-        ActiveScreen = NULL;
-        CurrentPopup = NULL;
-        std::vector<AbstractView*>::iterator it;
-        for(it = Screens.begin(); it != Screens.end();) {
-            delete *it;
-            it = Screens.erase(it);
+        ActiveScreen = nullptr;
+        CurrentPopup = nullptr;
+
+        for(auto* screen : Screens) {
+            delete screen;
         }
-        std::vector<Popup*>::iterator itp;
-        for(itp = PopupsContainer.begin(); itp != PopupsContainer.end();) {
-            delete *itp;
-            itp = PopupsContainer.erase(itp);
+
+        Screens.clear();
+
+        for(auto* popup : PopupsContainer) {
+            delete popup;
         }
+
+        PopupsContainer.clear();
+
         if(TopPanel) {
             delete TopPanel;
-            TopPanel = NULL;
+            TopPanel = nullptr;
         }
         if(BottomPanel) {
             delete BottomPanel;
-            BottomPanel = NULL;
+            BottomPanel = nullptr;
         }
     }
 

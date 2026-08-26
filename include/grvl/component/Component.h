@@ -29,6 +29,7 @@
 #include <tinyxml2.h>
 
 #include <stdint.h>
+#include <string_view>
 #include <unordered_map>
 
 namespace grvl {
@@ -263,6 +264,11 @@ namespace grvl {
         static duk_ret_t JSCloneWrapper(duk_context* ctx);
         static duk_ret_t JSAddMetadataWrapper(duk_context* ctx);
         static duk_ret_t JSGetMetadataWrapper(duk_context* ctx);
+
+        std::string_view GetId() const
+        {
+            return ID;
+        }
 
     protected:
         uint64_t AssignUniqueID();

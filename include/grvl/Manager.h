@@ -55,6 +55,7 @@
 #include <map>
 #include <math.h>
 #include <string>
+#include <string_view>
 #include <time.h>
 #include <unistd.h>
 #include <unordered_map>
@@ -333,7 +334,7 @@ namespace grvl {
 
         Font* GetFontFromContainer(const char* name) const;
         Font* GetDefaultFontFromContainer() const;
-        Popup* GetPopupFromContainer(const char* name);
+        Popup* GetPopupFromContainer(std::string_view id);
         Font* GetFontPointer(const char* fontName) const;
 
         // XML
@@ -444,6 +445,8 @@ namespace grvl {
         void ParseFontStyles(XMLElement* stylesheet);
         void ParseScripts(XMLElement* scripts);
         void ParseStyle(char* active_object, char* active_parameter, char* active_parameter_value);
+
+        Popup* OpenPopup(const char* name);
 
         void ProcessEvents();
         bool UpdateAnimationWindowOffset();
