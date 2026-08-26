@@ -7,24 +7,25 @@
             bgColor: "red"
         }
     </stylesheet>
+	<script src="callbacks.js" />
     <guiConfig dotColor="#ffffffff"></guiConfig>
     <keypadMapping>
-        <key id="space" code="456" repeat="200"/>
-        <key id="enter" code="789" repeat="100"/>
+        <key id="enter" code="13" />
+        <key id="escape" code="27" />
     </keypadMapping>
     <header height="50" backgroundColor="#ff000000">
-        <label id="h_label" text="Header (Label)" font="roboto-medium" alignment="Center" x="0" y="0" width="800" height="50" />
+        <label id="h_label" textColor="#ffffffff" text="Header (Label)" font="roboto-medium" alignment="Center" x="0" y="0" width="800" height="50" />
     </header>
     <popup id="test_popup" backgroundColor="#ff000000" x="250" y="200" width="300" height="200">
         <button id="close_popup_btn" x="100" y="10" width="100" height="50" backgroundColor="#ffffffff" textColor="#ff0000ff" activeTextColor="#ffff00ff" onClick="ClosePopup" text="Close" font="roboto-medium" />
-        <label id="popup_label" font="roboto-medium" x="0" y="100" width="300" height="50" text="This is a Popup." />
+        <label id="popup_label" font="roboto-medium" x="0" y="100" width="300" textColor="#ffffffff" height="50" text="This is a Popup. Hold ESCAPE to close it." />
     </popup>
     <customView id="start" backgroundColor="#FF4287F5">
 	    <button id="test_button" image="button_image" x="10" y="10" width="100" height="100" textColor="#ff00ff00" activeTextColor="#ffff00ff" onClick="ButtonCallback" text="TEST" font="roboto-medium" />
         <clock id="test_clock" x="150" y="10" width="100" height="100" font="roboto-medium" foregroundColor="#fffff000" format="%H:%M:%S" />
         <slider id="vertical_slider" x="300" y="10" width="20" height="100" scrollColor="#ffff0000" activeBarColor="#ff00ff00" />
         <slider id="horizontal_slider" x="340" y="10" width="100" height="20" scrollColor="#fffcba03" activeBarColor="#ffa903fc" />
-        <label id="popup_label" font="roboto-medium" x="0" y="100" width="300" height="50" text="This is a Popup." />
+        <label id="popup_label" font="roboto-medium" x="0" y="100" width="300" height="50" text="Press ENTER to open a popup." />
         <GridView id="grid_view" x="350" y="120" width="100" height="100" elementWidth="50" elementHeight="50">
             <GridRow id="row_1" backgroundColor="#ffff0000">
                 <button id="row_1_btn_1" text="1" font="roboto-medium" width="50" height="50" backgroundColor="#ff00ffff" />
@@ -42,7 +43,9 @@
             <ListItem backgroundColor="#ff0000ff" id="item_3" height="50" type="AlarmField" text="blue" textColor="#ffffffff" font="roboto-medium" />
         </ListView>
 
-        <key id="space" onLongPress="doSomething('a','b',3, 2)"/>
+        <key id="enter" onPress="ShowPopupCallback('test_popup')"/>
+        <key id="escape" onLongPress="ClosePopupCallback()"/>
+
 
     </customView>
 </doc>

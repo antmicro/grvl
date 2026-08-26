@@ -14,7 +14,7 @@ function SwitchCallback(caller) {
     }
 }
 
-function ShowPopupCallback(caller, popup_text) {
+function ShowPopupCallback(popup_text) {
 	Print("Popup shown!")
     ShowPopup(popup_text)
 }
