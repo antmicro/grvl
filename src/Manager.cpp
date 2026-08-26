@@ -959,8 +959,7 @@ namespace grvl {
 
         if(CurrentPopup && CurrentPopup->IsVisible()) {
             painter.SetActiveBuffer(painter.GetSwapperValue() ? 2 : 3);
-            static constexpr auto semiTransparent = 0x7F000000;
-            painter.ShadowBuffer(painter.GetSwapperValue() ? 2 : 3, semiTransparent); // note: originally caused segfault
+            painter.ShadowBuffer(0x7F);
             CurrentPopup->Draw(painter, 0, 0);
         }
 
@@ -1031,7 +1030,7 @@ namespace grvl {
         }
         // Apply transparency
         if(currentTransparency < 1.0f) {
-            painter.ShadowBuffer(painter.GetSwapperValue() ? 2 : 3, ((uint32_t)(0xff - 0xff * currentTransparency)) << 24); // NOLINT
+            painter.ShadowBuffer(0xff - 0xff * currentTransparency);
         }
     }
 

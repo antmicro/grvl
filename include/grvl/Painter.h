@@ -74,7 +74,6 @@ namespace grvl {
             , BackgroundImage(0)
             , contentManager(0)
             , is_rotated(false)
-            , shadowImage(0)
         {
         }
 
@@ -219,11 +218,11 @@ namespace grvl {
         void AddBackgroundBlock(int32_t y_position, int32_t height, uint32_t backgroundColor);
         void DmaTransferToFramebuffer(int32_t y_position, int32_t height, bool with_background, bool inPlace = false);
         void MergeBuffers(bool inPlace = false);
-        void ShadowBuffer(uint8_t number, uint32_t color);
+        void ShadowBuffer(uint8_t alpha);
 
         static bool IsColorTransparent(uint32_t color);
 
-    protected:
+    private:
         layer_t backLayerPointers[4];
         uint32_t backgroundColor;
         uint32_t XSize, YSize;
@@ -233,7 +232,6 @@ namespace grvl {
         Image* BackgroundImage;
         ContentManager* contentManager;
         bool is_rotated;
-        ImageContent* shadowImage;
         void DrawSpansBetweenEdges(const Edge& e1, const Edge& e2) const;
         void DrawSpan(int x1, int x2, uint32_t color, int y) const;
 

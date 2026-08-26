@@ -52,22 +52,40 @@ namespace grvl {
         ResetDrawingBounds();
     }
 
-    // Note: this was originally commented out
-    void Painter::ShadowBuffer(uint8_t number, uint32_t color)
+    void Painter::ShadowBuffer(uint8_t alpha)
     {
-        memset((void*)shadowImage->GetData(), color >> 24, shadowImage->GetWidth() * 4);
+        static ImageContent* shadow = nullptr;
+
+        // Why is this done like this and what is it?
+        // ShadowBuffer() is a method that applies a half-transparent gray tint to the screen,
+        // this is used as a background effect for when a popup is on the screen. You may wonder why DmaFill is not used
+        // here - that is because DmaFill doesn't support transparency, it's just a glorified memcpy(). So this is
+        // implemented by allocating a (XSize x 1) image (once) and then on each invocation of ShadowBuffer() memseting it
+        // with our alpha value and then DmaBlit'ing that image multiple times until the whole screen is covered.
+        // In the past there was an alternative implemention that instead performed a DmaBlit from a invalid address (nullptr)
+        // into the target while tinting the image, obv this will never work in a memory protected environment.
+        // As not all applications use popups we only allocate the shadow image once we need it.
+
+        if (shadow == nullptr) {
+            const int size = XSize * 4;
+            uint8_t* buffer = (uint8_t*) malloc(size);
+
+            shadow = new ImageContent(buffer, XSize, 1, 1, Format::ARGB8888);
+
+            if(IsRotated() && !shadow->IsRotated()) {
+                shadow->Rotate90();
+            }
+
+            Log(INFO, "Allocated %d bytes for the shadow buffer", size);
+        }
+
+        uint32_t color = static_cast<uint32_t>(alpha) << 24;
+        memset(shadow->GetData(), alpha, shadow->GetWidth() * 4);
 
         for(uint32_t i = 0; i < YSize; i++) {
-            DmaMoveShadow((uintptr_t)shadowImage->GetData(), GetVisibleBuffer(), 0, i, shadowImage->GetWidth(),
-                          1, GetDisplayPixelFormat(), color);
+            DmaMoveShadow((uintptr_t) shadow->GetData(), GetVisibleBuffer(), 0, i, shadow->GetWidth(), 1, GetDisplayPixelFormat(), color);
         }
     }
-
-    // Note: Code below causes segfault, is copying from addr 0x0 intended?
-
-    // void Painter::ShadowBuffer(uint8_t number, uint32_t color) {
-    //     Painter::DmaOperation(0, GetVisibleBuffer(), GetVisibleBuffer(), XSize, YSize, 0, 0, 0, Format::ARGB8888, GetActiveBufferPixelFormat(), GetActiveBufferPixelFormat(), color);
-    // }
 
     void Painter::DrawPixel(uint32_t Xpos, uint32_t Ypos, uint32_t RGB_Code) const
     {
@@ -1316,15 +1334,6 @@ namespace grvl {
                 backLayerPointers[2].pixel_format = Format::ARGB8888;
                 backLayerPointers[3].pixel_format = Format::ARGB8888;
                 break;
-            }
-        }
-
-        // Prepare shadow image
-        uint8_t* imgContent = (uint8_t*)malloc(XSize * /*1*/ 4);
-        shadowImage = new ImageContent(imgContent, XSize, 1, 1);
-        if(IsRotated()) {
-            if(!shadowImage->IsRotated()) {
-                shadowImage->Rotate90();
             }
         }
     }
