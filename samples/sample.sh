@@ -6,6 +6,8 @@ BUILD_ALL=0
 BUILD_CLEAN=0
 BUILD_ONLY=0
 BUILD_TYPE=RelWithDebInfo
+BUILD_DIR="build"
+INTERPRETER=""
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -23,13 +25,15 @@ while [[ $# -gt 0 ]]; do
       ;;
     --debug)
       BUILD_TYPE=Debug
+      BUILD_DIR="build-debug"
+      INTERPRETER="gdb"
       shift
       ;;
     --help)
-      echo "sample.sh [--build|--clean|--help] --all|<sample_name>"
+      echo "sample.sh [--build|--clean|--debug|--help] --all|<sample_name>"
       echo " --build  Do not run the sample after building"
       echo " --clean  Do a clean build of the sample"
-      echo " --debug  Do a Debug build (default is RelWithDebInfo)"
+      echo " --debug  Do a Debug build (default is RelWithDebInfo) and run in GDB"
       echo " --all    Build all samples"
       echo " --help   Print this help page and exit"
       exit 0
@@ -55,24 +59,24 @@ function sample() {
     fi
 
     echo "Building sample '$1'..."
-    rm -f "$SAMPLE_PATH/build/demo" || true
+    rm -f "$SAMPLE_PATH/$BUILD_DIR/demo" || true
 
-    if [ "$BUILD_CLEAN" -eq "1" ] && [ -d "$SAMPLE_PATH/build" ]; then
-        rm -rf "$SAMPLE_PATH/build"
+    if [ "$BUILD_CLEAN" -eq "1" ] && [ -d "$SAMPLE_PATH/$BUILD_DIR" ]; then
+        rm -rf "$SAMPLE_PATH/$BUILD_DIR"
     fi
 
     set -e
-    cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -B $SAMPLE_PATH/build/ $SAMPLE_PATH
-    cmake --build $SAMPLE_PATH/build/ -j $(nproc)
+    cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -B "$SAMPLE_PATH/$BUILD_DIR/" $SAMPLE_PATH
+    cmake --build "$SAMPLE_PATH/$BUILD_DIR/" -j $(nproc)
 
-    if [ ! -f "$SAMPLE_PATH/build/demo" ]; then
+    if [ ! -f "$SAMPLE_PATH/$BUILD_DIR/demo" ]; then
         echo "Failed to build sample $SAMPLE_PATH, executable file not found!"
         exit 1
     fi
 
     if [ ! "$BUILD_ONLY" -eq "1" ]; then
         echo "Running sample '$1'..."
-        $SAMPLE_PATH/build/demo
+        eval $INTERPRETER "$SAMPLE_PATH/$BUILD_DIR/demo"
     fi
 }
 

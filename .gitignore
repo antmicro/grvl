@@ -3,6 +3,7 @@
 *.out
 lib/
 build/
+build-debug/
 __pycache__/
 *.pyc
 *.sw*
