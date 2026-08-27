@@ -192,14 +192,15 @@ namespace grvl {
     }
 
     static constexpr auto defaultScrollingDuration = 400;
-    Manager::Manager(uint32_t xSize, uint32_t ySize, int bpp, bool rotate90, uint8_t* framebuffer)
-        : flips(0)
-        , TopPanel(0)
-        , BottomPanel(NULL)
-        , StartHeader(NULL)
-        , TargetHeader(NULL)
-        , ActiveScreen(NULL)
-        , TargetScreen(NULL)
+
+    Manager::Manager(uint32_t xSize, uint32_t ySize, Format format, bool rotate90, void* framebuffer_1, void* framebuffer_2)
+    : flips(0)
+        , TopPanel(nullptr)
+        , BottomPanel(nullptr)
+        , StartHeader(nullptr)
+        , TargetHeader(nullptr)
+        , ActiveScreen(nullptr)
+        , TargetScreen(nullptr)
         , AnimationWindowOffset(0)
         , CurrentTimestamp(0)
         , BeginTimestamp(0)
@@ -233,14 +234,10 @@ namespace grvl {
 
         painter.SetRotation(rotate90);
 
-        painter.SetBackgroundImage(&BackgroundImage);
         painter.SetContentManager(&contentManager);
         painter.SetDisplaySize(xSize, ySize);
 
-        if (framebuffer)
-            painter.CreateFramebuffersCollection(bpp, framebuffer);
-        else
-            painter.CreateFramebuffersCollection(bpp);
+        painter.CreateFramebuffersCollection(format, framebuffer_1, framebuffer_2);
 
         painter.InitFramebuffersCollection();
         static constexpr auto defaultBGColor = 0xFF000000;
@@ -253,6 +250,25 @@ namespace grvl {
         AddCallbackToContainer("RemoveLastCharacterFromCurrentInput", KeyboardRemoveLastCharacterCallback);
         AddCallbackToContainer("SwitchKeyboardKeys", SwitchKeyboardKeysCallback);
         AddCallbackToContainer("ShowPopup", ShowPopupCallback);
+    }
+
+    static Format GuessFormatByStride(int bpp)
+    {
+        if (bpp == 1) return Format::L8;
+        if (bpp == 2) return Format::RGB565;
+        if (bpp == 3) return Format::RGB888;
+        if (bpp == 4) return Format::ARGB8888;
+
+        Log(ERROR, "Unable to guess format for stride %d, using ARGB8888", bpp);
+        return Format::ARGB8888;
+    }
+
+    Manager::Manager(uint32_t xSize, uint32_t ySize, int bpp, bool rotate90, uint8_t* framebuffer)
+        : Manager(xSize, ySize, GuessFormatByStride(bpp), rotate90, framebuffer, framebuffer ? (framebuffer + (xSize * ySize * bpp)) : nullptr) {
+
+        if (framebuffer) {
+            Log(WARN, "You are using a deprecated API to supply the framebuffers!");
+        }
     }
 
     Manager::EventQueue& Manager::GetEventsQueueInstance()
@@ -495,30 +511,12 @@ namespace grvl {
         }
     }
 
-    Manager& Manager::SetBackgroundImage(const Image& image)
-    {
-        BackgroundImage = image;
-        if(painter.IsRotated()) {
-            if(!BackgroundImage.GetContent()->IsRotated()) {
-                BackgroundImage.GetContent()->Rotate90();
-            }
-        }
-        BackgroundImage.SetPosition(0, 0);
-        painter.SetBackgroundImage(&BackgroundImage);
-        return *this;
-    }
-
     Manager& Manager::SetCollectionImage(const Image& image)
     {
         CollectionImage = image;
         CollectionImage.SetPosition(0, 0);
         dotRadius = CollectionImage.GetWidth() / 2;
         return *this;
-    }
-
-    Image& Manager::GetBackgroundImage()
-    {
-        return BackgroundImage;
     }
 
     AbstractView* Manager::GetActiveScreen()
@@ -908,9 +906,8 @@ namespace grvl {
                 painter.FillRectangle(0, 0, width, height, painter.GetBackgroundColor());
                 DrawNextLoadingFrame();
                 ApplyTransparency();
-                painter.FlipSynchronizeBuffers();
+                painter.SwapSynchronizeBuffers();
                 return;
-                break;
             }
             case CrossFade: {
                 if(UpdateAnimationWindowOffset()) {
@@ -922,84 +919,13 @@ namespace grvl {
                         TopPanel->SetVisible(ActiveScreen->GetGlobalPanelVisibility());
                     }
                     ManagerState = Refreshing;
-                    grvl::Callbacks()->set_layer_pointer(painter.GetBuffer(2));
+                    grvl::Callbacks()->set_layer_pointer(painter.GetBuffer(0));
                     painter.FillRectangle(0, 0, width, height, COLOR_ARGB8888_TRANSPARENT);
                 }
                 break;
             }
-            case ToTheRight:
-            case ToTheLeft: {
-                uint8_t bytesPerPixel = painter.GetBytesPerPixel();
-                uint8_t displayBytesPerPixel = painter.GetDisplayBytesPerPixel();
-                Format pixelFormat = painter.GetPixelFormat();
-                Format displayPixelFormat = painter.GetDisplayPixelFormat();
-                UpdateAnimationWindowOffset();
-
-                uintptr_t clt = BackgroundImage.GetContent() ? BackgroundImage.GetContent()->GetColorPalette() : 0;
-
-                if(painter.IsRotated()) {
-                    uintptr_t framePtr = static_cast<uintptr_t>(bytesPerPixel) * GetTotalHeadersHeight();
-                    if(ManagerState == ToTheRight) {
-                        framePtr += static_cast<unsigned long>(AnimationWindowOffset * height * bytesPerPixel);
-                    } else {
-                        framePtr += static_cast<unsigned long>(width - AnimationWindowOffset) * height * bytesPerPixel;
-                    }
-
-                    // NOLINTBEGIN
-                    painter.DmaOperationCLT((uintptr_t)(painter.GetBuffer(0) + framePtr),
-                                            (uintptr_t)(BackgroundImage.GetContentData() + BackgroundImage.GetContentBytesPerPixel() * GetTotalHeadersHeight()),
-                                            (uintptr_t)(painter.GetVisibleBuffer() + (displayBytesPerPixel * GetTotalHeadersHeight())),
-                                            height - GetTotalHeadersHeight() - GetBottomPanelHeight(), width,
-                                            GetTotalHeadersHeight() + GetBottomPanelHeight(), GetTotalHeadersHeight() + GetBottomPanelHeight(),
-                                            GetTotalHeadersHeight() + GetBottomPanelHeight(), pixelFormat,
-                                            BackgroundImage.GetContentColorFormat(), displayPixelFormat, clt, 0);
-                    // NOLINTEND
-                } else {
-                    if(((int)width >= AnimationWindowOffset) && (AnimationWindowOffset > 0)) {
-                        uintptr_t w1;
-                        uintptr_t w2;
-                        if(ManagerState == ToTheRight) {
-                            w1 = AnimationWindowOffset;
-                            w2 = width - AnimationWindowOffset;
-                        } else {
-                            w1 = width - AnimationWindowOffset;
-                            w2 = AnimationWindowOffset;
-                        }
-
-                        // NOLINTBEGIN
-                        painter.DmaOperationCLT(painter.GetBuffer(0) + bytesPerPixel * (width * GetTotalHeadersHeight()),
-                            (uintptr_t)(BackgroundImage.GetContentData() + BackgroundImage.GetContentBytesPerPixel() * (width * GetTotalHeadersHeight() + w1)),
-                            painter.GetVisibleBuffer() + displayBytesPerPixel * (width * GetTotalHeadersHeight() + w1), w2,
-                            height - GetTotalHeadersHeight() - GetBottomPanelHeight(), w1, w1, w1, pixelFormat,
-                            BackgroundImage.GetContentColorFormat(), displayPixelFormat, clt, 0);
-
-                        painter.DmaOperationCLT(
-                            painter.GetBuffer(1) + bytesPerPixel * (width * GetTotalHeadersHeight() + w2),
-                            (uintptr_t)(BackgroundImage.GetContentData() + BackgroundImage.GetContentBytesPerPixel() * (width * GetTotalHeadersHeight())),
-                            painter.GetVisibleBuffer() + displayBytesPerPixel * (width * GetTotalHeadersHeight()), w1,
-                            height - GetTotalHeadersHeight() - GetBottomPanelHeight(), w2, w2, w2, pixelFormat,
-                            BackgroundImage.GetContentColorFormat(), displayPixelFormat, clt, 0);
-                        // NOLINTEND
-                    }
-                }
-                if(AnimationWindowOffset <= 0) {
-                    ActiveScreen = TargetScreen;
-                    if(TopPanel) {
-                        TopPanel->SetVisible(ActiveScreen->GetGlobalPanelVisibility());
-                    }
-                    ManagerState = Refreshing;
-                    return;
-                }
-                break;
-            }
-
             case Refreshing: {
-                // Select a buffer to draw on
-                painter.SetActiveBuffer(0);
                 if(ActiveScreen) {
-
-                    // Log(TRACE, "Drawing the active screen! (%d %d)\n", width, height - GetTotalHeadersHeight() - GetBottomPanelHeight());
-
                     ActiveScreen->SetSize(width, height - GetTotalHeadersHeight() - GetBottomPanelHeight());
                     ActiveScreen->Draw(painter, 0, GetTotalHeadersHeight());
                 }
@@ -1010,8 +936,6 @@ namespace grvl {
                 break;
             }
         }
-
-        painter.SetActiveBuffer(0);
 
         if(TopPanel && TopPanel->IsVisible() && GetGlobalTopPanelVisibility()) {
             TopPanel->Draw(painter, 0, 0);
@@ -1025,27 +949,11 @@ namespace grvl {
             BottomPanel->Draw(painter, 0, height - GetBottomPanelHeight());
         }
 
-        DrawOverlay();
-
-        if(ManagerState == Refreshing) { // Use unified background handling
-            painter.MergeBuffers();
-        } else if(GetTotalHeadersHeight() > 0 && !painter.IsRotated()) { // Use animation optimized background handling
-            Format pixelFormatBackground = painter.GetPixelFormat();
-            Format pixelFormatBackgroundDisplay = painter.GetDisplayPixelFormat();
-            painter.DmaOperationCLT(painter.GetBuffer(0), (uintptr_t)(BackgroundImage.GetContentData()),
-                                    painter.GetVisibleBuffer(), width, GetTotalHeadersHeight(), 0, 0, 0,
-                                    pixelFormatBackground, BackgroundImage.GetContentColorFormat(), pixelFormatBackgroundDisplay,
-                                    0, 0);
-        }
-
-        painter.SetActiveBuffer(painter.GetSwapperValue() ? 2 : 3);
-
         if(ActiveScreen && ActiveScreen->GetCollectionSize() > 0) {
             DrawDots(ActiveScreen->GetCollectionSize(), ActiveScreen->GetPositionInCollection());
         }
 
         if(CurrentPopup && CurrentPopup->IsVisible()) {
-            painter.SetActiveBuffer(painter.GetSwapperValue() ? 2 : 3);
             painter.ShadowBuffer(0x7F);
             CurrentPopup->Draw(painter, 0, 0);
         }
@@ -1061,7 +969,8 @@ namespace grvl {
                                alpha << 24 | (0x00FFFFFF & COLOR_ARGB8888_RED)); //NOLINT
         }
 
-        painter.FlipSynchronizeBuffers();
+        DrawOverlay();
+        painter.SwapSynchronizeBuffers();
         flips++;
     }
 
@@ -1758,7 +1667,7 @@ namespace grvl {
     void Manager::ClearBuffers()
     {
         painter.FillRectangle(0, 0, width, height, COLOR_ARGB8888_TRANSPARENT);
-        painter.FlipBuffers();
+        painter.SwapBuffers();
         painter.FillRectangle(0, 0, width, height, COLOR_ARGB8888_TRANSPARENT);
     }
 

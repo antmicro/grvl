@@ -163,6 +163,7 @@ namespace grvl {
         Manager& SetScrollingDuration(uint32_t milliseconds);
         uint32_t GetScrollingDuration(void) const;
 
+        [[deprecated]]
         uintptr_t GetFramebufferPointer(BufferName name) const;
 
         /// Sets transparency. TODO - Adjust the description
@@ -190,11 +191,6 @@ namespace grvl {
         /// @param image Reference to image object that should be displayed when loading.
         Manager& SetLoadingImage(const Image& image);
         Manager& SetLoadingImageVisibility(uint8_t visible);
-
-        /// Sets image that is displayed below screens.
-        ///
-        /// @param image Reference to the image to display.
-        Manager& SetBackgroundImage(const Image& image);
 
         /// Sets image that is displayed as screen collection indicator.
         ///
@@ -284,7 +280,6 @@ namespace grvl {
         /// @param id Numerical identifier of a screen (zero-based).
         /// @return Pointer to the screen or NULL if not found.
         AbstractView* GetScreen(int id);
-        Image& GetBackgroundImage();
         Image& GetLoadingImage();
         State GetState();
 
@@ -398,7 +393,10 @@ namespace grvl {
         Component* FindElementInTheActiveScreenById(const char* id);
 
     private:
-        Manager(uint32_t xSize, uint32_t ySize, int bpp, bool rotate90 = false, uint8_t* framebuffer = NULL);
+        Manager(uint32_t xSize, uint32_t ySize, Format fmt, bool rotate90 = false, void* framebuffer_1 = nullptr, void* framebuffer_2 = nullptr);
+
+        [[deprecated("For Removal")]]
+        Manager(uint32_t xSize, uint32_t ySize, int bpp, bool rotate90 = false, uint8_t* framebuffer = nullptr);
 
         static Manager* instance;
 
@@ -426,7 +424,6 @@ namespace grvl {
         uint64_t CurrentTimestamp, BeginTimestamp, PointerTimestamp, KeyPressTimestamp;
         State ManagerState;
         Image LoadingImage;
-        Image BackgroundImage;
         Image CollectionImage;
         uint8_t LoadingImageVisible;
         Popup* CurrentPopup;

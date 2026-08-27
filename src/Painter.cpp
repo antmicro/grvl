@@ -40,10 +40,6 @@ namespace grvl {
         return !((color & 0xff000000) == 0xff000000);
     }
 
-    Painter::~Painter()
-    {
-    }
-
     void Painter::SetDisplaySize(int32_t x, int32_t y)
     {
         XSize = x;
@@ -83,13 +79,13 @@ namespace grvl {
         memset(shadow->GetData(), alpha, shadow->GetWidth() * 4);
 
         for(uint32_t i = 0; i < YSize; i++) {
-            DmaMoveShadow((uintptr_t) shadow->GetData(), GetVisibleBuffer(), 0, i, shadow->GetWidth(), 1, GetDisplayPixelFormat(), color);
+            DmaMoveShadow((uintptr_t) shadow->GetData(), GetBackBuffer(), 0, i, shadow->GetWidth(), 1, GetPixelFormat(), color);
         }
     }
 
     void Painter::DrawPixel(uint32_t Xpos, uint32_t Ypos, uint32_t RGB_Code) const
     {
-        uintptr_t ptr = GetActiveBuffer();
+        uintptr_t ptr = GetBackBuffer();
 
         if(Xpos > CurrentDrawingBoundsEndX() || Xpos < CurrentDrawingBoundsStartX()) {
             return;
@@ -99,12 +95,12 @@ namespace grvl {
             return;
         }
 
-        if(GetActiveBufferBytesPerPixel() == 4) {
+        if(GetBytesPerPixel() == 4) {
             uint32_t* pixels = (uint32_t*)ptr;
             pixels[Ypos * GetXSize() + Xpos] = RGB_Code;
         } else {
             uint16_t* pixels = (uint16_t*)ptr;
-            uint16_t col = ConvertColorFormat(RGB_Code, Format::ARGB8888, GetActiveBufferPixelFormat()) & 0xFFFF;
+            uint16_t col = ConvertColorFormat(RGB_Code, Format::ARGB8888, GetPixelFormat()) & 0xFFFF;
             pixels[Ypos * GetXSize() + Xpos] = col;
         }
     }
@@ -173,13 +169,13 @@ namespace grvl {
             return COLOR_ARGB8888_BLACK;
         }
 
-        uintptr_t ptr = GetActiveBuffer();
-        if(GetActiveBufferBytesPerPixel() == 4) {
+        uintptr_t ptr = GetBackBuffer();
+        if(GetBytesPerPixel() == 4) {
             uint32_t* pixels = (uint32_t*)ptr;
             return pixels[Ypos * GetXSize() + Xpos];
         } else {
             uint16_t* pixels = (uint16_t*)ptr;
-            return ConvertColorFormat(pixels[Ypos * GetXSize() + Xpos], GetActiveBufferPixelFormat(), Format::ARGB8888);
+            return ConvertColorFormat(pixels[Ypos * GetXSize() + Xpos], GetPixelFormat(), Format::ARGB8888);
         }
     }
 
@@ -455,7 +451,7 @@ namespace grvl {
         uintptr_t address = reinterpret_cast<uintptr_t>(image->GetFrameData(frame));
 
         DmaMoveImage(
-            address, GetActiveBuffer(), 0, 0, x, y, image->GetWidth(), image->GetHeight(),
+            address, GetBackBuffer(), 0, 0, x, y, image->GetWidth(), image->GetHeight(),
             image->GetPixelsPerLine(), image->GetNumberOfLines(), 0, 1,
             image->GetColorFormat(), GetPixelFormat(), image->HasAlphaChannel() && !image->IsOpaque(), image->GetColorPalette()
         );
@@ -530,9 +526,9 @@ namespace grvl {
         }
 
         uintptr_t ax = 0;
-        uintptr_t ptr = GetActiveBuffer();
-        uint32_t bytes = GetActiveBufferBytesPerPixel();
-        Format pixelFormat = GetActiveBufferPixelFormat();
+        uintptr_t ptr = GetBackBuffer();
+        uint32_t bytes = GetBytesPerPixel();
+        Format pixelFormat = GetPixelFormat();
 
         float currentGradientValue = startingValue;
         float gradientDelta = (1.0f - currentGradientValue) / length;
@@ -750,9 +746,9 @@ namespace grvl {
         }
 
         uintptr_t ax = 0;
-        uintptr_t ptr = GetActiveBuffer();
-        uint32_t bytes = GetActiveBufferBytesPerPixel();
-        Format pixel_format = GetActiveBufferPixelFormat();
+        uintptr_t ptr = GetBackBuffer();
+        uint32_t bytes = GetBytesPerPixel();
+        Format pixel_format = GetPixelFormat();
         if(!IsRotated()) {
             ax = ptr + bytes * (GetXSize() * Ypos + Xpos);
             DmaFill(ax, Length, 1, 0, text_color, pixel_format);
@@ -786,9 +782,9 @@ namespace grvl {
         }
 
         uintptr_t ax = 0;
-        uintptr_t ptr = GetActiveBuffer();
-        uint32_t bytes = GetActiveBufferBytesPerPixel();
-        Format pixel_format = GetActiveBufferPixelFormat();
+        uintptr_t ptr = GetBackBuffer();
+        uint32_t bytes = GetBytesPerPixel();
+        Format pixel_format = GetPixelFormat();
         if(!IsRotated()) {
             /* Get the line address */
             ax = ptr + bytes * (GetXSize() * Ypos + Xpos);
@@ -837,9 +833,9 @@ namespace grvl {
         }
 
         uintptr_t ax = 0;
-        uint32_t bytes = GetActiveBufferBytesPerPixel();
-        uintptr_t ptr = GetActiveBuffer();
-        Format pixel_format = GetActiveBufferPixelFormat();
+        uint32_t bytes = GetBytesPerPixel();
+        uintptr_t ptr = GetBackBuffer();
+        Format pixel_format = GetPixelFormat();
         if(!IsRotated()) {
             /* Get the rectangle start address */
             ax = ptr + bytes * (GetXSize() * Ypos + Xpos);
@@ -1001,35 +997,16 @@ namespace grvl {
         return grvl::Callbacks()->fill(outputMem, PixelsPerLine, NumberOfLines, outOffset, color_index, pixel_format);
     }
 
-    Format Painter::GetActiveBufferPixelFormat() const
-    {
-        return backLayerPointers[ActiveBuffer].pixel_format;
-    }
-
-    uint32_t Painter::GetActiveBufferBytesPerPixel() const
-    {
-        return GetFormatStride(backLayerPointers[ActiveBuffer].pixel_format);
-    }
-
     Format Painter::GetPixelFormat() const
     {
-        return backLayerPointers[0].pixel_format;
+        return pixel_format;
     }
 
     uint32_t Painter::GetBytesPerPixel() const
     {
-        return GetFormatStride(backLayerPointers[0].pixel_format);
+        return GetFormatStride(GetPixelFormat());
     }
 
-    Format Painter::GetDisplayPixelFormat() const
-    {
-        return backLayerPointers[2].pixel_format;
-    }
-
-    uint32_t Painter::GetDisplayBytesPerPixel() const
-    {
-        return GetFormatStride(backLayerPointers[2].pixel_format);
-    }
     void Painter::DmaMove(uintptr_t fb_src, uintptr_t fb_dst, int32_t x_src, int32_t y_src, int32_t x_dst, int32_t y_dst,
                           int32_t width, int32_t height, Format src_pixel_format, Format dst_pixel_format) const
     {
@@ -1237,111 +1214,31 @@ namespace grvl {
                              Format::A8, outPixelFormat, outPixelFormat, fontColor);
     }
 
-    void Painter::DmaTransferToFramebuffer(int32_t y_position, int32_t height, bool with_background, bool inPlace)
+    void Painter::CreateFramebuffersCollection(Format fmt, void* framebuffer_1, void* framebuffer_2)
     {
+        this->pixel_format = fmt;
+        const size_t bytes = GetFormatStride(fmt) * XSize * YSize;
 
-        Format backFramebufferPixelFormat = GetPixelFormat();
-        uint8_t backFramebufferBPP = GetBytesPerPixel();
-        Format displayFramebufferPixelFormat = GetDisplayPixelFormat();
-        uint8_t displayFramebufferBPP = GetDisplayBytesPerPixel();
-        Format backgroundPixelFormat = BackgroundImage->GetContentColorFormat();
-        uint8_t backgroundBPP = BackgroundImage->GetContentBytesPerPixel();
-
-        uintptr_t inputMem = 0, backMem = 0, outputMem = 0;
-        uint32_t NumberOfLines = 0, PixelsPerLine = 0, inOffset = 0, outOffset = 0, backOffset = 0;
-
-        if(IsRotated()) {
-            inputMem = GetActiveBuffer() + y_position * backFramebufferBPP;
-
-            if(with_background) {
-                backMem = (uintptr_t)BackgroundImage->GetContentData() + y_position * backgroundBPP;
-                if((y_position + height) > BackgroundImage->GetHeight()) {
-                    Log(ERROR, "Background is smaller than the surface!");
-                }
-            }
-
-            outputMem = GetVisibleBuffer() + y_position * displayFramebufferBPP;
-            NumberOfLines = GetDisplayWidth();
-            PixelsPerLine = height;
-            inOffset = (GetDisplayHeight() - height) * backFramebufferBPP;
-            backOffset = BackgroundImage->GetHeight() - height;
-            outOffset = (GetDisplayHeight() - height) * displayFramebufferBPP;
-
-        } else {
-            inputMem = GetActiveBuffer() + (y_position * GetDisplayWidth() * backFramebufferBPP);
-            if(with_background) {
-                backMem = (uintptr_t)BackgroundImage->GetContentData()
-                    + (y_position * BackgroundImage->GetWidth() * backgroundBPP);
-                if((y_position + height) > BackgroundImage->GetHeight()) {
-                    Log(ERROR, "Background is smaller than the surface!");
-                }
-            } else {
-                backMem = 0;
-            }
-            outputMem = GetVisibleBuffer() + (y_position * GetDisplayWidth() * displayFramebufferBPP);
-            NumberOfLines = height;
-            PixelsPerLine = GetDisplayWidth();
-            inOffset = 0;
-            backOffset = GetDisplayWidth() - BackgroundImage->GetWidth();
-            outOffset = 0;
+        if (framebuffer_1 == nullptr) {
+            framebuffer_1 = malloc(bytes);
+            Log(INFO, "Allocated framebuffer #1 of size %u bytes", bytes);
         }
 
-        if(with_background && !BackgroundImage->IsEmpty() && backgroundPixelFormat == Format::L8) {
-            DmaOperationCLT(
-                inputMem, backMem, inPlace ? inputMem : outputMem, PixelsPerLine, NumberOfLines, inOffset, backOffset, outOffset,
-                backFramebufferPixelFormat, backgroundPixelFormat, displayFramebufferPixelFormat, 0, 0);
-        } else {
-            DmaOperation(
-                inputMem, backMem, inPlace ? inputMem : outputMem, PixelsPerLine, NumberOfLines, inOffset, backOffset, outOffset,
-                backFramebufferPixelFormat, backgroundPixelFormat, displayFramebufferPixelFormat, 0);
-        }
-    }
-
-    void Painter::CreateFramebuffersCollection(uint8_t BufferBPP, uint8_t* framebuffer)
-    {
-        if (framebuffer) {
-            backLayerPointers[0].data = (uintptr_t)framebuffer;
-        }
-        else {
-            backLayerPointers[0].data = (uintptr_t)malloc(BufferBPP * XSize * YSize * 4);
+        if (framebuffer_2 == nullptr) {
+            framebuffer_2 = malloc(bytes);
+            Log(INFO, "Allocated framebuffer #2 of size %u bytes", bytes);
         }
 
-        backLayerPointers[1].data = backLayerPointers[0].data + BufferBPP * XSize * YSize;
-        backLayerPointers[2].data = backLayerPointers[1].data + BufferBPP * XSize * YSize;
-        backLayerPointers[3].data = backLayerPointers[2].data + BufferBPP * XSize * YSize;
-
-        switch(BufferBPP) {
-            case 2:
-            {
-                backLayerPointers[0].pixel_format = Format::ARGB4444;
-                backLayerPointers[1].pixel_format = backLayerPointers[0].pixel_format;
-                backLayerPointers[2].pixel_format = Format::RGB565;
-                backLayerPointers[3].pixel_format = Format::RGB565;
-                break;
-            }
-            case 3:
-            {
-                backLayerPointers[0].pixel_format = Format::ARGB4444;
-                backLayerPointers[1].pixel_format = backLayerPointers[0].pixel_format;
-                backLayerPointers[2].pixel_format = Format::RGB888;
-                backLayerPointers[3].pixel_format = Format::RGB888;
-                break;
-            }
-            case 4:
-            {
-                backLayerPointers[0].pixel_format = Format::ARGB8888;
-                backLayerPointers[1].pixel_format = backLayerPointers[0].pixel_format;
-                backLayerPointers[2].pixel_format = Format::ARGB8888;
-                backLayerPointers[3].pixel_format = Format::ARGB8888;
-                break;
-            }
-        }
+        framebuffers[0] = (uintptr_t) framebuffer_1;
+        framebuffers[1] = (uintptr_t) framebuffer_2;
     }
 
     void Painter::InitFramebuffersCollection()
     {
-        FillMemory(backLayerPointers[0].data, XSize, YSize * 2, COLOR_ARGB8888_BLACK, backLayerPointers[0].pixel_format);
-        FillMemory(backLayerPointers[2].data, XSize, YSize * 2, COLOR_ARGB8888_BLACK, backLayerPointers[2].pixel_format);
+        const Format format = GetPixelFormat();
+
+        FillMemory(GetBackBuffer(), XSize, YSize, COLOR_ARGB8888_BLACK, format);
+        FillMemory(GetFrontBuffer(), XSize, YSize, COLOR_ARGB8888_BLACK, format);
     }
 
     uint32_t Painter::GetXSize() const
@@ -1364,89 +1261,9 @@ namespace grvl {
         return YSize;
     }
 
-    void Painter::SetLayerAddress(uint32_t display)
-    {
-        grvl::Callbacks()->set_layer_pointer(backLayerPointers[display].data);
-    }
-
     void Painter::AddBackgroundBlock(int32_t y_position, int32_t height, uint32_t backgroundColor)
     {
-        if(!HasTransparency(backgroundColor) || BackgroundImage->IsEmpty()) {
-            return;
-        }
-
-        background_block bblock;
-        bblock.y_position = y_position;
-        bblock.height = height;
-        // y_position is equal to ParentY + Y; both of them could be defined as < 0 by mistake.
-        // In this case blocks with y_position < 0 are ignored.
-        if(height > 0 && (y_position + height) <= (int32_t)GetYSize()) {
-            bblocks.push_back(bblock);
-        }
-    }
-
-    static int findNextBlock(const Painter::background_block_vector& vec, int transferPosition)
-    {
-        int nextValue = INT_LEAST16_MAX;
-        int index = -1;
-
-        for(uint32_t i = 0; i < vec.size(); i++) {
-            if(vec[i].y_position >= transferPosition && vec[i].y_position < nextValue) {
-                nextValue = vec[i].y_position;
-                index = i;
-            }
-        }
-
-        return index;
-    }
-
-    void Painter::MergeBuffers(bool inPlace)
-    {
-        if(bblocks.size() == 0 || BackgroundImage->IsEmpty()) {
-            DmaTransferToFramebuffer(0, GetYSize(), false, inPlace);
-        } else {
-            int currentTransferPosition = 0, i = 0;
-            // Transfer blocks
-            while(1) {
-                i = findNextBlock(bblocks, currentTransferPosition);
-                if(i == -1) {
-                    break;
-                }
-
-                if(currentTransferPosition < bblocks[i].y_position) { // Transfer without background
-                    DmaTransferToFramebuffer(
-                        currentTransferPosition, bblocks[i].y_position - currentTransferPosition, false, inPlace);
-                    currentTransferPosition = bblocks[i].y_position;
-                } else if(currentTransferPosition > bblocks[i].y_position) {
-                    continue;
-                }
-
-                // Detect block continuity
-                int mergedBlockBeginY = bblocks[i].y_position, mergedBlockHeight = bblocks[i].height, j = 0;
-
-                while(1) { // Check if another block can be merged
-                    j = findNextBlock(bblocks, currentTransferPosition + mergedBlockHeight);
-                    if(j > -1 && bblocks[j].y_position <= mergedBlockBeginY + mergedBlockHeight) {
-                        mergedBlockHeight = std::max(mergedBlockHeight,
-                                                bblocks[j].y_position + bblocks[j].height - mergedBlockBeginY);
-                    } else {
-                        break;
-                    }
-                }
-                DmaTransferToFramebuffer(mergedBlockBeginY, mergedBlockHeight, true, inPlace);
-                currentTransferPosition += mergedBlockHeight;
-            }
-            if(currentTransferPosition < (int32_t)GetYSize()) {
-                DmaTransferToFramebuffer(currentTransferPosition, GetYSize() - currentTransferPosition, false, inPlace);
-            }
-            bblocks.clear();
-        }
-    }
-
-    void Painter::FlipBuffers()
-    {
-        SetLayerAddress(VisibleBuffer ? 2 : 3);
-        VisibleBuffer = VisibleBuffer ? 0 : 1;
+        // this function is now redundant, it was only needed for background image handling
     }
 
     bool Painter::IsRotated() const
@@ -1471,55 +1288,32 @@ namespace grvl {
 
     uint8_t Painter::GetSwapperValue() const
     {
-        return VisibleBuffer;
+        return swapper ? 1 : 0;
     }
 
-    void Painter::FlipSynchronizeBuffers()
+    void Painter::SwapSynchronizeBuffers()
     {
         if(grvl::Callbacks()->wait_for_vsync) {
             grvl::Callbacks()->wait_for_vsync();
         }
-        FlipBuffers();
+        SwapBuffers();
         if(grvl::Callbacks()->flipping_completed) {
             grvl::Callbacks()->flipping_completed();
         }
     }
 
-    void Painter::SetBackgroundImage(const std::string& resource)
-    {
-        BackgroundImage->ReplaceDelegate(contentManager->RequestImage(resource));
-    }
-
-    void Painter::SetBackgroundImage(Image* image)
-    {
-        if(image) {
-            BackgroundImage = image;
-        }
-    }
-
     uintptr_t Painter::GetBuffer(int id) const
     {
-        if(id > 3) {
-            return 0;
+        if (id != 0 && id != 1) {
+            return 0 /* nullptr */;
         }
-        return backLayerPointers[id].data;
-    }
 
-    uintptr_t Painter::GetActiveBuffer() const
-    {
-        return backLayerPointers[ActiveBuffer].data;
-    }
-
-    uintptr_t Painter::GetVisibleBuffer() const
-    {
-        return backLayerPointers[VisibleBuffer ? 2 : 3].data;
+        return framebuffers[id];
     }
 
     void Painter::SetActiveBuffer(uint32_t activeBuffer)
     {
-        if(activeBuffer < 4) {
-            ActiveBuffer = activeBuffer;
-        }
+        Log(ERROR, "Deprecated Painter::SetActiveBuffer() called!");
     }
 
     void Painter::DrawString(Font* Font, int16_t Xpos, int16_t Ypos, const std::string& Text, uint32_t text_color, uint32_t background) const
@@ -1594,7 +1388,7 @@ namespace grvl {
     void Painter::DrawAntialiasedCharInBound(Font* Font, int16_t Xpos, int16_t Ypos,
                                              int16_t ParentX, int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight,
                                              uint32_t Index, uint32_t text_color, uint32_t background) const
-{
+    {
         if (ParentWidth <= 0 || ParentHeight <= 0) {
             return;
         }
@@ -1632,11 +1426,11 @@ namespace grvl {
             FillRectangle(clipLeft - 1, clipTop - 1, clippedWidth + 2, clippedHeight + 2, background);
         }
 
-        DmaMoveFont(reinterpret_cast<uintptr_t>(glyph.bitmap), GetActiveBuffer(),
+        DmaMoveFont(reinterpret_cast<uintptr_t>(glyph.bitmap), GetBackBuffer(),
                     srcX, srcY,
                     clipLeft, clipTop, clippedWidth, clippedHeight,
                     glyph.width, glyph.height,
-                    GetActiveBufferPixelFormat(),
+                    GetPixelFormat(),
                     text_color);
     }
 
@@ -1696,6 +1490,22 @@ namespace grvl {
         drawingBoundsStack[0].startY = 0;
         drawingBoundsStack[0].endX = XSize;
         drawingBoundsStack[0].endY = YSize;
+    }
+
+    uintptr_t Painter::GetFrontBuffer() const
+    {
+        return (uintptr_t) framebuffers[swapper ? 1 : 0];
+    }
+
+    uintptr_t Painter::GetBackBuffer() const
+    {
+        return (uintptr_t) framebuffers[swapper ? 0 : 1];
+    }
+
+    void Painter::SwapBuffers()
+    {
+        swapper = !swapper;
+        grvl::Callbacks()->set_layer_pointer(GetFrontBuffer());
     }
 
 } /* namespace grvl */

@@ -30,18 +30,8 @@ namespace grvl {
     class ContentManager;
     class ImageContent;
 
-    typedef struct {
-        uintptr_t data;
-        Format pixel_format;
-    } layer_t;
-
-    typedef struct {
-        int32_t y_position;
-        int32_t height;
-    } background_block;
-
     /// Represents object used to draw graphics.
-    class Painter {
+    class Painter final {
     public:
         class Edge {
         public:
@@ -69,27 +59,24 @@ namespace grvl {
             : backgroundColor(0)
             , XSize(0)
             , YSize(0)
-            , VisibleBuffer(0)
-            , ActiveBuffer(0)
-            , BackgroundImage(0)
             , contentManager(0)
             , is_rotated(false)
         {
         }
 
-        virtual ~Painter();
-
         void SetDisplaySize(int32_t x, int32_t y);
-        void CreateFramebuffersCollection(uint8_t BufferBPP, uint8_t* framebuffer = NULL);
+
+        /// Creates the framebuffers that will be used by the painter, or uses the ones provided
+        void CreateFramebuffersCollection(Format fmt, void* framebuffer_1 = nullptr, void* framebuffer_2 = nullptr);
         void InitFramebuffersCollection();
-        void SetBackgroundImage(Image* image);
-        void SetBackgroundImage(const std::string& resource);
 
         void SetContentManager(ContentManager* cm);
         ContentManager* GetContentManager();
 
         uint32_t GetXSize() const;
         uint32_t GetYSize() const;
+
+        [[deprecated("For Removal")]]
         uint8_t GetSwapperValue() const; // temporary
 
         struct DrawingBounds {
@@ -116,14 +103,11 @@ namespace grvl {
         int32_t CurrentDrawingBoundsWidth() const { return drawingBoundsStack[drawingBoundsStackIndex].endX - drawingBoundsStack[drawingBoundsStackIndex].startX; }
         int32_t CurrentDrawingBoundsHeight() const { return drawingBoundsStack[drawingBoundsStackIndex].endY - drawingBoundsStack[drawingBoundsStackIndex].startY; }
 
+        [[deprecated("For Removal")]]
         uintptr_t GetBuffer(int id) const;
-        uintptr_t GetVisibleBuffer() const;
-        uintptr_t GetActiveBuffer() const;
 
+        [[deprecated("For Removal")]]
         void SetActiveBuffer(uint32_t activeBuffer);
-
-        void FlipBuffers();
-        void FlipSynchronizeBuffers();
 
         enum class CircleQuarter : unsigned int {
             TOP_LEFT = 0,
@@ -155,8 +139,6 @@ namespace grvl {
         static uint32_t InterpolateColors(uint32_t first, uint32_t second, float t);
         void BlendPixel(uint32_t Xpos, uint32_t Ypos, uint32_t RGB_Code) const;
         uint32_t ReadPixel(uint32_t Xpos, uint32_t Ypos) const;
-
-        void SetLayerAddress(uint32_t display);
 
         void DmaOperation(uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem, uint32_t PixelsPerLine,
                           uint32_t NumberOfLines, uint32_t inOffset, uint32_t backgroundOffset, uint32_t outOffset,
@@ -201,10 +183,7 @@ namespace grvl {
                                              int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight, const char* Text, uint32_t text_color, uint32_t background = 0) const;
         Format GetPixelFormat() const;
         uint32_t GetBytesPerPixel() const;
-        Format GetDisplayPixelFormat() const;
-        uint32_t GetDisplayBytesPerPixel() const;
-        Format GetActiveBufferPixelFormat() const;
-        uint32_t GetActiveBufferBytesPerPixel() const;
+
         void SetBackgroundColor(uint32_t color);
         void SetRotation(bool rotate90);
         int32_t GetDisplayWidth() const;
@@ -217,24 +196,27 @@ namespace grvl {
 
         void FillMemory(uintptr_t memory, int32_t width, int32_t height, uint32_t text_color, Format colorFormat = Format::ARGB8888);
 
-        // Background blocks
-        using background_block_vector = std::vector<background_block>;
-        background_block_vector bblocks;
+        [[deprecated("For Removal")]]
         void AddBackgroundBlock(int32_t y_position, int32_t height, uint32_t backgroundColor);
-        void DmaTransferToFramebuffer(int32_t y_position, int32_t height, bool with_background, bool inPlace = false);
-        void MergeBuffers(bool inPlace = false);
         void ShadowBuffer(uint8_t alpha);
 
         static bool IsColorTransparent(uint32_t color);
 
+        uintptr_t GetFrontBuffer() const;
+        uintptr_t GetBackBuffer() const;
+        void SwapBuffers();
+        void SwapSynchronizeBuffers();
+
     private:
-        layer_t backLayerPointers[4];
+
+        Format pixel_format = Format::ARGB8888;
+        bool swapper = true;
+        uintptr_t framebuffers[2];
+
         uint32_t backgroundColor;
         uint32_t XSize, YSize;
         std::array<DrawingBounds, 16> drawingBoundsStack {};
         std::size_t drawingBoundsStackIndex { 0 };
-        uint8_t VisibleBuffer, ActiveBuffer;
-        Image* BackgroundImage;
         ContentManager* contentManager;
         bool is_rotated;
         bool nextFrameRequested { false };
@@ -244,6 +226,7 @@ namespace grvl {
         constexpr float ToRadians(float eulerAngles) const;
 
     private:
+
         void InnerDisplayAntialiasedString(Font* Font, int16_t Xpos, int16_t Ypos, const char* Text, uint32_t text_color, bool bounded, int16_t ParentX,
                                            int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight, uint32_t background = 0) const;
     };
