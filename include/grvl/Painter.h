@@ -33,28 +33,6 @@ namespace grvl {
     /// Represents object used to draw graphics.
     class Painter final {
     public:
-        class Edge {
-        public:
-            uint32_t Color;
-            int X1, Y1, X2, Y2;
-
-            Edge(int x1, int y1, int x2, int y2, const uint32_t color)
-            {
-                if(y1 < y2) {
-                    X1 = x1;
-                    Y1 = y1;
-                    X2 = x2;
-                    Y2 = y2;
-                } else {
-                    X1 = x2;
-                    Y1 = y2;
-                    X2 = x1;
-                    Y2 = y1;
-                }
-                Color = color;
-            }
-        };
-
         Painter()
             : backgroundColor(0)
             , XSize(0)
@@ -76,9 +54,6 @@ namespace grvl {
         uint32_t GetXSize() const;
         uint32_t GetYSize() const;
 
-        [[deprecated("For Removal")]]
-        uint8_t GetSwapperValue() const; // temporary
-
         struct DrawingBounds {
             int32_t startX { 0 };
             int32_t startY { 0 };
@@ -92,22 +67,8 @@ namespace grvl {
         void ClearNextFrameRequest() { nextFrameRequested = false; }
 
         void ResetDrawingBounds();
-        void PushDrawingBoundsStackElement(const DrawingBounds& drawing_bounds);
         void PushDrawingBoundsStackElement(int32_t startX, int32_t startY, int32_t endX, int32_t endY);
         void PopDrawingBoundsStackElement();
-
-        int32_t CurrentDrawingBoundsStartX() const { return drawingBoundsStack[drawingBoundsStackIndex].startX; }
-        int32_t CurrentDrawingBoundsStartY() const { return drawingBoundsStack[drawingBoundsStackIndex].startY; }
-        int32_t CurrentDrawingBoundsEndX() const { return drawingBoundsStack[drawingBoundsStackIndex].endX; }
-        int32_t CurrentDrawingBoundsEndY() const { return drawingBoundsStack[drawingBoundsStackIndex].endY; }
-        int32_t CurrentDrawingBoundsWidth() const { return drawingBoundsStack[drawingBoundsStackIndex].endX - drawingBoundsStack[drawingBoundsStackIndex].startX; }
-        int32_t CurrentDrawingBoundsHeight() const { return drawingBoundsStack[drawingBoundsStackIndex].endY - drawingBoundsStack[drawingBoundsStackIndex].startY; }
-
-        [[deprecated("For Removal")]]
-        uintptr_t GetBuffer(int id) const;
-
-        [[deprecated("For Removal")]]
-        void SetActiveBuffer(uint32_t activeBuffer);
 
         enum class CircleQuarter : unsigned int {
             TOP_LEFT = 0,
@@ -134,11 +95,94 @@ namespace grvl {
         void DrawAntialiasedLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint32_t color) const;
         void DrawVLine(int32_t Xpos, int32_t Ypos, int32_t Length, uint32_t text_color) const;
         void DrawGradientVLine(int16_t x1, int16_t y1, int16_t y2, uint32_t startingColor, uint32_t endingColor, float startingValue) const;
-        void DrawPixel(uint32_t Xpos, uint32_t Ypos, uint32_t RGB_Code) const;
+
         void DrawAntialiasedPixel(float Xpos, float Ypos, uint32_t RGB_Code) const;
         static uint32_t InterpolateColors(uint32_t first, uint32_t second, float t);
+
+        bool IsRotated() const;
+
+        void DrawHLine(int32_t Xpos, int32_t Ypos, int32_t Length, uint32_t text_color) const;
+
+        void DrawString(Font* Font, int16_t Xpos, int16_t Ypos, const std::string& Text, uint32_t text_color, uint32_t background = 0) const;
+
+        void DisplayAntialiasedString(Font* Font, int16_t Xpos, int16_t Ypos, const char* Text, uint32_t text_color, uint32_t background = 0) const;
+        void DisplayAntialiasedChar(Font* Font, uint16_t Xpos, uint16_t Ypos, uint32_t Index, uint32_t text_color, uint32_t background = 0) const;
+        void DrawAntialiasedChar(Font* Font, int16_t Xpos, int16_t Ypos, uint32_t Index, uint32_t text_color, uint32_t background = 0) const;
+        void DrawAntialiasedCharInBound(Font* Font, int16_t Xpos, int16_t Ypos, int16_t ParentX, int16_t ParentY,
+                                        int16_t ParentWidth, int16_t ParentHeight, uint32_t Index, uint32_t text_color, uint32_t background = 0) const;
+        void DisplayAntialiasedCharInBound(Font* Font, int16_t Xpos, int16_t Ypos, int16_t ParentX,
+                                           int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight, uint32_t index, uint32_t text_color, uint32_t background = 0) const;
+        void DisplayBoundedAntialiasedString(Font* Font, int16_t Xpos, int16_t Ypos, int16_t ParentX,
+                                             int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight, const char* Text, uint32_t text_color, uint32_t background = 0) const;
+
+        void SetBackgroundColor(uint32_t color);
+        void SetRotation(bool rotate90);
+        int32_t GetDisplayWidth() const;
+        int32_t GetDisplayHeight() const;
+        uint32_t GetBackgroundColor() const;
+
+        void FillRectangle(int32_t Xpos, int32_t Ypos, int32_t Width, int32_t Height, uint32_t text_color) const;
+        void FillRoundRectangle(int32_t Xpos, int32_t Ypos, int32_t Width, int32_t Height, uint32_t text_color, float BorderArcRadius) const;
+        void DrawRectangle(int32_t Xpos, int32_t Ypos, int32_t Width, int32_t Height, uint32_t text_color) const;
+        void DrawRoundRectangle(int32_t Xpos, int32_t Ypos, int32_t Width, int32_t Height, uint32_t text_color, float BorderArcRadius) const;
+
+        void FillMemory(uintptr_t memory, int32_t width, int32_t height, uint32_t text_color, Format colorFormat = Format::ARGB8888);
+        void ShadowBuffer(uint8_t alpha);
+
+        void SwapBuffers();
+        void SwapSynchronizeBuffers();
+
+        [[deprecated("For Removal")]]
+        uint8_t GetSwapperValue() const; // temporary
+
+        [[deprecated("For Removal")]]
+        uintptr_t GetBuffer(int id) const;
+
+        [[deprecated("For Removal")]]
+        void SetActiveBuffer(uint32_t activeBuffer);
+
+        [[deprecated("For Removal")]]
+        void AddBackgroundBlock(int32_t y_position, int32_t height, uint32_t backgroundColor);
+
+    private:
+        void PushDrawingBoundsStackElement(const DrawingBounds& drawing_bounds);
+
+        void DrawPixel(uint32_t Xpos, uint32_t Ypos, uint32_t RGB_Code) const;
         void BlendPixel(uint32_t Xpos, uint32_t Ypos, uint32_t RGB_Code) const;
+
+        int32_t CurrentDrawingBoundsStartX() const { return drawingBoundsStack[drawingBoundsStackIndex].startX; }
+        int32_t CurrentDrawingBoundsStartY() const { return drawingBoundsStack[drawingBoundsStackIndex].startY; }
+        int32_t CurrentDrawingBoundsEndX() const { return drawingBoundsStack[drawingBoundsStackIndex].endX; }
+        int32_t CurrentDrawingBoundsEndY() const { return drawingBoundsStack[drawingBoundsStackIndex].endY; }
+        int32_t CurrentDrawingBoundsWidth() const { return drawingBoundsStack[drawingBoundsStackIndex].endX - drawingBoundsStack[drawingBoundsStackIndex].startX; }
+        int32_t CurrentDrawingBoundsHeight() const { return drawingBoundsStack[drawingBoundsStackIndex].endY - drawingBoundsStack[drawingBoundsStackIndex].startY; }
+
         uint32_t ReadPixel(uint32_t Xpos, uint32_t Ypos) const;
+
+        uintptr_t GetFrontBuffer() const;
+        uintptr_t GetBackBuffer() const;
+
+        class Edge {
+        public:
+            uint32_t Color;
+            int X1, Y1, X2, Y2;
+
+            Edge(int x1, int y1, int x2, int y2, const uint32_t color)
+            {
+                if(y1 < y2) {
+                    X1 = x1;
+                    Y1 = y1;
+                    X2 = x2;
+                    Y2 = y2;
+                } else {
+                    X1 = x2;
+                    Y1 = y2;
+                    X2 = x1;
+                    Y2 = y1;
+                }
+                Color = color;
+            }
+        };
 
         void DmaOperation(uintptr_t inputMem, uintptr_t backgroundMem, uintptr_t outputMem, uint32_t PixelsPerLine,
                           uint32_t NumberOfLines, uint32_t inOffset, uint32_t backgroundOffset, uint32_t outOffset,
@@ -166,48 +210,10 @@ namespace grvl {
         void DmaMoveShadow(uintptr_t img_src, uintptr_t fb_dst, int32_t x_dst, int32_t y_dst, int32_t width, int32_t height,
                            Format outPixelFormat, uint32_t color) const;
 
-        bool IsRotated() const;
-
-        void DrawHLine(int32_t Xpos, int32_t Ypos, int32_t Length, uint32_t text_color) const;
-
-        void DrawString(Font* Font, int16_t Xpos, int16_t Ypos, const std::string& Text, uint32_t text_color, uint32_t background = 0) const;
-
-        void DisplayAntialiasedString(Font* Font, int16_t Xpos, int16_t Ypos, const char* Text, uint32_t text_color, uint32_t background = 0) const;
-        void DisplayAntialiasedChar(Font* Font, uint16_t Xpos, uint16_t Ypos, uint32_t Index, uint32_t text_color, uint32_t background = 0) const;
-        void DrawAntialiasedChar(Font* Font, int16_t Xpos, int16_t Ypos, uint32_t Index, uint32_t text_color, uint32_t background = 0) const;
-        void DrawAntialiasedCharInBound(Font* Font, int16_t Xpos, int16_t Ypos, int16_t ParentX, int16_t ParentY,
-                                        int16_t ParentWidth, int16_t ParentHeight, uint32_t Index, uint32_t text_color, uint32_t background = 0) const;
-        void DisplayAntialiasedCharInBound(Font* Font, int16_t Xpos, int16_t Ypos, int16_t ParentX,
-                                           int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight, uint32_t index, uint32_t text_color, uint32_t background = 0) const;
-        void DisplayBoundedAntialiasedString(Font* Font, int16_t Xpos, int16_t Ypos, int16_t ParentX,
-                                             int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight, const char* Text, uint32_t text_color, uint32_t background = 0) const;
         Format GetPixelFormat() const;
         uint32_t GetBytesPerPixel() const;
 
-        void SetBackgroundColor(uint32_t color);
-        void SetRotation(bool rotate90);
-        int32_t GetDisplayWidth() const;
-        int32_t GetDisplayHeight() const;
-        uint32_t GetBackgroundColor() const;
-        void FillRectangle(int32_t Xpos, int32_t Ypos, int32_t Width, int32_t Height, uint32_t text_color) const;
-        void FillRoundRectangle(int32_t Xpos, int32_t Ypos, int32_t Width, int32_t Height, uint32_t text_color, float BorderArcRadius) const;
-        void DrawRectangle(int32_t Xpos, int32_t Ypos, int32_t Width, int32_t Height, uint32_t text_color) const;
-        void DrawRoundRectangle(int32_t Xpos, int32_t Ypos, int32_t Width, int32_t Height, uint32_t text_color, float BorderArcRadius) const;
-
-        void FillMemory(uintptr_t memory, int32_t width, int32_t height, uint32_t text_color, Format colorFormat = Format::ARGB8888);
-
-        [[deprecated("For Removal")]]
-        void AddBackgroundBlock(int32_t y_position, int32_t height, uint32_t backgroundColor);
-        void ShadowBuffer(uint8_t alpha);
-
         static bool IsColorTransparent(uint32_t color);
-
-        uintptr_t GetFrontBuffer() const;
-        uintptr_t GetBackBuffer() const;
-        void SwapBuffers();
-        void SwapSynchronizeBuffers();
-
-    private:
 
         Format pixel_format = Format::ARGB8888;
         bool swapper = true;
@@ -226,7 +232,6 @@ namespace grvl {
         constexpr float ToRadians(float eulerAngles) const;
 
     private:
-
         void InnerDisplayAntialiasedString(Font* Font, int16_t Xpos, int16_t Ypos, const char* Text, uint32_t text_color, bool bounded, int16_t ParentX,
                                            int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight, uint32_t background = 0) const;
     };
