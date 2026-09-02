@@ -407,6 +407,11 @@ namespace grvl {
             encoder = nullptr;
         }
 
+        if (crtc) {
+            drmModeFreeCrtc(crtc);
+            crtc = nullptr;
+        }
+
         mode = nullptr;
         crtc_index = -1;
 
@@ -419,6 +424,7 @@ namespace grvl {
     bool LinuxNativeApp::InitDriver(int driver, uint16_t width, uint16_t height, uint32_t refresh, int requested_connector_id)
     {
         this->fd = driver;
+        bool is_lease = false;
 
         this->resource = drmModeGetResources(fd);
         if (!resource) {
@@ -450,6 +456,8 @@ namespace grvl {
                 return false;
             }
 
+            is_lease = true;
+
             this->resource = drmModeGetResources(fd);
             if (!resource) {
                 Log(ERROR, "Unable to get DRM resources!");
@@ -472,19 +480,40 @@ namespace grvl {
             return false;
         }
 
-        this->encoder = drmModeGetEncoder(fd, conn->encoder_id);
-        if (!encoder) {
-            Log(ERROR, "Unable to get DRM encoder!");
-            CloseDriver();
-            return false;
+        if (is_lease) {
+            if (resource->count_crtcs != 1) {
+                Log(ERROR, "Expected exactly one CRTC in DRM lease, found %d!", resource->count_crtcs);
+                CloseDriver();
+                return false;
+            }
+
+            crtc_index = 0;
+            this->crtc = drmModeGetCrtc(fd, resource->crtcs[crtc_index]);
+        } else {
+            this->encoder = drmModeGetEncoder(fd, conn->encoder_id);
+            if (!encoder) {
+                Log(ERROR, "Unable to get DRM encoder!");
+                CloseDriver();
+                return false;
+            }
+
+            // Find index of the CRTC we are using
+            for (int i = 0; i < resource->count_crtcs; i++) {
+                if (resource->crtcs[i] == encoder->crtc_id) {
+                    crtc_index = i;
+                    break;
+                }
+            }
+
+            if (crtc_index >= 0) {
+                this->crtc = drmModeGetCrtc(fd, resource->crtcs[crtc_index]);
+            }
         }
 
-        // Find index of the CRTC we are using
-        for (int i = 0; i < resource->count_crtcs; i++) {
-            if (resource->crtcs[i] == encoder->crtc_id) {
-                crtc_index = i;
-                break;
-            }
+        if (!crtc || crtc_index < 0) {
+            Log(ERROR, "Unable to get DRM CRTC!");
+            CloseDriver();
+            return false;
         }
 
         return true;
@@ -540,7 +569,7 @@ namespace grvl {
 
         if (cursor.plane) {
             drmModeAtomicAddProperty(req, cursor.plane, cursor.props.fb, cursor.fb);
-            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, encoder->crtc_id);
+            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, crtc->crtc_id);
             drmModeAtomicAddProperty(req, cursor.plane, cursor.props.x, x);
             drmModeAtomicAddProperty(req, cursor.plane, cursor.props.y, y);
 
@@ -706,8 +735,8 @@ namespace grvl {
         drmModeAtomicReqPtr req = drmModeAtomicAlloc();
 
         uint32_t connector_crtc = GetPropertyId(conn->connector_id, DRM_MODE_OBJECT_CONNECTOR, "CRTC_ID");
-        uint32_t crtc_active = GetPropertyId(encoder->crtc_id, DRM_MODE_OBJECT_CRTC, "ACTIVE");
-        uint32_t crtc_mode_id = GetPropertyId(encoder->crtc_id, DRM_MODE_OBJECT_CRTC, "MODE_ID");
+        uint32_t crtc_active = GetPropertyId(crtc->crtc_id, DRM_MODE_OBJECT_CRTC, "ACTIVE");
+        uint32_t crtc_mode_id = GetPropertyId(crtc->crtc_id, DRM_MODE_OBJECT_CRTC, "MODE_ID");
 
         uint32_t mode_blob = 0;
         if (drmModeCreatePropertyBlob(fd, mode, sizeof(*mode), &mode_blob) != 0) {
@@ -715,9 +744,9 @@ namespace grvl {
             return false;
         }
 
-        drmModeAtomicAddProperty(req, conn->connector_id, connector_crtc, encoder->crtc_id);
-        drmModeAtomicAddProperty(req, encoder->crtc_id, crtc_active, 1);
-        drmModeAtomicAddProperty(req, encoder->crtc_id, crtc_mode_id, mode_blob);
+        drmModeAtomicAddProperty(req, conn->connector_id, connector_crtc, crtc->crtc_id);
+        drmModeAtomicAddProperty(req, crtc->crtc_id, crtc_active, 1);
+        drmModeAtomicAddProperty(req, crtc->crtc_id, crtc_mode_id, mode_blob);
 
         primary.props.fb = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "FB_ID");
         primary.props.crtc = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "CRTC_ID");
@@ -732,7 +761,7 @@ namespace grvl {
             cursor.props.hotspot_y = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "HOTSPOT_Y");
 
             drmModeAtomicAddProperty(req, cursor.plane, cursor.props.fb, cursor.fb);
-            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, encoder->crtc_id);
+            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, crtc->crtc_id);
             drmModeAtomicAddProperty(req, cursor.plane, cursor.props.x, 0);
             drmModeAtomicAddProperty(req, cursor.plane, cursor.props.y, 0);
             if (cursor.props.hotspot_x) {
@@ -769,7 +798,7 @@ namespace grvl {
         uint32_t src_x = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "SRC_X");
         uint32_t src_y = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "SRC_Y");
 
-        drmModeAtomicAddProperty(req, primary.plane, primary.props.crtc, encoder->crtc_id);
+        drmModeAtomicAddProperty(req, primary.plane, primary.props.crtc, crtc->crtc_id);
         drmModeAtomicAddProperty(req, primary.plane, primary.props.fb, primary.fb);
         drmModeAtomicAddProperty(req, primary.plane, crtc_x, 0);
         drmModeAtomicAddProperty(req, primary.plane, crtc_y, 0);
