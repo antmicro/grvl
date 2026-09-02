@@ -264,7 +264,7 @@ namespace grvl {
 
     uint32_t Button::GetActiveTextColor()
     {
-        return ActiveForegroundColor;
+        return ActiveTextColor;
     }
 
     int32_t Button::GetTextTopOffset() const
