@@ -681,11 +681,13 @@ namespace grvl {
 
     void Manager::SetActiveInput(TextInput* destinationInput)
     {
-        if (!destinationInput) {
-            return;
-        }
-
         activeInput = destinationInput;
+        if(!destinationInput) {
+            if(keyboard) {
+                keyboard->SetCurrentInputDestination(nullptr);
+            }
+        }
+        
         if (keyboard && keyboard->HasAutoPopoup()) {
             ShowKeyboard();
         }
