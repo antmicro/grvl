@@ -340,21 +340,24 @@ namespace grvl {
 
     uint32_t LinuxNativeApp::GetPlaneType(uint32_t plane_id)
     {
-        uint32_t type_val = uint32_t(-1);
-
         drmModeObjectProperties *props = drmModeObjectGetProperties(fd, plane_id, DRM_MODE_OBJECT_PLANE);
+        if (!props) {
+            Log(ERROR, "Failed to get properties for DRM plane %u!", plane_id);
+            return uint32_t(-1);
+        }
 
         uint32_t type_prop_id = GetPropertyId(plane_id, DRM_MODE_OBJECT_PLANE, "type");
 
         for (uint32_t i = 0; i < props->count_props; i++) {
             if (props->props[i] == type_prop_id) {
-                type_val = (uint32_t)props->prop_values[i];
-                break;
+                uint32_t type_val = (uint32_t)props->prop_values[i];
+                drmModeFreeObjectProperties(props);
+                return type_val;
             }
         }
 
         drmModeFreeObjectProperties(props);
-        return type_val;
+        return uint32_t(-1);
     }
 
     uint32_t LinuxNativeApp::FindPlaneByType(uint32_t plane_type)
@@ -373,6 +376,11 @@ namespace grvl {
             }
 
             drmModePlanePtr plane = drmModeGetPlane(fd, plane_id);
+            if (!plane) {
+              Log(ERROR, "Failed to get DRM plane %u!", plane_id);
+              continue;
+            }
+
             uint32_t crtcs = plane->possible_crtcs;
             drmModeFreePlane(plane);
 
