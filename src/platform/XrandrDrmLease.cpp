@@ -244,13 +244,29 @@ namespace grvl {
             const RandrOutput& output = outputs.at(i);
             xcb_randr_lease_t id = xcb_generate_id(connection);
 
+            xcb_generic_error_t* error = nullptr;
             xcb_randr_create_lease_reply_t* reply = xcb_randr_create_lease_reply(
                 connection,
                 xcb_randr_create_lease(connection, output.root, id, 1, 1, &output.crtc, &output.output),
-                nullptr);
+                &error);
 
             if(!reply) {
-                Log(ERROR, "Failed to lease output #%d '%s' (DRM connector: %d): XRandR failed to create a lease", i, output.str(), output.connector_id);
+                  if(error) {
+                    Log(ERROR, "Failed to lease output #%d '%s' (DRM connector: %d): X11 error: code=%d major=%d minor=%d",
+                        i,
+                        output.str(),
+                        output.connector_id,
+                        error->error_code,
+                        error->major_code,
+                        error->minor_code);
+                    free(error);
+                  } else {
+                    Log(ERROR, "Failed to lease output #%d '%s' (DRM connector: %d): XRandR failed to create a lease without an X11 error",
+                        i,
+                        output.str(),
+                        output.connector_id);
+                  }
+
                 continue;
             }
 
