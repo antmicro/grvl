@@ -37,6 +37,7 @@ get_target_property(_defs grvl::grvl INTERFACE_COMPILE_DEFINITIONS)
 
 if(GRVL_BUILT_WITH_LINUX_NATIVE)
   pkg_check_modules(LIBDRM REQUIRED IMPORTED_TARGET libdrm)
+  pkg_check_modules(LIBDBUS REQUIRED IMPORTED_TARGET libdrm)
   pkg_check_modules(LIBUDEV REQUIRED IMPORTED_TARGET libudev)
   pkg_check_modules(LIBINPUT REQUIRED IMPORTED_TARGET libinput)
   pkg_check_modules(XKBCOMMON REQUIRED IMPORTED_TARGET xkbcommon)

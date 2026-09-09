@@ -1,7 +1,8 @@
 
 #include <grvl/platform/LinuxNativeApp.h>
 #include <grvl/Manager.h>
-#include <grvl/platform/DrmLease.h>
+#include <grvl/platform/XrandrDrmLease.h>
+#include <grvl/platform/FbtermDrmLease.h>
 
 #include <algorithm>
 #include <glob.h>
@@ -190,6 +191,14 @@ namespace grvl {
         }
     };
 
+    static int AcquireDrmLease(int fd, uint32_t connector_id)
+    {
+      int lease_fd = AcquireXrandrLease(fd, connector_id);
+      if (lease_fd >= 0)
+        return lease_fd;
+
+      return AcquireFbtermLease();
+    }
 
 // implementation
 
@@ -442,7 +451,7 @@ namespace grvl {
 
         if (drmSetMaster(fd) != 0) {
             Log(WARN, "Unable to aquire DRM master control!");
-            const int lease_fd = LeaseDriver(fd, conn->connector_id);
+            const int lease_fd = AcquireDrmLease(fd, conn->connector_id);
 
             drmModeFreeResources(resource);
             resource = nullptr;

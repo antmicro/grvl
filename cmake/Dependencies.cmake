@@ -11,6 +11,10 @@ if (GRVL_LINUX_NATIVE)
   get_target_property(lib_drm_includes PkgConfig::LIBDRM INTERFACE_INCLUDE_DIRECTORIES)
   message(STATUS "LIBDRM includes: ${lib_drm_includes}")
 
+  pkg_check_modules(LIBDBUS REQUIRED IMPORTED_TARGET dbus-1)
+  get_target_property(lib_dbus_includes PkgConfig::LIBDBUS INTERFACE_INCLUDE_DIRECTORIES)
+  message(STATUS "LIBDBUS includes: ${lib_dbus_includes}")
+
   pkg_check_modules(XKBCOMMON REQUIRED IMPORTED_TARGET xkbcommon)
   get_target_property(lib_xkbcommon_includes PkgConfig::LIBDRM INTERFACE_INCLUDE_DIRECTORIES)
   message(STATUS "XKBCOMMON includes: ${lib_xkbcommon_includes}")

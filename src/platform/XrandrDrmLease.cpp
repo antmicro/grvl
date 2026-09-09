@@ -2,7 +2,7 @@
 #include <grvl/Misc.h>
 #include <grvl/grvl.h>
 
-#include "grvl/platform/DrmLease.h"
+#include "grvl/platform/XrandrDrmLease.h"
 #include <algorithm>
 #include <cerrno>
 #include <cstring>
@@ -195,7 +195,7 @@ namespace grvl {
 
     // implementation
 
-    int LeaseDriver(int driver_fd, uint32_t preferred_connector_id)
+    int AcquireXrandrLease(int driver_fd, uint32_t preferred_connector_id)
     {
         dev_t driver_device;
         if(!GetDrmDeviceNumber(driver_fd, driver_device)) {
