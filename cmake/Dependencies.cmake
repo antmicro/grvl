@@ -16,7 +16,7 @@ if (GRVL_LINUX_NATIVE)
   message(STATUS "LIBDBUS includes: ${lib_dbus_includes}")
 
   pkg_check_modules(XKBCOMMON REQUIRED IMPORTED_TARGET xkbcommon)
-  get_target_property(lib_xkbcommon_includes PkgConfig::LIBDRM INTERFACE_INCLUDE_DIRECTORIES)
+  get_target_property(lib_xkbcommon_includes PkgConfig::XKBCOMMON INTERFACE_INCLUDE_DIRECTORIES)
   message(STATUS "XKBCOMMON includes: ${lib_xkbcommon_includes}")
 
   pkg_check_modules(XCB REQUIRED IMPORTED_TARGET xcb)
