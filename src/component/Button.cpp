@@ -330,6 +330,8 @@ namespace grvl {
         AbstractButton::PopulateJavaScriptObject(jsObjectBuilder);
         jsObjectBuilder.AddProperty("icoColor", Button::JSGetIcoColorWrapper, Button::JSSetIcoColorWrapper);
         jsObjectBuilder.AddProperty("activeIcoColor", Button::JSGetActiveIcoColorWrapper, Button::JSSetActiveIcoColorWrapper);
+        jsObjectBuilder.AddProperty("textColor", Button::JSGetTextColorWrapper, Button::JSSetTextColorWrapper);
+        jsObjectBuilder.AddProperty("activeTextColor", Button::JSGetActiveTextColorWrapper, Button::JSSetActiveTextColorWrapper);
     }
 
     void Button::CalculateContentLayout()

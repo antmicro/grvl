@@ -158,6 +158,12 @@ namespace grvl {
         GENERATE_DUK_UNSIGNED_INT_GETTER(Button, ActiveIcoColor, GetActiveIcoColor)
         GENERATE_DUK_UNSIGNED_INT_SETTER(Button, ActiveIcoColor, SetActiveIcoColor)
 
+        GENERATE_DUK_UNSIGNED_INT_GETTER(Button, TextColor, GetTextColor)
+        GENERATE_DUK_UNSIGNED_INT_SETTER(Button, TextColor, SetTextColor)
+
+        GENERATE_DUK_UNSIGNED_INT_GETTER(Button, ActiveTextColor, GetActiveTextColor)
+        GENERATE_DUK_UNSIGNED_INT_SETTER(Button, ActiveTextColor, SetActiveTextColor)
+
     protected:
         uint32_t TextColor { COLOR_ARGB8888_TRANSPARENT };
         uint32_t ActiveTextColor { COLOR_ARGB8888_TRANSPARENT };
