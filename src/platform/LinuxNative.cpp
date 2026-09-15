@@ -625,6 +625,91 @@ namespace grvl {
         }
     }
 
+    bool LinuxNativeApp::CreateDumbBuffer(DumbBuffer &buffer,
+                                       uint32_t buffer_width,
+                                       uint32_t buffer_height,
+                                       uint32_t bpp)
+    {
+        buffer = {};
+        buffer.dumb.width = buffer_width;
+        buffer.dumb.height = buffer_height;
+        buffer.dumb.bpp = bpp;
+
+        if (drmIoctl(fd,
+                    DRM_IOCTL_MODE_CREATE_DUMB,
+                    &buffer.dumb) != 0) {
+            Log(ERROR,
+                    "Failed to create %ux%u dumb buffer: %s",
+                    buffer_width,
+                    buffer_height,
+                    strerror(errno));
+            return false;
+        }
+
+        buffer.handles[0] = buffer.dumb.handle;
+        buffer.pitches[0] = buffer.dumb.pitch;
+        buffer.offsets[0] = 0;
+
+        drm_mode_map_dumb map_request = {};
+        map_request.handle = buffer.dumb.handle;
+
+        if (drmIoctl(fd,
+                    DRM_IOCTL_MODE_MAP_DUMB,
+                    &map_request) != 0) {
+            Log(ERROR,
+                    "Failed to map %ux%u dumb buffer: %s",
+                    buffer_width,
+                    buffer_height,
+                    strerror(errno));
+            return false;
+        }
+
+        buffer.map = mmap(nullptr,
+                buffer.dumb.size,
+                PROT_READ | PROT_WRITE,
+                MAP_SHARED,
+                fd,
+                map_request.offset);
+
+        if (buffer.map == MAP_FAILED) {
+            buffer.map = nullptr;
+
+            Log(ERROR,
+                    "Failed to mmap %ux%u dumb buffer: %s",
+                    buffer_width,
+                    buffer_height,
+                    strerror(errno));
+            return false;
+        }
+
+        return true;
+    }
+
+    bool LinuxNativeApp::AddFramebuffer(DumbBuffer &buffer,
+                                        uint32_t buffer_width,
+                                        uint32_t buffer_height,
+                                        uint32_t format)
+    {
+        if (drmModeAddFB2(fd,
+                    buffer_width,
+                    buffer_height,
+                    format,
+                    buffer.handles,
+                    buffer.pitches,
+                    buffer.offsets,
+                    &buffer.fb,
+                    0) != 0) {
+            Log(ERROR,
+                    "Failed to create framebuffer for %ux%u dumb buffer: %s",
+                    buffer_width,
+                    buffer_height,
+                    strerror(errno));
+            return false;
+        }
+
+        return true;
+    }
+
     bool LinuxNativeApp::Setup()
     {
         bool driver_found = false;
@@ -679,27 +764,11 @@ namespace grvl {
         Log(ERROR, "DRM cursor plane hotspot not supported!");
 #endif
 
-        // Prepare DRM buffers for the mouse cursor
-        cursor.dumb.width = 64;
-        cursor.dumb.height = 64;
-        cursor.dumb.bpp = 32;
-        drmIoctl(fd, DRM_IOCTL_MODE_CREATE_DUMB, &cursor.dumb);
-
-        cursor.handles[0] = cursor.dumb.handle;
-        cursor.pitches[0] = cursor.dumb.pitch;
-
-        struct drm_mode_map_dumb mreq = {};
-        mreq.handle = cursor.dumb.handle;
-        if (drmIoctl(fd, DRM_IOCTL_MODE_MAP_DUMB, &mreq) < 0) {
-            Log(ERROR, "Failed to prepare dumb buffer for mapping!");
+        if (!CreateDumbBuffer(cursor, 64, 64, 32))
             return false;
-        }
 
-        cursor.map = (uint32_t *)mmap(0, cursor.dumb.size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, mreq.offset);
-
-        drmModeAddFB2(fd, 64, 64, DRM_FORMAT_ARGB8888,
-                      cursor.handles, cursor.pitches,
-                      cursor.offsets, &cursor.fb, 0);
+        if (!AddFramebuffer(cursor, 64, 64, DRM_FORMAT_ARGB8888))
+            return false;
 
         cursor.plane = FindPlaneByType(DRM_PLANE_TYPE_CURSOR);
 
@@ -707,30 +776,11 @@ namespace grvl {
             Log(ERROR, "Failed to find DRM cursor plane!");
         }
 
-        // Prepare primary plane buffers
-        primary.dumb.width = width;
-        primary.dumb.height = height;
-        primary.dumb.bpp = 32;
+        if (!CreateDumbBuffer(primary, width, height, 32))
+            return false;
 
-        drmIoctl(fd, DRM_IOCTL_MODE_CREATE_DUMB, &primary.dumb);
-
-        primary.handles[0] = primary.dumb.handle;
-        primary.pitches[0] = primary.dumb.pitch;
-
-        drmModeAddFB2(fd, width, height, DRM_FORMAT_XRGB8888,
-                      primary.handles,
-                      primary.pitches,
-                      primary.offsets,
-                      &primary.fb,
-                      0);
-
-        // Map it to CPU memory
-        struct drm_mode_map_dumb dmap = {};
-        dmap.handle = primary.dumb.handle;
-        drmIoctl(fd, DRM_IOCTL_MODE_MAP_DUMB, &dmap);
-
-        primary.map = mmap(0, primary.dumb.size, PROT_READ | PROT_WRITE,
-                              MAP_SHARED, fd, dmap.offset);
+        if (!AddFramebuffer(primary, width, height, DRM_FORMAT_XRGB8888))
+            return false;
 
         // Clear the buffer (black)
         memset(primary.map, 0, primary.dumb.size);

@@ -78,7 +78,7 @@ namespace grvl {
         std::atomic<bool> thread_run;
         std::thread drm_thread, input_thread;
 
-        struct {
+        struct DumbBuffer {
             struct drm_mode_create_dumb dumb = {};
             uint32_t fb;
             uint32_t plane;
@@ -89,7 +89,10 @@ namespace grvl {
             uint32_t handles[4] = {};
             uint32_t pitches[4] = {};
             uint32_t offsets[4] = {};
-        } primary, cursor;
+        };
+
+        DumbBuffer primary;
+        DumbBuffer cursor;
 
         struct CursorState {
             std::atomic<int> x = 0;
@@ -124,6 +127,8 @@ namespace grvl {
         uint32_t GetPlaneType(uint32_t plane_id);
         uint32_t FindPlaneByType(uint32_t plane_type);
 
+        bool CreateDumbBuffer(DumbBuffer &buffer, uint32_t width, uint32_t height, uint32_t bpp);
+        bool AddFramebuffer(DumbBuffer &buffer, uint32_t width, uint32_t height, uint32_t format);
         void CloseDriver();
         bool InitDriver(int fd, uint16_t width, uint16_t height, uint32_t refresh, int requested_connector_id = -1);
         bool TryUsingDriver(const char* path, uint16_t width, uint16_t height, uint32_t refresh, int requested_connector_id = -1);
