@@ -191,15 +191,6 @@ namespace grvl {
         }
     };
 
-    static int AcquireDrmLease(int fd, uint32_t connector_id)
-    {
-      int lease_fd = AcquireXrandrLease(fd, connector_id);
-      if (lease_fd >= 0)
-        return lease_fd;
-
-      return AcquireFbtermLease();
-    }
-
 // implementation
 
     static NativeDisplayMode MakeNativeDisplayMode(const drmModeModeInfo& mode)
@@ -315,6 +306,23 @@ namespace grvl {
         grvl::grvl::Destroy();
     }
 
+    int LinuxNativeApp::AcquireDrmLease(int fd, uint32_t connector_id)
+    {
+      int lease_fd = AcquireXrandrLease(fd, connector_id);
+      if (lease_fd >= 0) {
+        drm_access_type = DrmAccessType::XrandrLease;
+        return lease_fd;
+      }
+
+      lease_fd = AcquireFbtermLease();
+      if (lease_fd >= 0) {
+        drm_access_type = DrmAccessType::FbtermLease;
+      }
+
+      return lease_fd;
+    }
+
+
     uint32_t LinuxNativeApp::GetPropertyId(uint32_t obj_id, uint32_t obj_type, const char* name)
     {
         uint32_t prop_id = 0;
@@ -409,6 +417,9 @@ namespace grvl {
             return;
         }
 
+        DestroyDumbBuffer(cursor);
+        DestroyDumbBuffer(primary);
+
         if (resource) {
             drmModeFreeResources(resource);
             resource = nullptr;
@@ -436,6 +447,14 @@ namespace grvl {
             close(fd);
             fd = -1;
         }
+
+        if (drm_access_type == DrmAccessType::FbtermLease) {
+            if (!ReleaseFbtermLease()) {
+                Log(ERROR, "Failed to release fbterm lease");
+            }
+        }
+
+        drm_access_type = DrmAccessType::None;
     }
 
     bool LinuxNativeApp::InitDriver(int driver, uint16_t width, uint16_t height, uint32_t refresh, int requested_connector_id)
@@ -457,7 +476,9 @@ namespace grvl {
             return false;
         }
 
-        if (drmSetMaster(fd) != 0) {
+        if (drmSetMaster(fd) == 0) {
+            drm_access_type = DrmAccessType::Master;
+        } else {
             Log(WARN, "Unable to aquire DRM master control!");
             const int lease_fd = AcquireDrmLease(fd, conn->connector_id);
 
@@ -708,6 +729,42 @@ namespace grvl {
         }
 
         return true;
+    }
+
+    void LinuxNativeApp::DestroyDumbBuffer(DumbBuffer &buffer)
+    {
+        Log(ERROR, "Destroying dumb buffer %u\n", buffer.fb);
+        if (buffer.fb != 0) {
+            if (drmModeRmFB(fd, buffer.fb) != 0) {
+                Log(ERROR,
+                        "drmModeRmFB(%u) failed: %s",
+                        buffer.fb,
+                        strerror(errno));
+            }
+
+            buffer.fb = 0;
+        }
+
+        if (buffer.map != nullptr && buffer.map != MAP_FAILED) {
+            munmap(buffer.map, buffer.dumb.size);
+            buffer.map = nullptr;
+        }
+
+        if (buffer.dumb.handle != 0) {
+            drm_mode_destroy_dumb destroy = {};
+            destroy.handle = buffer.dumb.handle;
+
+            if (drmIoctl(fd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroy) != 0) {
+                Log(ERROR,
+                        "DRM_IOCTL_MODE_DESTROY_DUMB(%u) failed: %s",
+                        buffer.dumb.handle,
+                        strerror(errno));
+            }
+
+            buffer.dumb.handle = 0;
+        }
+
+        buffer.dumb.size = 0;
     }
 
     bool LinuxNativeApp::Setup()

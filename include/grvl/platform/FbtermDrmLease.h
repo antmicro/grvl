@@ -6,6 +6,7 @@
 namespace grvl {
 
     int AcquireFbtermLease();
+    bool ReleaseFbtermLease();
 
 }
 
