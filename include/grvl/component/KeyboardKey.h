@@ -49,8 +49,17 @@ namespace grvl {
         void SetSecondaryTextFont(Font* font);
         void SetSecondaryTextColor(uint32_t color);
         void SetActiveSecondaryTextColor(uint32_t color);
+
         const char* GetSecondaryText();
         const char* GetCurrentValue() const { return currentTextValueIndex == 0 ? Text.c_str() : secondaryText.c_str(); }
+        inline uint32_t GetSecondaryTextColor() const
+        {
+            return secondaryTextColor;
+        }
+        inline uint32_t GetActiveSecondaryTextColor() const
+        {
+            return activeSecondaryTextColor;
+        }
 
         void SwitchKeyValue();
 

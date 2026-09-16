@@ -38,7 +38,7 @@ namespace grvl {
         result->SetSecondaryText(XMLSupport::GetAttributeOrDefault(xmlElement, "secondaryText", ""));
         result->SetSecondaryTextFont(man->GetFontPointer(XMLSupport::GetAttributeOrDefault(xmlElement, "secondaryTextFont", "normal")));
         result->SetSecondaryTextColor(XMLSupport::ParseColor(xmlElement, "secondaryTextColor", "#ffffffff"));
-        result->SetActiveSecondaryTextColor(XMLSupport::ParseColor(xmlElement, "activeSecondaryTextColor", result->GetTextColor()));
+        result->SetActiveSecondaryTextColor(XMLSupport::ParseColor(xmlElement, "activeSecondaryTextColor", result->GetSecondaryTextColor()));
 
         result->SetTextTopOffset(XMLSupport::GetAttributeOrDefault(xmlElement, "text_top_offset", (uint32_t)0));
 
@@ -112,7 +112,16 @@ namespace grvl {
             std::swap(primaryKeyValue, secondaryKeyValue);
         }
 
-        uint32_t CurrentPrimaryTextColor = GetTextColor();
+        uint32_t curPrimaryTextColor = COLOR_ARGB8888_TRANSPARENT;
+        uint32_t curSecondaryTextColor = COLOR_ARGB8888_TRANSPARENT;
+        if (State == On || State == Pressed || State == OnAndSelected || isFocused) {
+            curPrimaryTextColor = GetActiveTextColor();
+            curSecondaryTextColor = GetActiveSecondaryTextColor();
+        } else if (State == Off || State == Released || State == OffAndSelected) {
+            curPrimaryTextColor = GetTextColor();
+            curSecondaryTextColor = GetSecondaryTextColor();
+        }
+
         if(primaryKeyValue && ButtonFont != 0) {
             uint16_t TextSize = ButtonFont->GetWidth(primaryKeyValue);
             uint16_t BeginX = (RenderWidth / 2) - (TextSize / 2);
@@ -128,10 +137,9 @@ namespace grvl {
                 RenderWidth,
                 RenderHeight,
                 primaryKeyValue,
-                CurrentPrimaryTextColor);
+                curPrimaryTextColor);
         }
 
-        uint32_t CurrentSecondaryTextColor = Painter::InterpolateColors(0xFF191A1C, 0xFFECEDEE, 0.4f);
         if(secondaryKeyValue && secondaryTextFont) {
             uint16_t TextSize = secondaryTextFont->GetWidth(secondaryKeyValue);
             uint16_t BeginX = (RenderWidth / 2) - (TextSize / 2);
@@ -146,7 +154,7 @@ namespace grvl {
                 RenderWidth,
                 RenderHeight,
                 secondaryKeyValue,
-                CurrentSecondaryTextColor);
+                curSecondaryTextColor);
         }
     }
 
