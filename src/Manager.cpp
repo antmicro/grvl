@@ -684,7 +684,7 @@ namespace grvl {
                 keyboard->SetCurrentInputDestination(nullptr);
             }
         }
-        
+
         if (keyboard && keyboard->HasAutoPopoup()) {
             ShowKeyboard();
         }
@@ -1666,6 +1666,11 @@ namespace grvl {
 
     Component* Manager::FindElementInTheActiveScreenById(const char* id)
     {
+        if (ActiveScreen == nullptr) {
+            Log(ERROR, "Can't look for element '%s', as there is no active screen!", id);
+            return nullptr;
+        }
+
         return ActiveScreen->GetElement(id);
     }
 

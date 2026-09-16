@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- example grvl XML for XML Schema validation -->
+<!-- it is valid for the XML Schema shipped with grvl -->
+<doc xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="grvl.xsd">
+	<script src="callbacks.js" />
+    <guiConfig dotColor="#ffffffff"></guiConfig>
+    <keypadMapping>
+        <key id="enter" code="13" />
+    </keypadMapping>
+    <header height="50" backgroundColor="#ff000000">
+        <label id="h_label" textColor="#ffffffff" text="Graph Sample" font="roboto-medium" alignment="Center" x="0" y="0" width="800" height="50" />
+    </header>
+
+    <customView id="start" backgroundColor="#FF4287F5">
+        <button id="exit" text="Exit" x="695" y="5" width="100" height="20" onClick="OnExitButton" backgroundColor="#FFBF2A2A" activeBackgroundColor="#FFFF4A4A" />
+        <button id="debug" text="Overlay" x="695" y="30" width="100" height="20" onClick="ToggleOverlay" backgroundColor="#FF2A2ABF" activeBackgroundColor="#FF4A4AFF" />
+        <button id="add" text="Append" x="695" y="55" width="100" height="20" onClick="OnAddButton" backgroundColor="#FF2A2ABF" activeBackgroundColor="#FF4A4AFF" />
+        <button id="clear" text="Clear" x="695" y="80" width="100" height="20" onClick="OnClearButton" backgroundColor="#FF2A2ABF" activeBackgroundColor="#FF4A4AFF" />
+
+        <graph id="test_graph" x="10" y="10" width="670" height="530" backgroundColor="#FF3277E5" gradientStartColor="#FFff0000" gradientEndColor="#FF11bc11" />
+
+        <key id="enter" onPress="OnAddButton"/>
+    </customView>
+</doc>
