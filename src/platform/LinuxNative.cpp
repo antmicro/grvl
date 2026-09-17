@@ -1,4 +1,3 @@
-
 #include <grvl/platform/LinuxNativeApp.h>
 #include <grvl/Manager.h>
 #include <grvl/platform/XrandrDrmLease.h>
@@ -177,6 +176,15 @@ namespace grvl {
             if (fd < 0) {
                 Log(WARN, "Can't open '%s': %s", path, strerror(errno));
                 return -errno;
+            }
+
+            /* Never take synthetic devices
+               TODO: make it a configurable flag */
+            struct input_id id;
+            if (ioctl(fd, EVIOCGID, &id) == 0 && id.bustype == BUS_VIRTUAL) {
+                Log(INFO, "Ignoring virtual device '%s'", path);
+                close(fd);
+                return -EACCES;
             }
 
             if (ioctl(fd, EVIOCGRAB, 1) < 0) {
