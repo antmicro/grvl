@@ -340,8 +340,9 @@ namespace grvl {
         layout.hasText = ButtonFont != nullptr && !Text.empty();
         layout.hasIco = (IcoChar != -1) && (IcoFont != nullptr);
 
-        const int32_t imageWidth = layout.hasImage ? ButtonImage.GetWidth() : 0;
-        const int32_t imageHeight = (layout.hasImage ? ButtonImage.GetHeight() : 0) + TextTopOffset;
+        const ImageContent* imageContent = layout.hasImage ? ButtonImage.GetContent() : nullptr;
+        const int32_t imageWidth = imageContent ? imageContent->GetWidth() : 0;
+        const int32_t imageHeight = (imageContent ? imageContent->GetHeight() : 0) + TextTopOffset;
         const int32_t textWidth = layout.hasText ? ButtonFont->GetWidth(Text.c_str()) : 0;
         const int32_t textHeight = (layout.hasText ? ButtonFont->GetFontHeight() : 0) + TextTopOffset;
         const int32_t icoWidth = layout.hasIco ? IcoFont->GetCharWidth((uint32_t)IcoChar) : 0;
@@ -390,7 +391,7 @@ namespace grvl {
         }
 
         if(imageCentered) {
-            ButtonImage.SetPosition(Width / 2 - ButtonImage.GetWidth() / 2, Height / 2 - ButtonImage.GetHeight() / 2);
+            ButtonImage.SetPosition(Width / 2 - imageContent->GetWidth() / 2, Height / 2 - imageContent->GetHeight() / 2);
         }
     }
 
