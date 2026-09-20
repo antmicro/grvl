@@ -54,6 +54,62 @@ namespace grvl {
     WIDGET(KeyboardKey);
     WIDGET(TextInput);
 
+    static std::string DirOf(const std::string& path)
+    {
+        const size_t pos = path.find_last_of("/\\");
+        return (pos == std::string::npos) ? std::string(".") : path.substr(0, pos);
+    }
+
+    static int32_t ProcessIncludes(XMLNode* parent, const std::string& baseDir, int depth)
+    {
+        if(depth > 16) {
+            return -1; // Include loop
+        }
+
+        XMLNode* child = parent->FirstChild();
+
+        while(child != nullptr) {
+            XMLNode* next = child->NextSibling();
+            XMLElement* elem = child->ToElement();
+
+            if(elem != nullptr && std::strcmp(elem->Name(), "xi:include") == 0) {
+                const char* href = elem->Attribute("href");
+                if(href == nullptr) {
+                    return -1;
+                }
+
+                const std::string path = baseDir + "/" + href;
+
+                XMLDocument sub;
+                if(sub.LoadFile(path.c_str()) != XML_SUCCESS) {
+                    return -1;
+                }
+
+                XMLElement* subRoot = sub.RootElement();
+                if(subRoot == nullptr) {
+                    return -1;
+                }
+
+                if(ProcessIncludes(&sub, DirOf(path), depth + 1) != 0) {
+                    return -1;
+                }
+
+                XMLNode* copy = subRoot->DeepClone(parent->GetDocument());
+                parent->InsertAfterChild(child, copy);
+                parent->DeleteChild(child);
+            }
+            else if(elem != nullptr) {
+                if(ProcessIncludes(child, baseDir, depth + 1) != 0) {
+                    return -1;
+                }
+            }
+
+            child = next;
+        }
+
+        return 0;
+    }
+
     static inline float MotionFunc(float x)
     {
         return (sin(3.1415f * x - 1.57f) + 1) / 2; //NOLINT(readability-magic-numbers)
@@ -198,6 +254,16 @@ namespace grvl {
     Manager::EventQueue& Manager::GetEventsQueueInstance()
     {
         return eventsQueue;
+    }
+
+    void Manager::SetWorkingDirectory(std::string path)
+    {
+        workingDirectory = path;
+    }
+
+    std::string Manager::GetWorkingDirectory()
+    {
+        return workingDirectory;
     }
 
     uint32_t Manager::GetWidth() const
@@ -1397,7 +1463,10 @@ namespace grvl {
         XMLError Error = doc.Parse(document.c_str(), document.length());
 
         if(Error == XML_SUCCESS) {
-            XMLNode* Root = doc.LastChild();
+            if(ProcessIncludes(&doc, workingDirectory, 0) != 0) {
+                return -1;
+            }
+            XMLElement* Root = doc.RootElement();
 
             // Adding screens
             if(Root) {

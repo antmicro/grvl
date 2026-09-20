@@ -121,6 +121,7 @@ namespace grvl {
 
     void JSEngine::SetSourceCodeWorkingDirectory(std::string path)
     {
+        Manager::GetInstance().SetWorkingDirectory(path);
         sourceCodeWorkingDirectory = std::move(path);
     }
 

@@ -219,6 +219,8 @@ namespace grvl {
         /// @param touchX Position in axis X where the touch event was detected.
         /// @param touchY Position in axis Y where the touch event was detected.
         void ProcessTouchPoint(bool touched, uint32_t touchX, uint32_t touchY);
+        void SetWorkingDirectory(std::string path);
+        std::string GetWorkingDirectory();
 
         Popup* GetPopupInstance();
         Manager& AddPopup(Popup* popup);
@@ -435,6 +437,8 @@ namespace grvl {
         float initialTransparency, desiredTransparency, currentTransparency;
         uint64_t fadeBeginTimestamp, fadeEndTimestamp;
         FontLoader font_callback = [](const std::string& font) { /* do nothing */ };
+
+        std::string workingDirectory;
 
         Mutex DrawMutex {};
 
