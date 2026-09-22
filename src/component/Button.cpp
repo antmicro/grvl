@@ -391,7 +391,7 @@ namespace grvl {
         }
 
         if(imageCentered) {
-            ButtonImage.SetPosition(Width / 2 - imageContent->GetWidth() / 2, Height / 2 - imageContent->GetHeight() / 2);
+            ButtonImage.SetPosition(Width / 2 - imageWidth / 2, Height / 2 - imageHeight / 2);
         }
     }
 
