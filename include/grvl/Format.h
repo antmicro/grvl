@@ -254,6 +254,9 @@ namespace grvl {
 
             case Format::A8:
                 a = (color & 0xff);
+                r = 255;
+                g = 255;
+                b = 255;
                 break;
 
             case Format::ARGB6666:
