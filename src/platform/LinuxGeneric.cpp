@@ -20,7 +20,7 @@ static bool IsEnvSet(const char* name) {
 
 namespace grvl {
 
-    Application* CreateGenericLinuxApp(int width, int height, bool rotate_sideways) {
+    PosixApp* CreateGenericLinuxApp(int width, int height, bool rotate_sideways) {
 #if defined(GRVL_LINUX_NATIVE_SUPPORT) || defined(GRVL_LINUX_DESKTOP_SUPPORT)
         if (IsEnvSet("DISPLAY") || IsEnvSet("WAYLAND_DISPLAY")) {
 #if defined(GRVL_LINUX_DESKTOP_SUPPORT)

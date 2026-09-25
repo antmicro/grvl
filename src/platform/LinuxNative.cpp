@@ -212,6 +212,7 @@ namespace grvl {
         return display_mode;
     }
 
+
     std::vector<NativeDisplay> LinuxNativeApp::EnumerateConnectedDisplays()
     {
         std::vector<NativeDisplay> displays;
@@ -1094,8 +1095,15 @@ namespace grvl {
             {
                 libinput_event_pointer* pointer = libinput_event_get_pointer_event(event);
 
-                x += libinput_event_pointer_get_dx(pointer);
-                y += libinput_event_pointer_get_dy(pointer);
+                const double dx = libinput_event_pointer_get_dx(pointer);
+                const double dy = libinput_event_pointer_get_dy(pointer);
+
+                if (dx != 0 || dy != 0) {
+                    MarkUserActivity();
+                }
+
+                x += dx;
+                y += dy;
 
                 UpdateCursorPos();
                 break;
@@ -1106,8 +1114,15 @@ namespace grvl {
             {
                 libinput_event_pointer* pointer = libinput_event_get_pointer_event(event);
 
-                x = libinput_event_pointer_get_absolute_x_transformed(pointer, width);
-                y = libinput_event_pointer_get_absolute_y_transformed(pointer, height);
+                const int new_x = libinput_event_pointer_get_absolute_x_transformed(pointer, width);
+                const int new_y = libinput_event_pointer_get_absolute_y_transformed(pointer, height);
+
+                if (new_x != x || new_y != y) {
+                    MarkUserActivity();
+                }
+
+                x = new_x;
+                y = new_y;
 
                 UpdateCursorPos();
                 break;
@@ -1118,6 +1133,10 @@ namespace grvl {
                 libinput_event_pointer* pointer = libinput_event_get_pointer_event(event);
                 uint32_t button = libinput_event_pointer_get_button(pointer);
                 bool pressed = (libinput_event_pointer_get_button_state(pointer) == LIBINPUT_BUTTON_STATE_PRESSED);
+
+                if (pressed) {
+                    MarkUserActivity();
+                }
 
                 if (button == BTN_LEFT) {
                     left_mouse_pressed = pressed;
@@ -1132,6 +1151,8 @@ namespace grvl {
                 bool pressed = libinput_event_keyboard_get_key_state(keyboard) == LIBINPUT_KEY_STATE_PRESSED;
 
                 if (pressed) {
+                    MarkUserActivity();
+
                     if (evdev_key == KEY_NUMLOCK) leds ^= LIBINPUT_LED_NUM_LOCK;
                     if (evdev_key == KEY_CAPSLOCK) leds ^= LIBINPUT_LED_CAPS_LOCK;
                     if (evdev_key == KEY_SCROLLLOCK) leds ^= LIBINPUT_LED_SCROLL_LOCK;
@@ -1175,5 +1196,4 @@ namespace grvl {
     void LinuxNativeApp::DrawMouseIcon(bool flag) {
         draw_mouse_icon = flag;
     }
-
 }

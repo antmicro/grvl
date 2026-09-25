@@ -79,22 +79,39 @@ namespace grvl {
         SDL_zero(event);
 
         while (SDL_PollEvent(&event)) {
+            switch (event.type) {
+                case SDL_MOUSEMOTION:
+                    if (event.motion.xrel != 0 || event.motion.yrel != 0) {
+                        MarkUserActivity();
+                    }
+                    break;
 
-            if (event.type == SDL_TEXTINPUT) {
-                Manager::GetInstance().ProcessTextInput(event.text.text);
-            }
+                case SDL_MOUSEBUTTONDOWN:
+                    MarkUserActivity();
+                    break;
 
-            if (event.type == SDL_QUIT) {
-                should_run = false;
-            }
+                case SDL_MOUSEWHEEL:
+                    MarkUserActivity();
+                    break;
 
-            if (event.type == SDL_KEYDOWN) {
-                Manager::GetInstance().ProcessKeyInput(true, event.key.keysym.sym);
-            }
+                case SDL_TEXTINPUT:
+                    Manager::GetInstance().ProcessTextInput(event.text.text);
+                    break;
 
-            if (event.type == SDL_KEYUP) {
-                Manager::GetInstance().ProcessKeyInput(false, event.key.keysym.sym);
+                case SDL_QUIT:
+                    should_run = false;
+                    break;
+
+                case SDL_KEYDOWN:
+                    MarkUserActivity();
+                    Manager::GetInstance().ProcessKeyInput(true, event.key.keysym.sym);
+                    break;
+
+                case SDL_KEYUP:
+                    Manager::GetInstance().ProcessKeyInput(false, event.key.keysym.sym);
+                break;
             }
+            
         }
 
         int x, y;
