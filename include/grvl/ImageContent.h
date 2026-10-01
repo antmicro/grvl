@@ -43,6 +43,8 @@ namespace grvl {
 
         uint8_t* GetData()
         {
+            // the caller may modify the pixels
+            opaque = false;
             return data;
         }
 
@@ -53,6 +55,7 @@ namespace grvl {
 
         uint8_t* GetFrameData(uint32_t frame)
         {
+            opaque = false;
             return data + GetFrameDataLength() * frame;
         }
 
@@ -94,6 +97,12 @@ namespace grvl {
         bool HasAlphaChannel() const
         {
             return GetFormatAlphaChannel(format);
+        }
+
+        // True only if the image was loaded from a file and every pixel has alpha == 255
+        bool IsOpaque() const
+        {
+            return opaque;
         }
 
         bool IsRotated() const
@@ -153,6 +162,7 @@ namespace grvl {
         Format format;
         std::vector<uint32_t> frameDurations;
         bool rotated = false;
+        bool opaque = false;
     };
 
     /// Convert the pointed to pixel to a color, in the specific output format

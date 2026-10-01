@@ -457,7 +457,7 @@ namespace grvl {
         DmaMoveImage(
             address, GetActiveBuffer(), 0, 0, x, y, image->GetWidth(), image->GetHeight(),
             image->GetPixelsPerLine(), image->GetNumberOfLines(), 0, 1,
-            image->GetColorFormat(), GetPixelFormat(), image->HasAlphaChannel(), image->GetColorPalette()
+            image->GetColorFormat(), GetPixelFormat(), image->HasAlphaChannel() && !image->IsOpaque(), image->GetColorPalette()
         );
     }
 

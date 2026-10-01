@@ -110,9 +110,11 @@ namespace grvl {
         if (image_format == Format::ARGB8888) {
             Pixel* pixels = reinterpret_cast<Pixel*>(this->data);
             const uint32_t length = width * height * frames;
+            uint8_t alpha_and = 0xff;
 
             for (uint32_t i = 0; i < length; i ++) {
                 Pixel& pixel = pixels[i];
+                alpha_and &= pixel.channels.a;
 
 #if GRVL_BIG_ENDIAN
                 pixel.data = (pixel.data >> 8) | (pixel.channels.a << 24);
@@ -120,6 +122,8 @@ namespace grvl {
                 std::swap(pixel.channels.r, pixel.channels.b);
 #endif
             }
+
+            opaque = (alpha_and == 0xff);
         }
 
         // if the format could not have been loaded directly we perform transcoding
@@ -162,6 +166,7 @@ namespace grvl {
         frames = other.frames;
         format = other.format;
         rotated = other.rotated;
+        opaque = other.opaque;
         frameDurations = other.frameDurations;
     }
 
@@ -183,6 +188,7 @@ namespace grvl {
         frames = other.frames;
         format = other.format;
         rotated = other.rotated;
+        opaque = other.opaque;
         frameDurations = other.frameDurations;
 
         return *this;

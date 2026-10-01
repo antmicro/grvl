@@ -258,6 +258,22 @@ namespace grvl {
     {
         const bool blend = GetFormatAlphaChannel(ifmt) && (bmem != 0);
 
+        // Same-format opaque copy needs no per-pixel work, copy whole rows instead
+        if (!blend && ifmt == ofmt && (ifmt == Format::ARGB8888 || ifmt == Format::RGB888 || ifmt == Format::RGB565)) {
+            const size_t stride = GetFormatStride(ifmt);
+            auto* in = reinterpret_cast<const uint8_t*>(imem);
+            auto* out = reinterpret_cast<uint8_t*>(omem);
+
+            for (uint32_t y = 0; y < rows; y++) {
+                if (in != out) {
+                    memmove(out, in, columns * stride);
+                }
+                in += (columns + ioff) * stride;
+                out += (columns + ooff) * stride;
+            }
+            return;
+        }
+
         BakedBlitFunc blit = blend
             ? FastBlitPixel_t<true>::call
             : FastBlitPixel_t<false>::call;
