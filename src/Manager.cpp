@@ -570,6 +570,15 @@ namespace grvl {
         return ManagerState != Loading;
     }
 
+    bool Manager::NeedsFrames() const
+    {
+        return ManagerState != Refreshing
+            || currentTransparency != desiredTransparency
+            || keyActive
+            || timeoutedPopupMode
+            || TouchEvent.GetState() != Touch::Idle;
+    }
+
     Manager& Manager::AddFontToFontContainer(const std::string& name, Font* font)
     {
         FontContainer[name] = font;
@@ -1064,7 +1073,7 @@ namespace grvl {
         const float ns_to_ms = 1.0 / 1000'000.0;
 
         std::string res = std::to_string(GetWidth()) + "x" + std::to_string(GetHeight());
-        painter.DrawString(font, 4, 20, "FPS: " + std::to_string(perf.fps) + " (~" +  ftos(perf.mspt, 2) + "ms/t) " + res, fg, bg);
+        painter.DrawString(font, 4, 20, "FPS: " + std::to_string(perf.fps) + " (~" +  ftos(perf.mspt, 2) + "ms/t) " + res + (perf.status ? std::string(" ") + perf.status : ""), fg, bg);
 
         if (perf.overlay == Performance::MINIMAL) {
             return;

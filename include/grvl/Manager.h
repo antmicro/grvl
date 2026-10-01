@@ -76,6 +76,8 @@ namespace grvl {
         };
 
         Overlay overlay = NONE;
+        // optional text appended to the first overlay line, set by the platform (e.g. frame skipping state)
+        const char* status = nullptr;
         size_t frame_count = 0;
         size_t since_checkpoint = 0;
 
@@ -256,6 +258,9 @@ namespace grvl {
         /// Before calling this method loading image (if defined) is displayed.
         void InitializationFinished();
         int8_t IsInitializationFinished();
+
+        /// Returns true if the next frames should be rendered even without any new input
+        bool NeedsFrames() const;
         int8_t IsLoadingIcoVisible() const;
 
         Manager& AddScreen(AbstractView* screen);

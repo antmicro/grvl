@@ -127,6 +127,14 @@ namespace grvl {
         bool left_mouse_pressed = false;
         bool draw_mouse_icon = true;
 
+        // idle frame skipping, see SetIdleThrottle()
+        std::atomic<bool> idle_throttle { false };
+        std::atomic<uint64_t> last_event_ms { 0 };
+        uint64_t last_draw_ms = 0;
+        bool frame_drawn = true;
+
+        bool ShouldDrawFrame();
+
         struct xkb_context* xkb_ctx;
         struct xkb_keymap* xkb_keymap;
         struct xkb_state* xkb_state;
@@ -169,6 +177,15 @@ namespace grvl {
         // @remark
         // Can be called both before and after this object is passed to Application::Init().
         void DrawMouseIcon(bool draw_mouse = true);
+
+        // When enabled, frames are only rendered while there was recent input, while the Manager
+        // reports ongoing activity or at a low rate.
+        // This avoids redrawing an unchanged screen.
+        // Disabled by default.
+        void SetIdleThrottle(bool enabled);
+
+        // Make sure the next frames are rendered, call after changing the UI outside of input handling.
+        void RequestRedraw();
     };
 }
 

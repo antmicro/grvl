@@ -14,6 +14,7 @@
 #include <pthread.h>
 #include <sched.h>
 #include <poll.h>
+#include <chrono>
 
 #include <poll.h>
 #include <libdrm/drm.h>
@@ -972,6 +973,39 @@ namespace grvl {
         return true;
     }
 
+    static uint64_t NowMs()
+    {
+        return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+    }
+
+    void LinuxNativeApp::SetIdleThrottle(bool enabled)
+    {
+        idle_throttle = enabled;
+    }
+
+    void LinuxNativeApp::RequestRedraw()
+    {
+        last_event_ms = NowMs();
+    }
+
+    bool LinuxNativeApp::ShouldDrawFrame()
+    {
+        // keep rendering at full rate this long after the last input event
+        static constexpr uint64_t active_window_ms = 1000;
+        // otherwise still refresh now and then, for things changing without input (clock, JS, etc.)
+        static constexpr uint64_t idle_interval_ms = 250;
+
+        if (!idle_throttle) {
+            return true;
+        }
+
+        const uint64_t now = NowMs();
+
+        return now - last_event_ms < active_window_ms
+            || now - last_draw_ms >= idle_interval_ms
+            || Manager::GetInstance().NeedsFrames();
+    }
+
     void LinuxNativeApp::Render()
     {
         if (!thread_run) {
@@ -979,11 +1013,24 @@ namespace grvl {
         }
 
         render_mutex.lock();
+
+        frame_drawn = ShouldDrawFrame();
+        if (!frame_drawn) {
+            return;
+        }
+
+        last_draw_ms = NowMs();
+        Manager::GetInstance().perf.status = idle_throttle ? "[throttle: on]" : "[throttle: off]";
         Manager::GetInstance().MainLoopIteration();
     }
 
     void LinuxNativeApp::Swap()
     {
+        // nothing was rendered, the previous frame is still being displayed
+        if (!frame_drawn) {
+            return;
+        }
+
         Stopwatch watch {};
 
         const uint32_t row_bytes = width * 4;
@@ -1086,6 +1133,8 @@ namespace grvl {
 
     void LinuxNativeApp::HandleEvent(libinput_event* event)
     {
+        last_event_ms = NowMs();
+
         auto type = libinput_event_get_type(event);
 
         switch (type) {
