@@ -51,6 +51,15 @@ namespace grvl {
         Color fc = DecomposeColorFormat(icol, Format::ARGB8888);
         Color bc = DecomposeColorFormat(bcol, Format::ARGB8888);
 
+        // Fast paths avoiding the per-channel divisions below, results are identical
+        if (fc.a == 0xff) {
+            return icol;
+        }
+
+        if (fc.a == 0) {
+            return bc.a ? bcol : 0;
+        }
+
         uint8_t am = ((fc.a * bc.a) / 255);
         uint8_t ar = fc.a + bc.a - am;
 
