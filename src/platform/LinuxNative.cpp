@@ -299,7 +299,7 @@ namespace grvl {
     LinuxNativeApp::~LinuxNativeApp()
     {
         thread_run = false;
-        render_mutex.unlock();
+        frame_signal.Post();
 
         input_thread.join();
 
@@ -960,7 +960,7 @@ namespace grvl {
             while (thread_run) {
                 CommitPlanes();
                 DRMWait();
-                render_mutex.unlock();
+                frame_signal.Post();
             }
         });
 
@@ -1012,7 +1012,7 @@ namespace grvl {
             return;
         }
 
-        render_mutex.lock();
+        frame_signal.Wait();
 
         frame_drawn = ShouldDrawFrame();
         if (!frame_drawn) {

@@ -19,6 +19,7 @@
 #include <libdrm/drm_fourcc.h>
 
 #include <atomic>
+#include <condition_variable>
 #include <mutex>
 #include <string>
 #include <thread>
@@ -111,8 +112,32 @@ namespace grvl {
         } cursor_state;
 
         // to limit how often we draw we make sure the previous frame is shown before the next one starts rendering
-        // this is done using this mutex, the Render() method wait for it, and the drm_thread signals it.
-        std::mutex render_mutex;
+        // this is done using this signal, the Render() method waits for it, and the drm_thread posts it.
+        // It is a binary semaphore: posting it more than once before it is consumed has no additional effect.
+        class FrameSignal {
+        public:
+            void Wait()
+            {
+                std::unique_lock<std::mutex> lock(m);
+                cv.wait(lock, [this] { return ready; });
+                ready = false;
+            }
+
+            void Post()
+            {
+                {
+                    std::lock_guard<std::mutex> lock(m);
+                    ready = true;
+                }
+                cv.notify_one();
+            }
+
+        private:
+            std::mutex m;
+            std::condition_variable cv;
+            // initially set so the first frame does not wait
+            bool ready = true;
+        } frame_signal;
 
         drmEventContext ev = {};
         struct libinput* li = nullptr;
