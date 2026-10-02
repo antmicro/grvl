@@ -363,6 +363,11 @@ namespace grvl {
             }
         }
 
+        // Request next frame to render
+        if(animation != 0 || touchActive || scrollIndicatorOpacity > 0) {
+            painter.RequestNextFrame();
+        }
+
         // Clear empty space over a list.
         if(ScrollMax == 0 && itemsHeight < Height) {
             painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y + itemsHeight, Width, Height - itemsHeight, BackgroundColor);

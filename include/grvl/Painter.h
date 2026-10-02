@@ -99,6 +99,11 @@ namespace grvl {
             int32_t endY { 0 };
         };
 
+        // Request frames (used by GIFs, scrolling etc)
+        void RequestNextFrame() { nextFrameRequested = true; }
+        bool IsNextFrameRequested() const { return nextFrameRequested; }
+        void ClearNextFrameRequest() { nextFrameRequested = false; }
+
         void ResetDrawingBounds();
         void PushDrawingBoundsStackElement(const DrawingBounds& drawing_bounds);
         void PushDrawingBoundsStackElement(int32_t startX, int32_t startY, int32_t endX, int32_t endY);
@@ -232,6 +237,7 @@ namespace grvl {
         Image* BackgroundImage;
         ContentManager* contentManager;
         bool is_rotated;
+        bool nextFrameRequested { false };
         void DrawSpansBetweenEdges(const Edge& e1, const Edge& e2) const;
         void DrawSpan(int x1, int x2, uint32_t color, int y) const;
 

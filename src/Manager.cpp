@@ -576,7 +576,8 @@ namespace grvl {
             || currentTransparency != desiredTransparency
             || keyActive
             || timeoutedPopupMode
-            || TouchEvent.GetState() != Touch::Idle;
+            || TouchEvent.GetState() != Touch::Idle
+            || painter.IsNextFrameRequested();
     }
 
     Manager& Manager::AddFontToFontContainer(const std::string& name, Font* font)
@@ -888,6 +889,7 @@ namespace grvl {
     {
         Guard lock {DrawMutex};
 
+        painter.ClearNextFrameRequest();
         painter.ResetDrawingBounds();
 
         switch(ManagerState) {

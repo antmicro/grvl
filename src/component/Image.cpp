@@ -133,6 +133,10 @@ namespace grvl {
         int32_t RenderY = ParentRenderY + Y;
 
         updateAnimation();
+        if (IsAnimationEnabled()) {
+            painter.RequestNextFrame();
+        }
+
         painter.DrawImage(RenderX, RenderY, content, ActiveFrame);
     }
 
