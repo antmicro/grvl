@@ -5,7 +5,7 @@
 
 namespace grvl {
 
-    int AcquireXrandrLease(int driver_fd, uint32_t preferred_connector_id);
+    int AcquireXrandrLease(int driver_fd);
 
 }
 

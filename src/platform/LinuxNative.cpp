@@ -316,10 +316,12 @@ namespace grvl {
         grvl::grvl::Destroy();
     }
 
-    int LinuxNativeApp::AcquireDrmLease(int fd, uint32_t connector_id)
+    int LinuxNativeApp::AcquireDrmLease(int fd)
     {
-      int lease_fd = AcquireXrandrLease(fd, connector_id);
+      Log(INFO, "DRM lease: trying XRandR lease for fd=%d", fd);
+      int lease_fd = AcquireXrandrLease(fd);
       if (lease_fd >= 0) {
+        Log(INFO, "DRM lease: acquired XRandR lease fd=%d", lease_fd);
         drm_access_type = DrmAccessType::XrandrLease;
         return lease_fd;
       }
@@ -354,6 +356,29 @@ namespace grvl {
 
         drmModeFreeObjectProperties(props);
         return prop_id;
+    }
+
+    uint64_t LinuxNativeApp::GetPropertyValue(uint32_t obj_id, uint32_t obj_type, const char* name)
+    {
+        uint64_t prop_value = 0;
+
+        drmModeObjectProperties *props = drmModeObjectGetProperties(fd, obj_id, obj_type);
+        if (!props) return 0;
+
+        for (uint32_t i = 0; i < props->count_props; i++) {
+            drmModePropertyRes *prop = drmModeGetProperty(fd, props->props[i]);
+            if (!prop) continue;
+
+            if (std::strcmp(prop->name, name) == 0) {
+                prop_value = props->prop_values[i];
+                drmModeFreeProperty(prop);
+                break;
+            }
+            drmModeFreeProperty(prop);
+        }
+
+        drmModeFreeObjectProperties(props);
+        return prop_value;
     }
 
     uint32_t LinuxNativeApp::GetPlaneType(uint32_t plane_id)
@@ -470,7 +495,6 @@ namespace grvl {
     bool LinuxNativeApp::InitDriver(int driver, uint16_t width, uint16_t height, uint32_t refresh, int requested_connector_id)
     {
         this->fd = driver;
-        bool is_lease = false;
 
         this->resource = drmModeGetResources(fd);
         if (!resource) {
@@ -479,23 +503,19 @@ namespace grvl {
             return false;
         }
 
-        this->conn = PickConnector(fd, resource, requested_connector_id);
-        if (!conn) {
-            Log(ERROR, "Unable to pick DRM connection!");
-            CloseDriver();
-            return false;
-        }
+        Log(INFO, "DRM init: initial fd=%d resources connectors=%d CRTCs=%d encoders=%d",
+            fd, resource->count_connectors, resource->count_crtcs, resource->count_encoders);
 
+        Log(INFO, "DRM init: attempting drmSetMaster(fd=%d)", fd);
         if (drmSetMaster(fd) == 0) {
+            Log(INFO, "DRM init: DRM master acquired on fd=%d", fd);
             drm_access_type = DrmAccessType::Master;
         } else {
-            Log(WARN, "Unable to aquire DRM master control!");
-            const int lease_fd = AcquireDrmLease(fd, conn->connector_id);
+            Log(WARN, "Unable to aquire DRM master control on fd=%d: %s", fd, strerror(errno));
+            const int lease_fd = AcquireDrmLease(fd);
 
             drmModeFreeResources(resource);
             resource = nullptr;
-            drmModeFreeConnector(conn);
-            conn = nullptr;
 
             close(fd);
             this->fd = lease_fd;
@@ -504,22 +524,40 @@ namespace grvl {
                 return false;
             }
 
-            is_lease = true;
-
             this->resource = drmModeGetResources(fd);
             if (!resource) {
                 Log(ERROR, "Unable to get DRM resources!");
                 CloseDriver();
                 return false;
             }
-
-            this->conn = PickConnector(fd, resource, requested_connector_id);
-            if (!conn) {
-                Log(ERROR, "Unable to pick DRM connection!");
-                CloseDriver();
-                return false;
-            }
+            Log(INFO, "DRM init: lease fd=%d resources connectors=%d CRTCs=%d encoders=%d",
+                fd, resource->count_connectors, resource->count_crtcs, resource->count_encoders);
         }
+
+        // Pick the display only after DRM access has been established. The exact same
+        // connector selection policy is therefore used for DRM master and XRandR lease.
+        Log(INFO, "DRM selection: requested_connector=%d access_type=%d candidates=%d",
+            requested_connector_id, static_cast<int>(drm_access_type), resource->count_connectors);
+        for(int i = 0; i < resource->count_connectors; i++) {
+            drmModeConnectorPtr candidate = drmModeGetConnector(fd, resource->connectors[i]);
+            if(!candidate) {
+                Log(WARN, "DRM selection: connector[%d] id=%u query failed", i, resource->connectors[i]);
+                continue;
+            }
+            Log(INFO, "DRM selection: connector[%d] id=%u type=%u type_id=%u connection=%u modes=%d encoder=%u",
+                i, candidate->connector_id, candidate->connector_type, candidate->connector_type_id,
+                candidate->connection, candidate->count_modes, candidate->encoder_id);
+            drmModeFreeConnector(candidate);
+        }
+        this->conn = PickConnector(fd, resource, requested_connector_id);
+        if (!conn) {
+            Log(ERROR, "Unable to pick DRM connection!");
+            CloseDriver();
+            return false;
+        }
+
+        Log(INFO, "DRM selection: SELECTED connector=%u type=%u type_id=%u encoder=%u modes=%d",
+            conn->connector_id, conn->connector_type, conn->connector_type_id, conn->encoder_id, conn->count_modes);
 
         this->mode = PickMode(conn, width, height, refresh);
         if (!mode) {
@@ -528,7 +566,35 @@ namespace grvl {
             return false;
         }
 
-        if (is_lease) {
+        if (drm_access_type == DrmAccessType::XrandrLease) {
+            // Resolve the selected connector's CRTC through its encoder, just like
+            // the DRM master path does. Connector CRTC_ID may read as 0 on a lease FD.
+            this->encoder = drmModeGetEncoder(fd, conn->encoder_id);
+            if (!encoder) {
+                Log(ERROR, "DRM selection: unable to get encoder=%u for leased connector=%u",
+                    conn->encoder_id, conn->connector_id);
+            } else {
+                const uint32_t selected_crtc_id = encoder->crtc_id;
+                Log(INFO, "DRM selection: leased connector=%u encoder=%u current_CRTC=%u",
+                    conn->connector_id, encoder->encoder_id, selected_crtc_id);
+
+                for (int i = 0; i < resource->count_crtcs; i++) {
+                    Log(INFO, "DRM selection: lease CRTC[%d]=%u%s", i, resource->crtcs[i],
+                        resource->crtcs[i] == selected_crtc_id ? " [selected]" : "");
+                    if (resource->crtcs[i] == selected_crtc_id) {
+                        crtc_index = i;
+                        break;
+                    }
+                }
+
+                if (crtc_index >= 0) {
+                    this->crtc = drmModeGetCrtc(fd, resource->crtcs[crtc_index]);
+                    Log(INFO, "DRM selection: selected leased CRTC index=%d id=%u", crtc_index, resource->crtcs[crtc_index]);
+                } else {
+                    Log(ERROR, "DRM selection: encoder CRTC=%u not present in lease", selected_crtc_id);
+                }
+            }
+        } else if (drm_access_type == DrmAccessType::FbtermLease) {
             if (resource->count_crtcs != 1) {
                 Log(ERROR, "Expected exactly one CRTC in DRM lease, found %d!", resource->count_crtcs);
                 CloseDriver();
@@ -867,6 +933,75 @@ namespace grvl {
         }
 
         drmModeAtomicReqPtr req = drmModeAtomicAlloc();
+
+        if (drm_access_type == DrmAccessType::XrandrLease) {
+            Log(INFO, "XRandR blank: selected connector=%u CRTC=%u; blank all other leased outputs",
+                conn->connector_id, crtc->crtc_id);
+
+            // Xorg deliberately leaves leased primary planes scanning out their last
+            // framebuffer. Detach every non-selected connector/CRTC/plane so no X
+            // content remains visible on the other leased outputs.
+            for (int i = 0; i < resource->count_connectors; i++) {
+                const uint32_t connector_id = resource->connectors[i];
+                if (connector_id == conn->connector_id) {
+                    continue;
+                }
+
+                const uint64_t old_crtc = GetPropertyValue(connector_id, DRM_MODE_OBJECT_CONNECTOR, "CRTC_ID");
+                const uint32_t connector_crtc = GetPropertyId(connector_id, DRM_MODE_OBJECT_CONNECTOR, "CRTC_ID");
+                Log(INFO, "XRandR blank: connector=%u old_CRTC=%llu -> CRTC_ID=0",
+                    connector_id, static_cast<unsigned long long>(old_crtc));
+                if (connector_crtc) {
+                    drmModeAtomicAddProperty(req, connector_id, connector_crtc, 0);
+                } else {
+                    Log(WARN, "XRandR blank: connector=%u missing CRTC_ID property", connector_id);
+                }
+            }
+
+            drmModePlaneResPtr plane_res = drmModeGetPlaneResources(fd);
+            if (plane_res) {
+                for (uint32_t i = 0; i < plane_res->count_planes; i++) {
+                    const uint32_t plane_id = plane_res->planes[i];
+                    drmModePlanePtr plane = drmModeGetPlane(fd, plane_id);
+                    if (!plane) {
+                        continue;
+                    }
+
+                    Log(INFO, "XRandR blank: plane=%u type=%u CRTC=%u FB=%u%s",
+                        plane_id, GetPlaneType(plane_id), plane->crtc_id, plane->fb_id,
+                        plane->crtc_id == crtc->crtc_id ? " [selected CRTC]" : "");
+                    if (plane->crtc_id != 0 && plane->crtc_id != crtc->crtc_id) {
+                        Log(INFO, "XRandR blank: detach plane=%u from CRTC=%u FB=%u",
+                            plane_id, plane->crtc_id, plane->fb_id);
+                        const uint32_t plane_fb = GetPropertyId(plane_id, DRM_MODE_OBJECT_PLANE, "FB_ID");
+                        const uint32_t plane_crtc = GetPropertyId(plane_id, DRM_MODE_OBJECT_PLANE, "CRTC_ID");
+                        if (plane_fb) drmModeAtomicAddProperty(req, plane_id, plane_fb, 0);
+                        if (plane_crtc) drmModeAtomicAddProperty(req, plane_id, plane_crtc, 0);
+                    }
+
+                    drmModeFreePlane(plane);
+                }
+                drmModeFreePlaneResources(plane_res);
+            }
+
+            for (int i = 0; i < resource->count_crtcs; i++) {
+                const uint32_t crtc_id = resource->crtcs[i];
+                if (crtc_id == crtc->crtc_id) {
+                    continue;
+                }
+
+                const uint64_t old_active = GetPropertyValue(crtc_id, DRM_MODE_OBJECT_CRTC, "ACTIVE");
+                const uint64_t old_mode = GetPropertyValue(crtc_id, DRM_MODE_OBJECT_CRTC, "MODE_ID");
+                Log(INFO, "XRandR blank: CRTC=%u ACTIVE=%llu MODE_ID=%llu -> disable",
+                    crtc_id, static_cast<unsigned long long>(old_active), static_cast<unsigned long long>(old_mode));
+                const uint32_t active = GetPropertyId(crtc_id, DRM_MODE_OBJECT_CRTC, "ACTIVE");
+                const uint32_t mode_id = GetPropertyId(crtc_id, DRM_MODE_OBJECT_CRTC, "MODE_ID");
+                if (active) drmModeAtomicAddProperty(req, crtc_id, active, 0);
+                if (mode_id) drmModeAtomicAddProperty(req, crtc_id, mode_id, 0);
+            }
+        }
+
+        Log(INFO, "DRM modeset: enable selected connector=%u CRTC=%u", conn->connector_id, crtc->crtc_id);
 
         uint32_t connector_crtc = GetPropertyId(conn->connector_id, DRM_MODE_OBJECT_CONNECTOR, "CRTC_ID");
         uint32_t crtc_active = GetPropertyId(crtc->crtc_id, DRM_MODE_OBJECT_CRTC, "ACTIVE");

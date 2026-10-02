@@ -6,12 +6,9 @@
 #include <algorithm>
 #include <cerrno>
 #include <cstring>
-#include <functional>
-#include <memory>
 #include <string>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <unordered_map>
 #include <vector>
 #include <xcb/randr.h>
 #include <xcb/xcb.h>
@@ -23,10 +20,8 @@ namespace grvl {
         xcb_randr_output_t output;
         xcb_randr_crtc_t crtc;
 
-        c_unique_ptr<xcb_randr_get_output_info_reply_t> info;
         uint32_t connector_id;
         std::string name;
-        int score;
 
         const char* str() const
         {
@@ -45,33 +40,6 @@ namespace grvl {
 
         device = info.st_rdev;
         return true;
-    }
-
-    static int GetUseCount(const std::unordered_map<xcb_randr_crtc_t, int>& counts, xcb_randr_crtc_t crtc)
-    {
-        auto it = counts.find(crtc);
-
-        if(it == counts.end()) {
-            return 0;
-        }
-
-        return it->second;
-    }
-
-    static xcb_randr_crtc_t PickCrtc(xcb_connection_t* connection, const std::unordered_map<xcb_randr_crtc_t, int>& counts, const xcb_randr_get_output_info_reply_t* info)
-    {
-        if(info->crtc != XCB_NONE) {
-            return (GetUseCount(counts, info->crtc) == 1) ? info->crtc : XCB_NONE;
-        }
-
-        xcb_randr_crtc_t* crtcs = xcb_randr_get_output_info_crtcs(info);
-
-        for(int i = 0; i < info->num_crtcs; i++) {
-            if(GetUseCount(counts, crtcs[i]) == 0)
-                return crtcs[i];
-        }
-
-        return XCB_NONE;
     }
 
     static int GetConnectorId(xcb_connection_t* connection, xcb_randr_output_t output, xcb_atom_t atom)
@@ -115,88 +83,12 @@ namespace grvl {
         return atom;
     }
 
-    static std::vector<RandrOutput> GetOutputs(xcb_connection_t* connection, const std::function<int(const RandrOutput&)>& judge)
-    {
-        xcb_atom_t atom = GetAtom(connection, "CONNECTOR_ID");
-
-        std::unordered_map<xcb_randr_crtc_t, int> counts;
-        std::vector<RandrOutput> results;
-        xcb_screen_iterator_t it = xcb_setup_roots_iterator(xcb_get_setup(connection));
-
-        while(it.rem) {
-
-            xcb_window_t root = it.data->root;
-
-            auto* resources = xcb_randr_get_screen_resources_current_reply(
-                connection,
-                xcb_randr_get_screen_resources_current(connection, root),
-                nullptr);
-
-            if(!resources) {
-                xcb_screen_next(&it);
-                continue;
-            }
-
-            xcb_randr_output_t* outputs = xcb_randr_get_screen_resources_current_outputs(resources);
-
-            for(int i = 0; i < resources->num_outputs; i++) {
-
-                xcb_randr_output_t output = outputs[i];
-
-                auto* info = xcb_randr_get_output_info_reply(
-                    connection,
-                    xcb_randr_get_output_info(connection, output, resources->config_timestamp),
-                    nullptr);
-
-                if(!info) {
-                    continue;
-                }
-
-                if(info->connection != XCB_RANDR_CONNECTION_CONNECTED) {
-                    free(info);
-                    continue;
-                }
-
-                int name_len = xcb_randr_get_output_info_name_length(info);
-                const char* buffer = (const char*)xcb_randr_get_output_info_name(info);
-
-                char name[name_len + 1];
-                memcpy(name, buffer, name_len);
-                name[name_len] = 0;
-
-                RandrOutput result {};
-                result.root = root;
-                result.name = name;
-                result.output = output;
-                result.connector_id = GetConnectorId(connection, output, atom);
-                result.info = c_unique_ptr<xcb_randr_get_output_info_reply_t> { info };
-                result.score = judge(result);
-
-                counts[info->crtc]++;
-
-                results.push_back(std::move(result));
-            }
-
-            // second pass to pick CRTCs
-            for(RandrOutput& result : results) {
-                result.crtc = PickCrtc(connection, counts, result.info.get());
-            }
-
-            free(resources);
-            xcb_screen_next(&it);
-        }
-
-        std::sort(results.begin(), results.end(), [](const RandrOutput& l, const RandrOutput& r) {
-            return l.score > r.score;
-        });
-
-        return results;
-    }
-
     // implementation
 
-    int AcquireXrandrLease(int driver_fd, uint32_t preferred_connector_id)
+    int AcquireXrandrLease(int driver_fd)
     {
+        Log(INFO, "XRandR lease: begin acquisition for DRM fd=%d", driver_fd);
+
         dev_t driver_device;
         if(!GetDrmDeviceNumber(driver_fd, driver_device)) {
             return -1;
@@ -213,6 +105,7 @@ namespace grvl {
         const xcb_query_extension_reply_t* extension = xcb_get_extension_data(connection, &xcb_randr_id);
         if(!extension || !extension->present) {
             Log(ERROR, "RandR extension not supported");
+            xcb_disconnect(connection);
             return -1;
         }
 
@@ -223,52 +116,165 @@ namespace grvl {
 
         if(!version) {
             Log(ERROR, "Failed to query XRandR version");
+            xcb_disconnect(connection);
             return -1;
         }
 
         if((version->major_version < 1) || (version->major_version == 1 && version->minor_version < 6)) {
             Log(ERROR, "XRandR version >= 1.6 required, but not supported");
             free(version);
+            xcb_disconnect(connection);
             return -1;
         }
 
         free(version);
 
-        // Consider all outputs but first try the ones matching the given preferred_connector_id, by sorting them
-        // in descending order by the score returned by the given scoring function
-        std::vector<RandrOutput> outputs = GetOutputs(connection, [preferred = preferred_connector_id](const RandrOutput& output) {
-            return output.connector_id == preferred ? 100 : 0;
-        });
+        const xcb_atom_t connector_id_atom = GetAtom(connection, "CONNECTOR_ID");
+        xcb_screen_iterator_t screen = xcb_setup_roots_iterator(xcb_get_setup(connection));
+        bool found_outputs = false;
 
-        for(int i = 0; i < outputs.size(); i++) {
-            const RandrOutput& output = outputs.at(i);
+        while(screen.rem) {
+            const xcb_window_t root = screen.data->root;
+            Log(INFO, "XRandR lease: inspect root=%u", static_cast<unsigned>(root));
+
+            auto* resources = xcb_randr_get_screen_resources_current_reply(
+                connection,
+                xcb_randr_get_screen_resources_current(connection, root),
+                nullptr);
+
+            if(!resources) {
+                Log(WARN, "XRandR lease: failed to get resources for root=%u", static_cast<unsigned>(root));
+                xcb_screen_next(&screen);
+                continue;
+            }
+
+            Log(INFO, "XRandR lease: root=%u resources outputs=%d CRTCs=%d",
+                static_cast<unsigned>(root), resources->num_outputs, resources->num_crtcs);
+
+            std::vector<RandrOutput> outputs;
+            std::vector<xcb_randr_output_t> lease_outputs;
+            std::vector<xcb_randr_crtc_t> lease_crtcs;
+
+            xcb_randr_output_t* resource_outputs = xcb_randr_get_screen_resources_current_outputs(resources);
+            for(int i = 0; i < resources->num_outputs; i++) {
+                const xcb_randr_output_t output = resource_outputs[i];
+                auto* info = xcb_randr_get_output_info_reply(
+                    connection,
+                    xcb_randr_get_output_info(connection, output, resources->config_timestamp),
+                    nullptr);
+
+                if(!info) {
+                    Log(WARN, "XRandR lease: cannot query RandR output id=%u", static_cast<unsigned>(output));
+                    continue;
+                }
+
+                found_outputs = true;
+                const char* connection_name = "unknown";
+                switch(info->connection) {
+                    case XCB_RANDR_CONNECTION_CONNECTED:
+                        connection_name = "connected";
+                        break;
+                    case XCB_RANDR_CONNECTION_DISCONNECTED:
+                        connection_name = "disconnected";
+                        break;
+                    case XCB_RANDR_CONNECTION_UNKNOWN:
+                        connection_name = "unknown";
+                        break;
+                }
+
+                const int name_len = xcb_randr_get_output_info_name_length(info);
+                const char* buffer = reinterpret_cast<const char*>(xcb_randr_get_output_info_name(info));
+
+                RandrOutput result {};
+                result.root = root;
+                result.output = output;
+                result.crtc = info->crtc;
+                result.connector_id = GetConnectorId(connection, output, connector_id_atom);
+                result.name.assign(buffer, name_len);
+
+                Log(INFO,
+                    "XRandR lease: output #%d name='%s' randr_id=%u DRM_connector=%d connection=%s(%u) current_CRTC=%u modes=%u",
+                    i, result.str(), static_cast<unsigned>(result.output), static_cast<int>(result.connector_id),
+                    connection_name, static_cast<unsigned>(info->connection), static_cast<unsigned>(result.crtc),
+                    static_cast<unsigned>(info->num_modes));
+
+                outputs.push_back(result);
+                lease_outputs.push_back(output);
+
+                if(info->crtc != XCB_NONE &&
+                    std::find(lease_crtcs.begin(), lease_crtcs.end(), info->crtc) == lease_crtcs.end()) {
+                    Log(INFO, "XRandR lease: add active CRTC=%u for output '%s'",
+                        static_cast<unsigned>(info->crtc), result.str());
+                    lease_crtcs.push_back(info->crtc);
+                } else if(info->crtc == XCB_NONE) {
+                    Log(INFO, "XRandR lease: output '%s' has no active CRTC; connector will still be leased",
+                        result.str());
+                } else {
+                    Log(INFO, "XRandR lease: CRTC=%u for output '%s' already present in lease set",
+                        static_cast<unsigned>(info->crtc), result.str());
+                }
+
+                free(info);
+            }
+
+            free(resources);
+
+            if(lease_outputs.empty()) {
+                xcb_screen_next(&screen);
+                continue;
+            }
+
+            Log(INFO, "XRandR lease: collected existing outputs=%zu active_CRTCs=%zu on root=%u",
+                lease_outputs.size(), lease_crtcs.size(), static_cast<unsigned>(root));
+
+            if(lease_crtcs.empty()) {
+                Log(WARN, "XRandR screen has outputs but no CRTCs");
+                xcb_screen_next(&screen);
+                continue;
+            }
+
             xcb_randr_lease_t id = xcb_generate_id(connection);
+            Log(INFO, "XRandR lease: CreateLease id=%u root=%u outputs=%zu CRTCs=%zu",
+                static_cast<unsigned>(id), static_cast<unsigned>(root), lease_outputs.size(), lease_crtcs.size());
+
+            for(size_t i = 0; i < outputs.size(); i++) {
+                Log(INFO, "XRandR lease:   output[%zu] name='%s' randr_id=%u DRM_connector=%d CRTC=%u",
+                    i, outputs[i].str(), static_cast<unsigned>(outputs[i].output),
+                    static_cast<int>(outputs[i].connector_id), static_cast<unsigned>(outputs[i].crtc));
+            }
+            for(size_t i = 0; i < lease_crtcs.size(); i++) {
+                Log(INFO, "XRandR lease:   CRTC[%zu]=%u", i, static_cast<unsigned>(lease_crtcs[i]));
+            }
 
             xcb_generic_error_t* error = nullptr;
             xcb_randr_create_lease_reply_t* reply = xcb_randr_create_lease_reply(
                 connection,
-                xcb_randr_create_lease(connection, output.root, id, 1, 1, &output.crtc, &output.output),
+                xcb_randr_create_lease(
+                    connection,
+                    root,
+                    id,
+                    static_cast<uint16_t>(lease_crtcs.size()),
+                    static_cast<uint16_t>(lease_outputs.size()),
+                    lease_crtcs.data(),
+                    lease_outputs.data()),
                 &error);
 
             if(!reply) {
-                  if(error) {
-                    Log(ERROR, "Failed to lease output #%d '%s' (DRM connector: %d): X11 error: code=%d major=%d minor=%d",
-                        i,
-                        output.str(),
-                        output.connector_id,
+                if(error) {
+                    Log(ERROR, "Failed to lease all XRandR outputs on screen: X11 error: code=%d major=%d minor=%d",
                         error->error_code,
                         error->major_code,
                         error->minor_code);
                     free(error);
-                  } else {
-                    Log(ERROR, "Failed to lease output #%d '%s' (DRM connector: %d): XRandR failed to create a lease without an X11 error",
-                        i,
-                        output.str(),
-                        output.connector_id);
-                  }
+                } else {
+                    Log(ERROR, "Failed to lease all XRandR outputs on screen: XRandR failed without an X11 error");
+                }
 
+                xcb_screen_next(&screen);
                 continue;
             }
+
+            Log(INFO, "XRandR lease: CreateLease reply nfd=%u", static_cast<unsigned>(reply->nfd));
 
             int lease_fd = -1;
             int* fds = xcb_randr_create_lease_reply_fds(connection, reply);
@@ -276,40 +282,56 @@ namespace grvl {
             if(fds) {
                 if(reply->nfd >= 1)
                     lease_fd = fds[0];
-                for(int i = 1; i < reply->nfd; i++)
-                    close(fds[i]);
+                for(int fd_index = 1; fd_index < reply->nfd; fd_index++)
+                    close(fds[fd_index]);
             }
             free(reply);
 
             if(lease_fd < 0) {
-                Log(ERROR, "Failed to lease output #%d '%s' (DRM connector: %d): No file descriptor returned", i, output.str(), output.connector_id);
+                Log(ERROR, "Failed to lease all XRandR outputs on screen: no file descriptor returned");
+                xcb_screen_next(&screen);
                 continue;
             }
 
             dev_t lease_device;
             if(!GetDrmDeviceNumber(lease_fd, lease_device)) {
                 close(lease_fd);
+                xcb_screen_next(&screen);
                 continue;
             }
 
             if(lease_device != driver_device) {
-                Log(INFO, "Ignoring XRandR output #%d '%s' (DRM connector: %d): lease belongs to another DRM device", i, output.str(), output.connector_id);
+                Log(ERROR,
+                    "XRandR lease: created lease fd=%d belongs to DRM device=%llu, requested DRM device=%llu; ignoring lease",
+                    lease_fd,
+                    static_cast<unsigned long long>(lease_device),
+                    static_cast<unsigned long long>(driver_device));
                 close(lease_fd);
+                xcb_screen_next(&screen);
                 continue;
             }
 
             xcb_disconnect(connection);
-            Log(INFO, "Leased XRandR output #%d '%s' (DRM connector: %d)", i, output.str(), output.connector_id);
+            Log(INFO, "XRandR lease: SUCCESS fd=%d root=%u outputs=%zu CRTCs=%zu",
+                lease_fd, static_cast<unsigned>(root), lease_outputs.size(), lease_crtcs.size());
+            for(size_t i = 0; i < outputs.size(); i++) {
+                Log(INFO, "XRandR lease:   leased output #%zu '%s' randr_id=%u DRM_connector=%d CRTC=%u",
+                    i, outputs[i].str(), static_cast<unsigned>(outputs[i].output),
+                    static_cast<int>(outputs[i].connector_id), static_cast<unsigned>(outputs[i].crtc));
+            }
             return lease_fd;
         }
 
-        if(!outputs.empty()) {
-            Log(ERROR, "XRandR outputs found, but none could be leased!");
+        xcb_disconnect(connection);
+
+        if(found_outputs) {
+            Log(ERROR, "XRandR outputs found, but none could be leased for this DRM device!");
         } else {
-            Log(ERROR, "No leasable XRandR outputs found!");
+            Log(ERROR, "No XRandR outputs found!");
         }
 
         return -1;
     }
+
 
 }
