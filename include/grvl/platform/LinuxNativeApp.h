@@ -154,6 +154,8 @@ namespace grvl {
 
         // idle frame skipping, see SetIdleThrottle()
         std::atomic<bool> idle_throttle { false };
+        // FPS cap, see SetMinRefreshDelayMs()
+        std::atomic<uint64_t> min_refresh_delay_ms { 0 };
         std::atomic<uint64_t> last_event_ms { 0 };
         uint64_t last_draw_ms = 0;
         bool frame_drawn = true;
@@ -208,6 +210,11 @@ namespace grvl {
         // This avoids redrawing an unchanged screen.
         // Disabled by default.
         void SetIdleThrottle(bool enabled);
+
+        // When set to non-zero value, limits the effective FPS of rendering.
+        // Only takes effect when idle throttling is enabled, see SetIdleThrottle().
+        // Zero by default.
+        void SetMinRefreshDelayMs(uint64_t min_delay_ms);
 
         // Make sure the next frames are rendered, call after changing the UI outside of input handling.
         void RequestRedraw();
