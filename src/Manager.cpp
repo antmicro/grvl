@@ -24,6 +24,10 @@
 #include <grvl/JSEngine.h>
 #include <grvl/File.h>
 
+#ifndef GRVL_VER
+#define GRVL_VER "unknown"
+#endif
+
 #ifdef __ZEPHYR__
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(MANAGER, LOG_LEVEL_INF);
@@ -264,6 +268,12 @@ namespace grvl {
     std::string Manager::GetWorkingDirectory()
     {
         return workingDirectory;
+    }
+
+    Manager& Manager::SetOverlayInfo(const std::string& info)
+    {
+        overlayInfo = info;
+        return *this;
     }
 
     uint32_t Manager::GetWidth() const
@@ -1001,8 +1011,6 @@ namespace grvl {
             }
         }
 
-        DrawOverlay();
-
         painter.SetActiveBuffer(0);
 
         if(TopPanel && TopPanel->IsVisible() && GetGlobalTopPanelVisibility()) {
@@ -1016,6 +1024,8 @@ namespace grvl {
         if(BottomPanel && BottomPanel->IsVisible()) {
             BottomPanel->Draw(painter, 0, height - GetBottomPanelHeight());
         }
+
+        DrawOverlay();
 
         if(ManagerState == Refreshing) { // Use unified background handling
             painter.MergeBuffers();
@@ -1072,10 +1082,21 @@ namespace grvl {
         const uint32_t fg = Color { 200, 200, 255, 255 }.pack(Format::ARGB8888);
         const uint32_t bg = Color { 0, 0, 0, 20 }.pack(Format::ARGB8888);
 
+        int32_t y = 20;
+        auto drawLine = [&] (const std::string& text) {
+            painter.DrawString(font, 4, y, text, fg, bg);
+            y += 20;
+        };
+
         const float ns_to_ms = 1.0 / 1000'000.0;
 
         std::string res = std::to_string(GetWidth()) + "x" + std::to_string(GetHeight());
-        painter.DrawString(font, 4, 20, "FPS: " + std::to_string(perf.fps) + " (~" +  ftos(perf.mspt, 2) + "ms/t) " + res + (perf.status ? std::string(" ") + perf.status : ""), fg, bg);
+        drawLine("FPS: " + std::to_string(perf.fps) + " (~" + ftos(perf.mspt, 2) + "ms/t) " + res + (perf.status ? std::string(" ") + perf.status : ""));
+        drawLine(std::string("grvl: ") + GRVL_VER);
+
+        if(!overlayInfo.empty()) {
+            drawLine("app: " + overlayInfo);
+        }
 
         if (perf.overlay == Performance::MINIMAL) {
             return;
@@ -1085,10 +1106,10 @@ namespace grvl {
         size_t draw_ns = perf.draw_times.avg();
         size_t swap_ns = perf.swap_times.avg();
 
-        painter.DrawString(font, 4, 40, "J: " + ftos(script_ns * ns_to_ms, 4) + "ms", fg, bg); // events, JS, etc.
-        painter.DrawString(font, 4, 60, "D: " + ftos(draw_ns * ns_to_ms, 4) + "ms", fg, bg); // main drawing
-        painter.DrawString(font, 4, 80, "S: " + ftos(swap_ns * ns_to_ms, 4) + "ms", fg, bg); // time spent between MainLoopIteration() calls (includes Swaping time)
-        painter.DrawString(font, 4, 100, "T: " + ftos((script_ns + draw_ns + swap_ns) * ns_to_ms, 4) + "ms", fg, bg); // total time spent per frame
+        drawLine("J: " + ftos(script_ns * ns_to_ms, 4) + "ms"); // events, JS, etc.
+        drawLine("D: " + ftos(draw_ns * ns_to_ms, 4) + "ms"); // main drawing
+        drawLine("S: " + ftos(swap_ns * ns_to_ms, 4) + "ms"); // time spent between MainLoopIteration() calls (includes Swaping time)
+        drawLine("T: " + ftos((script_ns + draw_ns + swap_ns) * ns_to_ms, 4) + "ms"); // total time spent per frame
 
     }
 

@@ -8,6 +8,30 @@ project(
 
 set(CMAKE_CXX_STANDARD 17)
 
+set(GRVL_VER_OVERRIDE "" CACHE STRING "Override the git SHA shown in the GRVL overlay")
+set(GRVL_VER "unknown")
+
+if(GRVL_VER_OVERRIDE)
+  set(GRVL_VER "${GRVL_VER_OVERRIDE}")
+elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
+  find_package(Git QUIET)
+  if(GIT_FOUND)
+    execute_process(
+      COMMAND ${GIT_EXECUTABLE} rev-parse HEAD
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      RESULT_VARIABLE GRVL_VER_RESULT
+      OUTPUT_VARIABLE GRVL_VER
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      ERROR_QUIET)
+
+    if(NOT GRVL_VER_RESULT EQUAL 0 OR GRVL_VER STREQUAL "")
+      set(GRVL_VER "unknown")
+    endif()
+  endif()
+endif()
+
+message(STATUS "GRVL version: ${GRVL_VER}")
+
 include(StandardProjectSettings)
 include(Tools)
 include(Dependencies)
@@ -52,6 +76,7 @@ if(GRVL_ZEPHYR)
 endif()
 
 add_library(grvl ${sources} ${headers})
+target_compile_definitions(grvl PRIVATE "GRVL_VER=\"${GRVL_VER}\"")
 
 if(GRVL_LINUX_NATIVE)
   target_compile_definitions(grvl PUBLIC GRVL_LINUX_NATIVE_SUPPORT)

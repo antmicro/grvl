@@ -37,6 +37,7 @@ int main()
     manager.AddFontToFontContainer("roboto-medium", font);
 
     manager.BuildFromXML(ROMFS_PATH "/example.xml");
+    manager.SetOverlayInfo("Graph sample v1.0");
     manager.InitializationFinished();
 
     while (app->ShouldRun()) {

@@ -224,6 +224,12 @@ namespace grvl {
         void SetWorkingDirectory(std::string path);
         std::string GetWorkingDirectory();
 
+        /// Sets application-specific information displayed in the performance overlay.
+        ///
+        /// The value is copied by the manager and displayed on a separate line.
+        /// @param info Application information, e.g. application name and version.
+        Manager& SetOverlayInfo(const std::string& info);
+
         Popup* GetPopupInstance();
         Manager& AddPopup(Popup* popup);
 
@@ -444,6 +450,7 @@ namespace grvl {
         FontLoader font_callback = [](const std::string& font) { /* do nothing */ };
 
         std::string workingDirectory;
+        std::string overlayInfo;
 
         Mutex DrawMutex {};
 
