@@ -84,6 +84,7 @@ namespace grvl {
         drmModeModeInfoPtr mode = nullptr;
         drmModeEncoderPtr encoder = nullptr;
         drmModeCrtcPtr crtc = nullptr;
+        int drm_event_timeout = 0; // ms, 0 = no wait
 
         Queue<std::function<void()>> events;
         std::atomic<bool> thread_run;

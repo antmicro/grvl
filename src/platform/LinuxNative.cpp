@@ -649,7 +649,7 @@ namespace grvl {
         pfd.fd = fd;
         pfd.events = POLLIN;
 
-        int ret = poll(&pfd, 1, 16);
+        int ret = poll(&pfd, 1, drm_event_timeout);
 
         if (ret > 0 && (pfd.revents & POLLIN)) {
             drmHandleEvent(fd, &ev);
@@ -981,6 +981,14 @@ namespace grvl {
     void LinuxNativeApp::SetIdleThrottle(bool enabled)
     {
         idle_throttle = enabled;
+
+        if (idle_throttle) {
+            // this could be -1 (blocking), but let's make it a long drm_event_timeout
+            // so we never block indefinitely, e.g. be easy on exit
+            drm_event_timeout = 300;
+        } else {
+            drm_event_timeout = 0; // no wait
+        }
     }
 
     void LinuxNativeApp::RequestRedraw()
