@@ -983,11 +983,6 @@ namespace grvl {
         idle_throttle = enabled;
     }
 
-    void LinuxNativeApp::SetMinRefreshDelayMs(uint64_t min_delay_ms)
-    {
-        min_refresh_delay_ms = min_delay_ms;
-    }
-
     void LinuxNativeApp::RequestRedraw()
     {
         last_event_ms = NowMs();
@@ -999,7 +994,6 @@ namespace grvl {
         static constexpr uint64_t active_window_ms = 1000;
         // otherwise still refresh now and then, for things changing without input (clock, JS, etc.)
         static constexpr uint64_t idle_interval_ms = 250;
-        // but not more often than minimal refresh delay, allowing for an FPS cap
 
         if (!idle_throttle) {
             return true;
@@ -1007,10 +1001,9 @@ namespace grvl {
 
         const uint64_t now = NowMs();
 
-        return (now - last_draw_ms > min_refresh_delay_ms)
-            && (now - last_event_ms < active_window_ms
-                    || now - last_draw_ms >= idle_interval_ms
-                    || Manager::GetInstance().NeedsFrames());
+        return now - last_event_ms < active_window_ms
+            || now - last_draw_ms >= idle_interval_ms
+            || Manager::GetInstance().NeedsFrames();
     }
 
     void LinuxNativeApp::Render()
