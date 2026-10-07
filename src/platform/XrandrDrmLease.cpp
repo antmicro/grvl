@@ -7,11 +7,15 @@
 #include <cerrno>
 #include <cstring>
 #include <string>
+#include <unordered_set>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <vector>
 #include <xcb/randr.h>
 #include <xcb/xcb.h>
+
+#include <xf86drm.h>
+#include <xf86drmMode.h>
 
 namespace grvl {
 
@@ -20,13 +24,20 @@ namespace grvl {
         xcb_randr_output_t output;
         xcb_randr_crtc_t crtc;
 
-        uint32_t connector_id;
         std::string name;
 
         const char* str() const
         {
             return name.c_str();
         }
+    };
+
+    struct DrmDevice {
+        xcb_randr_provider_t provider = XCB_NONE;
+        std::vector<RandrOutput> outputs;
+        std::vector<xcb_randr_output_t> lease_outputs;
+        std::vector<xcb_randr_crtc_t> lease_crtcs;
+        size_t matching_connectors = 0;
     };
 
     static bool GetDrmDeviceNumber(int fd, dev_t& device)
@@ -84,6 +95,89 @@ namespace grvl {
     }
 
     // implementation
+    static int CreateXrandrLease( xcb_connection_t* connection, xcb_window_t root, xcb_randr_lease_t lease, const DrmDevice& device, dev_t driver_device)
+    {
+        xcb_generic_error_t* error = nullptr;
+        xcb_randr_create_lease_reply_t* reply = xcb_randr_create_lease_reply(
+                connection,
+                xcb_randr_create_lease(
+                    connection,
+                    root,
+                    lease,
+                    static_cast<uint16_t>(device.lease_crtcs.size()),
+                    static_cast<uint16_t>(device.lease_outputs.size()),
+                    device.lease_crtcs.data(),
+                    device.lease_outputs.data()),
+                &error);
+
+        if(!reply) {
+            if(error) {
+                Log(ERROR,
+                        "Failed to create XRandR lease: "
+                        "code=%u resource_id=0x%x sequence=%u major=%u minor=%u",
+                        error->error_code,
+                        error->resource_id,
+                        error->sequence,
+                        error->major_code,
+                        error->minor_code);
+                free(error);
+            } else {
+                Log(ERROR, "Failed to create XRandR lease: no X11 error");
+            }
+            return -1;
+        }
+
+        Log(INFO, "XRandR lease: CreateLease reply nfd=%u",
+                static_cast<unsigned>(reply->nfd));
+
+        int lease_fd = -1;
+        int* fds = xcb_randr_create_lease_reply_fds(connection, reply);
+
+        if(fds) {
+            if(reply->nfd >= 1)
+                lease_fd = fds[0];
+            for(int fd_index = 1; fd_index < reply->nfd; ++fd_index)
+                close(fds[fd_index]);
+        }
+        free(reply);
+
+        if(lease_fd < 0) {
+            Log(ERROR, "Failed to create XRandR lease: no file descriptor returned");
+            return -1;
+        }
+
+        dev_t lease_device;
+        if(!GetDrmDeviceNumber(lease_fd, lease_device)) {
+            close(lease_fd);
+            return -1;
+        }
+
+        if(lease_device != driver_device) {
+            Log(ERROR, "XRandR lease: created lease fd=%d belongs to DRM device=%llu, requested DRM device=%llu; ignoring lease",
+                    lease_fd,
+                    static_cast<unsigned long long>(lease_device),
+                    static_cast<unsigned long long>(driver_device));
+            close(lease_fd);
+            return -1;
+        }
+
+        Log(INFO, "XRandR lease: SUCCESS fd=%d root=%u outputs=%zu CRTCs=%zu",
+                lease_fd,
+                static_cast<unsigned>(root),
+                device.lease_outputs.size(),
+                device.lease_crtcs.size());
+
+        for(size_t i = 0; i < device.outputs.size(); ++i) {
+            Log(INFO,
+                    "XRandR lease:   leased output #%zu '%s' randr_id=%u CRTC=%u",
+                    i,
+                    device.outputs[i].str(),
+                    static_cast<unsigned>(device.outputs[i].output),
+                    static_cast<unsigned>(device.outputs[i].crtc));
+        }
+
+        return lease_fd;
+    }
 
     int AcquireXrandrLease(int driver_fd)
     {
@@ -99,6 +193,8 @@ namespace grvl {
 
         if(!connection || xcb_connection_has_error(connection)) {
             Log(ERROR, "Can't connect to X11");
+            if(connection)
+                xcb_disconnect(connection);
             return -1;
         }
 
@@ -129,209 +225,262 @@ namespace grvl {
 
         free(version);
 
-        const xcb_atom_t connector_id_atom = GetAtom(connection, "CONNECTOR_ID");
-        xcb_screen_iterator_t screen = xcb_setup_roots_iterator(xcb_get_setup(connection));
-        bool found_outputs = false;
+        std::vector<DrmDevice> devices;
+
+        const xcb_atom_t connector_id_atom =
+            GetAtom(connection, "CONNECTOR_ID");
+
+        std::unordered_set<uint32_t> driver_connector_ids;
+
+        drmModeRes* resources = drmModeGetResources(driver_fd);
+        if(!resources) {
+            Log(ERROR, "XRandR lease: failed to get DRM resources for requested device");
+            xcb_disconnect(connection);
+            return -1;
+        }
+
+        for(int i = 0; i < resources->count_connectors; ++i) {
+            driver_connector_ids.insert(resources->connectors[i]);
+        }
+
+        drmModeFreeResources(resources);
+
+        /*
+        * Enumerate XRandR providers. Each provider corresponds to one DRM
+        * device and owns a set of outputs and CRTCs.
+        */
+        xcb_screen_iterator_t screen =
+            xcb_setup_roots_iterator(xcb_get_setup(connection));
 
         while(screen.rem) {
             const xcb_window_t root = screen.data->root;
             Log(INFO, "XRandR lease: inspect root=%u", static_cast<unsigned>(root));
 
-            auto* resources = xcb_randr_get_screen_resources_current_reply(
+            auto* providers = xcb_randr_get_providers_reply(
                 connection,
-                xcb_randr_get_screen_resources_current(connection, root),
+                xcb_randr_get_providers(connection, root),
                 nullptr);
 
-            if(!resources) {
-                Log(WARN, "XRandR lease: failed to get resources for root=%u", static_cast<unsigned>(root));
+            if(!providers) {
+                Log(WARN, "XRandR lease: failed to get providers for root=%u", static_cast<unsigned>(root));
                 xcb_screen_next(&screen);
                 continue;
             }
 
-            Log(INFO, "XRandR lease: root=%u resources outputs=%d CRTCs=%d",
-                static_cast<unsigned>(root), resources->num_outputs, resources->num_crtcs);
+            Log(INFO,
+                "XRandR lease: root=%u providers=%u",
+                static_cast<unsigned>(root), static_cast<unsigned>(providers->num_providers));
 
-            std::vector<RandrOutput> outputs;
-            std::vector<xcb_randr_output_t> lease_outputs;
-            std::vector<xcb_randr_crtc_t> lease_crtcs;
+            xcb_randr_provider_t* provider_ids =
+                xcb_randr_get_providers_providers(providers);
 
-            xcb_randr_output_t* resource_outputs = xcb_randr_get_screen_resources_current_outputs(resources);
-            for(int i = 0; i < resources->num_outputs; i++) {
-                const xcb_randr_output_t output = resource_outputs[i];
-                auto* info = xcb_randr_get_output_info_reply(
+            for(int i = 0; i < providers->num_providers; ++i) {
+                const xcb_randr_provider_t provider = provider_ids[i];
+
+                auto* info = xcb_randr_get_provider_info_reply(
                     connection,
-                    xcb_randr_get_output_info(connection, output, resources->config_timestamp),
+                    xcb_randr_get_provider_info( connection, provider, XCB_CURRENT_TIME),
                     nullptr);
 
                 if(!info) {
-                    Log(WARN, "XRandR lease: cannot query RandR output id=%u", static_cast<unsigned>(output));
+                    Log(WARN, "XRandR lease: cannot query provider id=%u", static_cast<unsigned>(provider));
                     continue;
                 }
 
-                found_outputs = true;
-                const char* connection_name = "unknown";
-                switch(info->connection) {
-                    case XCB_RANDR_CONNECTION_CONNECTED:
-                        connection_name = "connected";
-                        break;
-                    case XCB_RANDR_CONNECTION_DISCONNECTED:
-                        connection_name = "disconnected";
-                        break;
-                    case XCB_RANDR_CONNECTION_UNKNOWN:
-                        connection_name = "unknown";
-                        break;
-                }
-
-                const int name_len = xcb_randr_get_output_info_name_length(info);
-                const char* buffer = reinterpret_cast<const char*>(xcb_randr_get_output_info_name(info));
-
-                RandrOutput result {};
-                result.root = root;
-                result.output = output;
-                result.crtc = info->crtc;
-                result.connector_id = GetConnectorId(connection, output, connector_id_atom);
-                result.name.assign(buffer, name_len);
-
                 Log(INFO,
-                    "XRandR lease: output #%d name='%s' randr_id=%u DRM_connector=%d connection=%s(%u) current_CRTC=%u modes=%u",
-                    i, result.str(), static_cast<unsigned>(result.output), static_cast<int>(result.connector_id),
-                    connection_name, static_cast<unsigned>(info->connection), static_cast<unsigned>(result.crtc),
-                    static_cast<unsigned>(info->num_modes));
+                    "XRandR lease: provider=%u CRTCs=%u outputs=%u name='%.*s'",
+                    static_cast<unsigned>(provider),
+                    static_cast<unsigned>(info->num_crtcs),
+                    static_cast<unsigned>(info->num_outputs),
+                    xcb_randr_get_provider_info_name_length(info),
+                    xcb_randr_get_provider_info_name(info));
 
-                outputs.push_back(result);
-                lease_outputs.push_back(output);
+                DrmDevice device {};
+                device.provider = provider;
 
-                if(info->crtc != XCB_NONE &&
-                    std::find(lease_crtcs.begin(), lease_crtcs.end(), info->crtc) == lease_crtcs.end()) {
-                    Log(INFO, "XRandR lease: add active CRTC=%u for output '%s'",
-                        static_cast<unsigned>(info->crtc), result.str());
-                    lease_crtcs.push_back(info->crtc);
-                } else if(info->crtc == XCB_NONE) {
-                    Log(INFO, "XRandR lease: output '%s' has no active CRTC; connector will still be leased",
-                        result.str());
-                } else {
-                    Log(INFO, "XRandR lease: CRTC=%u for output '%s' already present in lease set",
-                        static_cast<unsigned>(info->crtc), result.str());
+                std::unordered_set<uint32_t> matched_connector_ids;
+
+                /*
+                * Provider outputs are already grouped by the DRM device,
+                * so no CONNECTOR_ID -> DRM-device mapping is necessary here.
+                */
+                xcb_randr_output_t* outputs =
+                    xcb_randr_get_provider_info_outputs(info);
+
+                for(int output_index = 0;
+                    output_index < info->num_outputs;
+                    ++output_index) {
+
+                    const xcb_randr_output_t output =
+                        outputs[output_index];
+
+                    const int connector_id =
+                        GetConnectorId(connection, output, connector_id_atom);
+
+                    if(driver_connector_ids.find(connector_id) != driver_connector_ids.end()) {
+                        matched_connector_ids.insert(connector_id);
+                    }
+
+                    auto* output_info = xcb_randr_get_output_info_reply(
+                        connection,
+                        xcb_randr_get_output_info(
+                            connection,
+                            output,
+                            XCB_CURRENT_TIME),
+                        nullptr);
+
+                    if(!output_info) {
+                        Log(WARN, "XRandR lease: cannot query output id=%u", static_cast<unsigned>(output));
+                        continue;
+                    }
+
+                    const int name_len =
+                        xcb_randr_get_output_info_name_length(output_info);
+
+                    const char* name =
+                        reinterpret_cast<const char*>(
+                            xcb_randr_get_output_info_name(output_info));
+
+                    RandrOutput output_result {};
+                    output_result.root = root;
+                    output_result.output = output;
+                    output_result.crtc = output_info->crtc;
+                    output_result.name.assign(name, name_len);
+
+                    Log(INFO, "XRandR lease: provider=%u output #%d name='%s' randr_id=%u current_CRTC=%u modes=%u",
+                        static_cast<unsigned>(provider),
+                        output_index,
+                        output_result.str(),
+                        static_cast<unsigned>(output_result.output),
+                        static_cast<unsigned>(output_result.crtc),
+                        static_cast<unsigned>(output_info->num_modes));
+
+                    device.outputs.push_back(output_result);
+                    device.lease_outputs.push_back(output);
+
+                    if(output_info->crtc != XCB_NONE &&
+                    std::find(
+                        device.lease_crtcs.begin(),
+                        device.lease_crtcs.end(),
+                        output_info->crtc) ==
+                        device.lease_crtcs.end()) {
+
+                        Log(INFO, "XRandR lease: add active CRTC=%u for output '%s'",
+                            static_cast<unsigned>(output_info->crtc),
+                            output_result.str());
+
+                        device.lease_crtcs.push_back(output_info->crtc);
+                    } else if(output_info->crtc == XCB_NONE) {
+                        Log(INFO, "XRandR lease: output '%s' has no active CRTC; connector will still be leased",
+                            output_result.str());
+                    }
+
+                    free(output_info);
                 }
+
+                device.matching_connectors = matched_connector_ids.size();
 
                 free(info);
-            }
 
-            free(resources);
-
-            if(lease_outputs.empty()) {
-                xcb_screen_next(&screen);
-                continue;
-            }
-
-            Log(INFO, "XRandR lease: collected existing outputs=%zu active_CRTCs=%zu on root=%u",
-                lease_outputs.size(), lease_crtcs.size(), static_cast<unsigned>(root));
-
-            if(lease_crtcs.empty()) {
-                Log(WARN, "XRandR screen has outputs but no CRTCs");
-                xcb_screen_next(&screen);
-                continue;
-            }
-
-            xcb_randr_lease_t id = xcb_generate_id(connection);
-            Log(INFO, "XRandR lease: CreateLease id=%u root=%u outputs=%zu CRTCs=%zu",
-                static_cast<unsigned>(id), static_cast<unsigned>(root), lease_outputs.size(), lease_crtcs.size());
-
-            for(size_t i = 0; i < outputs.size(); i++) {
-                Log(INFO, "XRandR lease:   output[%zu] name='%s' randr_id=%u DRM_connector=%d CRTC=%u",
-                    i, outputs[i].str(), static_cast<unsigned>(outputs[i].output),
-                    static_cast<int>(outputs[i].connector_id), static_cast<unsigned>(outputs[i].crtc));
-            }
-            for(size_t i = 0; i < lease_crtcs.size(); i++) {
-                Log(INFO, "XRandR lease:   CRTC[%zu]=%u", i, static_cast<unsigned>(lease_crtcs[i]));
-            }
-
-            xcb_generic_error_t* error = nullptr;
-            xcb_randr_create_lease_reply_t* reply = xcb_randr_create_lease_reply(
-                connection,
-                xcb_randr_create_lease(
-                    connection,
-                    root,
-                    id,
-                    static_cast<uint16_t>(lease_crtcs.size()),
-                    static_cast<uint16_t>(lease_outputs.size()),
-                    lease_crtcs.data(),
-                    lease_outputs.data()),
-                &error);
-
-            if(!reply) {
-                if(error) {
-                    Log(ERROR, "Failed to lease all XRandR outputs on screen: X11 error: code=%d major=%d minor=%d",
-                        error->error_code,
-                        error->major_code,
-                        error->minor_code);
-                    free(error);
-                } else {
-                    Log(ERROR, "Failed to lease all XRandR outputs on screen: XRandR failed without an X11 error");
+                if(device.lease_outputs.empty()) {
+                    Log(INFO, "XRandR lease: provider=%u has no outputs; skipping",
+                        static_cast<unsigned>(provider));
+                    continue;
                 }
 
-                xcb_screen_next(&screen);
-                continue;
+                if(device.lease_crtcs.empty()) {
+                    Log(WARN, "XRandR lease: provider=%u has outputs but no CRTCs; skipping",
+                        static_cast<unsigned>(provider));
+                    continue;
+                }
+
+                devices.push_back(std::move(device));
             }
 
-            Log(INFO, "XRandR lease: CreateLease reply nfd=%u", static_cast<unsigned>(reply->nfd));
+            free(providers);
+            xcb_screen_next(&screen);
+        }
 
-            int lease_fd = -1;
-            int* fds = xcb_randr_create_lease_reply_fds(connection, reply);
+        int lease_fd = -1;
 
-            if(fds) {
-                if(reply->nfd >= 1)
-                    lease_fd = fds[0];
-                for(int fd_index = 1; fd_index < reply->nfd; fd_index++)
-                    close(fds[fd_index]);
+        if(!devices.empty()) {
+            /*
+             * Match the XRandR provider to the requested DRM device using
+             * the CONNECTOR_ID property of its outputs.
+             *
+             * CONNECTOR_ID values are local to a DRM device and are not
+             * guaranteed to uniquely identify a provider across devices.
+             * This is therefore a best-effort match.
+             */
+            auto matching_device = devices.end();
+            size_t max_matches = 0;
+            bool ambiguous = false;
+
+            for(auto it = devices.begin(); it != devices.end(); ++it) {
+                if(it->matching_connectors > max_matches) {
+                    max_matches = it->matching_connectors;
+                    matching_device = it;
+                    ambiguous = false;
+                } else if(it->matching_connectors == max_matches && max_matches > 0) {
+                    ambiguous = true;
+                }
             }
-            free(reply);
+
+            if(max_matches == 0 || ambiguous) {
+                Log(ERROR, "XRandR lease: unable to uniquely identify provider for the requested DRM device");
+                return -1;
+            }
+
+            auto& device = *matching_device;
+            const xcb_window_t root = device.outputs.front().root;
+            const xcb_randr_lease_t lease = xcb_generate_id(connection);
+
+            Log(INFO, "XRandR lease: creating lease provider=%u root=%u outputs=%zu CRTCs=%zu",
+                static_cast<unsigned>(device.provider),
+                static_cast<unsigned>(root),
+                device.lease_outputs.size(),
+                device.lease_crtcs.size());
+
+            for(size_t i = 0; i < device.outputs.size(); ++i) {
+                Log(INFO, "XRandR lease:   output[%zu] name='%s' randr_id=%u CRTC=%u",
+                    i,
+                    device.outputs[i].str(),
+                    static_cast<unsigned>(device.outputs[i].output),
+                    static_cast<unsigned>(device.outputs[i].crtc));
+            }
+
+            for(size_t i = 0; i < device.lease_crtcs.size(); ++i) {
+                Log(INFO, "XRandR lease:   CRTC[%zu]=%u",
+                    i,
+                    static_cast<unsigned>(device.lease_crtcs[i]));
+            }
+
+            lease_fd = CreateXrandrLease(connection, root, lease, device, driver_device);
 
             if(lease_fd < 0) {
-                Log(ERROR, "Failed to lease all XRandR outputs on screen: no file descriptor returned");
-                xcb_screen_next(&screen);
-                continue;
+                Log(ERROR, "XRandR lease: failed to create lease for provider=%u",
+                    static_cast<unsigned>(device.provider));
+
+                xcb_disconnect(connection);
+                return -1;
             }
 
             dev_t lease_device;
             if(!GetDrmDeviceNumber(lease_fd, lease_device)) {
                 close(lease_fd);
-                xcb_screen_next(&screen);
-                continue;
+                xcb_disconnect(connection);
+                return -1;
             }
-
-            if(lease_device != driver_device) {
-                Log(ERROR,
-                    "XRandR lease: created lease fd=%d belongs to DRM device=%llu, requested DRM device=%llu; ignoring lease",
-                    lease_fd,
-                    static_cast<unsigned long long>(lease_device),
-                    static_cast<unsigned long long>(driver_device));
-                close(lease_fd);
-                xcb_screen_next(&screen);
-                continue;
-            }
-
-            xcb_disconnect(connection);
-            Log(INFO, "XRandR lease: SUCCESS fd=%d root=%u outputs=%zu CRTCs=%zu",
-                lease_fd, static_cast<unsigned>(root), lease_outputs.size(), lease_crtcs.size());
-            for(size_t i = 0; i < outputs.size(); i++) {
-                Log(INFO, "XRandR lease:   leased output #%zu '%s' randr_id=%u DRM_connector=%d CRTC=%u",
-                    i, outputs[i].str(), static_cast<unsigned>(outputs[i].output),
-                    static_cast<int>(outputs[i].connector_id), static_cast<unsigned>(outputs[i].crtc));
-            }
-            return lease_fd;
         }
 
         xcb_disconnect(connection);
 
-        if(found_outputs) {
-            Log(ERROR, "XRandR outputs found, but none could be leased for this DRM device!");
-        } else {
-            Log(ERROR, "No XRandR outputs found!");
+        if(lease_fd < 0) {
+            Log(ERROR, "XRandR lease: no lease created");
+            return -1;
         }
 
-        return -1;
+        Log(INFO, "XRandR lease: SUCCESS fd=%d", lease_fd);
+        return lease_fd;
     }
-
-
 }
