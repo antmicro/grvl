@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <fcntl.h>
 #include <linux/input.h>
+#include <linux/input-event-codes.h>
 #include <sys/ioctl.h>
 #include <cstdlib>
 #include <pthread.h>
@@ -186,6 +187,31 @@ namespace grvl {
                 Log(INFO, "Ignoring virtual device '%s'", path);
                 close(fd);
                 return -EACCES;
+            }
+
+            constexpr size_t BITS_PER_LONG = sizeof(unsigned long) * 8;
+            constexpr size_t KEYMAP_SIZE = KEY_MAX / BITS_PER_LONG + 1;
+            unsigned long keys[KEYMAP_SIZE] = {0};
+
+            if(ioctl(fd, EVIOCGKEY(sizeof(keys)), keys) < 0) {
+                Log(WARN, "Call to ioctl EVIOCGKEY failed for file descriptor %d: %s", fd, strerror(errno));
+            }
+
+            // Release all pressed keys before grabbing the device, to avoid stuck keys
+            for(int code = 0; code < KEY_CNT; ++code) {
+                if(!((keys[code / BITS_PER_LONG] >> (code % BITS_PER_LONG)) & 1UL)) {
+                    continue;
+                }
+
+                struct input_event ev = {.type = EV_KEY, .code = (uint16_t)code, .value = 0};
+                if (write(fd, &ev, sizeof(ev)) < 0) {
+                    Log(WARN, "Failed to write key release event for code %d: %s", code, strerror(errno));
+                }
+            }
+
+            struct input_event syn = {.type = EV_SYN, .code = SYN_REPORT, .value = 0};
+            if(write(fd, &syn, sizeof(syn)) < 0) {
+                Log(WARN, "Failed to write SYN_REPORT event: %s", strerror(errno));
             }
 
             if (ioctl(fd, EVIOCGRAB, 1) < 0) {
