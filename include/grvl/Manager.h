@@ -381,7 +381,7 @@ namespace grvl {
         /// Executes an iteration of processing loop.
         ///
         /// This method handles pop-up windows, processes events and redraw screen if needed.
-        void MainLoopIteration();
+        void MainLoopIteration(bool shouldDraw = true);
 
         void ResetScreens();
         void ClearBuffers();

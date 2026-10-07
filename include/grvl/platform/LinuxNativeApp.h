@@ -171,6 +171,9 @@ namespace grvl {
         std::atomic<uint64_t> last_event_ms { 0 };
         uint64_t last_draw_ms = 0;
         bool frame_drawn = true;
+        bool monitor_active = true;
+        uint32_t monitor_blanking_ms = 0;
+        uint64_t app_start_ms = 0;
 
         bool ShouldDrawFrame();
 
@@ -203,6 +206,9 @@ namespace grvl {
         void CommitPlanes();
         void DRMWait();
 
+        void UpdateMonitorState();
+        void SetMonitorActive(bool active);
+
     public:
         LinuxNativeApp(int width, int height, bool rotate_sideways = false);
         LinuxNativeApp(const NativeDisplay& display, bool rotate_sideways = false);
@@ -228,6 +234,10 @@ namespace grvl {
         // This avoids redrawing an unchanged screen.
         // Disabled by default.
         void SetIdleThrottle(bool enabled);
+
+        // When set to a non-zero value, grvl will disable the display after the specified period.
+        // Disabled by default.
+        void SetMonitorBlanking(uint32_t inactivity_ms);
 
         // Make sure the next frames are rendered, call after changing the UI outside of input handling.
         void RequestRedraw();

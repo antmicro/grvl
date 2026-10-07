@@ -5,8 +5,6 @@
 
 #include <algorithm>
 #include <glob.h>
-#include <regex>
-#include <filesystem>
 #include <fcntl.h>
 #include <linux/input.h>
 #include <linux/input-event-codes.h>
@@ -28,6 +26,7 @@
 #include <sys/mman.h>
 
 namespace grvl {
+    static uint64_t NowMs();
 
     // Adawaita default cursor
     // CC-BY-SA
@@ -322,6 +321,7 @@ namespace grvl {
     {
         selected_display = display;
         has_selected_display = true;
+        app_start_ms = NowMs();
     }
 
     LinuxNativeApp::~LinuxNativeApp()
@@ -1158,6 +1158,55 @@ namespace grvl {
         }
         return true;
     }
+    
+    void LinuxNativeApp::UpdateMonitorState()
+    {
+        if (monitor_blanking_ms == 0) {
+            SetMonitorActive(true);
+            return;
+        }
+
+        auto now_ms = NowMs();
+        auto user_activity_ms = GetLastUserActivityTimestamp();
+
+        const uint64_t reference_ms = std::max(user_activity_ms, app_start_ms);
+        SetMonitorActive((NowMs() - reference_ms) < monitor_blanking_ms);
+    }
+
+    void LinuxNativeApp::SetMonitorActive(bool active)
+    {
+        int rc = -1;
+
+        if (monitor_active == active)
+            return;
+
+        Log(INFO, "Setting monitor active=%d", active);
+
+        uint32_t active_prop_id = GetPropertyId(crtc->crtc_id, DRM_MODE_OBJECT_CRTC, "ACTIVE");
+        int active_new_value = active ? 1 : 0;
+
+        drmModeAtomicReqPtr req = drmModeAtomicAlloc();
+        if (req == nullptr) {
+            return;
+        }
+        
+        rc = drmModeAtomicAddProperty(req, crtc->crtc_id, active_prop_id, active_new_value);
+        if (rc < 0) {
+            Log(ERROR, "Add property failed: %s", strerror(errno));
+            drmModeAtomicFree(req);
+            return;
+        }
+
+        rc = drmModeAtomicCommit(fd, req, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
+        if (rc) {
+            Log(ERROR, "Atomic commit failed: %s", strerror(errno));
+            drmModeAtomicFree(req);
+            return;
+        }
+
+        monitor_active = active;
+        drmModeAtomicFree(req);
+    }
 
     bool LinuxNativeApp::Setup()
     {
@@ -1279,12 +1328,12 @@ namespace grvl {
                     continue;
                 }
                 std::lock_guard<std::mutex> lock(input_mutex);
-                if (!vt_suspended) {
+                if (!vt_suspended || !monitor_active) {
                     HandleInput();
                 }
             }
         });
-
+ 
         return true;
     }
 
@@ -1305,6 +1354,11 @@ namespace grvl {
             drm_event_timeout = 0; // no wait
         }
     }
+    
+    void LinuxNativeApp::SetMonitorBlanking(uint32_t inactivity_ms)
+    {
+    	monitor_blanking_ms = inactivity_ms;
+    }
 
     void LinuxNativeApp::RequestRedraw()
     {
@@ -1317,6 +1371,10 @@ namespace grvl {
         static constexpr uint64_t active_window_ms = 1000;
         // otherwise still refresh now and then, for things changing without input (clock, JS, etc.)
         static constexpr uint64_t idle_interval_ms = 250;
+
+        if (!monitor_active) {
+            return false;
+        }
 
         if (!idle_throttle) {
             return true;
@@ -1336,15 +1394,15 @@ namespace grvl {
         }
 
         frame_signal.Wait();
-
+        UpdateMonitorState();
         frame_drawn = !first_frame_ready || ShouldDrawFrame();
-        if (!frame_drawn) {
-            return;
+
+        if (frame_drawn) {
+            last_draw_ms = NowMs();
+            Manager::GetInstance().perf.status = idle_throttle ? "[throttle: on]" : "[throttle: off]";
         }
 
-        last_draw_ms = NowMs();
-        Manager::GetInstance().perf.status = idle_throttle ? "[throttle: on]" : "[throttle: off]";
-        Manager::GetInstance().MainLoopIteration();
+        Manager::GetInstance().MainLoopIteration(frame_drawn);
     }
 
     void LinuxNativeApp::Swap()

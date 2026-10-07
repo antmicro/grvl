@@ -1646,7 +1646,7 @@ namespace grvl {
         return *this;
     }
 
-    void Manager::MainLoopIteration()
+    void Manager::MainLoopIteration(bool shouldDraw)
     {
         // process popups
         if(timeoutedPopupMode && CurrentPopup && CurrentPopup->GetTimetamp() < grvl::Callbacks()->get_timestamp()) {
@@ -1669,6 +1669,9 @@ namespace grvl {
 
         // process events
         ProcessEvents();
+
+        if (!shouldDraw)
+	        return;
 
         // redraw
         Stopwatch watch {};
