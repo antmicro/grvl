@@ -1,7 +1,7 @@
 #include <grvl/platform/PosixApp.h>
 
-#include <cstdio>
 #include <chrono>
+#include <cstdio>
 #include <pthread.h>
 
 // callbacks
@@ -23,7 +23,6 @@ namespace grvl {
     PosixApp::PosixApp(int width, int height, bool rotate_sideways)
         : Application(width, height, rotate_sideways)
     {
-        MarkUserActivity();
     }
 
     void PosixApp::SetCallbacks(gui_callbacks_t& callbacks)
@@ -31,7 +30,6 @@ namespace grvl {
         Application::SetCallbacks(callbacks);
         callbacks.get_timestamp = ChronoGetTimestamp;
     }
-
 
     uint64_t PosixApp::GetLastUserActivityTimestamp() const
     {

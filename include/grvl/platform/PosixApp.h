@@ -13,12 +13,12 @@ namespace grvl {
         /// The value is expressed in milliseconds and is set to "now" on start.
         uint64_t GetLastUserActivityTimestamp() const;
 
+        void MarkUserActivity();
+
     protected:
         PosixApp(int width, int height, bool rotate_sideways);
 
         void SetCallbacks(gui_callbacks_t& callbacks) override;
-
-        void MarkUserActivity();
 
     private:
         std::atomic<uint64_t> last_user_activity_ms { 0 };
