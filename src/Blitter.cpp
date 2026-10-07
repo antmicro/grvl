@@ -259,7 +259,7 @@ namespace grvl {
         const bool blend = GetFormatAlphaChannel(ifmt) && (bmem != 0);
 
         // Same-format opaque copy needs no per-pixel work, copy whole rows instead
-        if (!blend && ifmt == ofmt && (ifmt == Format::ARGB8888 || ifmt == Format::RGB888 || ifmt == Format::RGB565)) {
+        if (ifmt == ofmt && !GetFormatAlphaChannel(ifmt)) {
             const size_t stride = GetFormatStride(ifmt);
             auto* in = reinterpret_cast<const uint8_t*>(imem);
             auto* out = reinterpret_cast<uint8_t*>(omem);

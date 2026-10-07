@@ -24,6 +24,7 @@
 #include <grvl/Painter.h>
 #include <grvl/grvl.h>
 
+#include <optional>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -33,7 +34,7 @@ namespace grvl {
 
     class ImageContent {
     public:
-        ImageContent(const char* path, Format format = Format::ARGB8888);
+        ImageContent(const char* path, std::optional<Format> format = std::nullopt);
         ImageContent(uint8_t* pixels, int width, int height, int frames, Format format = Format::ARGB8888, uint32_t frameDelay = 100);
         ImageContent(int32_t width, int32_t height, int32_t frames = 1, Format format = Format::ARGB8888);
         ImageContent(const ImageContent& content);
@@ -43,8 +44,6 @@ namespace grvl {
 
         uint8_t* GetData()
         {
-            // the caller may modify the pixels
-            opaque = false;
             return data;
         }
 
@@ -55,7 +54,6 @@ namespace grvl {
 
         uint8_t* GetFrameData(uint32_t frame)
         {
-            opaque = false;
             return data + GetFrameDataLength() * frame;
         }
 
@@ -97,12 +95,6 @@ namespace grvl {
         bool HasAlphaChannel() const
         {
             return GetFormatAlphaChannel(format);
-        }
-
-        // True only if the image was loaded from a file and every pixel has alpha == 255
-        bool IsOpaque() const
-        {
-            return opaque;
         }
 
         bool IsRotated() const
@@ -157,12 +149,13 @@ namespace grvl {
         }
 
     private:
-        uint8_t* data;
-        int32_t width, height, frames;
-        Format format;
+        uint8_t* data = nullptr;
+        int32_t width = 0;
+        int32_t height = 0;
+        uint32_t frames = 0;
+        Format format = Format::ARGB8888;
         std::vector<uint32_t> frameDurations;
         bool rotated = false;
-        bool opaque = false;
     };
 
     /// Convert the pointed to pixel to a color, in the specific output format

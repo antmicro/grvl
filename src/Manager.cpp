@@ -257,7 +257,7 @@ namespace grvl {
         if (bpp == 1) return Format::L8;
         if (bpp == 2) return Format::RGB565;
         if (bpp == 3) return Format::RGB888;
-        if (bpp == 4) return Format::ARGB8888;
+        if (bpp == 4) return Format::XRGB8888;
 
         Log(ERROR, "Unable to guess format for stride %d, using ARGB8888", bpp);
         return Format::ARGB8888;

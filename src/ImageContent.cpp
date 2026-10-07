@@ -40,24 +40,21 @@ namespace grvl {
     };
 
 
-    ImageContent::ImageContent(const char* path, Format format)
+    ImageContent::ImageContent(const char* path, std::optional<Format> format)
     {
         Format image_format = Format::ARGB8888;
+        Format target_format = format.value_or(Format::ARGB8888);
 
-        if (format == Format::L8 || format == Format::AL88) {
-            image_format = format;
+        if (target_format == Format::L8 || target_format == Format::AL88) {
+            image_format = target_format;
         }
+
+        this->format = image_format;
 
         File file(path);
         const std::vector<char> fileData = file.Read();
         if(fileData.empty()) {
             Log(ERROR, "Failed to read image %s", path);
-            this->data = nullptr;
-            this->width = 0;
-            this->height = 0;
-            this->frames = 0;
-            this->format = format;
-            this->frameDurations.clear();
             return;
         }
 
@@ -96,18 +93,11 @@ namespace grvl {
 
         if (!this->data) {
             Log(ERROR, "Failed to load image %s: %s", path, stbi_failure_reason());
-            this->width = 0;
-            this->height = 0;
-            this->frames = 0;
-            this->format = format;
-            this->frameDurations.clear();
             return;
         }
 
-        this->format = image_format;
-
         // grvl and STB use a different channel order, we swap them here
-        if (image_format == Format::ARGB8888) {
+        if (image_format == Format::ARGB8888 || image_format == Format::XRGB8888) {
             Pixel* pixels = reinterpret_cast<Pixel*>(this->data);
             const uint32_t length = width * height * frames;
             uint8_t alpha_and = 0xff;
@@ -123,13 +113,17 @@ namespace grvl {
 #endif
             }
 
-            opaque = (alpha_and == 0xff);
+            // if the user did not select any specific format we will choose one based
+            // on whether or not the image contains trasparent pixels
+            if (alpha_and == 0xff && !format.has_value()) {
+                target_format = Format::XRGB8888;
+            }
         }
 
         // if the format could not have been loaded directly we perform transcoding
-        Transcode(format);
+        Transcode(target_format);
 
-        Log(INFO, "Loaded %dx%d image %s as %s", width, height, path, GetFormatName(format));
+        Log(INFO, "Loaded %dx%d image %s as %s", width, height, path, GetFormatName(target_format));
     }
 
     ImageContent::ImageContent(uint8_t* pixels, int width, int height, int frames, Format format, uint32_t frameDelay)
@@ -166,7 +160,6 @@ namespace grvl {
         frames = other.frames;
         format = other.format;
         rotated = other.rotated;
-        opaque = other.opaque;
         frameDurations = other.frameDurations;
     }
 
@@ -188,7 +181,6 @@ namespace grvl {
         frames = other.frames;
         format = other.format;
         rotated = other.rotated;
-        opaque = other.opaque;
         frameDurations = other.frameDurations;
 
         return *this;

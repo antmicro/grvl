@@ -33,6 +33,7 @@ namespace grvl {
         A8 = 8,
         ARGB6666 = 9,
         AXXX8888 = 10,
+        XRGB8888 = 11,
     };
 
     template <template <Format> typename F, typename... Args>
@@ -73,6 +74,9 @@ namespace grvl {
             case Format::AXXX8888:
                 F<Format::AXXX8888> {}(args...);
                 break;
+            case Format::XRGB8888:
+                F<Format::XRGB8888> {}(args...);
+                break;
         }
     }
 
@@ -108,6 +112,8 @@ namespace grvl {
                     return ((a >> 2) << 18) | ((r >> 2) << 12) | ((g >> 2) << 6) | (b >> 2);
                 case Format::AXXX8888:
                     return a << 24;
+                case Format::XRGB8888:
+                    return (r << 16) | (g << 8) | (b);
             }
 
             // invalid format?
@@ -135,6 +141,7 @@ namespace grvl {
         { 1, 1, true, false, "A8" },
         { 3, 4, true, false, "ARGB6666" },
         { 4, 1, true, false, "AXXX8888" },
+        { 4, 3, false, false, "XRGB8888" },
     };
 
     // Get format information object
@@ -272,6 +279,12 @@ namespace grvl {
 
             case Format::AXXX8888:
                 a = (color & 0xff000000) >> 24;
+                break;
+
+            case Format::XRGB8888:
+                r = (color & 0x00ff0000) >> 16;
+                g = (color & 0x0000ff00) >> 8;
+                b = (color & 0x000000ff) >> 0;
                 break;
         }
 
