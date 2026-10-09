@@ -90,6 +90,11 @@ namespace grvl {
         std::atomic<bool> thread_run;
         std::thread drm_thread, input_thread;
 
+        std::atomic<bool> vt_suspended = false;
+        int suspended_vt = -1;
+        std::mutex drm_mutex;
+        std::mutex input_mutex;
+
         struct DumbBuffer {
             struct drm_mode_create_dumb dumb = {};
             uint32_t fb = 0;
@@ -193,6 +198,8 @@ namespace grvl {
         void HandleInput();
         void UpdateCursorPos();
         bool Setup() override;
+        bool ApplyMode(bool nonblock);
+        bool IsSuspendedVTActive() const;
         void CommitPlanes();
         void DRMWait();
 
@@ -206,6 +213,9 @@ namespace grvl {
         void Render() override;
         void Swap() override;
         void Poll() override;
+
+        bool SuspendForVTSwitch();
+        bool ResumeAfterVTSwitch();
 
         // Decide whether a simple mouse icon should be drawn at the cursor position.
         //

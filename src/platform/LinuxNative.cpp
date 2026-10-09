@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <linux/input.h>
 #include <linux/input-event-codes.h>
+#include <linux/vt.h>
 #include <sys/ioctl.h>
 #include <cstdlib>
 #include <pthread.h>
@@ -62,6 +63,7 @@ namespace grvl {
     // pointer hostpot offset within the cursor_map
     static const int cursor_hotspot_x = 3;
     static const int cursor_hotspot_y = 3;
+    static const int suspend_sleep_time_ms = 10;
     // clang-format on
 
     static bool IsBuiltInConnector(uint32_t connector_type)
@@ -870,6 +872,293 @@ namespace grvl {
         buffer.dumb.size = 0;
     }
 
+    static int GetActiveVT()
+    {
+        int tty_fd = open("/dev/tty", O_RDWR | O_CLOEXEC);
+        if (tty_fd < 0) {
+            return -1;
+        }
+
+        struct vt_stat state = {};
+        const int ret = ioctl(tty_fd, VT_GETSTATE, &state);
+        close(tty_fd);
+
+        if (ret < 0) {
+            return -1;
+        }
+
+        return state.v_active;
+    }
+
+    bool LinuxNativeApp::SuspendForVTSwitch()
+    {
+        if (vt_suspended) {
+            return true;
+        }
+
+        switch (drm_access_type) {
+            case DrmAccessType::Master:
+                break;
+
+            case DrmAccessType::XrandrLease:
+            case DrmAccessType::FbtermLease:
+                Log(WARN, "VT switching while using a DRM lease is not implemented yet");
+                return false;
+
+            case DrmAccessType::None:
+                Log(WARN, "Cannot suspend display for VT switch without DRM access");
+                return false;
+        }
+
+        const int active_vt = GetActiveVT();
+        if (active_vt < 0) {
+            Log(ERROR, "Failed to determine the active VT before suspending DRM");
+            return false;
+        }
+
+        vt_suspended = true;
+        suspended_vt = active_vt;
+        {
+            std::lock_guard<std::mutex> lock(input_mutex);
+            libinput_suspend(li);
+        }
+
+        {
+            std::lock_guard<std::mutex> lock(drm_mutex);
+            if (drmDropMaster(fd) != 0) {
+                Log(ERROR, "Failed to drop DRM master before VT switch: %s", strerror(errno));
+
+                {
+                    std::lock_guard<std::mutex> input_lock(input_mutex);
+                    if (libinput_resume(li) != 0) {
+                        Log(ERROR, "Failed to resume libinput after DRM suspend failure");
+                    }
+                }
+
+                suspended_vt = -1;
+                vt_suspended = false;
+                return false;
+            }
+
+            cursor_state.pending = false;
+        }
+
+        Log(INFO, "Suspended DRM master on VT %d", suspended_vt);
+        return true;
+    }
+
+    bool LinuxNativeApp::ResumeAfterVTSwitch()
+    {
+        if (!vt_suspended) {
+            return true;
+        }
+
+        if (drm_access_type != DrmAccessType::Master) {
+            Log(WARN, "Resuming VT after a DRM lease is not implemented yet");
+            return false;
+        }
+
+        {
+            std::lock_guard<std::mutex> lock(drm_mutex);
+
+            if (drmSetMaster(fd) != 0) {
+                Log(ERROR, "Failed to regain DRM master after VT switch: %s", strerror(errno));
+                return false;
+            }
+
+            if (!ApplyMode(false)) {
+                Log(ERROR, "Failed to restore DRM mode after VT switch");
+                drmDropMaster(fd);
+                return false;
+            }
+
+            cursor_state.pending = false;
+        }
+
+        {
+            std::lock_guard<std::mutex> lock(input_mutex);
+            if (libinput_resume(li) != 0) {
+                Log(ERROR, "Failed to resume libinput after VT switch");
+                drmDropMaster(fd);
+                return false;
+            }
+        }
+
+        Log(INFO, "Resumed DRM master on VT %d", suspended_vt);
+        suspended_vt = -1;
+        vt_suspended = false;
+        return true;
+    }
+
+    bool LinuxNativeApp::IsSuspendedVTActive() const
+    {
+        return vt_suspended && suspended_vt > 0 && GetActiveVT() == suspended_vt;
+    }
+
+    bool LinuxNativeApp::ApplyMode(bool nonblock)
+    {
+        drmModeAtomicReqPtr req = drmModeAtomicAlloc();
+
+        if (drm_access_type == DrmAccessType::XrandrLease) {
+            Log(INFO, "XRandR blank: selected connector=%u CRTC=%u; blank all other leased outputs",
+                conn->connector_id, crtc->crtc_id);
+
+            // Xorg deliberately leaves leased primary planes scanning out their last
+            // framebuffer. Detach every non-selected connector/CRTC/plane so no X
+            // content remains visible on the other leased outputs.
+            for (int i = 0; i < resource->count_connectors; i++) {
+                const uint32_t connector_id = resource->connectors[i];
+                if (connector_id == conn->connector_id) {
+                    continue;
+                }
+
+                const uint64_t old_crtc = GetPropertyValue(connector_id, DRM_MODE_OBJECT_CONNECTOR, "CRTC_ID");
+                const uint32_t connector_crtc = GetPropertyId(connector_id, DRM_MODE_OBJECT_CONNECTOR, "CRTC_ID");
+                Log(INFO, "XRandR blank: connector=%u old_CRTC=%llu -> CRTC_ID=0",
+                    connector_id, static_cast<unsigned long long>(old_crtc));
+                if (connector_crtc) {
+                    drmModeAtomicAddProperty(req, connector_id, connector_crtc, 0);
+                } else {
+                    Log(WARN, "XRandR blank: connector=%u missing CRTC_ID property", connector_id);
+                }
+            }
+
+            drmModePlaneResPtr plane_res = drmModeGetPlaneResources(fd);
+            if (plane_res) {
+                for (uint32_t i = 0; i < plane_res->count_planes; i++) {
+                    const uint32_t plane_id = plane_res->planes[i];
+                    drmModePlanePtr plane = drmModeGetPlane(fd, plane_id);
+                    if (!plane) {
+                        continue;
+                    }
+
+                    Log(INFO, "XRandR blank: plane=%u type=%u CRTC=%u FB=%u%s",
+                        plane_id, GetPlaneType(plane_id), plane->crtc_id, plane->fb_id,
+                        plane->crtc_id == crtc->crtc_id ? " [selected CRTC]" : "");
+                    if (plane->crtc_id != 0 && plane->crtc_id != crtc->crtc_id) {
+                        Log(INFO, "XRandR blank: detach plane=%u from CRTC=%u FB=%u",
+                            plane_id, plane->crtc_id, plane->fb_id);
+                        const uint32_t plane_fb = GetPropertyId(plane_id, DRM_MODE_OBJECT_PLANE, "FB_ID");
+                        const uint32_t plane_crtc = GetPropertyId(plane_id, DRM_MODE_OBJECT_PLANE, "CRTC_ID");
+                        if (plane_fb) drmModeAtomicAddProperty(req, plane_id, plane_fb, 0);
+                        if (plane_crtc) drmModeAtomicAddProperty(req, plane_id, plane_crtc, 0);
+                    }
+
+                    drmModeFreePlane(plane);
+                }
+                drmModeFreePlaneResources(plane_res);
+            }
+
+            for (int i = 0; i < resource->count_crtcs; i++) {
+                const uint32_t crtc_id = resource->crtcs[i];
+                if (crtc_id == crtc->crtc_id) {
+                    continue;
+                }
+
+                const uint64_t old_active = GetPropertyValue(crtc_id, DRM_MODE_OBJECT_CRTC, "ACTIVE");
+                const uint64_t old_mode = GetPropertyValue(crtc_id, DRM_MODE_OBJECT_CRTC, "MODE_ID");
+                Log(INFO, "XRandR blank: CRTC=%u ACTIVE=%llu MODE_ID=%llu -> disable",
+                    crtc_id, static_cast<unsigned long long>(old_active), static_cast<unsigned long long>(old_mode));
+                const uint32_t active = GetPropertyId(crtc_id, DRM_MODE_OBJECT_CRTC, "ACTIVE");
+                const uint32_t mode_id = GetPropertyId(crtc_id, DRM_MODE_OBJECT_CRTC, "MODE_ID");
+                if (active) drmModeAtomicAddProperty(req, crtc_id, active, 0);
+                if (mode_id) drmModeAtomicAddProperty(req, crtc_id, mode_id, 0);
+            }
+        }
+
+        Log(INFO, "DRM modeset: enable selected connector=%u CRTC=%u", conn->connector_id, crtc->crtc_id);
+
+        uint32_t connector_crtc = GetPropertyId(conn->connector_id, DRM_MODE_OBJECT_CONNECTOR, "CRTC_ID");
+        uint32_t crtc_active = GetPropertyId(crtc->crtc_id, DRM_MODE_OBJECT_CRTC, "ACTIVE");
+        uint32_t crtc_mode_id = GetPropertyId(crtc->crtc_id, DRM_MODE_OBJECT_CRTC, "MODE_ID");
+
+        uint32_t mode_blob = 0;
+        if (drmModeCreatePropertyBlob(fd, mode, sizeof(*mode), &mode_blob) != 0) {
+            Log(ERROR, "Failed to create mode blob");
+            drmModeAtomicFree(req);
+            return false;
+        }
+
+        drmModeAtomicAddProperty(req, conn->connector_id, connector_crtc, crtc->crtc_id);
+        drmModeAtomicAddProperty(req, crtc->crtc_id, crtc_active, 1);
+        drmModeAtomicAddProperty(req, crtc->crtc_id, crtc_mode_id, mode_blob);
+
+        primary.props.fb = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "FB_ID");
+        primary.props.crtc = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "CRTC_ID");
+
+        // Set up cursor request
+        if (cursor.plane) {
+            cursor.props.fb = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "FB_ID");
+            cursor.props.crtc = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "CRTC_ID");
+            cursor.props.x = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "CRTC_X");
+            cursor.props.y = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "CRTC_Y");
+            cursor.props.hotspot_x = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "HOTSPOT_X");
+            cursor.props.hotspot_y = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "HOTSPOT_Y");
+
+            // Keep the cursor hidden until the first initialized frame is ready.
+            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.fb, 0);
+            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, 0);
+            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.x, 0);
+            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.y, 0);
+            if (cursor.props.hotspot_x) {
+                drmModeAtomicAddProperty(req, cursor.plane, cursor.props.hotspot_x, cursor_hotspot_x);
+            }
+            if (cursor.props.hotspot_y) {
+                drmModeAtomicAddProperty(req, cursor.plane, cursor.props.hotspot_y, cursor_hotspot_y);
+            }
+
+            uint32_t crtc_w = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "CRTC_W");
+            uint32_t crtc_h = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "CRTC_H");
+            uint32_t src_w = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "SRC_W");
+            uint32_t src_h = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "SRC_H");
+            uint32_t src_x = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "SRC_X");
+            uint32_t src_y = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "SRC_Y");
+
+            drmModeAtomicAddProperty(req, cursor.plane, crtc_w, 64);
+            drmModeAtomicAddProperty(req, cursor.plane, crtc_h, 64);
+
+            drmModeAtomicAddProperty(req, cursor.plane, src_x, 0);
+            drmModeAtomicAddProperty(req, cursor.plane, src_y, 0);
+
+            drmModeAtomicAddProperty(req, cursor.plane, src_w, 64 << 16);
+            drmModeAtomicAddProperty(req, cursor.plane, src_h, 64 << 16);
+        }
+
+        // add primary plane to the same request
+        uint32_t crtc_x = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "CRTC_X");
+        uint32_t crtc_y = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "CRTC_Y");
+        uint32_t crtc_w = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "CRTC_W");
+        uint32_t crtc_h = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "CRTC_H");
+        uint32_t src_w = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "SRC_W");
+        uint32_t src_h = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "SRC_H");
+        uint32_t src_x = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "SRC_X");
+        uint32_t src_y = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "SRC_Y");
+
+        drmModeAtomicAddProperty(req, primary.plane, primary.props.crtc, crtc->crtc_id);
+        drmModeAtomicAddProperty(req, primary.plane, primary.props.fb, primary.fb);
+        drmModeAtomicAddProperty(req, primary.plane, crtc_x, 0);
+        drmModeAtomicAddProperty(req, primary.plane, crtc_y, 0);
+        drmModeAtomicAddProperty(req, primary.plane, crtc_w, width);
+        drmModeAtomicAddProperty(req, primary.plane, crtc_h, height);
+        drmModeAtomicAddProperty(req, primary.plane, src_x, 0);
+        drmModeAtomicAddProperty(req, primary.plane, src_y, 0);
+        drmModeAtomicAddProperty(req, primary.plane, src_w, width << 16);
+        drmModeAtomicAddProperty(req, primary.plane, src_h, height << 16);
+
+        uint32_t flags = DRM_MODE_ATOMIC_ALLOW_MODESET;
+        if (nonblock) {
+            flags |= DRM_MODE_ATOMIC_NONBLOCK;
+        }
+        const int ret = drmModeAtomicCommit(fd, req, flags, nullptr);
+        drmModeAtomicFree(req);
+        drmModeDestroyPropertyBlob(fd, mode_blob);
+        if (ret != 0) {
+            Log(ERROR, "Atomic commit failed: %s", strerror(errno));
+            return false;
+        }
+        return true;
+    }
+
     bool LinuxNativeApp::Setup()
     {
         bool driver_found = false;
@@ -959,161 +1248,9 @@ namespace grvl {
             by ++;
         }
 
-        drmModeAtomicReqPtr req = drmModeAtomicAlloc();
-
-        if (drm_access_type == DrmAccessType::XrandrLease) {
-            Log(INFO, "XRandR blank: selected connector=%u CRTC=%u; blank all other leased outputs",
-                conn->connector_id, crtc->crtc_id);
-
-            // Xorg deliberately leaves leased primary planes scanning out their last
-            // framebuffer. Detach every non-selected connector/CRTC/plane so no X
-            // content remains visible on the other leased outputs.
-            for (int i = 0; i < resource->count_connectors; i++) {
-                const uint32_t connector_id = resource->connectors[i];
-                if (connector_id == conn->connector_id) {
-                    continue;
-                }
-
-                const uint64_t old_crtc = GetPropertyValue(connector_id, DRM_MODE_OBJECT_CONNECTOR, "CRTC_ID");
-                const uint32_t connector_crtc = GetPropertyId(connector_id, DRM_MODE_OBJECT_CONNECTOR, "CRTC_ID");
-                Log(INFO, "XRandR blank: connector=%u old_CRTC=%llu -> CRTC_ID=0",
-                    connector_id, static_cast<unsigned long long>(old_crtc));
-                if (connector_crtc) {
-                    drmModeAtomicAddProperty(req, connector_id, connector_crtc, 0);
-                } else {
-                    Log(WARN, "XRandR blank: connector=%u missing CRTC_ID property", connector_id);
-                }
-            }
-
-            drmModePlaneResPtr plane_res = drmModeGetPlaneResources(fd);
-            if (plane_res) {
-                for (uint32_t i = 0; i < plane_res->count_planes; i++) {
-                    const uint32_t plane_id = plane_res->planes[i];
-                    drmModePlanePtr plane = drmModeGetPlane(fd, plane_id);
-                    if (!plane) {
-                        continue;
-                    }
-
-                    Log(INFO, "XRandR blank: plane=%u type=%u CRTC=%u FB=%u%s",
-                        plane_id, GetPlaneType(plane_id), plane->crtc_id, plane->fb_id,
-                        plane->crtc_id == crtc->crtc_id ? " [selected CRTC]" : "");
-                    if (plane->crtc_id != 0 && plane->crtc_id != crtc->crtc_id) {
-                        Log(INFO, "XRandR blank: detach plane=%u from CRTC=%u FB=%u",
-                            plane_id, plane->crtc_id, plane->fb_id);
-                        const uint32_t plane_fb = GetPropertyId(plane_id, DRM_MODE_OBJECT_PLANE, "FB_ID");
-                        const uint32_t plane_crtc = GetPropertyId(plane_id, DRM_MODE_OBJECT_PLANE, "CRTC_ID");
-                        if (plane_fb) drmModeAtomicAddProperty(req, plane_id, plane_fb, 0);
-                        if (plane_crtc) drmModeAtomicAddProperty(req, plane_id, plane_crtc, 0);
-                    }
-
-                    drmModeFreePlane(plane);
-                }
-                drmModeFreePlaneResources(plane_res);
-            }
-
-            for (int i = 0; i < resource->count_crtcs; i++) {
-                const uint32_t crtc_id = resource->crtcs[i];
-                if (crtc_id == crtc->crtc_id) {
-                    continue;
-                }
-
-                const uint64_t old_active = GetPropertyValue(crtc_id, DRM_MODE_OBJECT_CRTC, "ACTIVE");
-                const uint64_t old_mode = GetPropertyValue(crtc_id, DRM_MODE_OBJECT_CRTC, "MODE_ID");
-                Log(INFO, "XRandR blank: CRTC=%u ACTIVE=%llu MODE_ID=%llu -> disable",
-                    crtc_id, static_cast<unsigned long long>(old_active), static_cast<unsigned long long>(old_mode));
-                const uint32_t active = GetPropertyId(crtc_id, DRM_MODE_OBJECT_CRTC, "ACTIVE");
-                const uint32_t mode_id = GetPropertyId(crtc_id, DRM_MODE_OBJECT_CRTC, "MODE_ID");
-                if (active) drmModeAtomicAddProperty(req, crtc_id, active, 0);
-                if (mode_id) drmModeAtomicAddProperty(req, crtc_id, mode_id, 0);
-            }
-        }
-
-        Log(INFO, "DRM modeset: enable selected connector=%u CRTC=%u", conn->connector_id, crtc->crtc_id);
-
-        uint32_t connector_crtc = GetPropertyId(conn->connector_id, DRM_MODE_OBJECT_CONNECTOR, "CRTC_ID");
-        uint32_t crtc_active = GetPropertyId(crtc->crtc_id, DRM_MODE_OBJECT_CRTC, "ACTIVE");
-        uint32_t crtc_mode_id = GetPropertyId(crtc->crtc_id, DRM_MODE_OBJECT_CRTC, "MODE_ID");
-
-        uint32_t mode_blob = 0;
-        if (drmModeCreatePropertyBlob(fd, mode, sizeof(*mode), &mode_blob) != 0) {
-            Log(ERROR, "Failed to create mode blob");
+        if (!ApplyMode(true)) {
             return false;
         }
-
-        drmModeAtomicAddProperty(req, conn->connector_id, connector_crtc, crtc->crtc_id);
-        drmModeAtomicAddProperty(req, crtc->crtc_id, crtc_active, 1);
-        drmModeAtomicAddProperty(req, crtc->crtc_id, crtc_mode_id, mode_blob);
-
-        primary.props.fb = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "FB_ID");
-        primary.props.crtc = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "CRTC_ID");
-
-        // Set up cursor request
-        if (cursor.plane) {
-            cursor.props.fb = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "FB_ID");
-            cursor.props.crtc = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "CRTC_ID");
-            cursor.props.x = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "CRTC_X");
-            cursor.props.y = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "CRTC_Y");
-            cursor.props.hotspot_x = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "HOTSPOT_X");
-            cursor.props.hotspot_y = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "HOTSPOT_Y");
-
-            // Keep the cursor hidden until the first initialized frame is ready.
-            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.fb, 0);
-            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, 0);
-            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.x, 0);
-            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.y, 0);
-            if (cursor.props.hotspot_x) {
-                drmModeAtomicAddProperty(req, cursor.plane, cursor.props.hotspot_x, cursor_hotspot_x);
-            }
-            if (cursor.props.hotspot_y) {
-                drmModeAtomicAddProperty(req, cursor.plane, cursor.props.hotspot_y, cursor_hotspot_y);
-            }
-
-            uint32_t crtc_w = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "CRTC_W");
-            uint32_t crtc_h = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "CRTC_H");
-            uint32_t src_w = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "SRC_W");
-            uint32_t src_h = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "SRC_H");
-            uint32_t src_x = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "SRC_X");
-            uint32_t src_y = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "SRC_Y");
-
-            drmModeAtomicAddProperty(req, cursor.plane, crtc_w, 64);
-            drmModeAtomicAddProperty(req, cursor.plane, crtc_h, 64);
-
-            drmModeAtomicAddProperty(req, cursor.plane, src_x, 0);
-            drmModeAtomicAddProperty(req, cursor.plane, src_y, 0);
-
-            drmModeAtomicAddProperty(req, cursor.plane, src_w, 64 << 16);
-            drmModeAtomicAddProperty(req, cursor.plane, src_h, 64 << 16);
-        }
-
-        // add primary plane to the same request
-        uint32_t crtc_x = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "CRTC_X");
-        uint32_t crtc_y = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "CRTC_Y");
-        uint32_t crtc_w = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "CRTC_W");
-        uint32_t crtc_h = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "CRTC_H");
-        uint32_t src_w = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "SRC_W");
-        uint32_t src_h = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "SRC_H");
-        uint32_t src_x = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "SRC_X");
-        uint32_t src_y = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "SRC_Y");
-
-        drmModeAtomicAddProperty(req, primary.plane, primary.props.crtc, crtc->crtc_id);
-        drmModeAtomicAddProperty(req, primary.plane, primary.props.fb, primary.fb);
-        drmModeAtomicAddProperty(req, primary.plane, crtc_x, 0);
-        drmModeAtomicAddProperty(req, primary.plane, crtc_y, 0);
-        drmModeAtomicAddProperty(req, primary.plane, crtc_w, width);
-        drmModeAtomicAddProperty(req, primary.plane, crtc_h, height);
-        drmModeAtomicAddProperty(req, primary.plane, src_x, 0);
-        drmModeAtomicAddProperty(req, primary.plane, src_y, 0);
-        drmModeAtomicAddProperty(req, primary.plane, src_w, width << 16);
-        drmModeAtomicAddProperty(req, primary.plane, src_h, height << 16);
-
-        uint32_t flags = DRM_MODE_ATOMIC_NONBLOCK | DRM_MODE_ATOMIC_ALLOW_MODESET;
-        ret = drmModeAtomicCommit(fd, req, flags, nullptr);
-        if (ret) {
-            Log(ERROR, "Atomic commit failed: %s", strerror(errno));
-            return false;
-        }
-        drmModeAtomicFree(req);
-        drmModeDestroyPropertyBlob(fd, mode_blob);
 
         ev.version = DRM_EVENT_CONTEXT_VERSION;
         ev.page_flip_handler = PageFlipHandler;
@@ -1122,15 +1259,29 @@ namespace grvl {
         drm_thread = std::thread([this] () -> void {
             first_frame_signal.Wait();
             while (thread_run) {
-                CommitPlanes();
-                DRMWait();
-                frame_signal.Post();
+                if (vt_suspended) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(suspend_sleep_time_ms));
+                    continue;
+                }
+                std::lock_guard<std::mutex> lock(drm_mutex);
+                if (!vt_suspended) {
+                    CommitPlanes();
+                    DRMWait();
+                    frame_signal.Post();
+                }
             }
         });
 
         input_thread = std::thread([this] () -> void {
             while (thread_run) {
-                HandleInput();
+                if (vt_suspended) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(suspend_sleep_time_ms));
+                    continue;
+                }
+                std::lock_guard<std::mutex> lock(input_mutex);
+                if (!vt_suspended) {
+                    HandleInput();
+                }
             }
         });
 
@@ -1180,8 +1331,7 @@ namespace grvl {
 
     void LinuxNativeApp::Render()
     {
-        if (!thread_run) {
-            frame_drawn = false;
+        if (!thread_run || vt_suspended) {
             return;
         }
 
@@ -1200,7 +1350,7 @@ namespace grvl {
     void LinuxNativeApp::Swap()
     {
         // nothing was rendered, the previous frame is still being displayed
-        if (!frame_drawn) {
+        if (vt_suspended || !frame_drawn) {
             return;
         }
 
@@ -1231,6 +1381,18 @@ namespace grvl {
 
     void LinuxNativeApp::Poll()
     {
+        if (vt_suspended) {
+            // Drop queued input and avoid dispatching to a suspended display.
+            while (events.pop()) {
+            }
+            if (IsSuspendedVTActive()) {
+                ResumeAfterVTSwitch();
+            } else {
+                std::this_thread::sleep_for(std::chrono::milliseconds(suspend_sleep_time_ms));
+            }
+            return;
+        }
+
         while (true) {
             auto event = events.pop();
 
@@ -1239,6 +1401,10 @@ namespace grvl {
             }
 
             (*event)();
+
+            if (vt_suspended) {
+                return;
+            }
         }
 
         auto x = cursor_state.x.load();
