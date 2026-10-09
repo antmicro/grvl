@@ -326,6 +326,7 @@ namespace grvl {
     {
         thread_run = false;
         frame_signal.Post();
+        first_frame_signal.Post();
 
         input_thread.join();
 
@@ -1055,8 +1056,9 @@ namespace grvl {
             cursor.props.hotspot_x = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "HOTSPOT_X");
             cursor.props.hotspot_y = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "HOTSPOT_Y");
 
-            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.fb, cursor.fb);
-            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, crtc->crtc_id);
+            // Keep the cursor hidden until the first initialized frame is ready.
+            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.fb, 0);
+            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, 0);
             drmModeAtomicAddProperty(req, cursor.plane, cursor.props.x, 0);
             drmModeAtomicAddProperty(req, cursor.plane, cursor.props.y, 0);
             if (cursor.props.hotspot_x) {
@@ -1118,6 +1120,7 @@ namespace grvl {
 
         thread_run = true;
         drm_thread = std::thread([this] () -> void {
+            first_frame_signal.Wait();
             while (thread_run) {
                 CommitPlanes();
                 DRMWait();
@@ -1178,12 +1181,13 @@ namespace grvl {
     void LinuxNativeApp::Render()
     {
         if (!thread_run) {
+            frame_drawn = false;
             return;
         }
 
         frame_signal.Wait();
 
-        frame_drawn = ShouldDrawFrame();
+        frame_drawn = !first_frame_ready || ShouldDrawFrame();
         if (!frame_drawn) {
             return;
         }
@@ -1218,6 +1222,11 @@ namespace grvl {
         }
 
         Manager::GetInstance().perf.swap_times.put(watch.stop());
+
+        if(!first_frame_ready) {
+            first_frame_ready = true;
+            first_frame_signal.Post();
+        }
     }
 
     void LinuxNativeApp::Poll()

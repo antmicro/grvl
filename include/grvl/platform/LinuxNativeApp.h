@@ -117,6 +117,11 @@ namespace grvl {
         // It is a binary semaphore: posting it more than once before it is consumed has no additional effect.
         class FrameSignal {
         public:
+            explicit FrameSignal(bool initially_ready = true)
+                : ready(initially_ready)
+            {
+            }
+
             void Wait()
             {
                 std::unique_lock<std::mutex> lock(m);
@@ -136,9 +141,12 @@ namespace grvl {
         private:
             std::mutex m;
             std::condition_variable cv;
-            // initially set so the first frame does not wait
-            bool ready = true;
+            bool ready;
         } frame_signal;
+
+        // The DRM loop starts only after setup and the first initialized frame's copy.
+        FrameSignal first_frame_signal { false };
+        bool first_frame_ready = false;
 
         drmEventContext ev = {};
         struct libinput* li = nullptr;
