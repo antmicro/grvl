@@ -611,6 +611,11 @@ namespace grvl {
         return *this;
     }
 
+    void Manager::SetRenderCallback(const std::function<void(Painter&)>& callback)
+    {
+        this->render_callback = callback;
+    }
+
     Font* Manager::GetFontFromContainer(const char* name) const
     {
         if(name == nullptr || *name == 0) {
@@ -969,6 +974,7 @@ namespace grvl {
                                alpha << 24 | (0x00FFFFFF & COLOR_ARGB8888_RED)); //NOLINT
         }
 
+        render_callback(painter);
         DrawOverlay();
         painter.SwapSynchronizeBuffers();
         flips++;

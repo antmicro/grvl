@@ -387,7 +387,12 @@ namespace grvl {
         Manager& SetLoaderCallback(const ContentManager::LoaderCallback& callback);
         Manager& SetFontCallback(const FontLoader& callback);
 
-        Painter painter; // TODO
+        void SetRenderCallback(const std::function<void(Painter&)>& callback);
+
+        /// Deprecated. Do not use painter directly, painter can only be used from specific contexts!
+        /// Set a render hook with SetRenderCallback() to gain access to a Painter methods correctly.
+        /// TODO make private
+        Painter painter;
         Performance perf;
 
         Component* FindElementInTheActiveScreenById(const char* id);
@@ -402,6 +407,7 @@ namespace grvl {
 
         uint32_t width;
         uint32_t height;
+        std::function<void(Painter&)> render_callback = [] (Painter& painter) { /* do nothing */ };
         typedef std::map<std::string, Event::CallbackPointer> EventsContainerMap;
         typedef std::unordered_map<std::string, Font*> FontContainerMap;
         typedef std::unordered_map<uint32_t, KeyData> KeyMappingMap;

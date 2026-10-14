@@ -29,7 +29,7 @@ int main()
     // fonts
     manager.AddFontToFontContainer("normal", new grvl::TrueTypeFont(ttf, 16));
     auto font = new grvl::TrueTypeFont(ttf, 60);
-    
+
 
     manager.BuildFromXML(ROMFS_PATH "/gui.xml");
     manager.InitializationFinished();
@@ -42,46 +42,49 @@ int main()
     constexpr int32_t width = 400;
     constexpr int32_t height = 300;
 
-    const auto drawChar = [&](char c, int32_t x, int32_t y) {
-        manager.painter.DrawAntialiasedChar(font, x - 15, y + 20, c, 0xFFAAAAAA);
-        manager.painter.DrawAntialiasedCharInBound(font, x - 15, y + 20, startX, startY, width, height, c, 0xFFFF0000);
+    const auto drawChar = [&] (grvl::Painter& painter, char c, int32_t x, int32_t y) {
+        painter.DrawAntialiasedChar(font, x - 15, y + 20, c, 0xFFAAAAAA);
+        painter.DrawAntialiasedCharInBound(font, x - 15, y + 20, startX, startY, width, height, c, 0xFFFF0000);
     };
+
+    const auto drawHook = [&] (grvl::Painter& painter) {
+        drawChar(painter, 'A', startX - 50,         startY - 50);
+        drawChar(painter, 'B', startX,              startY - 50);
+        drawChar(painter, 'C', startX + width / 2,  startY - 50);
+        drawChar(painter, 'D', startX + width,      startY - 50);
+        drawChar(painter, 'E', startX + width + 50, startY - 50);
+
+        drawChar(painter, 'F', startX - 50,         startY);
+        drawChar(painter, 'G', startX,              startY);
+        drawChar(painter, 'H', startX + width / 2,  startY);
+        drawChar(painter, 'X', startX + width,      startY);
+        drawChar(painter, 'J', startX + width + 50, startY);
+
+        drawChar(painter, 'K', startX - 50,         startY + height / 2);
+        drawChar(painter, 'L', startX,              startY + height / 2);
+        drawChar(painter, 'M', startX + width / 2,  startY + height / 2);
+        drawChar(painter, 'N', startX + width,      startY + height / 2);
+        drawChar(painter, 'O', startX + width + 50, startY + height / 2);
+
+        drawChar(painter, 'P', startX - 50,         startY + height);
+        drawChar(painter, 'Q', startX,              startY + height);
+        drawChar(painter, 'R', startX + width / 2,  startY + height);
+        drawChar(painter, 'S', startX + width,      startY + height);
+        drawChar(painter, 'T', startX + width + 50, startY + height);
+
+        drawChar(painter, 'U', startX - 50,         startY + height + 50);
+        drawChar(painter, 'V', startX,              startY + height + 50);
+        drawChar(painter, 'W', startX + width / 2,  startY + height + 50);
+        drawChar(painter, 'X', startX + width,      startY + height + 50);
+        drawChar(painter, 'Y', startX + width + 50, startY + height + 50);
+
+        painter.DrawRectangle(startX, startY, width, height, 0xFF00FF00);
+    };
+
+    manager.SetRenderCallback(drawHook);
 
     while (app->ShouldRun()) {
         app->Render();
-
-        drawChar('A', startX - 50,         startY - 50);
-        drawChar('B', startX,              startY - 50);
-        drawChar('C', startX + width / 2,  startY - 50);
-        drawChar('D', startX + width,      startY - 50);
-        drawChar('E', startX + width + 50, startY - 50);
-
-        drawChar('F', startX - 50,         startY);
-        drawChar('G', startX,              startY);
-        drawChar('H', startX + width / 2,  startY);
-        drawChar('X', startX + width,      startY);
-        drawChar('J', startX + width + 50, startY);
-
-        drawChar('K', startX - 50,         startY + height / 2);
-        drawChar('L', startX,              startY + height / 2);
-        drawChar('M', startX + width / 2,  startY + height / 2);
-        drawChar('N', startX + width,      startY + height / 2);
-        drawChar('O', startX + width + 50, startY + height / 2);
-
-        drawChar('P', startX - 50,         startY + height);
-        drawChar('Q', startX,              startY + height);
-        drawChar('R', startX + width / 2,  startY + height);
-        drawChar('S', startX + width,      startY + height);
-        drawChar('T', startX + width + 50, startY + height);
-
-        drawChar('U', startX - 50,         startY + height + 50);
-        drawChar('V', startX,              startY + height + 50);
-        drawChar('W', startX + width / 2,  startY + height + 50);
-        drawChar('X', startX + width,      startY + height + 50);
-        drawChar('Y', startX + width + 50, startY + height + 50);
-
-        manager.painter.DrawRectangle(startX, startY, width, height, 0xFF00FF00);
-
         app->Swap();
         app->Poll();
     }
