@@ -153,12 +153,12 @@ namespace grvl {
 
     static std::vector<std::string> GetDrmCardPaths()
     {
-        std::vector<std::string> paths;
-
         const char* override_path = std::getenv("DRM_PATH");
         if (override_path && override_path[0] != '\0') {
-            paths.emplace_back(override_path);
+            return {override_path};
         }
+
+        std::vector<std::string> paths;
 
         glob_t result = {};
         if (glob("/dev/dri/card*", 0, nullptr, &result) == 0) {
@@ -168,11 +168,8 @@ namespace grvl {
         }
         globfree(&result);
 
-        std::sort(paths.begin(), paths.end());
-        paths.erase(std::unique(paths.begin(), paths.end()), paths.end());
         return paths;
     }
-
     const static struct libinput_interface interface = {
         .open_restricted = [] (const char* path, int flags, void* user) {
             const int fd = open(path, flags);
