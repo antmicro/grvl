@@ -107,6 +107,7 @@ target_link_libraries(
          $<$<BOOL:${GRVL_LINUX_NATIVE}>:PkgConfig::LIBINPUT>
          $<$<BOOL:${GRVL_LINUX_NATIVE}>:PkgConfig::XKBCOMMON>
          $<$<BOOL:${GRVL_LINUX_NATIVE}>:PkgConfig::XCBRANDR>
+         $<$<BOOL:${GRVL_LINUX_NATIVE}>:PkgConfig::XCBDPMS>
          $<$<BOOL:${GRVL_LINUX_NATIVE}>:PkgConfig::XCB>
 )
 

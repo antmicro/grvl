@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <vector>
+#include <xcb/dpms.h>
 #include <xcb/randr.h>
 #include <xcb/xcb.h>
 
@@ -39,6 +40,14 @@ namespace grvl {
         std::vector<xcb_randr_crtc_t> lease_crtcs;
         size_t matching_connectors = 0;
     };
+
+    struct SavedDpmsState {
+        bool valid = false;
+        bool enabled = false;
+        uint16_t power_level = XCB_DPMS_DPMS_MODE_ON;
+    };
+
+    static SavedDpmsState saved_dpms_state;
 
     static bool GetDrmDeviceNumber(int fd, dev_t& device)
     {
@@ -92,6 +101,131 @@ namespace grvl {
         xcb_atom_t atom = reply->atom;
         free(reply);
         return atom;
+    }
+
+    static bool CheckDpmsRequest( xcb_connection_t *conn, xcb_void_cookie_t cookie, const char *action)
+    {
+        xcb_generic_error_t *error = xcb_request_check(conn, cookie);
+
+        if (!error)
+            return true;
+
+        Log(ERROR,
+                "%s: code=%u resource_id=0x%x sequence=%u major=%u minor=%u",
+                action,
+                error->error_code,
+                error->resource_id,
+                error->sequence,
+                error->major_code,
+                error->minor_code);
+
+        free(error);
+        return false;
+    }
+
+    static bool SaveDpmsState(xcb_connection_t *conn)
+    {
+        xcb_dpms_capable_cookie_t capable_cookie = xcb_dpms_capable(conn);
+        xcb_dpms_capable_reply_t *capable = xcb_dpms_capable_reply(conn, capable_cookie, nullptr);
+
+        if (!capable) {
+            Log(ERROR, "Failed to query DPMS capability");
+            return false;
+        }
+
+        bool is_capable = capable->capable;
+        free(capable);
+
+        if (!is_capable) {
+            Log(ERROR, "X server does not support DPMS");
+            return false;
+        }
+
+        xcb_dpms_info_cookie_t info_cookie = xcb_dpms_info(conn);
+        xcb_dpms_info_reply_t *info = xcb_dpms_info_reply(conn, info_cookie, nullptr);
+
+        if (!info) {
+            Log(ERROR, "Failed to query current DPMS state");
+            return false;
+        }
+
+        saved_dpms_state.enabled = info->state;
+        saved_dpms_state.power_level = info->power_level;
+        saved_dpms_state.valid = true;
+
+        Log(INFO,
+                "Saved DPMS state: enabled=%d power_level=0x%x",
+                saved_dpms_state.enabled,
+                saved_dpms_state.power_level);
+
+        free(info);
+        return true;
+    }
+
+    static bool RestoreDpmsState(xcb_connection_t *conn)
+    {
+        if (!saved_dpms_state.valid) {
+            Log(ERROR, "No saved DPMS state to restore");
+            return false;
+        }
+
+        if (saved_dpms_state.enabled) {
+            if (!CheckDpmsRequest(
+                        conn,
+                        xcb_dpms_enable_checked(conn),
+                        "Failed to enable DPMS during restoration"))
+                return false;
+
+            if (!CheckDpmsRequest(
+                        conn,
+                        xcb_dpms_force_level_checked(
+                            conn, saved_dpms_state.power_level),
+                        "Failed to restore DPMS power level"))
+                return false;
+        } else {
+            if (!CheckDpmsRequest(
+                        conn,
+                        xcb_dpms_disable_checked(conn),
+                        "Failed to restore disabled DPMS state"))
+                return false;
+        }
+
+        xcb_flush(conn);
+
+        Log(INFO,
+                "Restored DPMS state: enabled=%d power_level=0x%x",
+                saved_dpms_state.enabled,
+                saved_dpms_state.power_level);
+
+        saved_dpms_state.valid = false;
+        return true;
+    }
+
+    static int SetDpms(xcb_connection_t *conn, uint16_t level)
+    {
+        if (!CheckDpmsRequest(
+                    conn,
+                    xcb_dpms_enable_checked(conn),
+                    "Failed to enable DPMS"))
+            return -1;
+
+        if (!CheckDpmsRequest(
+                    conn,
+                    xcb_dpms_force_level_checked(conn, level),
+                    "Failed to force DPMS power level"))
+            return -1;
+
+        xcb_dpms_info_cookie_t info_cookie = xcb_dpms_info(conn);
+        xcb_dpms_info_reply_t *info =
+            xcb_dpms_info_reply(conn, info_cookie, NULL);
+
+        if (info) {
+            Log(INFO, "DPMS: power_level=0x%x state=0x%x", info->power_level, info->state);
+            free(info);
+        }
+
+        xcb_flush(conn);
+        return 0;
     }
 
     // implementation
@@ -473,14 +607,61 @@ namespace grvl {
             }
         }
 
-        xcb_disconnect(connection);
-
         if(lease_fd < 0) {
             Log(ERROR, "XRandR lease: no lease created");
+            xcb_disconnect(connection);
             return -1;
         }
 
+        Log(INFO, "XRandR lease: Saving DPMS state...");
+
+        if (!SaveDpmsState(connection)) {
+            Log(ERROR, "XRandR lease: Failed to save DPMS state");
+            close(lease_fd);
+            xcb_disconnect(connection);
+            return -1;
+        }
+
+        Log(INFO, "XRandR lease: Setting DPMS off...");
+
+        if (SetDpms(connection, XCB_DPMS_DPMS_MODE_OFF) != 0) {
+            Log(ERROR, "XRandR lease: Failed to set DPMS off");
+
+            if (!RestoreDpmsState(connection))
+                Log(ERROR, "XRandR lease: Failed to restore DPMS after acquisition failure");
+
+            close(lease_fd);
+            xcb_disconnect(connection);
+            return -1;
+        }
+
+        xcb_disconnect(connection);
+
         Log(INFO, "XRandR lease: SUCCESS fd=%d", lease_fd);
         return lease_fd;
+    }
+
+    bool RestoreXrandrDpms()
+    {
+        int default_screen = 0;
+        xcb_connection_t* connection = xcb_connect(nullptr, &default_screen);
+
+        if(!connection || xcb_connection_has_error(connection)) {
+            Log(ERROR, "Can't connect to X11");
+            if(connection)
+                xcb_disconnect(connection);
+            return false;
+        }
+
+        bool restored = RestoreDpmsState(connection);
+        xcb_disconnect(connection);
+
+        if (!restored) {
+            Log(ERROR, "XRandR lease: Failed to restore DPMS state");
+            return false;
+        }
+
+        Log(INFO, "XRandR DPMS restore: SUCCESS");
+        return true;
     }
 }

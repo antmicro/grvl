@@ -42,6 +42,7 @@ if(GRVL_BUILT_WITH_LINUX_NATIVE)
   pkg_check_modules(LIBINPUT REQUIRED IMPORTED_TARGET libinput)
   pkg_check_modules(XKBCOMMON REQUIRED IMPORTED_TARGET xkbcommon)
   pkg_check_modules(XCBRANDR REQUIRED IMPORTED_TARGET xcb-randr)
+  pkg_check_modules(XCBDPMS REQUIRED IMPORTED_TARGET xcb-dpms)
   pkg_check_modules(XCB REQUIRED IMPORTED_TARGET xcb)
 endif()
 

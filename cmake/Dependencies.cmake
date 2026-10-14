@@ -27,6 +27,10 @@ if (GRVL_LINUX_NATIVE)
   get_target_property(lib_xcbrandr_includes PkgConfig::XCBRANDR INTERFACE_INCLUDE_DIRECTORIES)
   message(STATUS "XCBRANDR includes: ${lib_xcbrandr_includes}")
 
+  pkg_check_modules(XCBDPMS REQUIRED IMPORTED_TARGET xcb-dpms)
+  get_target_property(lib_xcbdpms_includes PkgConfig::XCBDPMS INTERFACE_INCLUDE_DIRECTORIES)
+  message(STATUS "XCBDPMS includes: ${lib_xcbdpms_includes}")
+
   pkg_check_modules(LIBINPUT REQUIRED IMPORTED_TARGET libinput)
   get_target_property(lib_libinput_includes PkgConfig::LIBINPUT INTERFACE_INCLUDE_DIRECTORIES)
   message(STATUS "LIBINPUT includes: ${lib_libinput_includes}")

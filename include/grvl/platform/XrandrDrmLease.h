@@ -6,6 +6,7 @@
 namespace grvl {
 
     int AcquireXrandrLease(int driver_fd);
+    bool RestoreXrandrDpms();
 
 }
 

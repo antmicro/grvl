@@ -514,6 +514,12 @@ namespace grvl {
             }
         }
 
+        if (drm_access_type == DrmAccessType::XrandrLease) {
+            if (!RestoreXrandrDpms()) {
+                Log(ERROR, "Failed to restore DPMS!");
+            }
+        }
+
         drm_access_type = DrmAccessType::None;
     }
 
