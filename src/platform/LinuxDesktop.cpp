@@ -41,7 +41,7 @@ namespace grvl {
             return false;
         }
 
-        texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, width, height);
+        texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_STREAMING, width, height);
 
         Manager::Initialize(width, height, 4, sideways);
         return true;
@@ -64,8 +64,8 @@ namespace grvl {
             SDL_UnlockTexture(texture);
         }
 
-        SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
-        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+        SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_NONE);
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, texture, nullptr, nullptr);
         SDL_RenderPresent(renderer);
@@ -111,7 +111,7 @@ namespace grvl {
                     Manager::GetInstance().ProcessKeyInput(false, event.key.keysym.sym);
                 break;
             }
-            
+
         }
 
         int x, y;
