@@ -113,7 +113,7 @@ namespace grvl {
                 case Format::AXXX8888:
                     return a << 24;
                 case Format::XRGB8888:
-                    return (r << 16) | (g << 8) | (b);
+                    return (0xff << 24) | (r << 16) | (g << 8) | (b);
             }
 
             // invalid format?
