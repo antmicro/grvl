@@ -311,6 +311,7 @@ namespace grvl {
         }
         xkb_state = xkb_state_new(xkb_keymap);
 
+        app_start_ms = NowMs();
     }
 
     LinuxNativeApp::LinuxNativeApp(const NativeDisplay& display, bool rotate_sideways)
@@ -318,7 +319,6 @@ namespace grvl {
     {
         selected_display = display;
         has_selected_display = true;
-        app_start_ms = NowMs();
     }
 
     LinuxNativeApp::~LinuxNativeApp()
