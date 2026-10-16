@@ -708,8 +708,11 @@ namespace grvl {
         drmModeAtomicReq *req = drmModeAtomicAlloc();
 
         if (cursor.plane) {
-            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.fb, cursor.fb);
-            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, crtc->crtc_id);
+            // setting fb and crtc to 0 disables the cursor plane
+            const bool show_cursor = cursor_visible;
+
+            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.fb, show_cursor ? cursor.fb : 0);
+            drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, show_cursor ? crtc->crtc_id : 0);
             drmModeAtomicAddProperty(req, cursor.plane, cursor.props.x, x);
             drmModeAtomicAddProperty(req, cursor.plane, cursor.props.y, y);
 
@@ -1170,6 +1173,26 @@ namespace grvl {
         SetMonitorActive((NowMs() - reference_ms) < monitor_blanking_ms);
     }
 
+    void LinuxNativeApp::UpdateCursorState()
+    {
+        if (cursor_timeout_ms == 0) {
+            cursor_visible = true;
+            return;
+        }
+
+        auto now_ms = NowMs();
+        auto pointer_activity_ms = last_pointer_activity_ms.load();
+
+        // the cursor should be visible shortly after the app starts, even without any input yet
+        const uint64_t reference_ms = std::max(pointer_activity_ms, app_start_ms);
+        const bool visible = (now_ms - reference_ms) < cursor_timeout_ms;
+
+        if (cursor_visible != visible) {
+            Log(INFO, "Setting cursor visible=%d", visible);
+            cursor_visible = visible;
+        }
+    }
+
     void LinuxNativeApp::SetMonitorActive(bool active)
     {
         int rc = -1;
@@ -1357,6 +1380,11 @@ namespace grvl {
     	monitor_blanking_ms = inactivity_ms;
     }
 
+    void LinuxNativeApp::SetCursorTimeout(uint32_t inactivity_ms)
+    {
+        cursor_timeout_ms = inactivity_ms;
+    }
+
     void LinuxNativeApp::RequestRedraw()
     {
         last_event_ms = NowMs();
@@ -1392,6 +1420,7 @@ namespace grvl {
 
         frame_signal.Wait();
         UpdateMonitorState();
+        UpdateCursorState();
         frame_drawn = !first_frame_ready || ShouldDrawFrame();
 
         if (frame_drawn) {
@@ -1548,6 +1577,7 @@ namespace grvl {
 
                 if (dx != 0 || dy != 0) {
                     MarkUserActivity();
+                    last_pointer_activity_ms = NowMs();
                 }
 
                 x += dx;
@@ -1567,6 +1597,7 @@ namespace grvl {
 
                 if (new_x != x || new_y != y) {
                     MarkUserActivity();
+                    last_pointer_activity_ms = NowMs();
                 }
 
                 x = new_x;
@@ -1584,6 +1615,7 @@ namespace grvl {
 
                 if (pressed) {
                     MarkUserActivity();
+                    last_pointer_activity_ms = NowMs();
                 }
 
                 if (button == BTN_LEFT) {

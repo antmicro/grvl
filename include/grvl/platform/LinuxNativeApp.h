@@ -174,6 +174,9 @@ namespace grvl {
         bool monitor_active = true;
         uint32_t monitor_blanking_ms = 0;
         uint64_t app_start_ms = 0;
+        std::atomic<bool> cursor_visible { true };
+        uint32_t cursor_timeout_ms = 0;
+        std::atomic<uint64_t> last_pointer_activity_ms { 0 };
 
         bool ShouldDrawFrame();
 
@@ -208,6 +211,7 @@ namespace grvl {
 
         void UpdateMonitorState();
         void SetMonitorActive(bool active);
+        void UpdateCursorState();
 
     public:
         LinuxNativeApp(int width, int height, bool rotate_sideways = false);
@@ -238,6 +242,12 @@ namespace grvl {
         // When set to a non-zero value, grvl will disable the display after the specified period.
         // Disabled by default.
         void SetMonitorBlanking(uint32_t inactivity_ms);
+
+        // When set to a non-zero value, grvl will hide the mouse cursor after the specified period
+        // of pointer inactivity. Pointer motion, button presses and touch reset the timer.
+        // Keyboard input does not show the cursor again while it is hidden.
+        // Disabled by default.
+        void SetCursorTimeout(uint32_t inactivity_ms);
 
         // Make sure the next frames are rendered, call after changing the UI outside of input handling.
         void RequestRedraw();
