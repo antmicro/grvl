@@ -44,6 +44,30 @@ namespace grvl {
         Mutex& m;
     };
 
+    template <typename T>
+    class Atomic {
+    public:
+        Atomic(T initial)
+        : value(initial)
+        {}
+
+        T load()
+        {
+            Guard guard {mutex};
+            return value;
+        }
+
+        void store(T value)
+        {
+            Guard guard {mutex};
+            this->value = value;
+        }
+
+    private:
+        T value;
+        Mutex mutex;
+    };
+
 }
 
 #endif /* GRVL_ACTION_MUTEX_H_ */

@@ -114,13 +114,20 @@ namespace grvl {
 
     void ZephyrApp::Render()
     {
-        Manager::GetInstance().MainLoopIteration();
+        Manager& manager = Manager::GetInstance();
+        this->frame_drawn = manager.ShouldRedraw();
+
+        manager.MainLoopIteration(frame_drawn);
     }
 
     void ZephyrApp::Swap()
     {
         Stopwatch watch {};
-        display_write(display_device, 0, 0, &display_descriptor, framebuffer);
+
+        if (frame_drawn) {
+            display_write(display_device, 0, 0, &display_descriptor, framebuffer);
+        }
+
         Manager::GetInstance().perf.swap_times.put(watch.stop());
     }
 

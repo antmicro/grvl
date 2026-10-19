@@ -31,6 +31,7 @@ namespace grvl {
         int bpp;
         const device* display_device;
         display_buffer_descriptor display_descriptor;
+        bool frame_drawn = true;
 
         bool InitDisplay(const device* display);
 

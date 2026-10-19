@@ -243,6 +243,9 @@ namespace grvl {
         static constexpr auto defaultBGColor = 0xFF000000;
         painter.SetBackgroundColor(defaultBGColor);
 
+        this->last_input_timestamp.store(grvl::Callbacks()->get_timestamp());
+        this->last_redraw_timestamp.store(0);
+
         AddCallbackToContainer("ChangeScreen", ChangeScreenCallback);
         AddCallbackToContainer("ClosePopup", ClosePopupCallback);
         AddCallbackToContainer("ShowKeyboard", ShowKeyboardCallback);
@@ -898,8 +901,47 @@ namespace grvl {
         return painter.GetBuffer(name);
     }
 
+    bool Manager::ShouldRedraw()
+    {
+        const uint64_t now = grvl::Callbacks()->get_timestamp();
+
+        if (!throttle_on_idle) {
+            return true;
+        }
+
+        uint64_t last_timestamp = std::max(
+            last_input_timestamp.load(),
+            last_request_timestamp.load()
+        );
+
+        return now - last_timestamp < active_render_timeout_ms
+            || now - last_redraw_timestamp.load() >= idle_render_interval_ms
+            || NeedsFrames();
+    }
+
+    void Manager::SetIdleThrottle(bool throttle)
+    {
+        this->throttle_on_idle = throttle;
+    }
+
+    void Manager::ScheduleRedraw()
+    {
+        last_request_timestamp.store(grvl::Callbacks()->get_timestamp());
+    }
+
+    void Manager::MarkUserActivity()
+    {
+        last_input_timestamp.store(grvl::Callbacks()->get_timestamp());
+    }
+
+    uint64_t Manager::GetLastInputTimestamp()
+    {
+        return last_input_timestamp.load();
+    }
+
     void Manager::Draw()
     {
+        last_redraw_timestamp.store(grvl::Callbacks()->get_timestamp());
         Guard lock {DrawMutex};
 
         painter.ClearNextFrameRequest();
@@ -1005,8 +1047,18 @@ namespace grvl {
 
         const float ns_to_ms = 1.0 / 1000'000.0;
 
+        std::string needs_frames = NeedsFrames() ? "yes" : "no";
+        std::string should_redraw = ShouldRedraw() ? "yes" : "no";
+        std::string last_input = std::to_string(last_input_timestamp.load());
+        std::string last_request = std::to_string(last_request_timestamp.load());
+        std::string last_redraw = std::to_string(last_redraw_timestamp.load());
+
+        std::string config = throttle_on_idle
+            ? " throttle=[idle: " + std::to_string(idle_render_interval_ms) + "ms, timeout: " + std::to_string(active_render_timeout_ms) + "ms]"
+            : " throttle=off";
+
         std::string res = std::to_string(GetWidth()) + "x" + std::to_string(GetHeight());
-        drawLine("FPS: " + std::to_string(perf.fps) + " (~" + ftos(perf.mspt, 2) + "ms/t) " + res + (perf.status ? std::string(" ") + perf.status : ""));
+        drawLine("FPS: " + std::to_string(perf.fps) + " (~" + ftos(perf.mspt, 2) + "ms/t) " + res + config + (perf.status ? std::string(" ") + perf.status : ""));
         drawLine(std::string("grvl: ") + GRVL_VER);
 
         if(!overlayInfo.empty()) {
@@ -1020,6 +1072,9 @@ namespace grvl {
         size_t script_ns = perf.script_times.avg();
         size_t draw_ns = perf.draw_times.avg();
         size_t swap_ns = perf.swap_times.avg();
+
+        drawLine("In=" + last_input + ", Rq=" + last_request + ", Rd=" + last_redraw);
+        drawLine("needs-frames=" + needs_frames + ", should-redraw=" + should_redraw);
 
         drawLine("J: " + ftos(script_ns * ns_to_ms, 4) + "ms"); // events, JS, etc.
         drawLine("D: " + ftos(draw_ns * ns_to_ms, 4) + "ms"); // main drawing
@@ -1119,6 +1174,15 @@ namespace grvl {
 
     void Manager::ProcessTouchPoint(bool touched, uint32_t touchX, uint32_t touchY)
     {
+
+        if ((previousTouchState != touched) || (previousX != touchX) || (previousY != touchY)) {
+            MarkUserActivity();
+
+            this->previousX = touchX;
+            this->previousY = touchY;
+
+        }
+
         if(!previousTouchState && !touched) { // Idle
             TouchEvent.SetState(Touch::Idle);
         } else if(previousTouchState && touched) { // Moving
@@ -1173,6 +1237,8 @@ namespace grvl {
             return;
         }
 
+        MarkUserActivity();
+
         if(pressed && !keyActive) { // Press
             KeyMappingMap::const_iterator searchKey = KeyMappingContainer.find(code);
             if(searchKey != KeyMappingContainer.end() && activeKey.name != searchKey->second.name) {
@@ -1202,6 +1268,7 @@ namespace grvl {
     void Manager::ProcessTextInput(const char* text)
     {
         assert(text && "text cannot be null");
+        MarkUserActivity();
 
         if (!activeInput) {
             return;

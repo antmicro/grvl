@@ -76,6 +76,7 @@ namespace grvl {
         AddGlobalFunction("SetActiveInput", JSEngine::SetActiveInput, 1);
         AddGlobalFunction("GetTopPanel", JSEngine::GetTopPanel, 0);
         AddGlobalFunction("GetBottomPanel", JSEngine::GetBottomPanel, 0);
+        AddGlobalFunction("ScheduleRedraw", JSEngine::ScheduleRedraw, 0);
         AddGlobalFunction("GetPrefabById", JSEngine::GetPrefabById, 1);
     }
 
@@ -340,6 +341,12 @@ namespace grvl {
         bottomPanel->PushJSObjectOnStack(ctx);
 
         return RETURN_VALUE_PRESENT;
+    }
+
+    duk_ret_t JSEngine::ScheduleRedraw(duk_context* ctx)
+    {
+        Manager::GetInstance().ScheduleRedraw();
+        return NO_RETURN_VALUE;
     }
 
     duk_ret_t JSEngine::GetPrefabById(duk_context* ctx)

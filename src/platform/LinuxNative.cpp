@@ -26,7 +26,6 @@
 #include <sys/mman.h>
 
 namespace grvl {
-    static uint64_t NowMs();
 
     // Adawaita default cursor
     // CC-BY-SA
@@ -310,8 +309,7 @@ namespace grvl {
             xkb_keymap = xkb_keymap_new_from_names(xkb_ctx, &names, XKB_KEYMAP_COMPILE_NO_FLAGS);
         }
         xkb_state = xkb_state_new(xkb_keymap);
-
-        app_start_ms = NowMs();
+        app_start_ms = CurrentTimestamp();
     }
 
     LinuxNativeApp::LinuxNativeApp(const NativeDisplay& display, bool rotate_sideways)
@@ -1158,7 +1156,7 @@ namespace grvl {
         }
         return true;
     }
-    
+
     void LinuxNativeApp::UpdateMonitorState()
     {
         if (monitor_blanking_ms == 0) {
@@ -1166,11 +1164,11 @@ namespace grvl {
             return;
         }
 
-        auto now_ms = NowMs();
+        auto now_ms = CurrentTimestamp();
         auto user_activity_ms = GetLastUserActivityTimestamp();
 
         const uint64_t reference_ms = std::max(user_activity_ms, app_start_ms);
-        SetMonitorActive((NowMs() - reference_ms) < monitor_blanking_ms);
+        SetMonitorActive((now_ms - reference_ms) < monitor_blanking_ms);
     }
 
     void LinuxNativeApp::UpdateCursorState()
@@ -1180,7 +1178,7 @@ namespace grvl {
             return;
         }
 
-        auto now_ms = NowMs();
+        auto now_ms = CurrentTimestamp();
         auto pointer_activity_ms = last_pointer_activity_ms.load();
 
         // the cursor should be visible shortly after the app starts, even without any input yet
@@ -1209,7 +1207,7 @@ namespace grvl {
         if (req == nullptr) {
             return;
         }
-        
+
         rc = drmModeAtomicAddProperty(req, crtc->crtc_id, active_prop_id, active_new_value);
         if (rc < 0) {
             Log(ERROR, "Add property failed: %s", strerror(errno));
@@ -1353,28 +1351,33 @@ namespace grvl {
                 }
             }
         });
- 
-        return true;
-    }
 
-    static uint64_t NowMs()
-    {
-        return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+        return true;
     }
 
     void LinuxNativeApp::SetIdleThrottle(bool enabled)
     {
-        idle_throttle = enabled;
+        idle_throttle.store(enabled, std::memory_order_relaxed);
+        set_idle_throttle.store(enabled, std::memory_order_release);
 
-        if (idle_throttle) {
+        Log(INFO, "IdleThrottle set to %s", enabled ? "enabled" : "disabled");
+
+        SetVSync(enabled);
+    }
+
+    void LinuxNativeApp::SetVSync(bool enabled)
+    {
+        if (enabled) {
             // this could be -1 (blocking), but let's make it a long drm_event_timeout
             // so we never block indefinitely, e.g. be easy on exit
             drm_event_timeout = 300;
         } else {
             drm_event_timeout = 0; // no wait
         }
+
+        Log(INFO, "VSync set to %s (%d)", enabled ? "enabled" : "disabled", drm_event_timeout);
     }
-    
+
     void LinuxNativeApp::SetMonitorBlanking(uint32_t inactivity_ms)
     {
     	monitor_blanking_ms = inactivity_ms;
@@ -1387,48 +1390,31 @@ namespace grvl {
 
     void LinuxNativeApp::RequestRedraw()
     {
-        last_event_ms = NowMs();
-    }
-
-    bool LinuxNativeApp::ShouldDrawFrame()
-    {
-        // keep rendering at full rate this long after the last input event
-        static constexpr uint64_t active_window_ms = 1000;
-        // otherwise still refresh now and then, for things changing without input (clock, JS, etc.)
-        static constexpr uint64_t idle_interval_ms = 250;
-
-        if (!monitor_active) {
-            return false;
-        }
-
-        if (!idle_throttle) {
-            return true;
-        }
-
-        const uint64_t now = NowMs();
-
-        return now - last_event_ms < active_window_ms
-            || now - last_draw_ms >= idle_interval_ms
-            || Manager::GetInstance().NeedsFrames();
+        Manager::GetInstance().ScheduleRedraw();
     }
 
     void LinuxNativeApp::Render()
     {
         if (!thread_run || vt_suspended) {
+            frame_drawn = false;
             return;
+        }
+
+        Manager& manager = Manager::GetInstance();
+
+        bool expected = true;
+
+        if (set_idle_throttle.compare_exchange_strong(expected, false, std::memory_order_relaxed)) {
+            manager.SetIdleThrottle(idle_throttle.load(std::memory_order_relaxed));
+            Log(WARN, "Idle throttle configured using deprecated LinuxNativeApp::SetIdleThrottle(), use Manager::SetIdleThrottle() & LinuxNativeApp::SetVSync()");
         }
 
         frame_signal.Wait();
         UpdateMonitorState();
         UpdateCursorState();
-        frame_drawn = !first_frame_ready || ShouldDrawFrame();
+        this->frame_drawn = monitor_active && (!first_frame_ready || manager.ShouldRedraw());
 
-        if (frame_drawn) {
-            last_draw_ms = NowMs();
-            Manager::GetInstance().perf.status = idle_throttle ? "[throttle: on]" : "[throttle: off]";
-        }
-
-        Manager::GetInstance().MainLoopIteration(frame_drawn);
+        manager.MainLoopIteration(frame_drawn);
     }
 
     void LinuxNativeApp::Swap()
@@ -1561,8 +1547,6 @@ namespace grvl {
 
     void LinuxNativeApp::HandleEvent(libinput_event* event)
     {
-        last_event_ms = NowMs();
-
         auto type = libinput_event_get_type(event);
 
         switch (type) {
@@ -1576,8 +1560,7 @@ namespace grvl {
                 const double dy = libinput_event_pointer_get_dy(pointer);
 
                 if (dx != 0 || dy != 0) {
-                    MarkUserActivity();
-                    last_pointer_activity_ms = NowMs();
+                    last_pointer_activity_ms = CurrentTimestamp();
                 }
 
                 x += dx;
@@ -1596,8 +1579,7 @@ namespace grvl {
                 const int new_y = libinput_event_pointer_get_absolute_y_transformed(pointer, height);
 
                 if (new_x != x || new_y != y) {
-                    MarkUserActivity();
-                    last_pointer_activity_ms = NowMs();
+                    last_pointer_activity_ms = CurrentTimestamp();
                 }
 
                 x = new_x;
@@ -1614,8 +1596,7 @@ namespace grvl {
                 bool pressed = (libinput_event_pointer_get_button_state(pointer) == LIBINPUT_BUTTON_STATE_PRESSED);
 
                 if (pressed) {
-                    MarkUserActivity();
-                    last_pointer_activity_ms = NowMs();
+                    last_pointer_activity_ms = CurrentTimestamp();
                 }
 
                 if (button == BTN_LEFT) {
@@ -1631,8 +1612,6 @@ namespace grvl {
                 bool pressed = libinput_event_keyboard_get_key_state(keyboard) == LIBINPUT_KEY_STATE_PRESSED;
 
                 if (pressed) {
-                    MarkUserActivity();
-
                     if (evdev_key == KEY_NUMLOCK) leds ^= LIBINPUT_LED_NUM_LOCK;
                     if (evdev_key == KEY_CAPSLOCK) leds ^= LIBINPUT_LED_CAPS_LOCK;
                     if (evdev_key == KEY_SCROLLLOCK) leds ^= LIBINPUT_LED_SCROLL_LOCK;

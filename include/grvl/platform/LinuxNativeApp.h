@@ -168,8 +168,7 @@ namespace grvl {
 
         // idle frame skipping, see SetIdleThrottle()
         std::atomic<bool> idle_throttle { false };
-        std::atomic<uint64_t> last_event_ms { 0 };
-        uint64_t last_draw_ms = 0;
+        std::atomic<bool> set_idle_throttle { false };
         bool frame_drawn = true;
         bool monitor_active = true;
         uint32_t monitor_blanking_ms = 0;
@@ -177,8 +176,6 @@ namespace grvl {
         std::atomic<bool> cursor_visible { true };
         uint32_t cursor_timeout_ms = 0;
         std::atomic<uint64_t> last_pointer_activity_ms { 0 };
-
-        bool ShouldDrawFrame();
 
         struct xkb_context* xkb_ctx;
         struct xkb_keymap* xkb_keymap;
@@ -233,10 +230,14 @@ namespace grvl {
         // Can be called both before and after this object is passed to Application::Init().
         void DrawMouseIcon(bool draw_mouse = true);
 
+        // Limit swapping speed to the display referesh rate
+        void SetVSync(bool enabled);
+
         // When enabled, frames are only rendered while there was recent input, while the Manager
         // reports ongoing activity or at a low rate.
         // This avoids redrawing an unchanged screen.
         // Disabled by default.
+        [[deprecated("Use Manager::SetIdleThrottle() and LinuxNativeApp::SetVSync()")]]
         void SetIdleThrottle(bool enabled);
 
         // When set to a non-zero value, grvl will disable the display after the specified period.
@@ -250,6 +251,7 @@ namespace grvl {
         void SetCursorTimeout(uint32_t inactivity_ms);
 
         // Make sure the next frames are rendered, call after changing the UI outside of input handling.
+        [[deprecated("Use Manager::ScheduleRedraw()")]]
         void RequestRedraw();
     };
 }

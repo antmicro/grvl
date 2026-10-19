@@ -57,6 +57,7 @@ namespace grvl {
         static duk_ret_t GetTopPanel(duk_context* ctx);
         static duk_ret_t GetBottomPanel(duk_context* ctx);
         static duk_ret_t GetPrefabById(duk_context* ctx);
+        static duk_ret_t ScheduleRedraw(duk_context* ctx);
 
         static constexpr duk_ret_t NO_RETURN_VALUE { 0 };
         static constexpr duk_ret_t RETURN_VALUE_PRESENT { 1 };

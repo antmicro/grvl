@@ -62,7 +62,6 @@ int main()
 
     const uint64_t runtime = 10'000'000; // us
     const uint64_t start = ChronoGetTimestamp();
-    int frames = 0;
 
     // draw one frame here to make sure nothing breaks when drawing without all images being loaded
     app->Render();
@@ -71,7 +70,6 @@ int main()
     manager.AddImageContentToContainer("left", new grvl::ImageContent(ROMFS_PATH "/images/left.png", grvl::Format::ARGB8888)); // replace existing image
 
     while (app->ShouldRun()) {
-        frames ++;
 
         app->Render();
 
@@ -86,6 +84,8 @@ int main()
         app->Swap();
         app->Poll();
     }
+
+    int frames = manager.perf.frame_count;
 
     const uint64_t time = ChronoGetTimestamp() - start;
     printf("Exited after %ldms, drawn %d frames, (avg. %d FPS)\n", time / 1000, frames, (int) (frames / (time / 1000000.0)));

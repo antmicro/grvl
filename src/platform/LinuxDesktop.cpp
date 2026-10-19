@@ -1,4 +1,5 @@
 
+#include <SDL2/SDL_blendmode.h>
 #include <grvl/Manager.h>
 #include <grvl/platform/LinuxDesktopApp.h>
 
@@ -44,31 +45,40 @@ namespace grvl {
         texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_STREAMING, width, height);
 
         Manager::Initialize(width, height, 4, sideways);
+        Manager::GetInstance().SetIdleThrottle(true);
+
         return true;
     }
 
     void LinuxDesktopApp::Render()
     {
-        Manager::GetInstance().MainLoopIteration();
+        Manager& manager = Manager::GetInstance();
+        this->frame_drawn = manager.ShouldRedraw();
+
+        manager.MainLoopIteration(frame_drawn);
     }
 
     void LinuxDesktopApp::Swap()
     {
         Stopwatch watch {};
 
-        void* pixels = 0;
-        int pitch;
+        if (frame_drawn) {
 
-        if (SDL_LockTexture(texture, nullptr, &pixels, &pitch) == 0) {
-            memcpy(pixels, framebuffer, height * width * 4);
-            SDL_UnlockTexture(texture);
+            void* pixels = 0;
+            int pitch;
+
+            if (SDL_LockTexture(texture, nullptr, &pixels, &pitch) == 0) {
+                memcpy(pixels, framebuffer, height * width * 4);
+                SDL_UnlockTexture(texture);
+            }
+
+            SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_NONE);
+            SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+            SDL_RenderClear(renderer);
+            SDL_RenderCopy(renderer, texture, nullptr, nullptr);
+            SDL_RenderPresent(renderer);
+
         }
-
-        SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_NONE);
-        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
-        SDL_RenderClear(renderer);
-        SDL_RenderCopy(renderer, texture, nullptr, nullptr);
-        SDL_RenderPresent(renderer);
 
         Manager::GetInstance().perf.swap_times.put(watch.stop());
     }
@@ -80,18 +90,8 @@ namespace grvl {
 
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
-                case SDL_MOUSEMOTION:
-                    if (event.motion.xrel != 0 || event.motion.yrel != 0) {
-                        MarkUserActivity();
-                    }
-                    break;
-
-                case SDL_MOUSEBUTTONDOWN:
-                    MarkUserActivity();
-                    break;
-
                 case SDL_MOUSEWHEEL:
-                    MarkUserActivity();
+                    Manager::GetInstance().MarkUserActivity();
                     break;
 
                 case SDL_TEXTINPUT:
@@ -103,7 +103,6 @@ namespace grvl {
                     break;
 
                 case SDL_KEYDOWN:
-                    MarkUserActivity();
                     Manager::GetInstance().ProcessKeyInput(true, event.key.keysym.sym);
                     break;
 

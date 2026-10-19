@@ -397,6 +397,30 @@ namespace grvl {
 
         Component* FindElementInTheActiveScreenById(const char* id);
 
+        /// Check whether the screen should be redrawn
+        /// this is based on multiple factors, including displayed
+        /// animations, user inputs and manual requests.
+        bool ShouldRedraw();
+
+        /// Mark that the user performed some action other than whats
+        /// already handled (key, touch, text), additionally marks the
+        /// screen for redraw
+        void MarkUserActivity();
+
+        /// Manually mark the screen for redraw. Works like MarkUserActivity()
+        /// but doesn't affect the timestamp returned by GetLastInputTimestamp()
+        /// call.
+        void ScheduleRedraw();
+
+        /// Set whether to limit FPS when there is no user input or
+        /// animations present.
+        void SetIdleThrottle(bool throttle);
+
+        /// Get a timestamp, in milliseconds, of the last user input
+        /// This includes any calls to MarkUserActivity().
+        /// This is unaffected by calls to ScheduleRedraw().
+        uint64_t GetLastInputTimestamp();
+
     private:
         Manager(uint32_t xSize, uint32_t ySize, Format fmt, bool rotate90 = false, void* framebuffer_1 = nullptr, void* framebuffer_2 = nullptr);
 
@@ -417,6 +441,17 @@ namespace grvl {
         std::vector<AbstractView*> Screens;
 
         std::vector<Division*> Prefabs;
+
+        Atomic<uint64_t> last_input_timestamp { 0 };
+        Atomic<uint64_t> last_request_timestamp { 0 };
+        Atomic<uint64_t> last_redraw_timestamp { 0 };
+
+        bool throttle_on_idle = false;
+        uint64_t idle_render_interval_ms = 250;
+        uint64_t active_render_timeout_ms = 1000;
+
+        uint32_t previousX = 0;
+        uint32_t previousY = 0;
 
         Keyboard* keyboard { nullptr };
         TextInput* activeInput { nullptr };

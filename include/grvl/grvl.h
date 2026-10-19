@@ -57,6 +57,9 @@ namespace grvl {
     inline void Log(LogLevel level, const char* text, Args... args)
     {
         static auto CallUserPrint = [](LogLevel level, const char* format, ...) {
+            if (grvl::Callbacks()->logger == nullptr) {
+                return;
+            }
             va_list list;
             int bytes = 0;
 

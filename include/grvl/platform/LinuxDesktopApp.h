@@ -28,6 +28,7 @@ namespace grvl {
         SDL_Renderer* renderer = nullptr;
 
         const char* title = "Untitled";
+        bool frame_drawn = true;
 
         bool Setup() override;
 
