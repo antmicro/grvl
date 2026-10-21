@@ -707,7 +707,7 @@ namespace grvl {
 
         if (cursor.plane) {
             // setting fb and crtc to 0 disables the cursor plane
-            const bool show_cursor = cursor_visible;
+            const bool show_cursor = draw_mouse_icon && cursor_visible;
 
             drmModeAtomicAddProperty(req, cursor.plane, cursor.props.fb, show_cursor ? cursor.fb : 0);
             drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, show_cursor ? crtc->crtc_id : 0);
