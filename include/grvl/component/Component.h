@@ -243,8 +243,8 @@ namespace grvl {
         GENERATE_DUK_UNSIGNED_INT_GETTER(Component, ForegroundColor, GetForegroundColor)
         GENERATE_DUK_UNSIGNED_INT_SETTER(Component, ForegroundColor, SetForegroundColor)
 
-        GENERATE_DUK_UNSIGNED_INT_GETTER(Component, ActiveForegroundColor, GetActiveBackgroundColor)
-        GENERATE_DUK_UNSIGNED_INT_SETTER(Component, ActiveForegroundColor, SetActiveBackgroundColor)
+        GENERATE_DUK_UNSIGNED_INT_GETTER(Component, ActiveForegroundColor, GetActiveForegroundColor)
+        GENERATE_DUK_UNSIGNED_INT_SETTER(Component, ActiveForegroundColor, SetActiveForegroundColor)
 
         GENERATE_DUK_UNSIGNED_INT_GETTER(Component, BackgroundColor, GetBackgroundColor)
         GENERATE_DUK_UNSIGNED_INT_SETTER(Component, BackgroundColor, SetBackgroundColor)
