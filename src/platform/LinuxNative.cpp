@@ -1235,6 +1235,10 @@ namespace grvl {
 
     bool LinuxNativeApp::Setup()
     {
+        ud = udev_new();
+        li = libinput_udev_create_context(&interface, nullptr, ud);
+        libinput_udev_assign_seat(li, "seat0");
+
         bool driver_found = false;
 
         if (has_selected_display) {
@@ -1252,10 +1256,6 @@ namespace grvl {
             Log(ERROR, "No usable DRM device found!");
             return false;
         }
-
-        ud = udev_new();
-        li = libinput_udev_create_context(&interface, nullptr, ud);
-        libinput_udev_assign_seat(li, "seat0");
 
         Manager::Initialize(width, height, 4, sideways);
 
