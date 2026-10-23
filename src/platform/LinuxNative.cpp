@@ -1623,7 +1623,6 @@ namespace grvl {
                 // The '+8' is here to convert from the kernel/libinput's
                 // keycodes to the ones expected by xkbcommon
                 HandleKeycode(evdev_key + 8, evdev_key, pressed);
-                Manager::GetInstance().ProcessKeyInput(pressed, evdev_key);
                 break;
             }
 
