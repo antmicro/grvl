@@ -164,6 +164,16 @@ namespace grvl {
         textInput->RemoveLastCharacter();
     }
 
+    static void ClearCurrentInputCallback(void* sender, const Event::ArgVector& Args)
+    {
+        auto& manager = Manager::GetInstance();
+        auto textInput = manager.GetActiveInput();
+        if (!textInput) {
+            return;
+        }
+        textInput->Clear();
+    }
+
     static void SwitchKeyboardKeysCallback(void* sender, const Event::ArgVector& Args)
     {
         Manager* man = &Manager::GetInstance();
@@ -251,6 +261,7 @@ namespace grvl {
         AddCallbackToContainer("ShowKeyboard", ShowKeyboardCallback);
         AddCallbackToContainer("AppendFromKeyboardKey", KeyboardAddFromKeyCallback);
         AddCallbackToContainer("RemoveLastCharacterFromCurrentInput", KeyboardRemoveLastCharacterCallback);
+        AddCallbackToContainer("ClearCurrentInput", ClearCurrentInputCallback);
         AddCallbackToContainer("SwitchKeyboardKeys", SwitchKeyboardKeysCallback);
         AddCallbackToContainer("ShowPopup", ShowPopupCallback);
     }
