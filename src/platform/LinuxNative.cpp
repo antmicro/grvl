@@ -24,6 +24,7 @@
 #include <xf86drmMode.h>
 
 #include <sys/mman.h>
+#include <xkbcommon/xkbcommon-names.h>
 
 namespace grvl {
 
@@ -1540,8 +1541,20 @@ namespace grvl {
 
         xkb_state_update_key(xkb_state, xkb_keycode, pressed ? XKB_KEY_DOWN : XKB_KEY_UP);
 
-        events.push([pressed, evdev_keycode] () {
-            Manager::GetInstance().ProcessKeyInput(pressed, evdev_keycode);
+        uint16_t modifiers = 0;
+        if (xkb_state_mod_name_is_active(xkb_state, XKB_MOD_NAME_CTRL, XKB_STATE_MODS_EFFECTIVE)) {
+            modifiers |= 0x01; // Control
+        }
+        if (xkb_state_mod_name_is_active(xkb_state, XKB_MOD_NAME_ALT, XKB_STATE_MODS_EFFECTIVE)) {
+            modifiers |= 0x02; // Alt
+        }
+        if (xkb_state_mod_name_is_active(xkb_state, XKB_MOD_NAME_SHIFT, XKB_STATE_MODS_EFFECTIVE)) {
+            modifiers |= 0x04; // Shift
+        }
+        modifiers <<= 10;
+
+        events.push([pressed, evdev_keycode, modifiers] () {
+            Manager::GetInstance().ProcessKeyInput(pressed, modifiers | evdev_keycode);
         });
     }
 
