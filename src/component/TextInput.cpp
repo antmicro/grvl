@@ -183,7 +183,7 @@ namespace grvl {
             RenderY + BeginY,
             RenderX,
             RenderY,
-            RenderWidth,
+            RenderWidth - HorizontalPadding,
             RenderHeight,
             textToDraw,
             CurrentTextColor);
