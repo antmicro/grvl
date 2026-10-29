@@ -1408,6 +1408,7 @@ namespace grvl {
         }
 
         Manager& manager = Manager::GetInstance();
+        manager.perf.status = drm_event_timeout ? "vsync=on" : "vsync=off";
 
         bool expected = true;
 
