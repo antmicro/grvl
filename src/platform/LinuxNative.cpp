@@ -843,7 +843,7 @@ namespace grvl {
 
     void LinuxNativeApp::DestroyDumbBuffer(DumbBuffer &buffer)
     {
-        Log(ERROR, "Destroying dumb buffer %u\n", buffer.fb);
+        Log(INFO, "Destroying dumb buffer %u\n", buffer.fb);
         if (buffer.fb != 0) {
             if (drmModeRmFB(fd, buffer.fb) != 0) {
                 Log(ERROR,
