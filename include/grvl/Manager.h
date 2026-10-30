@@ -480,6 +480,7 @@ namespace grvl {
         uint32_t dotColor, dotActiveColor;
         int32_t dotDistance, dotRadius, dotYPos, debugDot;
         KeyData activeKey;
+        uint16_t activeKeyCode { 0 };
         EventQueue eventsQueue;
         PopupQueue popupsQueue;
         ContentManager contentManager;

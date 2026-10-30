@@ -1250,21 +1250,23 @@ namespace grvl {
 
         MarkUserActivity();
 
+        const uint16_t codeWithoutModifiers = code & 0x3FF;
+
         if(pressed && !keyActive) { // Press
             KeyMappingMap::const_iterator searchKey = KeyMappingContainer.find(code);
             // Check without modifiers if not found with modifiers
             if(searchKey == KeyMappingContainer.end()) {
-                uint16_t codeWithoutModifiers = code & 0x3FF;
                 searchKey = KeyMappingContainer.find(codeWithoutModifiers);
             }
 
             if(searchKey != KeyMappingContainer.end() && activeKey.name != searchKey->second.name) {
                 activeKey = searchKey->second;
+                activeKeyCode = codeWithoutModifiers;
                 ActiveScreen->PressKey(activeKey.name.c_str());
                 keyActive = true;
                 KeyPressTimestamp = grvl::Callbacks()->get_timestamp();
             }
-        } else if(!pressed && keyActive) { // Release
+        } else if(!pressed && keyActive && codeWithoutModifiers == activeKeyCode) { // Release
             ActiveScreen->ReleaseKey(activeKey.name.c_str());
             activeKey.name = "";
             keyActive = false;
