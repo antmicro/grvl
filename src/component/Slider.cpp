@@ -238,10 +238,11 @@ namespace grvl {
             if(ScrollImage.IsEmpty()) {
 
                 if(Width > Height) {
+                    const int32_t activeBarWidth = static_cast<int32_t>(Width * Position);
                     painter.FillRectangle(
-                        ParentRenderX + X + (Width - ScrollLength) * Position, ParentRenderY + Y, Width * (1.0f - Position), Height,
+                        ParentRenderX + X + activeBarWidth, ParentRenderY + Y, Width - activeBarWidth, Height,
                         BarColor);
-                    painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width * Position, Height, ActiveBarColor);
+                    painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, activeBarWidth, Height, ActiveBarColor);
 
                     ScrollLength = (uint32_t)(Width / 10);
                     painter.FillRectangle(
