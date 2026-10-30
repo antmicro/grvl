@@ -1,6 +1,7 @@
 
 #include <SDL2/SDL_blendmode.h>
 #include <grvl/Manager.h>
+#include <grvl/platform/KeyMappings.h>
 #include <grvl/platform/LinuxDesktopApp.h>
 
 #include <SDL2/SDL.h>
@@ -45,6 +46,7 @@ namespace grvl {
         texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_STREAMING, width, height);
 
         Manager::Initialize(width, height, 4, sideways);
+        InstallLinuxDesktopKeyMappings(Manager::GetInstance());
         Manager::GetInstance().SetIdleThrottle(true);
 
         return true;
@@ -102,11 +104,11 @@ namespace grvl {
                     break;
 
                 case SDL_KEYDOWN:
-                    Manager::GetInstance().ProcessKeyInput(true, event.key.keysym.sym);
+                    Manager::GetInstance().ProcessKeyInput(true, event.key.keysym.sym, static_cast<uint16_t>(event.key.keysym.sym));
                     break;
 
                 case SDL_KEYUP:
-                    Manager::GetInstance().ProcessKeyInput(false, event.key.keysym.sym);
+                    Manager::GetInstance().ProcessKeyInput(false, event.key.keysym.sym, static_cast<uint16_t>(event.key.keysym.sym));
                     break;
             }
         }

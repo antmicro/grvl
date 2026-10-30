@@ -639,15 +639,23 @@ namespace grvl {
         return *this;
     }
 
-    void Manager::AddKeyMappingToContainer(uint16_t mask, const std::string& name, uint32_t repeat)
+    void Manager::AddKeyMappingToContainer(uint32_t code, const std::string& name, uint32_t repeat)
     {
-        if(mask == 0x0) {
+        if(code == 0x0) {
             return;
         }
         KeyData k;
         k.name = name; // NOLINT
         k.repeat = repeat;
-        KeyMappingContainer[mask] = k;
+        KeyMappingContainer[code] = k;
+    }
+
+    void Manager::AddDefaultKeyMappingToContainer(uint32_t code, const std::string& name, uint32_t repeat)
+    {
+        if(code != 0 && KeyMappingContainer.find(code) == KeyMappingContainer.end()) {
+            AddKeyMappingToContainer(code, name, repeat);
+            KeyMappingContainer[code].isDefault = true;
+        }
     }
 
     Manager& Manager::SetFontCallback(const FontLoader& callback)
@@ -1300,7 +1308,7 @@ namespace grvl {
         previousTouchState = touched;
     }
 
-    void Manager::ProcessKeyInput(bool pressed, uint16_t code)
+    void Manager::ProcessKeyInput(bool pressed, uint32_t code, uint32_t legacyCode)
     {
         if(ActiveScreen == NULL) {
             return;
@@ -1308,21 +1316,31 @@ namespace grvl {
 
         MarkUserActivity();
 
-        const uint16_t codeWithoutModifiers = code & 0x3FF;
+        // Preserve full SDL key symbols; only strip the legacy modifier bits.
+        const uint32_t codeWithoutModifiers = code & ~uint32_t(0x1C00);
 
         if(pressed && !keyActive) { // Press
             KeyMappingMap::const_iterator searchKey = KeyMappingContainer.find(code);
+            // Explicit full-width mappings win. An explicit legacy SDL binding
+            // still overrides a backend default, but defaults never act as aliases.
+            if(legacyCode != 0 && (searchKey == KeyMappingContainer.end() || searchKey->second.isDefault)) {
+                auto legacyKey = KeyMappingContainer.find(legacyCode);
+                if(legacyKey != KeyMappingContainer.end() && !legacyKey->second.isDefault) {
+                    searchKey = legacyKey;
+                }
+            }
             // Check without modifiers if not found with modifiers
             if(searchKey == KeyMappingContainer.end()) {
                 searchKey = KeyMappingContainer.find(codeWithoutModifiers);
             }
 
             if(searchKey != KeyMappingContainer.end() && activeKey.name != searchKey->second.name) {
-                activeKey = searchKey->second;
-                activeKeyCode = codeWithoutModifiers;
-                ActiveScreen->PressKey(activeKey.name.c_str());
-                keyActive = true;
-                KeyPressTimestamp = grvl::Callbacks()->get_timestamp();
+                if(ActiveScreen->PressKey(searchKey->second.name.c_str()) != Key::NA) {
+                    activeKey = searchKey->second;
+                    activeKeyCode = codeWithoutModifiers;
+                    keyActive = true;
+                    KeyPressTimestamp = grvl::Callbacks()->get_timestamp();
+                }
             }
         } else if(!pressed && keyActive && codeWithoutModifiers == activeKeyCode) { // Release
             ActiveScreen->ReleaseKey(activeKey.name.c_str());

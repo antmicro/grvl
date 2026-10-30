@@ -281,7 +281,7 @@
                 <xs:complexType>
                     <xs:attribute name="id" type="idType" use="required"/>
                     <xs:attribute name="code" type="xs:integer" use="required"/>
-                    <xs:attribute name="repeat" type="xs:integer" use="required"/>
+                    <xs:attribute name="repeat" type="xs:integer" default="100"/>
                 </xs:complexType>
             </xs:element>
         </xs:sequence>

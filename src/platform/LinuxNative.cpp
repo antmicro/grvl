@@ -1,5 +1,6 @@
 #include <grvl/Manager.h>
 #include <grvl/platform/FbtermDrmLease.h>
+#include <grvl/platform/KeyMappings.h>
 #include <grvl/platform/LinuxNativeApp.h>
 #include <grvl/platform/XrandrDrmLease.h>
 
@@ -1267,6 +1268,7 @@ namespace grvl {
         }
 
         Manager::Initialize(width, height, 4, sideways);
+        InstallLinuxNativeKeyMappings(Manager::GetInstance());
 
         // set drm caps
         int ret = drmSetClientCap(fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);

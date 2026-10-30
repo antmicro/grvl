@@ -4,9 +4,6 @@
 <doc xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="grvl.xsd">
 	<script src="callbacks.js" />
     <guiConfig dotColor="#ffffffff"></guiConfig>
-    <keypadMapping>
-        <key id="enter" code="13" />
-    </keypadMapping>
     <header height="50" backgroundColor="#ff000000">
         <label id="h_label" textColor="#ffffffff" text="Graph Sample" font="roboto-medium" alignment="Center" x="0" y="0" width="800" height="50" />
     </header>

@@ -596,11 +596,54 @@ The current version of grvl only implements parsing, the stylesheet is not appli
 
 ### keypadMapping
 
+SDL (LinuxDesktop) and LinuxNative install default keyboard mappings during
+application setup, before XML is loaded. Standard keys therefore need only an
+action declaration inside a view, for example:
+
+```xml
+<key id="backspace" onPress="Backspace"/>
+<key id="escape" onPress="QuitApplication"/>
+```
+
+`Backspace` and `QuitApplication` here are application-provided callbacks, not
+built-in actions.
+Default IDs are identical across these backends:
+
+* `a`–`z`, `0`–`9`, `space`, `tab`, `enter`, `backspace`, `escape`
+* `minus`, `equals`, `leftbracket`, `rightbracket`, `backslash`, `semicolon`,
+  `apostrophe`, `grave`, `comma`, `period`, `slash`
+* `leftshift`, `rightshift`, `leftctrl`, `rightctrl`, `leftalt`, `rightalt`,
+  `leftmeta`, `rightmeta`, `menu`, `capslock`
+* `f1`–`f24`, `printscreen`, `scrolllock`, `pause`
+* `insert`, `delete`, `home`, `end`, `pageup`, `pagedown`, `left`, `right`, `up`, `down`
+* `numlock`, `kp_0`–`kp_9`, `kp_period`, `kp_divide`, `kp_multiply`, `kp_minus`,
+  `kp_plus`, `kp_enter`, `kp_equals`, `kp_comma`
+* `mute`, `volumeup`, `volumedown`, `playpause`, `stop`, `nexttrack`, `previoustrack`
+
+Letter and punctuation IDs follow SDL key symbols on desktop and physical evdev
+keys (US key names) on LinuxNative. Other platforms and applications that
+initialize `Manager` directly must provide their own mappings.
+
+`keypadMapping` is optional. Its entries override defaults **by numeric code**;
+unmentioned defaults remain. Giving another code the same ID adds an alias rather
+than removing the original binding. Codes retain their backend-specific meaning:
+SDL2 key symbols on desktop, evdev codes on LinuxNative. For example, Backspace
+is `8` on SDL and `14` on LinuxNative. Codes support unsigned 32-bit values, including
+full SDL special-key symbols (e.g. Left is `1073741904`). Explicit legacy bindings
+using truncated 16-bit SDL codes are still honored ahead of backend defaults;
+an explicit full-width binding takes precedence over a legacy binding. New XML
+should use full-width values to avoid the ambiguity of truncated codes.
+
+LinuxNative retains its existing modifier encoding: OR the evdev code with
+`1024` for Ctrl, `2048` for Alt, and `4096` for Shift. Exact modified mappings take
+precedence, falling back to the unmodified code. SDL continues to send key symbols
+without this modifier encoding.
+
 Contains key elements with the following attributes:
 
 * id
 * code (int)
-* repeat (int)
+* repeat (int, optional; repeat interval in milliseconds, default `100`)
 
 #### Example
 

@@ -58,6 +58,7 @@ list(APPEND sources "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/Posix.cpp"
                     "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/LinuxGeneric.cpp")
 
 if(GRVL_LINUX_NATIVE)
+  list(APPEND sources "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/LinuxNativeKeyMappings.cpp")
   list(APPEND sources "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/LinuxNative.cpp")
   list(APPEND sources "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/XrandrDrmLease.cpp")
   list(APPEND sources "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/FbtermDrmLease.cpp")
@@ -65,6 +66,7 @@ if(GRVL_LINUX_NATIVE)
 endif()
 
 if(GRVL_LINUX_DESKTOP)
+  list(APPEND sources "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/LinuxDesktopKeyMappings.cpp")
   list(APPEND sources "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/LinuxDesktop.cpp")
   message(STATUS "GRVL Desktop Linux support ENABLED")
 endif()

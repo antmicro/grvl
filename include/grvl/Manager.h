@@ -138,6 +138,7 @@ namespace grvl {
             }
             std::string name;
             uint32_t repeat;
+            bool isDefault { false };
         };
 
         std::unordered_map<std::string, char*> widgetAttributes;
@@ -342,7 +343,12 @@ namespace grvl {
         /// @param font Font object.
         Manager& AddFontToFontContainer(const std::string& name, Font* font);
 
-        void AddKeyMappingToContainer(uint16_t mask, const std::string& name, uint32_t repeat);
+        /// Adds or replaces a mapping by backend-native code (including full SDL symbols).
+        /// repeat is the long-press repeat interval in milliseconds.
+        void AddKeyMappingToContainer(uint32_t code, const std::string& name, uint32_t repeat);
+
+        /// Installs a backend default without replacing an existing mapping.
+        void AddDefaultKeyMappingToContainer(uint32_t code, const std::string& name, uint32_t repeat);
 
         Font* GetFontFromContainer(const char* name) const;
         Font* GetDefaultFontFromContainer() const;
@@ -363,7 +369,8 @@ namespace grvl {
         // ///
         // /// @param pressed Indicates if the key is pressed (true) or released (false).
         // /// @param code Code of the key.
-        void ProcessKeyInput(bool pressed, uint16_t code);
+        // legacyCode optionally supplies a backend's formerly truncated code.
+        void ProcessKeyInput(bool pressed, uint32_t code, uint32_t legacyCode = 0);
         Key::KeyState PressKey(const char* id);
         Key::KeyState ReleaseKey(const char* id);
 
@@ -487,7 +494,7 @@ namespace grvl {
         uint32_t dotColor, dotActiveColor;
         int32_t dotDistance, dotRadius, dotYPos, debugDot;
         KeyData activeKey;
-        uint16_t activeKeyCode { 0 };
+        uint32_t activeKeyCode { 0 };
         EventQueue eventsQueue;
         PopupQueue popupsQueue;
         ContentManager contentManager;
