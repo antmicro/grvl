@@ -242,6 +242,10 @@ namespace grvl {
 
         /// Sets the curren active text input - triggers ShowKeyboard.
         void SetActiveInput(TextInput* destinationInput);
+
+        /// Remembers the element that takes focus when a screen holding it is
+        /// opened. Called by TextInput for autoFocus="true".
+        void RequestAutoFocus(const char* elementId);
         TextInput* GetActiveInput();
 
         /// Switches keyboard pop-up keys.
@@ -455,6 +459,9 @@ namespace grvl {
 
         Keyboard* keyboard { nullptr };
         TextInput* activeInput { nullptr };
+        std::string autoFocusElementId;
+
+        void ApplyAutoFocus(AbstractView* screen);
         std::vector<Popup*> PopupsContainer;
         Panel* TopPanel;
         Panel* BottomPanel;

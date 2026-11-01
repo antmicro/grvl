@@ -368,6 +368,66 @@ Used for horizontal separation of content.
 <Separator id="separator" x="0" y="20" width="128" foregroundColor="#FF2E2E2E" />
 ```
 
+### TextInput
+
+A single-line text field. The keyboard is shown when the field is clicked.
+
+#### Attributes
+
+* text
+* basicText (placeholder, shown while the field is empty)
+* font
+* textColor
+* activeTextColor
+* type (`text` or `password`)
+* cursor (`true`/`false`, default `false`)
+* cursorColor (default: the value of `textColor`)
+* cursorBlink (`true`/`false`, default `true`)
+* autoFocus (`true`/`false`, default `false`)
+* onTextInput
+* onSubmit
+
+The caret is a one-pixel line drawn after the typed text. The gap between the
+text and the caret, and the height the caret adds above and below the font,
+are both a quarter of the font height, with a minimum of one pixel. Thus an 8
+pixel font gets a gap of 2 and a caret of 12, and a 26 pixel font gets a gap
+of 6 and a caret of 38.
+
+It appears only while the field has focus. A placeholder does not move it, so
+an empty field shows the caret at the left edge. When the text is wider than
+the field, the caret stops at the right edge.
+
+The caret blinks every 500 ms. Typing restarts the cycle, so the caret is lit
+while the user types. Blinking asks for a new frame on every draw, which
+defeats the idle throttle of `SetIdleThrottle()`. Set `cursorBlink="false"` on
+a device where the screen should go idle.
+
+#### Focus
+
+A text input receives the keys of `Manager::ProcessTextInput()` only while it
+is the active input. Clicking the field makes it active, and `SetActiveInput`
+does the same from JavaScript or from C++.
+
+A device with no touchscreen has nothing to click, so `autoFocus="true"` marks
+the field that becomes active when a screen holding it is opened. The element
+is found by its id at that moment, thus a field inside a prefab gives the focus
+to the instance on the screen and not to the prefab. Only one element can hold
+the request; a second `autoFocus` replaces the first and logs a warning. When
+the opening screen does not hold the element, the current focus stays as it is.
+
+Note that `autoFocus` triggers the keyboard popup, exactly as a click does,
+when the keyboard has `autoPopup` set.
+
+#### Example
+
+```xml
+<TextInput id="name" basicText="Name" font="mona26"
+    x="0" y="0" width="426" height="34"
+    borderType="box" borderArcRadius="12"
+    backgroundColor="#FF191A1C" textColor="#FF9EA2A6"
+    cursor="true" cursorColor="#FFECEDEE" autoFocus="true" />
+```
+
 ## List of screens
 
 ### GridView

@@ -15,10 +15,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <grvl/Manager.h>
+
+#include <algorithm>
 #include <grvl/component/TextInput.h>
 
 namespace grvl {
-    TextInput::TextInput(const TextInput& other) : Button(other), basicText(other.basicText), type(other.type)
+    TextInput::TextInput(const TextInput& other)
+        : Button(other)
+        , basicText(other.basicText)
+        , type(other.type)
+        , autoFocus(other.autoFocus)
+        , cursorEnabled(other.cursorEnabled)
+        , cursorColor(other.cursorColor)
+        , cursorBlink(other.cursorBlink)
     {
         onTextInput.SetSenderPointer(this);
         onSubmit.SetSenderPointer(this);
@@ -26,7 +35,7 @@ namespace grvl {
 
     TextInput& TextInput::operator=(const TextInput& other)
     {
-        if (this == &other) {
+        if(this == &other) {
             return *this;
         }
 
@@ -34,6 +43,10 @@ namespace grvl {
 
         basicText = other.basicText;
         type = other.type;
+        autoFocus = other.autoFocus;
+        cursorEnabled = other.cursorEnabled;
+        cursorColor = other.cursorColor;
+        cursorBlink = other.cursorBlink;
         onTextInput.SetSenderPointer(this);
         onSubmit.SetSenderPointer(this);
 
@@ -61,6 +74,15 @@ namespace grvl {
         result->SetActiveTextColor(XMLSupport::ParseColor(xmlElement, "activeTextColor", result->GetTextColor()));
 
         result->SetType(XMLSupport::GetAttributeOrDefault(xmlElement, "type", "text"));
+
+        result->SetAutoFocus(XMLSupport::GetAttributeOrDefault(xmlElement, "autoFocus", false));
+        if(result->IsAutoFocus()) {
+            man->RequestAutoFocus(result->GetID());
+        }
+
+        result->SetCursorEnabled(XMLSupport::GetAttributeOrDefault(xmlElement, "cursor", false));
+        result->SetCursorColor(XMLSupport::ParseColor(xmlElement, "cursorColor", result->GetTextColor()));
+        result->SetCursorBlink(XMLSupport::GetAttributeOrDefault(xmlElement, "cursorBlink", true));
 
         return result;
     }
@@ -98,26 +120,29 @@ namespace grvl {
     void TextInput::AddCharacter(char character)
     {
         Text += character;
+        ResetCursorBlink();
         Manager::GetInstance().GetEventsQueueInstance().push(&onTextInput);
     }
 
     void TextInput::Append(const char* text)
     {
         Text += text;
+        ResetCursorBlink();
         Manager::GetInstance().GetEventsQueueInstance().push(&onTextInput);
     }
 
     void TextInput::RemoveLastCharacter()
     {
-        if (Text.empty()) {
+        if(Text.empty()) {
             return;
         }
 
         size_t pos = Text.size() - 1;
-        while (pos > 0 && (static_cast<unsigned char>(Text[pos]) & 0xC0) == 0x80) {
+        while(pos > 0 && (static_cast<unsigned char>(Text[pos]) & 0xC0) == 0x80) {
             --pos;
         }
         Text.erase(pos);
+        ResetCursorBlink();
 
         Manager::GetInstance().GetEventsQueueInstance().push(&onTextInput);
     }
@@ -125,6 +150,7 @@ namespace grvl {
     void TextInput::Clear()
     {
         Text.clear();
+        ResetCursorBlink();
         Manager::GetInstance().GetEventsQueueInstance().push(&onTextInput);
     }
 
@@ -148,12 +174,67 @@ namespace grvl {
         this->type = type;
     }
 
+    void TextInput::SetAutoFocus(bool enabled)
+    {
+        autoFocus = enabled;
+    }
+
+    bool TextInput::IsAutoFocus() const
+    {
+        return autoFocus;
+    }
+
+    int32_t TextInput::CursorGap(int32_t fontHeight)
+    {
+        return std::max(1, fontHeight / CURSOR_METRIC_DIVIDER);
+    }
+
+    int32_t TextInput::CursorOverhang(int32_t fontHeight)
+    {
+        return std::max(1, fontHeight / CURSOR_METRIC_DIVIDER);
+    }
+
+    void TextInput::ResetCursorBlink()
+    {
+        cursorBlinkStart = grvl::Callbacks()->get_timestamp();
+    }
+
+    void TextInput::SetCursorBlink(bool enabled)
+    {
+        cursorBlink = enabled;
+    }
+
+    bool TextInput::IsCursorBlinking() const
+    {
+        return cursorBlink;
+    }
+
+    void TextInput::SetCursorEnabled(bool enabled)
+    {
+        cursorEnabled = enabled;
+    }
+
+    bool TextInput::IsCursorEnabled() const
+    {
+        return cursorEnabled;
+    }
+
+    void TextInput::SetCursorColor(uint32_t color)
+    {
+        cursorColor = color;
+    }
+
+    uint32_t TextInput::GetCursorColor() const
+    {
+        return cursorColor;
+    }
+
     size_t TextInput::GetUTF8CharacterCount() const
     {
         size_t count = 0;
 
-        for (unsigned char c : Text) {
-            if ((c & 0xC0) != 0x80) {
+        for(unsigned char c : Text) {
+            if((c & 0xC0) != 0x80) {
                 ++count;
             }
         }
@@ -170,10 +251,13 @@ namespace grvl {
 
     void TextInput::DrawText(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight)
     {
+        if(!ButtonFont) {
+            return;
+        }
+
         const char* textToDraw = GetTextToDraw();
 
         uint32_t CurrentTextColor = GetTextColor();
-        uint16_t TextSize = ButtonFont->GetWidth(textToDraw);
         uint16_t BeginX = HorizontalPadding;
         uint16_t BeginY = RenderHeight / 2 + (ButtonFont->GetFontHeight() / 2) + TextTopOffset;
 
@@ -187,16 +271,53 @@ namespace grvl {
             RenderHeight,
             textToDraw,
             CurrentTextColor);
+
+        DrawCursor(painter, RenderX, RenderY, RenderWidth, RenderHeight, RenderY + BeginY, textToDraw);
+    }
+
+    void TextInput::DrawCursor(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth,
+                               int32_t RenderHeight, int32_t BaselineY, const char* textToDraw)
+    {
+        if(!cursorEnabled || Manager::GetInstance().GetActiveInput() != this) {
+            return;
+        }
+
+        // GetTextToDraw() returns the placeholder when nothing is typed, so the
+        // caret must not sit behind it.
+        const int32_t fontHeight = ButtonFont->GetFontHeight();
+        const int32_t overhang = CursorOverhang(fontHeight);
+
+        if(cursorBlink) {
+            // Frames must keep coming, or the caret freezes mid-cycle.
+            painter.RequestNextFrame();
+
+            const uint64_t elapsed = grvl::Callbacks()->get_timestamp() - cursorBlinkStart;
+            if((elapsed / CURSOR_BLINK_PERIOD_MS) % 2 != 0) {
+                return;
+            }
+        }
+
+        const int32_t typedWidth = Text.empty() ? 0 : ButtonFont->GetWidth(textToDraw) + CursorGap(fontHeight);
+        const int32_t height = fontHeight + 2 * overhang;
+        const int32_t lastColumn = RenderX + RenderWidth - HorizontalPadding - CURSOR_WIDTH;
+
+        int32_t x = RenderX + HorizontalPadding + typedWidth;
+        if(x > lastColumn) {
+            x = lastColumn;
+        }
+
+        painter.FillRectangle(x, BaselineY - height + overhang, CURSOR_WIDTH, height, cursorColor);
     }
 
     const char* TextInput::GetTextToDraw()
     {
-        if (Text.empty()) {
+        if(Text.empty()) {
             return basicText.c_str();
         }
 
-        switch (type) {
-            case InputType::TEXT: return Text.c_str();
+        switch(type) {
+            case InputType::TEXT:
+                return Text.c_str();
 
             case InputType::PASSWORD: {
                 const size_t count = GetUTF8CharacterCount();
@@ -207,7 +328,7 @@ namespace grvl {
                 masked.clear();
                 masked.reserve(count * mask_char_len);
 
-                for (size_t i = 0; i < count; ++i) {
+                for(size_t i = 0; i < count; ++i) {
                     masked += mask_char;
                 }
 

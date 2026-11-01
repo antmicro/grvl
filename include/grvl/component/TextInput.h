@@ -94,7 +94,7 @@ namespace grvl {
         };
 
         TextInput()
-            : Button {}
+            : Button { }
         {
         }
 
@@ -126,6 +126,30 @@ namespace grvl {
         const char* GetType() const;
         void SetType(const char* type);
 
+        static constexpr int32_t CURSOR_WIDTH { 1 };
+        /// The gap and the overhang are this fraction of the font height.
+        static constexpr int32_t CURSOR_METRIC_DIVIDER { 4 };
+        /// Milliseconds the caret spends visible, and then hidden.
+        static constexpr uint64_t CURSOR_BLINK_PERIOD_MS { 500 };
+
+        /// Blank columns kept between the text and the caret.
+        static int32_t CursorGap(int32_t fontHeight);
+        /// Pixels the caret adds above and below the font height.
+        static int32_t CursorOverhang(int32_t fontHeight);
+
+        /// Restarts the blink cycle, so the caret is visible straight away.
+        void ResetCursorBlink();
+
+        void SetAutoFocus(bool enabled);
+        bool IsAutoFocus() const;
+
+        void SetCursorEnabled(bool enabled);
+        bool IsCursorEnabled() const;
+        void SetCursorColor(uint32_t color);
+        uint32_t GetCursorColor() const;
+        void SetCursorBlink(bool enabled);
+        bool IsCursorBlinking() const;
+
         size_t GetUTF8CharacterCount() const;
 
         void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder) override;
@@ -137,11 +161,20 @@ namespace grvl {
         GENERATE_DUK_STRING_SETTER(TextInput, BasicText, SetBasicText);
 
     protected:
-        Event onTextInput {};
-        Event onSubmit {};
-        std::string basicText {};
-        std::string masked {};
+        Event onTextInput { };
+        Event onSubmit { };
+        std::string basicText { };
+        std::string masked { };
         InputType type { InputType::TEXT };
+        bool autoFocus { false };
+        bool cursorEnabled { false };
+        uint32_t cursorColor { 0 };
+        bool cursorBlink { true };
+        uint64_t cursorBlinkStart { 0 };
+
+        /// Draws the caret after the typed text, clamped to the field.
+        void DrawCursor(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight,
+                        int32_t BaselineY, const char* textToDraw);
 
         void DrawText(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight) override;
 

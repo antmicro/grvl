@@ -414,6 +414,7 @@ namespace grvl {
 
                     NewScreen = screen;
                     NewScreen->PrepareToOpen();
+                    ApplyAutoFocus(NewScreen);
 
                     screen->CheckPlacement();
                     if(direction != 0 && ScrollingDuration > 0) {
@@ -798,7 +799,9 @@ namespace grvl {
     void Manager::SetActiveInput(TextInput* destinationInput)
     {
         activeInput = destinationInput;
-        if(!destinationInput) {
+        if(destinationInput) {
+            destinationInput->ResetCursorBlink();
+        } else {
             if(keyboard) {
                 keyboard->SetCurrentInputDestination(nullptr);
             }
@@ -806,6 +809,34 @@ namespace grvl {
 
         if (keyboard && keyboard->HasAutoPopoup()) {
             ShowKeyboard();
+        }
+    }
+
+    void Manager::RequestAutoFocus(const char* elementId)
+    {
+        if(!elementId || *elementId == '\0') {
+            Log(ERROR, "autoFocus needs the element to have an id");
+            return;
+        }
+
+        if(!autoFocusElementId.empty() && autoFocusElementId != elementId) {
+            Log(WARN, "autoFocus already requested by \"%s\", replacing it with \"%s\"",
+                autoFocusElementId.c_str(), elementId);
+        }
+
+        autoFocusElementId = elementId;
+    }
+
+    void Manager::ApplyAutoFocus(AbstractView* screen)
+    {
+        if(autoFocusElementId.empty() || !screen) {
+            return;
+        }
+
+        // The screen that is opening may not hold the element; leave the
+        // current focus alone when it does not.
+        if(auto* input = dynamic_cast<TextInput*>(screen->GetElement(autoFocusElementId.c_str()))) {
+            SetActiveInput(input);
         }
     }
 
