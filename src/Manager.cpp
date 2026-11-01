@@ -17,6 +17,7 @@
 #include <grvl/JSEngine.h>
 #include <grvl/Manager.h>
 #include <grvl/ParsingUtils.h>
+#include <grvl/XMLPreprocessor.h>
 
 #include <cassert>
 #include <iomanip>
@@ -84,8 +85,23 @@ namespace grvl {
 
                 const std::string path = baseDir + "/" + href;
 
+                File file{ path.c_str() };
+                const std::string raw = file.ReadString();
+                if(raw.empty()) {
+                    Log(ERROR, "Cannot read included file: %s", path.c_str());
+                    return -1;
+                }
+
+                std::string source;
+                std::string error;
+                if(!XMLPreprocessor::EscapeExpressions(raw, source, error)) {
+                    Log(ERROR, "%s: %s", path.c_str(), error.c_str());
+                    return -1;
+                }
+
                 XMLDocument sub;
-                if(sub.LoadFile(path.c_str()) != XML_SUCCESS) {
+                if(sub.Parse(source.c_str(), source.length()) != XML_SUCCESS) {
+                    Log(ERROR, "Cannot parse included file: %s", path.c_str());
                     return -1;
                 }
 
@@ -1491,9 +1507,16 @@ namespace grvl {
             return -1; // Parsing failed
         }
 
+        std::string error;
+        std::string source;
+        if(!XMLPreprocessor::EscapeExpressions(document, source, error)) {
+            Log(ERROR, "XML preprocessing failed: %s", error.c_str());
+            return -1;
+        }
+
         XMLDocument doc;
 
-        XMLError Error = doc.Parse(document.c_str(), document.length());
+        XMLError Error = doc.Parse(source.c_str(), source.length());
 
         if(Error == XML_SUCCESS) {
             if(ProcessIncludes(&doc, workingDirectory, 0) != 0) {
@@ -1503,6 +1526,17 @@ namespace grvl {
 
             // Adding screens
             if(Root) {
+
+                JSEngine::DefineGlobalNumber("screenWidth", width);
+                JSEngine::DefineGlobalNumber("screenHeight", height);
+		JSEngine::DefineGlobalNumber("screenRatio",
+                                             height != 0 ? static_cast<double>(width) / height : 0.0);
+
+                if(!XMLPreprocessor::CollectDefines(Root, error)
+                   || !XMLPreprocessor::ExpandExpressions(&doc, error)) {
+                    Log(ERROR, "XML expression error: %s", error.c_str());
+                    return -1;
+                }
 
                 XMLElement* nextElement = Root->FirstChildElement("guiConfig");
                 if(nextElement) {

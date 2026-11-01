@@ -158,6 +158,47 @@ namespace grvl {
         return true;
     }
 
+    bool JSEngine::PushExpressionResult(const std::string& expression, std::string& error)
+    {
+        // The parentheses keep `{a: 1}` an object, not a block.
+        const std::string wrapped = "(" + expression + ")";
+
+        if (duk_peval_lstring(ctx, wrapped.c_str(), static_cast<duk_size_t>(wrapped.size())) != 0) {
+            error = duk_safe_to_string(ctx, -1);
+            duk_pop(ctx);
+            return false;
+        }
+
+        return true;
+    }
+
+    bool JSEngine::EvaluateExpression(const std::string& expression, std::string& result, std::string& error)
+    {
+        if (!PushExpressionResult(expression, error)) {
+            return false;
+        }
+
+        result = duk_safe_to_string(ctx, -1);
+        duk_pop(ctx);
+        return true;
+    }
+
+    bool JSEngine::DefineGlobalFromExpression(const char* name, const std::string& expression, std::string& error)
+    {
+        if (!PushExpressionResult(expression, error)) {
+            return false;
+        }
+
+        duk_put_global_string(ctx, name);
+        return true;
+    }
+
+    void JSEngine::DefineGlobalNumber(const char* name, double value)
+    {
+        duk_push_number(ctx, value);
+        duk_put_global_string(ctx, name);
+    }
+
     void JSEngine::MakeJavaScriptFunctionCall(const char* functionName)
     {
         PrepareJavaScriptFunctionCall(functionName);

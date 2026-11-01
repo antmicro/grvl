@@ -7,6 +7,7 @@
     <xs:element name="doc">
         <xs:complexType>
             <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:element name="defines" type="definesType" />
                 <xs:element name="guiConfig" type="guiConfigType" />
                 <xs:element name="stylesheet" type="stylesheetType" />
                 <xs:element name="script" type="scriptType" />
@@ -259,6 +260,18 @@
     <xs:complexType name="stylesheetType" mixed="true">
     </xs:complexType>
     
+    <xs:complexType name="definesType">
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="define">
+                <xs:complexType>
+                    <xs:attribute name="name" type="xs:string" use="required"/>
+                    <xs:attribute name="value" type="xs:string" use="required"/>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="script" type="scriptType"/>
+        </xs:choice>
+    </xs:complexType>
+
     <xs:complexType name="scriptType" mixed="true">
         <xs:attribute name="src" type="xs:string" />
     </xs:complexType>

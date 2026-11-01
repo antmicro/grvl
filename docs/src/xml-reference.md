@@ -21,7 +21,82 @@ First define the root of the document.
 
 Then include the screens/special components in the document.
 
-(generic-component-container-attributes)=
+## Expressions
+
+Each attribute value and each text node can hold `${...}` spans.
+grvl evaluates the content of a span as a JavaScript expression and puts the
+result in its place. The evaluation occurs one time, before any widget is built.
+
+```xml
+<button x="${100 + 20}" width="${Math.round(screenWidth / 3)}" text="${screenWidth}x${screenHeight}"/>
+```
+
+The expressions use the same Duktape context as the `<script>` elements, thus
+they can call the global functions of the GUI. grvl defines `screenWidth` and
+`screenHeight` before the evaluation. This makes one template sufficient for
+more than one display resolution.
+
+Write `$$` for a dollar sign that is followed by a brace.
+
+### The defines block
+
+A `<defines>` block holds the constants and the helper functions of the
+document. The block is evaluated before the expansion, then removed from the
+document.
+
+```xml
+<doc>
+    <defines>
+        <define name="scale" value="screenWidth / 1920"/>
+        <define name="gutter" value="Math.round(16 * scale)"/>
+        <script>
+            function px(value) { return Math.round(value * scale); }
+        </script>
+    </defines>
+
+    <customView id="home">
+        <button id="ok" x="${gutter}" y="${gutter}" width="${px(240)}" height="${px(48)}"/>
+    </customView>
+</doc>
+```
+
+A `<define>` can use the names above it. The blocks are evaluated in document
+order.
+
+To keep the resolution-dependent values separate from the layout, put the
+`<defines>` block in its own file and include it:
+
+```xml
+<doc xmlns:xi="http://www.w3.org/2001/XInclude">
+    <xi:include href="metrics-1920.xml"/>
+    <!-- the layout -->
+</doc>
+```
+
+### Operators and quotation marks
+
+Write the expression in plain JavaScript. grvl escapes the XML special
+characters inside a span before the parse, thus `>`, `<`, `&&` and the
+quotation marks are permitted with no entity:
+
+```text
+<label text="${screenWidth > 1280 ? "wide" : "narrow"}"/>
+```
+
+An XML entity inside a span is **not** decoded first. Write `>`, not `&gt;`.
+
+### Limits
+
+* The engine is Duktape, thus the language is ECMAScript 5.1. There are no
+  arrow functions, no `let` and no template literals.
+* A regular expression literal in a span is not supported, because the span
+  scanner cannot tell it from a division. Use `new RegExp("...")`.
+* The expressions share one global object and run in document order. Thus an
+  expression that has a side effect changes the result of the expressions
+  below it.
+* A span in a comment, a CDATA section or a processing instruction is not
+  expanded.
+
 ## Generic component/container attributes
 
 Each component has the following attributes:

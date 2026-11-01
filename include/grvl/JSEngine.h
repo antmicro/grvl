@@ -42,6 +42,15 @@ namespace grvl {
         static void AddGlobalObject(const char* name, void* ptr, const std::unordered_map<const char*, duk_c_function>& methods);
         static void AddGlobalEnum(const std::string& enumName, const std::unordered_map<std::string, int>& values);
 
+        /// Evaluates a single expression and converts the result to a string.
+        static bool EvaluateExpression(const std::string& expression, std::string& result, std::string& error);
+
+        /// Evaluates a single expression and stores the result in a global.
+        static bool DefineGlobalFromExpression(const char* name, const std::string& expression, std::string& error);
+
+        /// Stores a number in a global.
+        static void DefineGlobalNumber(const char* name, double value);
+
         static void MakeJavaScriptFunctionCall(const char* functionName);
         static void ExecuteJavaScriptCallback(const char* functionName, void* caller, const Event::ArgVector& args);
         static Event CreateJavaScriptFunctionCallEvent(const std::string& functionName, const Event::ArgVector& args);
@@ -63,6 +72,9 @@ namespace grvl {
         static constexpr duk_ret_t RETURN_VALUE_PRESENT { 1 };
 
     private:
+        /// Evaluates an expression and leaves the result on the Duktape stack.
+        static bool PushExpressionResult(const std::string& expression, std::string& error);
+
         static void InitializeDukContext(gui_callbacks_t* n_callbacks);
         static void InitializeDukContext();
         static void RegisterBasicAPIFunctions();
