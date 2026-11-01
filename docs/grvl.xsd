@@ -59,7 +59,7 @@
                                 <xs:enumeration value="Inline"/>
                             </xs:restriction>
                         </xs:simpleType>
-                    </xs:atribute>
+                    </xs:attribute>
                     <xs:attribute name="imageTextGap" type="xs:integer"/>
                     <xs:attribute name="padding" type="xs:integer"/>
                     <xs:attribute name="onLongPress" type="functionType"/>
