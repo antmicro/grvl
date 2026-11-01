@@ -17,6 +17,8 @@
 #ifndef GRVL_ENDIAN_H_
 #define GRVL_ENDIAN_H_
 
+#include <cstdint>
+
 #if (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)) || defined(__BIG_ENDIAN__)
 #define GRVL_BIG_ENDIAN true
 #else
