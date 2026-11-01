@@ -1573,6 +1573,13 @@ namespace grvl {
 		JSEngine::DefineGlobalNumber("screenRatio",
                                              height != 0 ? static_cast<double>(width) / height : 0.0);
 
+                // The scripts run first, so a <define> and a ${...} span can
+                // call the functions they declare.
+                for(XMLElement* script = Root->FirstChildElement("script"); script != nullptr;
+                    script = script->NextSiblingElement("script")) {
+                    ParseScripts(script);
+                }
+
                 if(!XMLPreprocessor::CollectDefines(Root, error)
                    || !XMLPreprocessor::ExpandExpressions(&doc, error)) {
                     Log(ERROR, "XML expression error: %s", error.c_str());
@@ -1592,10 +1599,6 @@ namespace grvl {
                 nextElement = Root->FirstChildElement("font-styles");
                 if (nextElement) {
                     ParseFontStyles(nextElement);
-                }
-
-                for(nextElement = Root->FirstChildElement("script"); nextElement != nullptr; nextElement = nextElement->NextSiblingElement("script")) {
-                    ParseScripts(nextElement);
                 }
 
                 nextElement = Root->FirstChildElement("keypadMapping");

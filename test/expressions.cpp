@@ -8,6 +8,7 @@
 #include <grvl/XMLPreprocessor.h>
 #include <grvl/grvl.h>
 
+#include <cstring>
 #include <string>
 #include <tinyxml2.h>
 #include <unordered_map>
@@ -37,12 +38,21 @@ namespace {
         REQUIRE(doc.Parse(source.c_str(), source.length()) == XML_SUCCESS);
         REQUIRE(doc.RootElement() != nullptr);
 
+        // Mirrors Manager: the scripts run before the defines and the spans.
+        for(XMLElement* script = doc.RootElement()->FirstChildElement("script"); script != nullptr;
+            script = script->NextSiblingElement("script")) {
+            if(const char* code = script->GetText()) {
+                REQUIRE(JSEngine::LoadJavaScriptCode(code, std::strlen(code)));
+            }
+        }
+
         REQUIRE(XMLPreprocessor::CollectDefines(doc.RootElement(), error));
         REQUIRE(XMLPreprocessor::ExpandExpressions(&doc, error));
 
-        XMLElement* first = doc.RootElement()->FirstChildElement();
-        REQUIRE(first != nullptr);
-        return first->Attribute("v");
+        XMLElement* target = doc.RootElement()->FirstChildElement("a");
+        REQUIRE(target != nullptr);
+        REQUIRE(target->Attribute("v") != nullptr);
+        return target->Attribute("v");
     }
 
     std::string EvaluateExpr(const std::string& expression)
@@ -106,13 +116,66 @@ TEST_CASE_METHOD(JSFixture, "Expressions: defines block", "[xml][expressions]")
           <defines>
             <define name="baseWidth" value="1920"/>
             <define name="halfWidth" value="baseWidth / 2"/>
-            <script>function px(v) { return Math.round(v * 2); }</script>
           </defines>
+          <script>function px(v) { return Math.round(v * 2); }</script>
           <a v="${halfWidth} ${px(5)}"/>
         </doc>
     )XML";
 
     REQUIRE(Evaluate(document) == "960 10");
+}
+
+TEST_CASE_METHOD(JSFixture, "Expressions: a span calls a function from <script>", "[xml][expressions]")
+{
+    const std::string document = R"XML(
+        <doc>
+          <script>
+            function double(v) { return v * 2; }
+            var unit = 7;
+          </script>
+          <a v="${double(unit)}"/>
+        </doc>
+    )XML";
+
+    REQUIRE(Evaluate(document) == "14");
+}
+
+TEST_CASE_METHOD(JSFixture, "Expressions: a define calls a function from <script>", "[xml][expressions]")
+{
+    const std::string document = R"XML(
+        <doc>
+          <script>function half(v) { return v / 2; }</script>
+          <defines>
+            <define name="col" value="half(640)"/>
+          </defines>
+          <a v="${col}"/>
+        </doc>
+    )XML";
+
+    REQUIRE(Evaluate(document) == "320");
+}
+
+TEST_CASE_METHOD(JSFixture, "Expressions: a script body is left alone", "[xml][expressions]")
+{
+    // ${...} inside a script is JavaScript, not a span to expand.
+    std::string source;
+    std::string error;
+    const std::string document = R"(<doc><script>var s = "${nope}";</script><a v="1"/></doc>)";
+
+    REQUIRE(XMLPreprocessor::EscapeExpressions(document, source, error));
+
+    XMLDocument doc;
+    REQUIRE(doc.Parse(source.c_str(), source.length()) == XML_SUCCESS);
+    REQUIRE(XMLPreprocessor::ExpandExpressions(&doc, error));
+
+    XMLElement* script = doc.RootElement()->FirstChildElement("script");
+    REQUIRE(script != nullptr);
+    REQUIRE(std::string(script->GetText()).find("${nope}") != std::string::npos);
+}
+
+TEST_CASE_METHOD(JSFixture, "Expressions: <defines> rejects a nested script", "[xml][expressions]")
+{
+    REQUIRE(Fails(R"(<doc><defines><script>var a = 1;</script></defines><a v="1"/></doc>)"));
 }
 
 TEST_CASE_METHOD(JSFixture, "Expressions: defines block is removed from the tree", "[xml][expressions]")
@@ -152,14 +215,39 @@ TEST_CASE_METHOD(JSFixture, "Expressions: comments and CDATA pass through", "[xm
     REQUIRE(source.find("${a > b}") != std::string::npos);
 }
 
+TEST_CASE_METHOD(JSFixture, "Expressions: grvl injects the screen globals", "[xml][expressions]")
+{
+    Manager::Initialize(1920, 1080, 4, false);
+    Manager& manager = Manager::GetInstance();
+
+    REQUIRE(manager.BuildFromXMLString(R"XML(
+        <doc>
+          <stylesheet></stylesheet>
+          <customView id="home">
+            <button id="ok" text="" x="${screenWidth}" y="${screenHeight}"
+                    width="${Math.round(screenRatio * 100)}" height="10"/>
+          </customView>
+        </doc>
+    )XML") != -1);
+
+    manager.InitializationFinished();
+    manager.SetActiveScreen("home", 0);
+
+    Component* button = manager.FindElementInTheActiveScreenById("ok");
+    REQUIRE(button != nullptr);
+    REQUIRE(button->GetX() == 1920);
+    REQUIRE(button->GetY() == 1080);
+    REQUIRE(button->GetWidth() == 178); // 16/9 * 100
+}
+
 TEST_CASE_METHOD(JSFixture, "Expressions: one template, two resolutions", "[xml][expressions]")
 {
     static constexpr const char* TEMPLATE = R"XML(
         <doc>
           <defines>
             <define name="scale" value="screenWidth / 100"/>
-            <script>function px(v) { return Math.round(v * scale); }</script>
           </defines>
+          <script>function px(v) { return Math.round(v * scale); }</script>
           <stylesheet></stylesheet>
           <customView id="home">
             <button id="ok" text="" x="${px(10)}" y="0" width="${px(30)}" height="10"/>

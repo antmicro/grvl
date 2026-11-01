@@ -223,12 +223,6 @@ namespace grvl {
                         error.append(" in <define name=\"").append(name).append("\">");
                         return false;
                     }
-                } else if(std::strcmp(entry->Name(), "script") == 0) {
-                    const char* code = entry->GetText();
-                    if(code != nullptr && !JSEngine::LoadJavaScriptCode(code, std::strlen(code))) {
-                        error = "<script> in <defines> failed to evaluate";
-                        return false;
-                    }
                 } else {
                     error = std::string { "unexpected <" } + entry->Name() + "> in <defines>";
                     return false;
@@ -244,6 +238,11 @@ namespace grvl {
     bool XMLPreprocessor::ExpandExpressions(XMLNode* node, std::string& error)
     {
         if(XMLElement* element = node->ToElement()) {
+            // A script body is JavaScript already; it reads the globals direct.
+            if(std::strcmp(element->Name(), "script") == 0) {
+                return true;
+            }
+
             std::vector<std::pair<std::string, std::string>> updates;
 
             for(const XMLAttribute* attribute = element->FirstAttribute(); attribute != nullptr;

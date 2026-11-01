@@ -33,7 +33,7 @@ namespace grvl {
         static bool EscapeExpressions(const std::string& source, std::string& result, std::string& error);
 
         /// Evaluates and removes every <defines> block below the root. Must run
-        /// after the includes and before ExpandExpressions().
+        /// after the scripts and before ExpandExpressions().
         static bool CollectDefines(tinyxml2::XMLElement* root, std::string& error);
 
         /// Replaces each ${...} span in the attribute values and the text nodes

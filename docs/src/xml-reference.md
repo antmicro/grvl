@@ -38,20 +38,25 @@ more than one display resolution.
 
 Write `$$` for a dollar sign that is followed by a brace.
 
-### The defines block
+### Scripts and defines
 
-A `<defines>` block holds the constants and the helper functions of the
-document. The block is evaluated before the expansion, then removed from the
-document.
+A `<script>` element is loaded before anything is expanded, thus a `${...}`
+span can call the functions it declares. The same script is what the GUI uses
+at run time, so a helper is written once and serves both.
+
+A `<defines>` block holds plain constants. Each `<define>` is evaluated in
+document order and can use the names above it, and the block is removed from
+the document afterwards.
 
 ```xml
 <doc>
+    <script>
+        function px(value) { return Math.round(value * scale); }
+    </script>
+
     <defines>
         <define name="scale" value="screenWidth / 1920"/>
         <define name="gutter" value="Math.round(16 * scale)"/>
-        <script>
-            function px(value) { return Math.round(value * scale); }
-        </script>
     </defines>
 
     <customView id="home">
@@ -60,8 +65,13 @@ document.
 </doc>
 ```
 
-A `<define>` can use the names above it. The blocks are evaluated in document
-order.
+The order inside the document does not matter for a function, because `px()`
+reads `scale` when the span calls it, which is after the defines are
+evaluated. It does matter for code that runs immediately: a statement at the
+top level of a script cannot read a `<define>`, because the scripts run first.
+
+`${...}` is not expanded inside a `<script>` element. A script is JavaScript
+already, thus it reads `screenWidth` and the defines as plain variables.
 
 To keep the resolution-dependent values separate from the layout, put the
 `<defines>` block in its own file and include it:
