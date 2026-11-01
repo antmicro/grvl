@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <grvl/container/Division.h>
 #include <grvl/Manager.h>
 #include <grvl/XMLSupport.h>
+#include <grvl/container/Division.h>
 
 namespace grvl {
 
@@ -44,7 +44,7 @@ namespace grvl {
 
     void Division::Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY)
     {
-        if (!Visible || Width <= 0 || Height <= 0) {
+        if(!Visible || Width <= 0 || Height <= 0) {
             return;
         }
 
@@ -68,11 +68,11 @@ namespace grvl {
 
     void Division::FillBackground(Painter& painter, int32_t RenderX, int32_t RenderY)
     {
-        if ((BackgroundColor & 0xFF000000) == 0) {
+        if((BackgroundColor & 0xFF000000) == 0) {
             return;
         }
 
-        if (BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
+        if(BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
             painter.FillRoundRectangle(RenderX, RenderY, Width, Height, BackgroundColor, BorderArcRadius);
         } else {
             painter.FillRectangle(RenderX, RenderY, Width, Height, BackgroundColor);
@@ -81,14 +81,14 @@ namespace grvl {
 
     void Division::DrawChildrenComponents(Painter& painter, int32_t RenderX, int32_t RenderY)
     {
-        for (std::size_t i = 0; i < Elements.size(); ++i) {
+        for(std::size_t i = 0; i < Elements.size(); ++i) {
             DrawChildComponent(Elements[i], painter, RenderX, RenderY);
         }
     }
 
     void Division::DrawChildComponent(Component* component, Painter& painter, int32_t RenderX, int32_t RenderY)
     {
-        if (RenderY + component->GetY() + component->GetHeight() < RenderY) {
+        if(RenderY + component->GetY() + component->GetHeight() < RenderY) {
             return;
         }
         component->Draw(painter, RenderX, RenderY);

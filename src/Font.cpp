@@ -61,7 +61,7 @@ namespace grvl {
 
     Font::~Font()
     {
-        for (auto& [key, value] : glyphs) {
+        for(auto& [key, value] : glyphs) {
             free(value.bitmap);
         }
 
@@ -84,7 +84,7 @@ namespace grvl {
         int32_t width = 0;
         uint32_t prev_unicode = 0;
 
-        while (*text) {
+        while(*text) {
 
             Unicode unicode = ParseUnicodeCodepoint(text);
             text += unicode.length;
@@ -92,14 +92,13 @@ namespace grvl {
             Glyph glyph = GetGlyph(unicode.code);
             width += glyph.advance;
 
-            if (prev_unicode) {
+            if(prev_unicode) {
                 width += GetKerning(prev_unicode, unicode.code);
             }
 
-            if (unicode.code != ' ') {
+            if(unicode.code != ' ') {
                 prev_unicode = unicode.code;
             }
-
         }
 
         return width;
@@ -126,7 +125,7 @@ namespace grvl {
     {
         File file(path);
 
-        if (!file.Exists()) {
+        if(!file.Exists()) {
             Log(ERROR, "Unable to load font file %s (no such file)", path);
             return;
         }
@@ -135,7 +134,7 @@ namespace grvl {
         uint8_t* data = reinterpret_cast<uint8_t*>(buffer.data());
         uint8_t* start = data;
 
-        if (buffer.size() < sizeof(FontFileHeader)) {
+        if(buffer.size() < sizeof(FontFileHeader)) {
             Log(ERROR, "Font file %s too short", path);
             return;
         }
@@ -144,7 +143,7 @@ namespace grvl {
         memcpy(&header, data, sizeof(header));
         data += sizeof(header);
 
-        if (memcmp(header.magic, "grvlfnt\0", 8) != 0 || header.version != 0) {
+        if(memcmp(header.magic, "grvlfnt\0", 8) != 0 || header.version != 0) {
             Log(ERROR, "Font file %s has invalid header", path);
             return;
         }
@@ -154,14 +153,14 @@ namespace grvl {
         int64_t kerning_count = BigEndian64(header.kernings);
         int32_t version = BigEndian32(header.version);
 
-        if (version != 0) {
+        if(version != 0) {
             Log(ERROR, "Baked font %s has unknown version %d!", path, version);
             return;
         }
 
         Log(INFO, "Loading baked font %s (height %dpx), %ld glyphs, %ld kernings", path, height, entry_count, kerning_count);
 
-        for (int64_t i = 0; i < entry_count; i ++) {
+        for(int64_t i = 0; i < entry_count; i++) {
 
             FontFileEntry entry;
             memcpy(&entry, data, sizeof(entry));
@@ -180,16 +179,15 @@ namespace grvl {
 
             uint32_t bytes = glyph.bytes();
 
-            if (bytes != 0) {
-                glyph.bitmap = (uint8_t*) malloc(bytes);
+            if(bytes != 0) {
+                glyph.bitmap = (uint8_t*)malloc(bytes);
                 memcpy(glyph.bitmap, start + bitmap, bytes);
             }
 
             glyphs[unicode] = glyph;
-
         }
 
-        for (int64_t i = 0; i < kerning_count; i ++) {
+        for(int64_t i = 0; i < kerning_count; i++) {
 
             FontFileKerning kerning {};
             memcpy(&kerning, data, sizeof(kerning));
@@ -197,24 +195,22 @@ namespace grvl {
 
             uint64_t key = static_cast<uint64_t>(BigEndian32(kerning.prev)) << 32 | BigEndian32(kerning.next);
             kernings[key] = BigEndian32(kerning.horizontal);
-
         }
 
         Log(INFO, "Loaded font file %s (%d kerning entries, %d glyphs)", path, kerning_count, entry_count);
-
     }
 
     Glyph GrvlBakedFont::GetGlyph(uint32_t unicode)
     {
         auto it = glyphs.find(unicode);
 
-        if (it != glyphs.end()) {
+        if(it != glyphs.end()) {
             return it->second;
         }
 
         it = glyphs.find('?');
 
-        if (it != glyphs.end()) {
+        if(it != glyphs.end()) {
             return it->second;
         }
 
@@ -231,7 +227,7 @@ namespace grvl {
         uint64_t key = static_cast<uint64_t>(prev) << 32 | next;
         auto it = kernings.find(key);
 
-        if (it != kernings.end()) {
+        if(it != kernings.end()) {
             return it->second;
         }
 
@@ -246,7 +242,7 @@ namespace grvl {
     {
         File file(path);
 
-        if (!file.Exists()) {
+        if(!file.Exists()) {
             Log(ERROR, "No such font file %s", path);
             return;
         }
@@ -257,7 +253,7 @@ namespace grvl {
 
         auto* info = new ::stbtt_fontinfo();
 
-        if (stbtt_InitFont(info, data(), 0) != 1) {
+        if(stbtt_InitFont(info, data(), 0) != 1) {
             Log(ERROR, "Unable to load font file %s", path);
             delete info;
             return;
@@ -269,7 +265,7 @@ namespace grvl {
 
     TrueTypeData::~TrueTypeData()
     {
-        if (m_info) {
+        if(m_info) {
             delete m_info;
         }
 
@@ -315,15 +311,15 @@ namespace grvl {
     {
         auto it = glyphs.find(unicode);
 
-        if (it != glyphs.end()) {
+        if(it != glyphs.end()) {
             return it->second;
         }
 
         // check if the codepoint is not defined
-        if (stbtt_FindGlyphIndex(ttf->info(), unicode) == 0) {
+        if(stbtt_FindGlyphIndex(ttf->info(), unicode) == 0) {
             auto it = glyphs.find('?');
 
-            if (it != glyphs.end()) {
+            if(it != glyphs.end()) {
                 return it->second;
             }
 
@@ -367,7 +363,7 @@ namespace grvl {
 
     int TrueTypeFont::Preload(uint32_t start, uint32_t end)
     {
-        for (uint32_t codepoint = start; codepoint <= end; codepoint ++) {
+        for(uint32_t codepoint = start; codepoint <= end; codepoint++) {
             GetGlyph(codepoint);
         }
 
@@ -398,7 +394,7 @@ namespace grvl {
         uint32_t offset = 0;
         int current = 1;
 
-        for (auto& [unicode, glyph] : glyphs) {
+        for(auto& [unicode, glyph] : glyphs) {
 
             FontFileEntry entry;
             entry.bitmap = offset; // this is temporary, and will be updated later
@@ -416,7 +412,7 @@ namespace grvl {
             chr.unicode = unicode;
             chr.index = stbtt_FindGlyphIndex(ttf->info(), unicode);
 
-            if (glyph.bytes() != 0) {
+            if(glyph.bytes() != 0) {
                 characters.push_back(chr);
             }
         }
@@ -424,13 +420,13 @@ namespace grvl {
         Log(INFO, "Exported %d glyphs", glyphs.size());
         Log(INFO, "Generating kerning table...", glyphs.size());
 
-        for (Character prev : characters) {
-            for (Character next : characters) {
+        for(Character prev : characters) {
+            for(Character next : characters) {
 
                 int points = stbtt_GetGlyphKernAdvance(ttf->info(), prev.index, next.index);
                 int advance = round(scale * points);
 
-                if (advance == 0) {
+                if(advance == 0) {
                     continue;
                 }
 
@@ -439,11 +435,10 @@ namespace grvl {
                 entry.next = BigEndian32(next.unicode);
                 entry.horizontal = BigEndian32(advance);
                 file_kernings.push_back(entry);
-
             }
 
             Log(INFO, "Scanning %d/%d glyphs, found %d kernings", current, characters.size(), file_kernings.size());
-            current ++;
+            current++;
         }
 
         FontFileHeader header {};
@@ -457,7 +452,7 @@ namespace grvl {
         uint32_t bitmap_area_start = sizeof(FontFileHeader) + file_entries.size() * sizeof(FontFileEntry) + file_kernings.size() * sizeof(FontFileKerning);
 
         // update offsets to point into the bitmap area
-        for (FontFileEntry& entry : file_entries) {
+        for(FontFileEntry& entry : file_entries) {
             entry.bitmap = BigEndian32(entry.bitmap + bitmap_area_start);
         }
 
@@ -465,7 +460,7 @@ namespace grvl {
         fwrite(file_kernings.data(), file_kernings.size(), sizeof(FontFileKerning), file);
 
         // bitmaps
-        for (auto& [unicode, glyph] : glyphs) {
+        for(auto& [unicode, glyph] : glyphs) {
             fwrite(glyph.bitmap, 1, glyph.bytes(), file);
         }
 

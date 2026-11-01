@@ -9,7 +9,6 @@ namespace grvl {
 
     class PosixApp : public Application {
     public:
-
         /// Returns the last user activity timestamp from std::chrono::steady_clock.
         /// The value is expressed in milliseconds and is set to "now" on start.
         [[deprecated("Use Manager::GetLastInputTimestamp()")]]

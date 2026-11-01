@@ -1,14 +1,15 @@
 
+#include <grvl/Manager.h>
 #include <grvl/platform/Dma2d.h>
 #include <grvl/platform/ZephyrApp.h>
-#include <zephyr/logging/log.h>
-#include <grvl/Manager.h>
 #include <zephyr/dt-bindings/input/input-event-codes.h>
+#include <zephyr/logging/log.h>
 
 // TODO: rename to 'grvl' - can't do it now as it conflicts with the demo
 LOG_MODULE_REGISTER(lib_grvl, LOG_LEVEL_INF);
 
-static void ZephyrInputCallback(input_event *evt, void *user_data) {
+static void ZephyrInputCallback(input_event* evt, void* user_data)
+{
     static_cast<grvl::ZephyrApp*>(grvl::Application::GetInstance())->HandleInput(evt);
 }
 
@@ -23,22 +24,22 @@ namespace grvl {
 
     void ZephyrApp::HandleInput(input_event* evt)
     {
-        switch (evt->code) {
-        case INPUT_BTN_TOUCH:
-            mouse.pressed = evt->value;
-            break;
+        switch(evt->code) {
+            case INPUT_BTN_TOUCH:
+                mouse.pressed = evt->value;
+                break;
 
-        case INPUT_ABS_X:
-            mouse.x = evt->value;
-            break;
+            case INPUT_ABS_X:
+                mouse.x = evt->value;
+                break;
 
-        case INPUT_ABS_Y:
-            mouse.y = evt->value;
-            break;
+            case INPUT_ABS_Y:
+                mouse.y = evt->value;
+                break;
 
-        default:
-            LOG_WRN_ONCE("Unknown input event %d", evt->code);
-            break;
+            default:
+                LOG_WRN_ONCE("Unknown input event %d", evt->code);
+                break;
         }
     }
 
@@ -46,7 +47,7 @@ namespace grvl {
     {
         struct display_capabilities caps;
 
-        if (!device_is_ready(dev)) {
+        if(!device_is_ready(dev)) {
             LOG_ERR("Display %s initialization failed", dev->name);
             return false;
         }
@@ -57,7 +58,7 @@ namespace grvl {
         this->height = caps.y_resolution;
         this->bpp = DISPLAY_BITS_PER_PIXEL(caps.current_pixel_format) / 8;
 
-        if (width == 0 || height == 0 || bpp == 0) {
+        if(width == 0 || height == 0 || bpp == 0) {
             return false;
         }
 
@@ -73,14 +74,14 @@ namespace grvl {
         return true;
     }
 
-    ZephyrApp::ZephyrApp(const device* display, bool sideways) : Application(0, 0, sideways)
+    ZephyrApp::ZephyrApp(const device* display, bool sideways)
+        : Application(0, 0, sideways)
     {
         display_device = display;
     }
 
     ZephyrApp::~ZephyrApp()
     {
-
     }
 
     void ZephyrApp::SetCallbacks(gui_callbacks_t& callbacks)
@@ -90,11 +91,23 @@ namespace grvl {
         callbacks.set_layer_pointer = Application::SetFramebuffer;
         callbacks.get_timestamp = GetTimestamp;
 
-        callbacks.logger = [] (LogLevel level, const char* text) {
-            if (level == TRACE) { LOG_DBG("%s", text); return; }
-            if (level == INFO) { LOG_INF("%s", text); return; }
-            if (level == WARN) { LOG_WRN("%s", text); return; }
-            if (level == ERROR) { LOG_ERR("%s", text); return; }
+        callbacks.logger = [](LogLevel level, const char* text) {
+            if(level == TRACE) {
+                LOG_DBG("%s", text);
+                return;
+            }
+            if(level == INFO) {
+                LOG_INF("%s", text);
+                return;
+            }
+            if(level == WARN) {
+                LOG_WRN("%s", text);
+                return;
+            }
+            if(level == ERROR) {
+                LOG_ERR("%s", text);
+                return;
+            }
 
             LOG_WRN_ONCE("Got unknown log level from grvl!?");
             LOG_ERR("(invalid) %s", text);
@@ -103,7 +116,7 @@ namespace grvl {
 
     bool ZephyrApp::Setup()
     {
-        if (InitDisplay(display_device) == false) {
+        if(InitDisplay(display_device) == false) {
             return false;
         }
 
@@ -124,7 +137,7 @@ namespace grvl {
     {
         Stopwatch watch {};
 
-        if (frame_drawn) {
+        if(frame_drawn) {
             display_write(display_device, 0, 0, &display_descriptor, framebuffer);
         }
 

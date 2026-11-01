@@ -26,8 +26,8 @@
 
 static void* guarded_realloc(void* udata, void* ptr, duk_size_t size)
 {
-    if (size == 0) {
-        if (ptr) {
+    if(size == 0) {
+        if(ptr) {
             free(ptr);
         }
         return nullptr;
@@ -37,7 +37,8 @@ static void* guarded_realloc(void* udata, void* ptr, duk_size_t size)
 
 static void* guarded_malloc(void* udata, duk_size_t size)
 {
-    if (size == 0) size = 4;
+    if(size == 0)
+        size = 4;
     return malloc(size);
 }
 
@@ -57,7 +58,7 @@ namespace grvl {
     void JSEngine::InitializeDukContext()
     {
         ctx = duk_create_heap(guarded_malloc, guarded_realloc, guarded_free, nullptr, nullptr);
-        if (!ctx) {
+        if(!ctx) {
             Log(ERROR, "Failed to create a Duktape heap.");
             exit(1);
         }
@@ -93,20 +94,19 @@ namespace grvl {
         duk_push_pointer(ctx, ptr);
         duk_put_prop_string(ctx, -2, JSObject::C_OBJECT_POINTER_KEY);
 
-        for (auto const& [methodName, func] : methods) {
+        for(auto const& [methodName, func] : methods) {
             duk_push_c_function(ctx, func, DUK_VARARGS);
             duk_put_prop_string(ctx, -2, methodName);
         }
 
         duk_put_global_string(ctx, name);
-
     }
 
     void JSEngine::AddGlobalEnum(const std::string& enumName, const std::unordered_map<std::string, int>& values)
     {
         duk_push_object(ctx);
 
-        for (auto const& [key, value] : values) {
+        for(auto const& [key, value] : values) {
             duk_push_string(ctx, key.c_str());
             duk_push_int(ctx, value);
             duk_def_prop(ctx, -3, DUK_DEFPROP_HAVE_VALUE | DUK_DEFPROP_CLEAR_WRITABLE);
@@ -128,7 +128,7 @@ namespace grvl {
 
     bool JSEngine::LoadJavaScriptCode(const std::string& filePath)
     {
-        if (filePath.empty()) {
+        if(filePath.empty()) {
             return true;
         }
 
@@ -140,7 +140,7 @@ namespace grvl {
 
     std::vector<char> JSEngine::LoadCodeFromFile(const char* path)
     {
-        File file {path};
+        File file { path };
         return file.Read();
     }
 
@@ -148,8 +148,7 @@ namespace grvl {
     {
         duk_push_lstring(ctx, code, static_cast<duk_size_t>(codeSize));
 
-        if (duk_peval(ctx) != 0)
-        {
+        if(duk_peval(ctx) != 0) {
             Log(ERROR, "Error occurred while parsing JavaScript code: %s", duk_safe_to_string(ctx, -1));
             duk_pop(ctx);
             return false;
@@ -163,7 +162,7 @@ namespace grvl {
         // The parentheses keep `{a: 1}` an object, not a block.
         const std::string wrapped = "(" + expression + ")";
 
-        if (duk_peval_lstring(ctx, wrapped.c_str(), static_cast<duk_size_t>(wrapped.size())) != 0) {
+        if(duk_peval_lstring(ctx, wrapped.c_str(), static_cast<duk_size_t>(wrapped.size())) != 0) {
             error = duk_safe_to_string(ctx, -1);
             duk_pop(ctx);
             return false;
@@ -174,7 +173,7 @@ namespace grvl {
 
     bool JSEngine::EvaluateExpression(const std::string& expression, std::string& result, std::string& error)
     {
-        if (!PushExpressionResult(expression, error)) {
+        if(!PushExpressionResult(expression, error)) {
             return false;
         }
 
@@ -185,7 +184,7 @@ namespace grvl {
 
     bool JSEngine::DefineGlobalFromExpression(const char* name, const std::string& expression, std::string& error)
     {
-        if (!PushExpressionResult(expression, error)) {
+        if(!PushExpressionResult(expression, error)) {
             return false;
         }
 
@@ -203,7 +202,7 @@ namespace grvl {
     {
         PrepareJavaScriptFunctionCall(functionName);
 
-        constexpr int NO_ARGS{0};
+        constexpr int NO_ARGS { 0 };
         ExecutePreparedJavaScriptFunctionCall(functionName, NO_ARGS);
     }
 
@@ -216,7 +215,7 @@ namespace grvl {
     {
         Stopwatch watch {};
 
-        if (duk_pcall(ctx, numOfArgs) != 0) {
+        if(duk_pcall(ctx, numOfArgs) != 0) {
             Log(ERROR, "Error while trying to execute JavaScript function call %s: %s", functionName, duk_safe_to_string(ctx, -1));
         }
         duk_pop(ctx);
@@ -230,12 +229,12 @@ namespace grvl {
 
         int numOfArgs = args.size();
 
-        if (auto callerAsComponent = static_cast<Component*>(caller)) {
+        if(auto callerAsComponent = static_cast<Component*>(caller)) {
             numOfArgs += 1;
             callerAsComponent->PushJSObjectOnStack(ctx);
         }
 
-        for (const auto& arg : args) {
+        for(const auto& arg : args) {
             duk_push_string(ctx, arg.c_str());
         }
 
@@ -244,15 +243,15 @@ namespace grvl {
 
     Event JSEngine::CreateJavaScriptFunctionCallEvent(const std::string& functionName, const Event::ArgVector& args)
     {
-        if (functionName.empty()) {
-            return Event{};
+        if(functionName.empty()) {
+            return Event {};
         }
 
-        auto callback = [=] (void* caller, const Event::ArgVector&) {
+        auto callback = [=](void* caller, const Event::ArgVector&) {
             ExecuteJavaScriptCallback(functionName.c_str(), caller, args);
         };
 
-        return Event{std::move(callback)};
+        return Event { std::move(callback) };
     }
 
     void JSEngine::PushRemeberedObjectsArray(duk_context* ctx)
@@ -262,13 +261,14 @@ namespace grvl {
         duk_remove(ctx, -2);
     }
 
-    void JSEngine::RememberObject(void *objectPtr)
+    void JSEngine::RememberObject(void* objectPtr)
     {
         PushRemeberedObjectsArray(ctx);
         duk_uarridx_t len = duk_get_length(ctx, -1);
         duk_uarridx_t idx = lowestMaybeEmptyRememberedObjectIdx;
-        while (idx < len) {
-            if (!duk_has_prop_index(ctx, -1, idx)) break;
+        while(idx < len) {
+            if(!duk_has_prop_index(ctx, -1, idx))
+                break;
             idx += 1;
         }
         lowestMaybeEmptyRememberedObjectIdx = idx + 1;
@@ -277,27 +277,27 @@ namespace grvl {
         duk_pop(ctx);
     }
 
-    void JSEngine::ForgetObject(void *objectPtr)
+    void JSEngine::ForgetObject(void* objectPtr)
     {
         PushRemeberedObjectsArray(ctx);
         duk_uarridx_t len = duk_get_length(ctx, -1);
         duk_uarridx_t idx = 0;
-        for (; idx < len; duk_pop(ctx), idx += 1) {
-            if (!duk_get_prop_index(ctx, -1, idx)) {
+        for(; idx < len; duk_pop(ctx), idx += 1) {
+            if(!duk_get_prop_index(ctx, -1, idx)) {
                 continue;
             }
-            if (duk_get_heapptr(ctx, -1) != objectPtr) {
+            if(duk_get_heapptr(ctx, -1) != objectPtr) {
                 continue;
             }
             duk_pop(ctx);
             break;
         }
-        if (idx == len) {
+        if(idx == len) {
             // Object was already forgotten?
             return;
         }
         duk_del_prop_index(ctx, -1, idx);
-        if (idx < lowestMaybeEmptyRememberedObjectIdx) {
+        if(idx < lowestMaybeEmptyRememberedObjectIdx) {
             lowestMaybeEmptyRememberedObjectIdx = idx;
         }
         duk_pop(ctx);
@@ -315,7 +315,7 @@ namespace grvl {
     {
         const char* componentName = duk_to_string(ctx, 0);
         Manager& managerInstance = Manager::GetInstance();
-        if (Component* foundComponent = managerInstance.FindElementInTheActiveScreenById(componentName)) {
+        if(Component* foundComponent = managerInstance.FindElementInTheActiveScreenById(componentName)) {
             foundComponent->PushJSObjectOnStack(ctx);
             return RETURN_VALUE_PRESENT;
         }
@@ -354,7 +354,7 @@ namespace grvl {
     duk_ret_t JSEngine::SetActiveInput(duk_context* ctx)
     {
         Manager& managerInstance = Manager::GetInstance();
-        if (duk_is_null(ctx,0)) {
+        if(duk_is_null(ctx, 0)) {
             managerInstance.SetActiveInput(nullptr);
             return NO_RETURN_VALUE;
         }

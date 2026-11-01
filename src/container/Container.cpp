@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <grvl/container/Container.h>
 #include <grvl/JSEngine.h>
 #include <grvl/Manager.h>
 #include <grvl/XMLSupport.h>
+#include <grvl/container/Container.h>
 
 #include <cassert>
 
@@ -42,7 +42,7 @@ namespace grvl {
         , childDropped(false)
         , BackgroundImage(other.BackgroundImage)
         , lastActiveChild(NULL)
-        , isSelection{other.isSelection}
+        , isSelection { other.isSelection }
     {
         ID = ID.append(std::to_string(uniqueID));
         copyComponents(other.Elements);
@@ -65,7 +65,7 @@ namespace grvl {
 
     void Container::copyComponents(const std::vector<Component*>& other)
     {
-        for (std::size_t index = 0; index < other.size(); ++index) {
+        for(std::size_t index = 0; index < other.size(); ++index) {
             AddElement(other[index]->Clone());
         }
     }
@@ -101,12 +101,11 @@ namespace grvl {
 
     void Container::SetCurrentlySelectedComponent(Component* component)
     {
-        if (component == lastActiveChild) {
+        if(component == lastActiveChild) {
             return;
         }
 
-        if (IsSelection())
-        {
+        if(IsSelection()) {
             ClearSelection();
             component->SetIsFocused(true);
         }
@@ -115,7 +114,7 @@ namespace grvl {
 
     void Container::ClearSelection()
     {
-        if (isSelection && lastActiveChild) {
+        if(isSelection && lastActiveChild) {
             lastActiveChild->SetIsFocused(false);
             lastActiveChild = nullptr;
         }
@@ -125,8 +124,7 @@ namespace grvl {
     {
         Component::SetIsFocused(value);
 
-        if (!IsFocused())
-        {
+        if(!IsFocused()) {
             ClearSelection();
         }
     }
@@ -140,11 +138,11 @@ namespace grvl {
 
     void Container::RemoveElement(const char* elementId)
     {
-        Component* foundComponent{nullptr};
-        for (int index = 0; index < Elements.size(); ++index) {
-            if (strcmp(Elements[index]->GetID(), elementId) == 0) {
+        Component* foundComponent { nullptr };
+        for(int index = 0; index < Elements.size(); ++index) {
+            if(strcmp(Elements[index]->GetID(), elementId) == 0) {
                 foundComponent = Elements[index];
-                if (foundComponent == lastActiveChild) {
+                if(foundComponent == lastActiveChild) {
                     lastActiveChild = nullptr;
                 }
                 Elements.erase(Elements.begin() + index);
@@ -182,7 +180,7 @@ namespace grvl {
 
     Component* Container::TryToGetElementFromChildContainer(Component* possible_container, const char* searched_component_id)
     {
-        if (Container* container = dynamic_cast<Container*>(possible_container)) {
+        if(Container* container = dynamic_cast<Container*>(possible_container)) {
             return container->GetElement(searched_component_id);
         }
 
@@ -250,13 +248,13 @@ namespace grvl {
                 }
 
                 return Touch::TouchHandled;
-            }  // Push data
+            } // Push data
 
             if(tp.GetState() != Touch::Pressed) { // Not to trigger onPress twice.
                 return lastActiveChild->ProcessTouch(tp, ParentX + X, ParentY + Y, modificator);
             }
 
-            if (tp.GetState() == Touch::Moving) {
+            if(tp.GetState() == Touch::Moving) {
                 return Touch::LongTouchHandled;
             }
 
@@ -282,12 +280,12 @@ namespace grvl {
         duk_push_this(ctx);
         duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
         Container* container = static_cast<Container*>(duk_to_pointer(ctx, -1));
-        if (!container) {
+        if(!container) {
             return 0;
         }
 
         const char* componentName = duk_to_string(ctx, 0);
-        if (Component* foundComponent = container->GetElement(componentName)) {
+        if(Component* foundComponent = container->GetElement(componentName)) {
             foundComponent->PushJSObjectOnStack(ctx);
             return 1;
         }
@@ -300,7 +298,7 @@ namespace grvl {
         duk_push_this(ctx);
         duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
         Container* container = static_cast<Container*>(duk_to_pointer(ctx, -1));
-        if (!container) {
+        if(!container) {
             return 0;
         }
 
@@ -314,7 +312,7 @@ namespace grvl {
         duk_push_this(ctx);
         duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
         Container* container = static_cast<Container*>(duk_to_pointer(ctx, -1));
-        if (!container) {
+        if(!container) {
             return 0;
         }
 
@@ -332,7 +330,7 @@ namespace grvl {
         duk_push_this(ctx);
         duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
         Container* container = static_cast<Container*>(duk_to_pointer(ctx, -1));
-        if (!container || !componentToAdd) {
+        if(!container || !componentToAdd) {
             return 0;
         }
 
@@ -346,7 +344,7 @@ namespace grvl {
         duk_push_this(ctx);
         duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
         AbstractView* container = static_cast<AbstractView*>(duk_to_pointer(ctx, -1));
-        if (!container) {
+        if(!container) {
             return 0;
         }
 
@@ -361,7 +359,7 @@ namespace grvl {
         duk_push_this(ctx);
         duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
         AbstractView* container = static_cast<AbstractView*>(duk_to_pointer(ctx, -1));
-        if (!container) {
+        if(!container) {
             return 0;
         }
 
@@ -376,7 +374,7 @@ namespace grvl {
         duk_push_this(ctx);
         duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
         Container* container = static_cast<Container*>(duk_to_pointer(ctx, -1));
-        if (!container) {
+        if(!container) {
             return 0;
         }
 

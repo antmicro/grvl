@@ -3,8 +3,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <grvl/Manager.h>
 #include <grvl/JSEngine.h>
+#include <grvl/Manager.h>
 #include <grvl/platform/LinuxGenericApp.h>
 
 #define HEIGHT 600
@@ -35,17 +35,16 @@ int main()
 
     manager.perf.overlay = grvl::Performance::FULL;
 
-    manager.SetLoaderCallback([] (const std::string& name) {
-
+    manager.SetLoaderCallback([](const std::string& name) {
         std::string resource = name;
 
         // let's load wifi later to check if that will work
-        if (name == "wifi") {
+        if(name == "wifi") {
             return;
         }
 
         // ... and first load 'left' in place of 'right', to check if replacing works
-        if (name == "left") {
+        if(name == "left") {
             resource = "right";
         }
 
@@ -69,14 +68,14 @@ int main()
     manager.AddImageContentToContainer("wifi", new grvl::ImageContent(ROMFS_PATH "/images/wifi.png", grvl::Format::ARGB8888)); // load image after it is alredy in use
     manager.AddImageContentToContainer("left", new grvl::ImageContent(ROMFS_PATH "/images/left.png", grvl::Format::ARGB8888)); // replace existing image
 
-    while (app->ShouldRun()) {
+    while(app->ShouldRun()) {
 
         app->Render();
 
         grvl::JSEngine::MakeJavaScriptFunctionCall("UpdateCurrentTime");
         grvl::JSEngine::MakeJavaScriptFunctionCall("UpdatePositionOfCurrentTimeLine");
 
-        if ((ChronoGetTimestamp() - start) > runtime) {
+        if((ChronoGetTimestamp() - start) > runtime) {
             printf("Goodbye!\n");
             break;
         }
@@ -88,6 +87,6 @@ int main()
     int frames = manager.perf.frame_count;
 
     const uint64_t time = ChronoGetTimestamp() - start;
-    printf("Exited after %ldms, drawn %d frames, (avg. %d FPS)\n", time / 1000, frames, (int) (frames / (time / 1000000.0)));
+    printf("Exited after %ldms, drawn %d frames, (avg. %d FPS)\n", time / 1000, frames, (int)(frames / (time / 1000000.0)));
     delete app;
 }

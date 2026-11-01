@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <grvl/component/KeyboardKey.h>
 #include <grvl/Manager.h>
 #include <grvl/XMLSupport.h>
+#include <grvl/component/KeyboardKey.h>
 
 namespace grvl {
 
@@ -97,7 +97,7 @@ namespace grvl {
 
     void KeyboardKey::SwitchKeyValue()
     {
-        if (secondaryText.empty()) {
+        if(secondaryText.empty()) {
             return;
         }
 
@@ -108,16 +108,16 @@ namespace grvl {
     {
         const char* primaryKeyValue = Text.c_str();
         const char* secondaryKeyValue = secondaryText.c_str();
-        if (currentTextValueIndex == 1) {
+        if(currentTextValueIndex == 1) {
             std::swap(primaryKeyValue, secondaryKeyValue);
         }
 
         uint32_t curPrimaryTextColor = COLOR_ARGB8888_TRANSPARENT;
         uint32_t curSecondaryTextColor = COLOR_ARGB8888_TRANSPARENT;
-        if (State == On || State == Pressed || State == OnAndSelected || isFocused) {
+        if(State == On || State == Pressed || State == OnAndSelected || isFocused) {
             curPrimaryTextColor = GetActiveTextColor();
             curSecondaryTextColor = GetActiveSecondaryTextColor();
-        } else if (State == Off || State == Released || State == OffAndSelected) {
+        } else if(State == Off || State == Released || State == OffAndSelected) {
             curPrimaryTextColor = GetTextColor();
             curSecondaryTextColor = GetSecondaryTextColor();
         }

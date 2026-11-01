@@ -2,20 +2,23 @@
 
 namespace grvl {
 
-    Application::Application(int width, int height, bool rotate_sideways) {
+    Application::Application(int width, int height, bool rotate_sideways)
+    {
         this->width = width;
         this->height = height;
         this->sideways = rotate_sideways;
     }
 
-    void Application::SetFramebuffer(uintptr_t address) {
+    void Application::SetFramebuffer(uintptr_t address)
+    {
         instance->framebuffer = reinterpret_cast<uint8_t*>(address);
     }
 
-    void Application::Init(Application* app) {
+    void Application::Init(Application* app)
+    {
         instance = app;
 
-        if (app == nullptr) {
+        if(app == nullptr) {
             exit(1);
         }
 
@@ -23,16 +26,18 @@ namespace grvl {
         app->SetCallbacks(callbacks);
         grvl::Init(&callbacks);
 
-        if (!app->Setup()) {
+        if(!app->Setup()) {
             exit(2);
         }
     }
 
-    Application* Application::GetInstance() {
+    Application* Application::GetInstance()
+    {
         return instance;
     }
 
-    void Application::SetCallbacks(gui_callbacks_t& callbacks) {
+    void Application::SetCallbacks(gui_callbacks_t& callbacks)
+    {
         callbacks.set_layer_pointer = Application::SetFramebuffer;
     }
 

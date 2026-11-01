@@ -1,15 +1,15 @@
 
-#include <grvl/platform/LinuxNativeApp.h>
 #include <grvl/platform/LinuxDesktopApp.h>
 #include <grvl/platform/LinuxGenericApp.h>
-
+#include <grvl/platform/LinuxNativeApp.h>
 
 #if defined(GRVL_LINUX_NATIVE_SUPPORT) || defined(GRVL_LINUX_DESKTOP_SUPPORT)
 
-static bool IsEnvSet(const char* name) {
+static bool IsEnvSet(const char* name)
+{
     char* val = getenv(name);
 
-    if (val == NULL || strlen(val) == 0) {
+    if(val == NULL || strlen(val) == 0) {
         return false;
     }
 
@@ -20,9 +20,10 @@ static bool IsEnvSet(const char* name) {
 
 namespace grvl {
 
-    PosixApp* CreateGenericLinuxApp(int width, int height, bool rotate_sideways) {
+    PosixApp* CreateGenericLinuxApp(int width, int height, bool rotate_sideways)
+    {
 #if defined(GRVL_LINUX_NATIVE_SUPPORT) || defined(GRVL_LINUX_DESKTOP_SUPPORT)
-        if (IsEnvSet("DISPLAY") || IsEnvSet("WAYLAND_DISPLAY")) {
+        if(IsEnvSet("DISPLAY") || IsEnvSet("WAYLAND_DISPLAY")) {
 #if defined(GRVL_LINUX_DESKTOP_SUPPORT)
             return new LinuxDesktopApp(width, height, rotate_sideways);
 #endif

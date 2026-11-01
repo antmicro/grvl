@@ -19,11 +19,13 @@
 
 #include <grvl/Blitter.h>
 
-static void NoOpSetLayerPointer(uintptr_t addr) {
-    (void) addr;
+static void NoOpSetLayerPointer(uintptr_t addr)
+{
+    (void)addr;
 }
 
-static uint64_t NoOpGetTimestamp() {
+static uint64_t NoOpGetTimestamp()
+{
     return 0;
 }
 
@@ -35,31 +37,36 @@ namespace grvl {
     {
         gui_callbacks_t default_callbacks {};
 
-        if (n_callbacks == nullptr) {
+        if(n_callbacks == nullptr) {
             n_callbacks = &default_callbacks;
         }
 
-        if (n_callbacks->logger == nullptr) {
+        if(n_callbacks->logger == nullptr) {
 
             // use standard print if there is no callback set
-            n_callbacks->logger = [] (LogLevel level, const char* message) {
+            n_callbacks->logger = [](LogLevel level, const char* message) {
                 printf("%s: %s\n", LogLevelToString(level), message);
             };
         }
 
         // this avoids a terrible performance regression for users that did not define blit_clt but require
         // custom blit/fill functions, previously grvl would avoid using CLT formats altogether in those cases, but now it's the user who decides
-        if (n_callbacks->blit && !n_callbacks->blit_clt) {
+        if(n_callbacks->blit && !n_callbacks->blit_clt) {
             n_callbacks->blit_clt = UseBlitAsBlitClt;
         }
 
-        if (n_callbacks->fill == nullptr) n_callbacks->fill = GetFillFunction();
-        if (n_callbacks->blit == nullptr) n_callbacks->blit = GetBlitFunction();
-        if (n_callbacks->blit_clt == nullptr) n_callbacks->blit_clt = GetBlitCltFunction();
+        if(n_callbacks->fill == nullptr)
+            n_callbacks->fill = GetFillFunction();
+        if(n_callbacks->blit == nullptr)
+            n_callbacks->blit = GetBlitFunction();
+        if(n_callbacks->blit_clt == nullptr)
+            n_callbacks->blit_clt = GetBlitCltFunction();
 
         // those should probably be set for grvl to be usefull but let's not crash if they are not
-        if (n_callbacks->set_layer_pointer == nullptr) n_callbacks->set_layer_pointer = NoOpSetLayerPointer;
-        if (n_callbacks->get_timestamp == nullptr) n_callbacks->get_timestamp = NoOpGetTimestamp;
+        if(n_callbacks->set_layer_pointer == nullptr)
+            n_callbacks->set_layer_pointer = NoOpSetLayerPointer;
+        if(n_callbacks->get_timestamp == nullptr)
+            n_callbacks->get_timestamp = NoOpGetTimestamp;
 
         callbacks = *n_callbacks;
         JSEngine::Initialize();

@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <grvl/component/Clock.h>
 #include <grvl/Manager.h>
 #include <grvl/XMLSupport.h>
+#include <grvl/component/Clock.h>
 
 namespace grvl {
 
@@ -51,7 +51,7 @@ namespace grvl {
         result->SetVisible(XMLSupport::GetAttributeOrDefault(xmlElement, "visible", true));
 
         const char* format = xmlElement->Attribute("format");
-        if (format != NULL) {
+        if(format != NULL) {
             result->SetTimeFormat(format);
         }
 
@@ -85,7 +85,7 @@ namespace grvl {
 
     void Clock::SetTimeFormat(const char* fmt)
     {
-        if (!fmt) {
+        if(!fmt) {
             fmt = "%H:%M";
         }
 

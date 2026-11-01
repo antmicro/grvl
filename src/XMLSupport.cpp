@@ -14,7 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-//NOLINTBEGIN(readability-magic-numbers)
+// NOLINTBEGIN(readability-magic-numbers)
 
 #include <grvl/Manager.h>
 #include <grvl/ParsingUtils.h>
@@ -106,11 +106,11 @@ namespace grvl {
 
     CallbackDefinition XMLSupport::ParseCallback(const char* callbackDefinition)
     {
-        if (!callbackDefinition || strlen(callbackDefinition) == 0) {
-            return CallbackDefinition{};
+        if(!callbackDefinition || strlen(callbackDefinition) == 0) {
+            return CallbackDefinition {};
         }
 
-        CallbackDefinition result_callback_definition{};
+        CallbackDefinition result_callback_definition {};
         result_callback_definition.functionName = ParsingUtils::GetFunctionName(callbackDefinition);
         result_callback_definition.args = ParsingUtils::GetArguments(callbackDefinition);
 
@@ -182,7 +182,7 @@ namespace grvl {
     uint32_t XMLSupport::GetPositionInCollection(const std::string& collectionString)
     {
         uint32_t result = 0;
-        std::string subString = collectionString.substr(0, collectionString.find_first_of("/", 0)); //NOLINT
+        std::string subString = collectionString.substr(0, collectionString.find_first_of("/", 0)); // NOLINT
         result = atoi(subString);
         return result;
     }
@@ -190,7 +190,7 @@ namespace grvl {
     uint32_t XMLSupport::GetCollectionSize(const std::string& collectionString)
     {
         uint32_t result = 0;
-        std::string subString = collectionString.substr(collectionString.find_first_of("/", 0) + 1, collectionString.length()); //NOLINT
+        std::string subString = collectionString.substr(collectionString.find_first_of("/", 0) + 1, collectionString.length()); // NOLINT
         result = atoi(subString);
         return result;
     }
@@ -243,4 +243,4 @@ namespace grvl {
     }
 
 } /* namespace grvl */
-//NOLINTEND(readability-magic-numbers)
+// NOLINTEND(readability-magic-numbers)

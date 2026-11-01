@@ -15,20 +15,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <grvl/Manager.h>
-#include <grvl/component/SwitchButton.h>
 #include <grvl/XMLSupport.h>
+#include <grvl/component/SwitchButton.h>
 
 namespace grvl {
 
     SwitchButton::SwitchButton(const SwitchButton& other)
         : AbstractButton(other)
-        , switchState{other.switchState}
-        , previousSwitchState{other.previousSwitchState}
-        , onSwitchON{other.onSwitchON}
-        , onSwitchOFF{other.onSwitchOFF}
-        , stateIndicatorWidth{other.stateIndicatorWidth}
-        , stateIndicatorHeight{other.stateIndicatorHeight}
-        , stateIndicatorArcRadius{other.stateIndicatorArcRadius}
+        , switchState { other.switchState }
+        , previousSwitchState { other.previousSwitchState }
+        , onSwitchON { other.onSwitchON }
+        , onSwitchOFF { other.onSwitchOFF }
+        , stateIndicatorWidth { other.stateIndicatorWidth }
+        , stateIndicatorHeight { other.stateIndicatorHeight }
+        , stateIndicatorArcRadius { other.stateIndicatorArcRadius }
     {
         onSwitchON.SetSenderPointer(this);
         onSwitchOFF.SetSenderPointer(this);
@@ -36,7 +36,7 @@ namespace grvl {
 
     SwitchButton& SwitchButton::operator=(const SwitchButton& other)
     {
-        if (this == &other) {
+        if(this == &other) {
             return *this;
         }
 
@@ -214,7 +214,7 @@ namespace grvl {
 
         if(!previousSwitchState) {
             if(StartX < Width / 2 && DeltaX > Width / 2) {
-                switchState = true; //NOLINT
+                switchState = true; // NOLINT
             } // Slide detected
             else {
                 switchState = false;
@@ -225,7 +225,7 @@ namespace grvl {
             } // Ignore slide
         } else if(previousSwitchState) {
             if(StartX > Width / 2 && DeltaX < -Width / 2) {
-                switchState = false; //NOLINT
+                switchState = false; // NOLINT
             } // Slide detected
             else {
                 switchState = true;

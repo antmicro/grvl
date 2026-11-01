@@ -18,35 +18,44 @@
 
 namespace grvl {
 
-    Mutex::Mutex() {
+    Mutex::Mutex()
+    {
         pthread_mutex_init(&m, nullptr);
     }
 
-    Mutex::~Mutex() {
+    Mutex::~Mutex()
+    {
         pthread_mutex_destroy(&m);
     }
 
     Mutex::Mutex(const Mutex& other)
-        : Mutex() {
+        : Mutex()
+    {
     }
 
     Mutex::Mutex(Mutex&& other)
-        : Mutex() {
+        : Mutex()
+    {
     }
 
-    void Mutex::lock() {
+    void Mutex::lock()
+    {
         pthread_mutex_lock(&m);
     }
 
-    void Mutex::unlock() {
+    void Mutex::unlock()
+    {
         pthread_mutex_unlock(&m);
     }
 
-    Guard::Guard(Mutex& m) : m(m) {
+    Guard::Guard(Mutex& m)
+        : m(m)
+    {
         m.lock();
     }
 
-    Guard::~Guard() {
+    Guard::~Guard()
+    {
         m.unlock();
     }
 

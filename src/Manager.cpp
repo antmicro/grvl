@@ -20,10 +20,10 @@
 #include <grvl/XMLPreprocessor.h>
 
 #include <cassert>
+#include <grvl/File.h>
+#include <grvl/JSEngine.h>
 #include <iomanip>
 #include <sstream>
-#include <grvl/JSEngine.h>
-#include <grvl/File.h>
 
 #ifndef GRVL_VER
 #define GRVL_VER "unknown"
@@ -85,7 +85,7 @@ namespace grvl {
 
                 const std::string path = baseDir + "/" + href;
 
-                File file{ path.c_str() };
+                File file { path.c_str() };
                 const std::string raw = file.ReadString();
                 if(raw.empty()) {
                     Log(ERROR, "Cannot read included file: %s", path.c_str());
@@ -127,8 +127,7 @@ namespace grvl {
                     parent->InsertAfterChild(last, subRoot->DeepClone(parent->GetDocument()));
                 }
                 parent->DeleteChild(child);
-            }
-            else if(elem != nullptr) {
+            } else if(elem != nullptr) {
                 if(ProcessIncludes(child, baseDir, depth + 1) != 0) {
                     return -1;
                 }
@@ -142,7 +141,7 @@ namespace grvl {
 
     static inline float MotionFunc(float x)
     {
-        return (sin(3.1415f * x - 1.57f) + 1) / 2; //NOLINT(readability-magic-numbers)
+        return (sin(3.1415f * x - 1.57f) + 1) / 2; // NOLINT(readability-magic-numbers)
     }
 
     static void ClosePopupCallback(void* sender, const Event::ArgVector& Args)
@@ -166,15 +165,15 @@ namespace grvl {
     static void KeyboardAddFromKeyCallback(void* sender, const Event::ArgVector& Args)
     {
         KeyboardKey* keyboardKey = static_cast<KeyboardKey*>(sender);
-        if (!keyboardKey) {
+        if(!keyboardKey) {
             return;
         }
         Keyboard* parentKeyboard = keyboardKey->GetParentKeyboard();
-        if (!parentKeyboard) {
+        if(!parentKeyboard) {
             return;
         }
         TextInput* textInput = parentKeyboard->GetCurrentInputDestination();
-        if (!textInput) {
+        if(!textInput) {
             return;
         }
         textInput->Append(keyboardKey->GetCurrentValue());
@@ -184,7 +183,7 @@ namespace grvl {
     {
         auto& manager = Manager::GetInstance();
         auto textInput = manager.GetActiveInput();
-        if (!textInput) {
+        if(!textInput) {
             return;
         }
         textInput->RemoveLastCharacter();
@@ -194,7 +193,7 @@ namespace grvl {
     {
         auto& manager = Manager::GetInstance();
         auto textInput = manager.GetActiveInput();
-        if (!textInput) {
+        if(!textInput) {
             return;
         }
         textInput->Clear();
@@ -230,7 +229,7 @@ namespace grvl {
     static constexpr auto defaultScrollingDuration = 400;
 
     Manager::Manager(uint32_t xSize, uint32_t ySize, Format format, bool rotate90, void* framebuffer_1, void* framebuffer_2)
-    : flips(0)
+        : flips(0)
         , TopPanel(nullptr)
         , BottomPanel(nullptr)
         , StartHeader(nullptr)
@@ -294,19 +293,24 @@ namespace grvl {
 
     static Format GuessFormatByStride(int bpp)
     {
-        if (bpp == 1) return Format::L8;
-        if (bpp == 2) return Format::RGB565;
-        if (bpp == 3) return Format::RGB888;
-        if (bpp == 4) return Format::XRGB8888;
+        if(bpp == 1)
+            return Format::L8;
+        if(bpp == 2)
+            return Format::RGB565;
+        if(bpp == 3)
+            return Format::RGB888;
+        if(bpp == 4)
+            return Format::XRGB8888;
 
         Log(ERROR, "Unable to guess format for stride %d, using ARGB8888", bpp);
         return Format::ARGB8888;
     }
 
     Manager::Manager(uint32_t xSize, uint32_t ySize, int bpp, bool rotate90, uint8_t* framebuffer)
-        : Manager(xSize, ySize, GuessFormatByStride(bpp), rotate90, framebuffer, framebuffer ? (framebuffer + (xSize * ySize * bpp)) : nullptr) {
+        : Manager(xSize, ySize, GuessFormatByStride(bpp), rotate90, framebuffer, framebuffer ? (framebuffer + (xSize * ySize * bpp)) : nullptr)
+    {
 
-        if (framebuffer) {
+        if(framebuffer) {
             Log(WARN, "You are using a deprecated API to supply the framebuffers!");
         }
     }
@@ -602,8 +606,8 @@ namespace grvl {
 
     Event Manager::GetOrCreateCallback(const std::string& callbackFunctionName, const Event::ArgVector& callbackArgs)
     {
-        if (Event::CallbackPointer foundCallback = GetCallbackFromContainer(callbackFunctionName)) {
-            return Event{foundCallback, callbackArgs};
+        if(Event::CallbackPointer foundCallback = GetCallbackFromContainer(callbackFunctionName)) {
+            return Event { foundCallback, callbackArgs };
         }
 
         return JSEngine::CreateJavaScriptFunctionCallEvent(callbackFunctionName, callbackArgs);
@@ -641,7 +645,7 @@ namespace grvl {
             return;
         }
         KeyData k;
-        k.name = name; //NOLINT
+        k.name = name; // NOLINT
         k.repeat = repeat;
         KeyMappingContainer[mask] = k;
     }
@@ -665,14 +669,14 @@ namespace grvl {
 
         auto it = FontContainer.find(name);
 
-        if (it == FontContainer.end()) {
+        if(it == FontContainer.end()) {
 
             // notify callback, it then has a chance to load the font
             font_callback(name);
             it = FontContainer.find(name);
         }
 
-        if (it != FontContainer.end()) {
+        if(it != FontContainer.end()) {
             return it->second;
         }
 
@@ -699,7 +703,7 @@ namespace grvl {
             font = GetFontFromContainer(fontName);
         }
 
-        if (!font && (strcmp(fontName, "normal") != 0)) {
+        if(!font && (strcmp(fontName, "normal") != 0)) {
             Log(WARN, "Font \"%s\" doesn't exist. Using \"normal\"!", fontName);
             font = GetFontFromContainer("normal");
         }
@@ -739,13 +743,13 @@ namespace grvl {
     Popup* Manager::OpenPopup(const char* name)
     {
         // consider removing the handling of this edge case
-        if (name == nullptr) {
+        if(name == nullptr) {
             name = "";
         }
 
         Popup* popup = GetPopupFromContainer(name);
 
-        if (popup == nullptr) {
+        if(popup == nullptr) {
             Log(ERROR, "popup definition '%s' not found!", name);
             return nullptr;
         }
@@ -760,7 +764,7 @@ namespace grvl {
 
     void Manager::ShowPopup(const char* Name, const char* Message)
     {
-        if (Popup* popup = OpenPopup(Name)) {
+        if(Popup* popup = OpenPopup(Name)) {
             popup->SetMessage(Message);
             ShowPopup();
         }
@@ -768,14 +772,14 @@ namespace grvl {
 
     void Manager::ShowPopup(const char* Name)
     {
-        if (Popup* popup = OpenPopup(Name)) {
+        if(Popup* popup = OpenPopup(Name)) {
             ShowPopup();
         }
     }
 
     void Manager::ShowPopup(const char* Name, uint32_t milliseconds)
     {
-        if (Popup* popup = OpenPopup(Name)) {
+        if(Popup* popup = OpenPopup(Name)) {
             timeoutedPopupMode = true;
             popup->SetTimestamp(grvl::Callbacks()->get_timestamp() + milliseconds);
             ShowPopup();
@@ -784,7 +788,7 @@ namespace grvl {
 
     void Manager::ShowPopup(const char* Name, const char* Message, uint32_t milliseconds)
     {
-        if (Popup* popup = OpenPopup(Name)) {
+        if(Popup* popup = OpenPopup(Name)) {
             timeoutedPopupMode = true;
             popup->SetTimestamp(grvl::Callbacks()->get_timestamp() + milliseconds);
             popup->SetMessage(Message);
@@ -817,7 +821,7 @@ namespace grvl {
             }
         }
 
-        if (keyboard && keyboard->HasAutoPopoup()) {
+        if(keyboard && keyboard->HasAutoPopoup()) {
             ShowKeyboard();
         }
     }
@@ -973,14 +977,13 @@ namespace grvl {
     {
         const uint64_t now = grvl::Callbacks()->get_timestamp();
 
-        if (!throttle_on_idle) {
+        if(!throttle_on_idle) {
             return true;
         }
 
         uint64_t last_timestamp = std::max(
             last_input_timestamp.load(),
-            last_request_timestamp.load()
-        );
+            last_request_timestamp.load());
 
         return now - last_timestamp < active_render_timeout_ms
             || now - last_redraw_timestamp.load() >= idle_render_interval_ms
@@ -1010,7 +1013,7 @@ namespace grvl {
     void Manager::Draw()
     {
         last_redraw_timestamp.store(grvl::Callbacks()->get_timestamp());
-        Guard lock {DrawMutex};
+        Guard lock { DrawMutex };
 
         painter.ClearNextFrameRequest();
         painter.ResetDrawingBounds();
@@ -1080,8 +1083,8 @@ namespace grvl {
         if(debugDot && (TouchEvent.GetState() != Touch::Idle || PointerTimestamp > (grvl::Callbacks()->get_timestamp() - touchDelay))) {
             static constexpr auto maxAlpha = 0xff;
             uint8_t alpha = maxAlpha - ((float)(grvl::Callbacks()->get_timestamp() - PointerTimestamp) / touchDelay) * maxAlpha;
-            painter.FillCircle(TouchEvent.GetCurrentX(), TouchEvent.GetCurrentY(), 5, //NOLINT
-                               alpha << 24 | (0x00FFFFFF & COLOR_ARGB8888_RED)); //NOLINT
+            painter.FillCircle(TouchEvent.GetCurrentX(), TouchEvent.GetCurrentY(), 5, // NOLINT
+                               alpha << 24 | (0x00FFFFFF & COLOR_ARGB8888_RED)); // NOLINT
         }
 
         render_callback(painter);
@@ -1093,13 +1096,13 @@ namespace grvl {
     void Manager::DrawOverlay()
     {
 
-        auto ftos = [] (float value, int precision) -> std::string {
+        auto ftos = [](float value, int precision) -> std::string {
             std::stringstream stream;
             stream << std::fixed << std::setprecision(precision) << value;
             return stream.str();
         };
 
-        if (perf.overlay == Performance::NONE) {
+        if(perf.overlay == Performance::NONE) {
             return;
         }
 
@@ -1108,7 +1111,7 @@ namespace grvl {
         const uint32_t bg = Color { 0, 0, 0, 20 }.pack(Format::ARGB8888);
 
         int32_t y = 20;
-        auto drawLine = [&] (const std::string& text) {
+        auto drawLine = [&](const std::string& text) {
             painter.DrawString(font, 4, y, text, fg, bg);
             y += 20;
         };
@@ -1133,7 +1136,7 @@ namespace grvl {
             drawLine("app: " + overlayInfo);
         }
 
-        if (perf.overlay == Performance::MINIMAL) {
+        if(perf.overlay == Performance::MINIMAL) {
             return;
         }
 
@@ -1148,7 +1151,6 @@ namespace grvl {
         drawLine("D: " + ftos(draw_ns * ns_to_ms, 4) + "ms"); // main drawing
         drawLine("S: " + ftos(swap_ns * ns_to_ms, 4) + "ms"); // time spent between MainLoopIteration() calls (includes Swaping time)
         drawLine("T: " + ftos((script_ns + draw_ns + swap_ns) * ns_to_ms, 4) + "ms"); // total time spent per frame
-
     }
 
     void Manager::ApplyTransparency()
@@ -1227,11 +1229,11 @@ namespace grvl {
 
     Popup* Manager::GetPopupFromContainer(std::string_view id)
     {
-        if (id.empty()) {
+        if(id.empty()) {
             return nullptr;
         }
 
-        for (Popup* popup : PopupsContainer) {
+        for(Popup* popup : PopupsContainer) {
             if(popup->GetId() == id) {
                 return popup;
             }
@@ -1243,12 +1245,11 @@ namespace grvl {
     void Manager::ProcessTouchPoint(bool touched, uint32_t touchX, uint32_t touchY)
     {
 
-        if ((previousTouchState != touched) || (previousX != touchX) || (previousY != touchY)) {
+        if((previousTouchState != touched) || (previousX != touchX) || (previousY != touchY)) {
             MarkUserActivity();
 
             this->previousX = touchX;
             this->previousY = touchY;
-
         }
 
         if(!previousTouchState && !touched) { // Idle
@@ -1346,12 +1347,12 @@ namespace grvl {
         assert(text && "text cannot be null");
         MarkUserActivity();
 
-        if (!activeInput) {
+        if(!activeInput) {
             return;
         }
 
         size_t len = strlen(text);
-        for (int i = 0; i < len; i++) {
+        for(int i = 0; i < len; i++) {
             activeInput->AddCharacter(text[i]);
         }
     }
@@ -1454,11 +1455,11 @@ namespace grvl {
             const char* fname = XMLSupport::GetAttributeOrDefault(nextElement, "name", "");
             const char* flname = XMLSupport::GetAttributeOrDefault(nextElement, "file", "");
             Font* tfont = GetFontFromContainer(fname);
-            if (tfont == NULL) {
+            if(tfont == NULL) {
                 std::string font_path = std::string("fonts/") + fname;
                 const char* c_font_path = font_path.c_str();
 
-                if (EndsWith(c_font_path, ".gbf") || EndsWith(c_font_path, ".gbf.gz")) {
+                if(EndsWith(c_font_path, ".gbf") || EndsWith(c_font_path, ".gbf.gz")) {
                     AddFontToFontContainer(fname, new GrvlBakedFont(c_font_path));
                 }
             } else {
@@ -1570,7 +1571,7 @@ namespace grvl {
 
                 JSEngine::DefineGlobalNumber("screenWidth", width);
                 JSEngine::DefineGlobalNumber("screenHeight", height);
-		JSEngine::DefineGlobalNumber("screenRatio",
+                JSEngine::DefineGlobalNumber("screenRatio",
                                              height != 0 ? static_cast<double>(width) / height : 0.0);
 
                 // The scripts run first, so a <define> and a ${...} span can
@@ -1597,7 +1598,7 @@ namespace grvl {
                 }
 
                 nextElement = Root->FirstChildElement("font-styles");
-                if (nextElement) {
+                if(nextElement) {
                     ParseFontStyles(nextElement);
                 }
 
@@ -1681,7 +1682,7 @@ namespace grvl {
 
     void Manager::ParseScripts(XMLElement* script)
     {
-        if (const char* embeddedJavaScriptCode = script->GetText()) {
+        if(const char* embeddedJavaScriptCode = script->GetText()) {
             std::size_t embeddedJavaScriptCodeSize = strlen(embeddedJavaScriptCode);
             JSEngine::LoadJavaScriptCode(embeddedJavaScriptCode, embeddedJavaScriptCodeSize);
         }
@@ -1695,9 +1696,9 @@ namespace grvl {
         if(!eventName) {
             return Event();
         }
-            std::string FunctionName = ParsingUtils::GetFunctionName(eventName);
-            Event::CallbackPointer callbackPtr = GetCallbackFromContainer(FunctionName);
-            Event::ArgVector argVec = ParsingUtils::GetArguments(eventName);
+        std::string FunctionName = ParsingUtils::GetFunctionName(eventName);
+        Event::CallbackPointer callbackPtr = GetCallbackFromContainer(FunctionName);
+        Event::ArgVector argVec = ParsingUtils::GetArguments(eventName);
 
         if(callbackPtr) {
             return Event(callbackPtr, argVec);
@@ -1707,8 +1708,8 @@ namespace grvl {
 
     Division* Manager::GetPrefabByID(const char* PrefabID)
     {
-        for (auto& prefab : Prefabs) {
-            if (prefab->GetId() == PrefabID) {
+        for(auto& prefab : Prefabs) {
+            if(prefab->GetId() == PrefabID) {
                 return prefab;
             }
         }
@@ -1749,8 +1750,8 @@ namespace grvl {
         // process events
         ProcessEvents();
 
-        if (!shouldDraw)
-	        return;
+        if(!shouldDraw)
+            return;
 
         // redraw
         Stopwatch watch {};
@@ -1764,12 +1765,12 @@ namespace grvl {
         perf.draw_times.put(watch.get());
 
         perf.prev_frame_end = watch.end;
-        perf.frame_count ++;
-        perf.since_checkpoint ++;
+        perf.frame_count++;
+        perf.since_checkpoint++;
 
         float elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(watch.end - perf.prev_checkpoint).count();
 
-        if (elapsed >= 1000) {
+        if(elapsed >= 1000) {
             perf.prev_checkpoint = watch.end;
 
             perf.fps = perf.since_checkpoint;
@@ -1777,12 +1778,11 @@ namespace grvl {
 
             perf.mspt = (perf.fps == 0) ? 0 : (elapsed / perf.fps);
         }
-
     }
 
     void Manager::ProcessEvents()
     {
-        while (true) {
+        while(true) {
             auto event = eventsQueue.pop();
 
             if(!event) {
@@ -1849,7 +1849,7 @@ namespace grvl {
 
     Component* Manager::FindElementInTheActiveScreenById(const char* id)
     {
-        if (ActiveScreen == nullptr) {
+        if(ActiveScreen == nullptr) {
             Log(ERROR, "Can't look for element '%s', as there is no active screen!", id);
             return nullptr;
         }

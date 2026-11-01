@@ -3,8 +3,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <grvl/Manager.h>
 #include <grvl/JSEngine.h>
+#include <grvl/Manager.h>
 #include <grvl/platform/LinuxGenericApp.h>
 
 #define WIDTH 800
@@ -28,7 +28,7 @@ int main()
     manager.InitializationFinished();
     manager.SetActiveScreen("start", 0);
 
-    while (app->ShouldRun()) {
+    while(app->ShouldRun()) {
         app->Render();
         app->Swap();
         app->Poll();

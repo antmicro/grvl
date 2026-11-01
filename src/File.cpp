@@ -22,8 +22,8 @@
 #include <string.h>
 #include <zlib.h>
 
-#include <sys/stat.h>
 #include <string>
+#include <sys/stat.h>
 
 namespace grvl {
     static constexpr auto bufferSize = 128;
@@ -31,7 +31,8 @@ namespace grvl {
     bool File::noFS = false;
     std::unordered_map<std::string, std::pair<unsigned char*, uint64_t>>* File::files;
 
-    void File::NoFilesystem(std::unordered_map<std::string, std::pair<unsigned char*, uint64_t>>* _files) {
+    void File::NoFilesystem(std::unordered_map<std::string, std::pair<unsigned char*, uint64_t>>* _files)
+    {
         noFS = true;
         files = _files;
     }
@@ -57,7 +58,7 @@ namespace grvl {
 
     bool File::HasExtension(const char* ext) const
     {
-    	const size_t min = strlen(ext);
+        const size_t min = strlen(ext);
         const size_t len = strlen(path);
         return len >= min && strcmp(ext, &path[len - min]) == 0;
     }
@@ -69,7 +70,7 @@ namespace grvl {
             return files->find(name) != files->end();
         }
 
-        if (storage == NORMAL || storage == GZIPPED) {
+        if(storage == NORMAL || storage == GZIPPED) {
             FILE* file = fopen(path, "rb");
 
             if(file == nullptr) {
@@ -102,7 +103,7 @@ namespace grvl {
             return it->second.second;
         }
 
-        if (storage == NORMAL) {
+        if(storage == NORMAL) {
             struct stat file_stat;
             if(stat(path, &file_stat) == -1) {
                 return 0;
@@ -137,7 +138,7 @@ namespace grvl {
             std::string name = GetName();
             const auto it = files->find(name);
 
-            if (it == files->end()) {
+            if(it == files->end()) {
                 Log(ERROR, "No such filesystem entry: %s", name.c_str());
                 return -1;
             }
@@ -167,7 +168,7 @@ namespace grvl {
             return read_bytes;
         }
 
-        if (storage == NORMAL) {
+        if(storage == NORMAL) {
             uint32_t offset = 0;
             size_t read_bytes = 0;
 
@@ -195,7 +196,7 @@ namespace grvl {
             return 0;
         }
 
-        if (storage == NORMAL) {
+        if(storage == NORMAL) {
             FILE* file = fopen(path, "wb");
             if(file == nullptr) {
                 Log(ERROR, "No such file: %s", path);

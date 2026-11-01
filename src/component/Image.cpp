@@ -14,11 +14,11 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <grvl/component/Image.h>
 #include <grvl/JSEngine.h>
 #include <grvl/Manager.h>
 #include <grvl/Painter.h>
 #include <grvl/XMLSupport.h>
+#include <grvl/component/Image.h>
 
 namespace grvl {
     Component* Image::Clone() const
@@ -41,7 +41,7 @@ namespace grvl {
         return ActiveFrame;
     }
 
-    void Image::SetAnimationEnabled(bool enabled) 
+    void Image::SetAnimationEnabled(bool enabled)
     {
         AnimationEnabled = enabled;
         LastFrameChange = std::chrono::steady_clock::now();
@@ -71,7 +71,7 @@ namespace grvl {
 
     void Image::updateAnimation()
     {
-        if (!IsAnimationEnabled()) {
+        if(!IsAnimationEnabled()) {
             return;
         }
 
@@ -79,21 +79,21 @@ namespace grvl {
         auto now = std::chrono::steady_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - LastFrameChange).count();
 
-        while (AnimationEnabled) {
+        while(AnimationEnabled) {
             const uint32_t duration = content->GetFrameDuration(ActiveFrame);
-            if (duration == 0 || elapsed < duration) {
+            if(duration == 0 || elapsed < duration) {
                 break;
             }
 
             elapsed -= duration;
             LastFrameChange += std::chrono::milliseconds(duration);
 
-            if (ActiveFrame + 1 < content->GetNumberOfFrames()) {
+            if(ActiveFrame + 1 < content->GetNumberOfFrames()) {
                 ++ActiveFrame;
                 continue;
             }
 
-            if (AnimationLoop) {
+            if(AnimationLoop) {
                 ActiveFrame = 0;
             } else {
                 AnimationEnabled = false;
@@ -116,16 +116,18 @@ namespace grvl {
 
     void Image::Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY)
     {
-        if(!Visible) return;
+        if(!Visible)
+            return;
 
         ImageContent* content = GetContent();
-        if (content == nullptr) return;
+        if(content == nullptr)
+            return;
 
         int w = content->GetWidth();
         int h = content->GetHeight();
         SetSize(w, h);
 
-        if (w <= 0 || h <= 0) {
+        if(w <= 0 || h <= 0) {
             return;
         }
 
@@ -133,7 +135,7 @@ namespace grvl {
         int32_t RenderY = ParentRenderY + Y;
 
         updateAnimation();
-        if (IsAnimationEnabled()) {
+        if(IsAnimationEnabled()) {
             painter.RequestNextFrame();
         }
 
@@ -155,7 +157,7 @@ namespace grvl {
 
     void Image::ReplaceDelegate(const std::shared_ptr<ImageDelegate>& delegate)
     {
-        if (Delegate == delegate) {
+        if(Delegate == delegate) {
             return;
         }
 

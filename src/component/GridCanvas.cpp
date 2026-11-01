@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <grvl/component/GridCanvas.h>
 #include <grvl/Manager.h>
+#include <grvl/component/GridCanvas.h>
 
 namespace grvl {
 
@@ -44,7 +44,7 @@ namespace grvl {
 
     void GridCanvas::Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY)
     {
-        if (!Visible || Width <= 0 || Height <= 0) {
+        if(!Visible || Width <= 0 || Height <= 0) {
             return;
         }
 
@@ -57,7 +57,7 @@ namespace grvl {
 
     void GridCanvas::DrawBackgroundItems(Painter& painter, int32_t renderX, int32_t renderY, int32_t renderWidth, int32_t renderHeight)
     {
-        if ((BackgroundColor & 0xFF000000) == 0) {
+        if((BackgroundColor & 0xFF000000) == 0) {
             return;
         }
 
@@ -67,7 +67,7 @@ namespace grvl {
 
     void GridCanvas::DrawForegroundItems(Painter& painter, int32_t renderX, int32_t renderY, int32_t renderWidth, int32_t renderHeight)
     {
-        if ((ForegroundColor & 0xFF000000) == 0) {
+        if((ForegroundColor & 0xFF000000) == 0) {
             return;
         }
 
@@ -77,22 +77,22 @@ namespace grvl {
 
     void GridCanvas::DrawHorizontalLines(Painter& painter, int32_t renderX, int32_t renderY, int32_t renderWidth, int32_t renderHeight)
     {
-        if (horizontalGridElementHeight <= 0) {
+        if(horizontalGridElementHeight <= 0) {
             return;
         }
 
-        for (int32_t currentY = renderY; currentY <= renderY + renderHeight; currentY += horizontalGridElementHeight) {
+        for(int32_t currentY = renderY; currentY <= renderY + renderHeight; currentY += horizontalGridElementHeight) {
             painter.DrawHLine(renderX, currentY, renderWidth, ForegroundColor);
         }
     }
 
     void GridCanvas::DrawVerticalLines(Painter& painter, int32_t renderX, int32_t renderY, int32_t renderWidth, int32_t renderHeight)
     {
-        if (horizontalGridElementWidth <= 0) {
+        if(horizontalGridElementWidth <= 0) {
             return;
         }
 
-        for (int32_t currentX = renderX; currentX <= renderX + renderWidth; currentX += horizontalGridElementWidth) {
+        for(int32_t currentX = renderX; currentX <= renderX + renderWidth; currentX += horizontalGridElementWidth) {
             painter.DrawVLine(currentX, renderY, renderHeight, ForegroundColor);
         }
     }

@@ -28,7 +28,7 @@ namespace grvl {
     {
         auto delegate = GetByName(name);
 
-        if (!delegate->HasContent()) {
+        if(!delegate->HasContent()) {
             loader_callback(name);
         }
 
@@ -39,7 +39,7 @@ namespace grvl {
     {
         auto it = content_registry.find(name);
 
-        if (it == content_registry.end()) {
+        if(it == content_registry.end()) {
             auto [iterator, _] = content_registry.emplace(name, std::make_shared<ImageDelegate>());
             it = iterator;
         }

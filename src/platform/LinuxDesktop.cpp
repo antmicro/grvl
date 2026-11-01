@@ -25,7 +25,7 @@ namespace grvl {
     bool LinuxDesktopApp::Setup()
     {
 
-        if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+        if(SDL_Init(SDL_INIT_VIDEO) != 0) {
             Log(ERROR, "SDL_Init() Failed: %s", SDL_GetError());
             return false;
         }
@@ -33,11 +33,11 @@ namespace grvl {
         window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
         renderer = SDL_GetRenderer(window);
 
-        if (!renderer) {
+        if(!renderer) {
             renderer = SDL_CreateRenderer(window, -1, 0);
         }
 
-        if (!renderer) {
+        if(!renderer) {
             Log(ERROR, "SDL_CreateRenderer() Failed: %s", SDL_GetError());
             return false;
         }
@@ -62,12 +62,12 @@ namespace grvl {
     {
         Stopwatch watch {};
 
-        if (frame_drawn) {
+        if(frame_drawn) {
 
             void* pixels = 0;
             int pitch;
 
-            if (SDL_LockTexture(texture, nullptr, &pixels, &pitch) == 0) {
+            if(SDL_LockTexture(texture, nullptr, &pixels, &pitch) == 0) {
                 memcpy(pixels, framebuffer, height * width * 4);
                 SDL_UnlockTexture(texture);
             }
@@ -77,7 +77,6 @@ namespace grvl {
             SDL_RenderClear(renderer);
             SDL_RenderCopy(renderer, texture, nullptr, nullptr);
             SDL_RenderPresent(renderer);
-
         }
 
         Manager::GetInstance().perf.swap_times.put(watch.stop());
@@ -88,8 +87,8 @@ namespace grvl {
         SDL_Event event;
         SDL_zero(event);
 
-        while (SDL_PollEvent(&event)) {
-            switch (event.type) {
+        while(SDL_PollEvent(&event)) {
+            switch(event.type) {
                 case SDL_MOUSEWHEEL:
                     Manager::GetInstance().MarkUserActivity();
                     break;
@@ -108,15 +107,13 @@ namespace grvl {
 
                 case SDL_KEYUP:
                     Manager::GetInstance().ProcessKeyInput(false, event.key.keysym.sym);
-                break;
+                    break;
             }
-
         }
 
         int x, y;
         bool state = SDL_GetMouseState(&x, &y) & SDL_BUTTON(SDL_BUTTON_LEFT);
         Manager::GetInstance().ProcessTouchPoint(state, std::min(x, width), std::min(y, height));
-
     }
 
     void LinuxDesktopApp::SetTitle(const char* title)

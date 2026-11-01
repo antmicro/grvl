@@ -14,7 +14,7 @@ namespace {
 
     Manager& Build(const std::string& document, const char* screen = "home")
     {
-        gui_callbacks_t callbacks { };
+        gui_callbacks_t callbacks {};
         grvl::grvl::Init(&callbacks);
 
         Manager::Initialize(120, 40, 4, false);

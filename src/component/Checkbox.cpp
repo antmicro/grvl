@@ -14,8 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <grvl/component/Checkbox.h>
 #include <grvl/Manager.h>
+#include <grvl/component/Checkbox.h>
 
 namespace grvl {
 

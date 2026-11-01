@@ -4,8 +4,8 @@
 #include <grvl/File.h>
 #include <grvl/JSEngine.h>
 #include <grvl/Manager.h>
-#include <grvl/container/Division.h>
 #include <grvl/XMLPreprocessor.h>
+#include <grvl/container/Division.h>
 #include <grvl/grvl.h>
 
 #include <cstring>
@@ -22,7 +22,7 @@ namespace {
     struct JSFixture {
         JSFixture()
         {
-            gui_callbacks_t callbacks { };
+            gui_callbacks_t callbacks {};
             grvl::grvl::Init(&callbacks);
         }
     };

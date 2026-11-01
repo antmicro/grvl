@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+#include <grvl/Manager.h>
 #include <grvl/component/Image.h>
 #include <grvl/container/ListView.h>
-#include <grvl/Manager.h>
 
 namespace grvl {
 
@@ -84,28 +84,28 @@ namespace grvl {
     void ListView::RemoveElement(const char* elementId)
     {
         int elementsSize = Elements.size();
-        Component* foundComponent{nullptr};
+        Component* foundComponent { nullptr };
         int index = 0;
-        for (; index < Elements.size(); ++index) {
-            if (strcmp(Elements[index]->GetID(), elementId) == 0) {
+        for(; index < Elements.size(); ++index) {
+            if(strcmp(Elements[index]->GetID(), elementId) == 0) {
                 foundComponent = Elements[index];
                 Elements.erase(Elements.begin() + index);
                 break;
             }
         }
 
-        if (!foundComponent) {
+        if(!foundComponent) {
             return;
         }
 
-        if (index < elementsSize - 1) {
+        if(index < elementsSize - 1) {
 
             int y = 0;
-            if (index > 0) {
+            if(index > 0) {
                 y = Elements[index - 1]->GetY() + Elements[index - 1]->GetHeight();
             }
 
-            for (; index < Elements.size(); ++index) {
+            for(; index < Elements.size(); ++index) {
                 Elements[index]->SetY(y);
                 y += Elements[index]->GetHeight();
             }
@@ -121,8 +121,8 @@ namespace grvl {
 
     void ListView::ClearList()
     {
-        Guard touch_lock {ClearWhileTouchMutex};
-        Guard draw_lock {ClearWhileDrawMutex};
+        Guard touch_lock { ClearWhileTouchMutex };
+        Guard draw_lock { ClearWhileDrawMutex };
 
         std::vector<Component*>::iterator it;
         for(it = Elements.begin(); it != Elements.end();) {
@@ -130,7 +130,7 @@ namespace grvl {
             it = Elements.erase(it);
         }
 
-        Scroll = ScrollMax = ScrollChange = itemsHeight = animation = 0; //NOLINT
+        Scroll = ScrollMax = ScrollChange = itemsHeight = animation = 0; // NOLINT
     }
 
     void ListView::Refresh()
@@ -139,8 +139,8 @@ namespace grvl {
         ScrollMax = 0;
         itemsHeight = 0;
 
-        Guard touch_lock {ClearWhileTouchMutex};
-        Guard draw_lock {ClearWhileDrawMutex};
+        Guard touch_lock { ClearWhileTouchMutex };
+        Guard draw_lock { ClearWhileDrawMutex };
 
         for(it = Elements.begin(); it != Elements.end(); it++) {
             if((*it)->IsVisible()) {

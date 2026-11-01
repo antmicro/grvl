@@ -4,8 +4,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <grvl/Manager.h>
 #include <grvl/JSEngine.h>
+#include <grvl/Manager.h>
 #include <grvl/platform/LinuxGenericApp.h>
 
 #define WIDTH 800
@@ -18,8 +18,7 @@ int main(int argc, char** argv)
         argv + argc,
         [](const char* argument) {
             return std::string_view(argument) == "--rotated";
-        }
-    );
+        });
 
     grvl::Application* app = grvl::CreateGenericLinuxApp(WIDTH, HEIGHT, rotated);
     grvl::Application::Init(app);
@@ -27,11 +26,10 @@ int main(int argc, char** argv)
     grvl::JSEngine::SetSourceCodeWorkingDirectory(ROMFS_PATH);
     grvl::Manager& manager = grvl::Manager::GetInstance();
 
-    grvl::JSEngine::AddGlobalFunction("Exit", [] (duk_context* ctx) -> duk_ret_t {
+    grvl::JSEngine::AddGlobalFunction("Exit", [](duk_context* ctx) -> duk_ret_t {
         int status = duk_to_int(ctx, 0);
         exit(status);
-        return grvl::JSEngine::NO_RETURN_VALUE;
-    }, 1);
+        return grvl::JSEngine::NO_RETURN_VALUE; }, 1);
 
     auto ttf = std::make_shared<grvl::TrueTypeData>(ROMFS_PATH "/fonts/Roboto.ttf.gz");
 
@@ -46,7 +44,6 @@ int main(int argc, char** argv)
     manager.BuildFromXML(ROMFS_PATH "/gui.xml");
     manager.InitializationFinished();
     manager.SetActiveScreen("home", 0);
-
 
     // Bounding box parameters
     constexpr int32_t startX = 200;
@@ -64,45 +61,45 @@ int main(int argc, char** argv)
         painter.PopDrawingBoundsStackElement();
     };
 
-    const auto drawHook = [&] (grvl::Painter& painter) {
+    const auto drawHook = [&](grvl::Painter& painter) {
         auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count();
         auto frame = (ms / 100) % spinner.GetNumberOfFrames();
         painter.DrawRectangle(startX, startY, width, height, 0xFF00FF00);
 
-        drawSquare(painter, startX - 80,         startY - 80, frame);
-        drawSquare(painter, startX,              startY - 80, frame);
-        drawSquare(painter, startX + width / 2,  startY - 80, frame);
-        drawSquare(painter, startX + width,      startY - 80, frame);
+        drawSquare(painter, startX - 80, startY - 80, frame);
+        drawSquare(painter, startX, startY - 80, frame);
+        drawSquare(painter, startX + width / 2, startY - 80, frame);
+        drawSquare(painter, startX + width, startY - 80, frame);
         drawSquare(painter, startX + width + 80, startY - 80, frame);
 
-        drawSquare(painter, startX - 80,         startY, frame);
-        drawSquare(painter, startX,              startY, frame);
-        drawSquare(painter, startX + width / 2,  startY, frame);
-        drawSquare(painter, startX + width,      startY, frame);
+        drawSquare(painter, startX - 80, startY, frame);
+        drawSquare(painter, startX, startY, frame);
+        drawSquare(painter, startX + width / 2, startY, frame);
+        drawSquare(painter, startX + width, startY, frame);
         drawSquare(painter, startX + width + 80, startY, frame);
 
-        drawSquare(painter, startX - 80,         startY + height / 2, frame);
-        drawSquare(painter, startX,              startY + height / 2, frame);
-        drawSquare(painter, startX + width / 2,  startY + height / 2, frame);
-        drawSquare(painter, startX + width,      startY + height / 2, frame);
+        drawSquare(painter, startX - 80, startY + height / 2, frame);
+        drawSquare(painter, startX, startY + height / 2, frame);
+        drawSquare(painter, startX + width / 2, startY + height / 2, frame);
+        drawSquare(painter, startX + width, startY + height / 2, frame);
         drawSquare(painter, startX + width + 80, startY + height / 2, frame);
 
-        drawSquare(painter, startX - 80,         startY + height, frame);
-        drawSquare(painter, startX,              startY + height, frame);
-        drawSquare(painter, startX + width / 2,  startY + height, frame);
-        drawSquare(painter, startX + width,      startY + height, frame);
+        drawSquare(painter, startX - 80, startY + height, frame);
+        drawSquare(painter, startX, startY + height, frame);
+        drawSquare(painter, startX + width / 2, startY + height, frame);
+        drawSquare(painter, startX + width, startY + height, frame);
         drawSquare(painter, startX + width + 80, startY + height, frame);
 
-        drawSquare(painter, startX - 80,         startY + height + 80, frame);
-        drawSquare(painter, startX,              startY + height + 80, frame);
-        drawSquare(painter, startX + width / 2,  startY + height + 80, frame);
-        drawSquare(painter, startX + width,      startY + height + 80, frame);
+        drawSquare(painter, startX - 80, startY + height + 80, frame);
+        drawSquare(painter, startX, startY + height + 80, frame);
+        drawSquare(painter, startX + width / 2, startY + height + 80, frame);
+        drawSquare(painter, startX + width, startY + height + 80, frame);
         drawSquare(painter, startX + width + 80, startY + height + 80, frame);
     };
 
     manager.SetRenderCallback(drawHook);
 
-    while (app->ShouldRun()) {
+    while(app->ShouldRun()) {
         app->Render();
         app->Swap();
         app->Poll();

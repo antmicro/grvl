@@ -14,16 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <grvl/container/AbstractView.h>
+#include <grvl/Blitter.h>
 #include <grvl/ContentManager.h>
-#include <grvl/component/Image.h>
 #include <grvl/ImageContent.h>
 #include <grvl/Misc.h>
 #include <grvl/Painter.h>
-#include <grvl/Blitter.h>
+#include <grvl/component/Image.h>
+#include <grvl/container/AbstractView.h>
 
-#include <cmath>
 #include <cassert>
+#include <cmath>
 #include <string>
 
 // NOLINTBEGIN
@@ -62,9 +62,9 @@ namespace grvl {
         // into the target while tinting the image, obv this will never work in a memory protected environment.
         // As not all applications use popups we only allocate the shadow image once we need it.
 
-        if (shadow == nullptr) {
+        if(shadow == nullptr) {
             const int size = XSize * 4;
-            uint8_t* buffer = (uint8_t*) malloc(size);
+            uint8_t* buffer = (uint8_t*)malloc(size);
 
             shadow = new ImageContent(buffer, XSize, 1, 1, Format::ARGB8888);
 
@@ -79,7 +79,7 @@ namespace grvl {
         memset(shadow->GetData(), alpha, shadow->GetWidth() * 4);
 
         for(uint32_t i = 0; i < YSize; i++) {
-            DmaMoveShadow((uintptr_t) shadow->GetData(), GetBackBuffer(), 0, i, shadow->GetWidth(), 1, GetPixelFormat(), color);
+            DmaMoveShadow((uintptr_t)shadow->GetData(), GetBackBuffer(), 0, i, shadow->GetWidth(), 1, GetPixelFormat(), color);
         }
     }
 
@@ -147,7 +147,7 @@ namespace grvl {
         uint32_t interpolatedGreen = ((0xFF00 & second) >> 8) * t + ((0xFF00 & first) >> 8) * (1.0f - t);
         uint32_t interpolatedBlue = (0xFF & second) * t + (0xFF & first) * (1.0f - t);
 
-        uint32_t interpolatedColor{0};
+        uint32_t interpolatedColor { 0 };
         interpolatedColor |= interpolatedAlpha << 24;
         interpolatedColor |= interpolatedRed << 16;
         interpolatedColor |= interpolatedGreen << 8;
@@ -165,7 +165,7 @@ namespace grvl {
 
     uint32_t Painter::ReadPixel(uint32_t Xpos, uint32_t Ypos) const
     {
-        if (Xpos > GetXSize() || Ypos > GetYSize()) {
+        if(Xpos > GetXSize() || Ypos > GetYSize()) {
             return COLOR_ARGB8888_BLACK;
         }
 
@@ -201,7 +201,7 @@ namespace grvl {
         float currentY = 0;
 
         do {
-            //TODO: maybe try with some lookup table with 90 angle values
+            // TODO: maybe try with some lookup table with 90 angle values
             float currentXOffset = radiusWithOffset * std::cos(currentAngle);
             float currentYOffset = radiusWithOffset * std::sin(currentAngle);
 
@@ -225,7 +225,7 @@ namespace grvl {
             DrawVLine(std::floor(std::max(0.0f, middleX + currentXOffset - 1)), std::ceil(middleY - currentYOffset), std::floor(currentYOffset * 2), color);
 
             currentAngle -= angleDiff;
-        } while (currentAngle > 0);
+        } while(currentAngle > 0);
     }
 
     void Painter::DrawCircle(int16_t Xpos, int16_t Ypos, int16_t Radius, uint32_t color) const
@@ -245,7 +245,7 @@ namespace grvl {
         float currentY = 0;
 
         do {
-            //TODO: maybe try with some lookup table with 90 angle values
+            // TODO: maybe try with some lookup table with 90 angle values
             float currentXOffset = radiusWithOffset * std::cos(currentAngle);
             float currentYOffset = radiusWithOffset * std::sin(currentAngle);
 
@@ -266,7 +266,7 @@ namespace grvl {
             DrawAntialiasedPixel(currentX, currentY, color);
 
             currentAngle -= angleDiff;
-        } while (currentAngle > 0);
+        } while(currentAngle > 0);
     }
 
     // Source: http://joshbeam.com/articles/triangle_rasterization/
@@ -444,7 +444,7 @@ namespace grvl {
 
     void Painter::DrawImage(int16_t x, int16_t y, const ImageContent* image, uint32_t frame) const
     {
-        if (image == nullptr || image->IsEmpty()) {
+        if(image == nullptr || image->IsEmpty()) {
             return;
         }
 
@@ -453,8 +453,7 @@ namespace grvl {
         DmaMoveImage(
             address, GetBackBuffer(), 0, 0, x, y, image->GetWidth(), image->GetHeight(),
             image->GetPixelsPerLine(), image->GetNumberOfLines(), 0, 1,
-            image->GetColorFormat(), GetPixelFormat(), image->HasAlphaChannel(), image->GetColorPalette()
-        );
+            image->GetColorFormat(), GetPixelFormat(), image->HasAlphaChannel(), image->GetColorPalette());
     }
 
     void Painter::DrawLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint32_t color) const
@@ -514,14 +513,14 @@ namespace grvl {
 
     void Painter::DrawGradientVLine(int16_t x1, int16_t y1, int16_t y2, uint32_t startingColor, uint32_t endingColor, float startingValue) const
     {
-        if (y1 >= YSize || x1 < 0 || x1 >= XSize) {
+        if(y1 >= YSize || x1 < 0 || x1 >= XSize) {
             return;
         }
 
         auto finalEndingY = std::min(y2, static_cast<int16_t>(YSize));
 
         int16_t length = finalEndingY - y1;
-        if (length <= 0) {
+        if(length <= 0) {
             return;
         }
 
@@ -532,7 +531,7 @@ namespace grvl {
 
         float currentGradientValue = startingValue;
         float gradientDelta = (1.0f - currentGradientValue) / length;
-        for (int i = 0; i < length; ++i) {
+        for(int i = 0; i < length; ++i) {
             uint32_t interpolatedColor = InterpolateColors(startingColor, endingColor, currentGradientValue);
             DrawPixel(x1, y1 + i, interpolatedColor);
             currentGradientValue = std::min(1.0f, currentGradientValue + gradientDelta);
@@ -541,7 +540,7 @@ namespace grvl {
 
     void Painter::DrawEllipse(int32_t Xpos, int32_t Ypos, int32_t XRadius, int32_t YRadius, uint32_t color) const
     {
-        if (IsColorTransparent(color)) {
+        if(IsColorTransparent(color)) {
             return;
         }
 
@@ -574,7 +573,7 @@ namespace grvl {
 
     void Painter::FillEllipse(int32_t Xpos, int32_t Ypos, int32_t XRadius, int32_t YRadius, uint32_t color) const
     {
-        if (IsColorTransparent(color)) {
+        if(IsColorTransparent(color)) {
             return;
         }
 
@@ -614,7 +613,7 @@ namespace grvl {
 
     void Painter::DrawAntialiasedArc(int16_t Xpos, int16_t Ypos, int16_t Radius, float startAngle, float endAngle, int granularity, uint32_t color) const
     {
-        if (IsColorTransparent(color)) {
+        if(IsColorTransparent(color)) {
             return;
         }
 
@@ -633,7 +632,7 @@ namespace grvl {
         float currentY = 0;
 
         do {
-            //TODO: maybe try with some lookup table with 90 angle values
+            // TODO: maybe try with some lookup table with 90 angle values
             float currentXOffset = radiusWithOffset * std::cos(currentAngleInRadians);
             float currentYOffset = radiusWithOffset * std::sin(currentAngleInRadians);
 
@@ -642,7 +641,7 @@ namespace grvl {
             DrawAntialiasedPixel(currentX, currentY, color);
 
             currentAngleInRadians += angleDiffInRadians;
-        } while (currentAngleInRadians < endAngleInRadians);
+        } while(currentAngleInRadians < endAngleInRadians);
     }
 
     void Painter::FillAntialiasedQuarterCircle(int16_t Xpos, int16_t Ypos, int16_t Radius, CircleQuarter circleQuarter, int granularity, uint32_t color) const
@@ -663,7 +662,7 @@ namespace grvl {
         float currentY = 0;
 
         do {
-            //TODO: maybe try with some lookup table with 90 angle values
+            // TODO: maybe try with some lookup table with 90 angle values
             float currentXOffset = radiusWithOffset * std::cos(currentAngleInRadians);
             float currentYOffset = radiusWithOffset * std::sin(currentAngleInRadians);
 
@@ -673,7 +672,7 @@ namespace grvl {
             DrawVLine(std::round(currentX), std::min(currentY, middleY) + 1, std::abs(currentYOffset), color);
 
             currentAngleInRadians += angleDiffInRadians;
-        } while (currentAngleInRadians < endAngleInRadians);
+        } while(currentAngleInRadians < endAngleInRadians);
     }
 
     void Painter::FillArc(int32_t Xpos, int32_t Ypos, int32_t startAngle, int32_t endAngle, int32_t radius, int32_t width,
@@ -724,7 +723,7 @@ namespace grvl {
 
     void Painter::DrawHLine(int32_t Xpos, int32_t Ypos, int32_t Length, uint32_t text_color) const
     {
-        if (IsColorTransparent(text_color)) {
+        if(IsColorTransparent(text_color)) {
             return;
         }
 
@@ -732,7 +731,7 @@ namespace grvl {
             return;
         }
 
-        if (Xpos + Length >= CurrentDrawingBoundsEndX()) {
+        if(Xpos + Length >= CurrentDrawingBoundsEndX()) {
             Length = CurrentDrawingBoundsEndX() - Xpos - 1;
         }
 
@@ -760,15 +759,15 @@ namespace grvl {
 
     void Painter::DrawVLine(int32_t Xpos, int32_t Ypos, int32_t Length, uint32_t text_color) const
     {
-        if (IsColorTransparent(text_color)) {
+        if(IsColorTransparent(text_color)) {
             return;
         }
 
-        if (Xpos < CurrentDrawingBoundsStartX() || Xpos >= CurrentDrawingBoundsEndX() || Ypos >= CurrentDrawingBoundsEndY()) {
+        if(Xpos < CurrentDrawingBoundsStartX() || Xpos >= CurrentDrawingBoundsEndX() || Ypos >= CurrentDrawingBoundsEndY()) {
             return;
         }
 
-        if (Ypos + Length >= CurrentDrawingBoundsEndY()) {
+        if(Ypos + Length >= CurrentDrawingBoundsEndY()) {
             Length = CurrentDrawingBoundsEndY() - Ypos - 1;
         }
 
@@ -777,7 +776,7 @@ namespace grvl {
             Ypos = CurrentDrawingBoundsStartY();
         }
 
-        if (Length <= 0) {
+        if(Length <= 0) {
             return;
         }
 
@@ -802,29 +801,29 @@ namespace grvl {
 
     void Painter::FillRectangle(int32_t Xpos, int32_t Ypos, int32_t Width, int32_t Height, uint32_t text_color) const
     {
-        if (IsColorTransparent(text_color)) {
+        if(IsColorTransparent(text_color)) {
             return;
         }
 
-        if (Xpos >= CurrentDrawingBoundsEndX() || Ypos >= CurrentDrawingBoundsEndY()) {
+        if(Xpos >= CurrentDrawingBoundsEndX() || Ypos >= CurrentDrawingBoundsEndY()) {
             return;
         }
 
-        if (Xpos < CurrentDrawingBoundsStartX()) {
+        if(Xpos < CurrentDrawingBoundsStartX()) {
             Width = Width - (CurrentDrawingBoundsStartX() - Xpos);
             Xpos = CurrentDrawingBoundsStartX();
         }
 
-        if (Ypos < CurrentDrawingBoundsStartY()) {
+        if(Ypos < CurrentDrawingBoundsStartY()) {
             Height = Height - (CurrentDrawingBoundsStartY() - Ypos);
             Ypos = CurrentDrawingBoundsStartY();
         }
 
-        if (Xpos + Width >= CurrentDrawingBoundsEndX()) {
+        if(Xpos + Width >= CurrentDrawingBoundsEndX()) {
             Width = CurrentDrawingBoundsEndX() - Xpos;
         }
 
-        if (Ypos + Height >= CurrentDrawingBoundsEndY()) {
+        if(Ypos + Height >= CurrentDrawingBoundsEndY()) {
             Height = CurrentDrawingBoundsEndY() - Ypos;
         }
 
@@ -851,15 +850,15 @@ namespace grvl {
 
     void Painter::FillRoundRectangle(int32_t Xpos, int32_t Ypos, int32_t Width, int32_t Height, uint32_t text_color, float BorderArcRadius) const
     {
-        if (IsColorTransparent(text_color)) {
+        if(IsColorTransparent(text_color)) {
             return;
         }
 
-        if (BorderArcRadius > Width / 2.0f || BorderArcRadius > Height / 2.0f) {
+        if(BorderArcRadius > Width / 2.0f || BorderArcRadius > Height / 2.0f) {
             return;
         }
 
-        if (Xpos >= CurrentDrawingBoundsEndX() || Ypos >= CurrentDrawingBoundsEndY()) {
+        if(Xpos >= CurrentDrawingBoundsEndX() || Ypos >= CurrentDrawingBoundsEndY()) {
             return;
         }
 
@@ -889,20 +888,20 @@ namespace grvl {
 
     void Painter::DrawRectangle(int32_t Xpos, int32_t Ypos, int32_t Width, int32_t Height, uint32_t text_color) const
     {
-        if (IsColorTransparent(text_color)) {
+        if(IsColorTransparent(text_color)) {
             return;
         }
 
-        if (Xpos >= CurrentDrawingBoundsEndX() || Ypos >= CurrentDrawingBoundsEndY()) {
+        if(Xpos >= CurrentDrawingBoundsEndX() || Ypos >= CurrentDrawingBoundsEndY()) {
             return;
         }
 
-        if (Xpos < CurrentDrawingBoundsStartX()) {
+        if(Xpos < CurrentDrawingBoundsStartX()) {
             Width = std::max(0, static_cast<int32_t>(Width) - CurrentDrawingBoundsStartX() + Xpos);
             Xpos = CurrentDrawingBoundsStartX();
         }
 
-        if (Ypos < CurrentDrawingBoundsStartY()) {
+        if(Ypos < CurrentDrawingBoundsStartY()) {
             Height = std::max(0, static_cast<int32_t>(Height) - CurrentDrawingBoundsStartY() + Ypos);
             Ypos = CurrentDrawingBoundsStartY();
         }
@@ -918,11 +917,11 @@ namespace grvl {
 
     void Painter::DrawRoundRectangle(int32_t Xpos, int32_t Ypos, int32_t Width, int32_t Height, uint32_t text_color, float BorderArcRadius) const
     {
-        if (BorderArcRadius > Width / 2.0f || BorderArcRadius > Height / 2.0f) {
+        if(BorderArcRadius > Width / 2.0f || BorderArcRadius > Height / 2.0f) {
             return;
         }
 
-        if (Xpos >= CurrentDrawingBoundsEndX() || Ypos >= CurrentDrawingBoundsEndY()) {
+        if(Xpos >= CurrentDrawingBoundsEndX() || Ypos >= CurrentDrawingBoundsEndY()) {
             return;
         }
 
@@ -975,7 +974,7 @@ namespace grvl {
                 backCLT = (uintptr_t)greyscaleCltPalette;
             }
 
-            if(frontCLT == 0){
+            if(frontCLT == 0) {
                 frontCLT = (uintptr_t)greyscaleCltPalette;
             }
 
@@ -1048,29 +1047,29 @@ namespace grvl {
         uint32_t NumberOfLines = 0, PixelsPerLine = 0, inOffset = 0, outOffset = 0;
 
         /* safety checks so that image is in drawing bounds */
-        if(y_dst < CurrentDrawingBoundsStartY()){
+        if(y_dst < CurrentDrawingBoundsStartY()) {
             auto offset = std::abs(y_dst - CurrentDrawingBoundsStartY());
             y_dst = CurrentDrawingBoundsStartY();
             y_src += offset;
             height -= offset;
         }
 
-        if(y_dst + height > CurrentDrawingBoundsEndY()){
+        if(y_dst + height > CurrentDrawingBoundsEndY()) {
             height -= y_dst + height - CurrentDrawingBoundsEndY();
         }
 
-        if(x_dst < CurrentDrawingBoundsStartX()){
+        if(x_dst < CurrentDrawingBoundsStartX()) {
             auto offset = std::abs(x_dst - CurrentDrawingBoundsStartX());
             x_dst = CurrentDrawingBoundsStartX();
             x_src += offset;
             width -= offset;
         }
 
-        if(x_dst + width > CurrentDrawingBoundsEndX()){
+        if(x_dst + width > CurrentDrawingBoundsEndX()) {
             width -= x_dst + width - CurrentDrawingBoundsEndX();
         }
 
-        if (width <= 0 || height <= 0) {
+        if(width <= 0 || height <= 0) {
             return;
         }
 
@@ -1116,27 +1115,27 @@ namespace grvl {
         uint32_t NumberOfLines = 0, PixelsPerLine = 0, inOffset = 0, outOffset = 0;
 
         /* safety checks so that image is in drawing bounds */
-        if(y_dst < CurrentDrawingBoundsStartY()){
+        if(y_dst < CurrentDrawingBoundsStartY()) {
             auto offset = std::abs(y_dst - CurrentDrawingBoundsStartY());
             y_dst = CurrentDrawingBoundsStartY();
             height -= offset;
         }
 
-        if(y_dst + height >= CurrentDrawingBoundsEndY()){
+        if(y_dst + height >= CurrentDrawingBoundsEndY()) {
             height -= y_dst + height - CurrentDrawingBoundsEndY();
         }
 
-        if(x_dst < CurrentDrawingBoundsStartX()){
+        if(x_dst < CurrentDrawingBoundsStartX()) {
             auto offset = std::abs(x_dst - CurrentDrawingBoundsStartX());
             x_dst = CurrentDrawingBoundsStartX();
             width -= offset;
         }
 
-        if(x_dst + width >= CurrentDrawingBoundsEndX()){
+        if(x_dst + width >= CurrentDrawingBoundsEndX()) {
             width -= x_dst + width - CurrentDrawingBoundsEndX();
         }
 
-        if (width <= 0 || height <= 0) {
+        if(width <= 0 || height <= 0) {
             return;
         }
 
@@ -1173,29 +1172,29 @@ namespace grvl {
         uint32_t NumberOfLines = 0, PixelsPerLine = 0, inOffset = 0, outOffset = 0;
 
         /* safety checks so that font is in buffer bounds */
-        if(y_dst < CurrentDrawingBoundsStartY()){
+        if(y_dst < CurrentDrawingBoundsStartY()) {
             auto offset = std::abs(y_dst - CurrentDrawingBoundsStartY());
             y_dst = CurrentDrawingBoundsStartY();
             y_src += offset;
             height -= offset;
         }
 
-        if(y_dst + height >= y_lcd_size){
+        if(y_dst + height >= y_lcd_size) {
             height -= y_dst + height - y_lcd_size;
         }
 
-        if(x_dst < CurrentDrawingBoundsStartX()){
+        if(x_dst < CurrentDrawingBoundsStartX()) {
             auto offset = std::abs(x_dst - CurrentDrawingBoundsStartX());
             x_dst = CurrentDrawingBoundsStartX();
             x_src += offset;
             width -= offset;
         }
 
-        if(x_dst + width >= x_lcd_size){
+        if(x_dst + width >= x_lcd_size) {
             width -= x_dst + width - x_lcd_size;
         }
 
-        if (width <= 0 || height <= 0) {
+        if(width <= 0 || height <= 0) {
             return;
         }
 
@@ -1211,7 +1210,7 @@ namespace grvl {
         }
 
         DmaOperation(inputMem, outputMem, outputMem, PixelsPerLine, NumberOfLines, inOffset, outOffset, outOffset,
-                             Format::A8, outPixelFormat, outPixelFormat, fontColor);
+                     Format::A8, outPixelFormat, outPixelFormat, fontColor);
     }
 
     void Painter::CreateFramebuffersCollection(Format fmt, void* framebuffer_1, void* framebuffer_2)
@@ -1219,18 +1218,18 @@ namespace grvl {
         this->pixel_format = fmt;
         const size_t bytes = GetFormatStride(fmt) * XSize * YSize;
 
-        if (framebuffer_1 == nullptr) {
+        if(framebuffer_1 == nullptr) {
             framebuffer_1 = malloc(bytes);
             Log(INFO, "Allocated framebuffer #1 of size %u bytes", bytes);
         }
 
-        if (framebuffer_2 == nullptr) {
+        if(framebuffer_2 == nullptr) {
             framebuffer_2 = malloc(bytes);
             Log(INFO, "Allocated framebuffer #2 of size %u bytes", bytes);
         }
 
-        framebuffers[0] = (uintptr_t) framebuffer_1;
-        framebuffers[1] = (uintptr_t) framebuffer_2;
+        framebuffers[0] = (uintptr_t)framebuffer_1;
+        framebuffers[1] = (uintptr_t)framebuffer_2;
     }
 
     void Painter::InitFramebuffersCollection()
@@ -1304,7 +1303,7 @@ namespace grvl {
 
     uintptr_t Painter::GetBuffer(int id) const
     {
-        if (id != 0 && id != 1) {
+        if(id != 0 && id != 1) {
             return 0 /* nullptr */;
         }
 
@@ -1333,8 +1332,7 @@ namespace grvl {
         const int32_t textWidth = Font->GetWidth(Text);
         const int32_t textHeight = Font->GetFontHeight();
 
-        if (Xpos >= CurrentDrawingBoundsEndX() || Ypos >= CurrentDrawingBoundsEndY() ||
-            Xpos + textWidth < CurrentDrawingBoundsStartX() || Ypos + textHeight < CurrentDrawingBoundsStartY()) {
+        if(Xpos >= CurrentDrawingBoundsEndX() || Ypos >= CurrentDrawingBoundsEndY() || Xpos + textWidth < CurrentDrawingBoundsStartX() || Ypos + textHeight < CurrentDrawingBoundsStartY()) {
             return;
         }
 
@@ -1346,14 +1344,14 @@ namespace grvl {
     {
         uint32_t prev_unicode = 0;
 
-        while (*Text) {
+        while(*Text) {
 
             Unicode unicode = ParseUnicodeCodepoint(Text);
             Text += unicode.length;
 
             Glyph glyph = Font->GetGlyph(unicode.code);
 
-            if (prev_unicode) {
+            if(prev_unicode) {
                 Xpos += Font->GetKerning(prev_unicode, unicode.code);
             }
 
@@ -1365,10 +1363,9 @@ namespace grvl {
 
             Xpos += glyph.advance;
 
-            if (unicode.code != ' ') {
+            if(unicode.code != ' ') {
                 prev_unicode = unicode.code;
             }
-
         }
     }
 
@@ -1384,17 +1381,16 @@ namespace grvl {
         DrawAntialiasedCharInBound(Font, Xpos, Ypos, CurrentDrawingBoundsStartX(), CurrentDrawingBoundsStartY(), CurrentDrawingBoundsWidth(), CurrentDrawingBoundsHeight(), Index, text_color, background);
     }
 
-
     void Painter::DrawAntialiasedCharInBound(Font* Font, int16_t Xpos, int16_t Ypos,
                                              int16_t ParentX, int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight,
                                              uint32_t Index, uint32_t text_color, uint32_t background) const
     {
-        if (ParentWidth <= 0 || ParentHeight <= 0) {
+        if(ParentWidth <= 0 || ParentHeight <= 0) {
             return;
         }
 
         Glyph glyph = Font->GetGlyph(Index);
-        if (glyph.bitmap == nullptr || glyph.width <= 0 || glyph.height <= 0) {
+        if(glyph.bitmap == nullptr || glyph.width <= 0 || glyph.height <= 0) {
             return;
         }
 
@@ -1413,7 +1409,7 @@ namespace grvl {
         const int32_t clipRight = std::min(glyphRight, boundRight);
         const int32_t clipBottom = std::min(glyphBottom, boundBottom);
 
-        if (clipLeft >= clipRight || clipTop >= clipBottom) {
+        if(clipLeft >= clipRight || clipTop >= clipBottom) {
             return;
         }
 
@@ -1422,7 +1418,7 @@ namespace grvl {
         const int32_t clippedWidth = clipRight - clipLeft;
         const int32_t clippedHeight = clipBottom - clipTop;
 
-        if (background != 0) {
+        if(background != 0) {
             FillRectangle(clipLeft - 1, clipTop - 1, clippedWidth + 2, clippedHeight + 2, background);
         }
 
@@ -1433,7 +1429,6 @@ namespace grvl {
                     GetPixelFormat(),
                     text_color);
     }
-
 
     void Painter::DisplayAntialiasedCharInBound(Font* Font, int16_t Xpos, int16_t Ypos, int16_t ParentX,
                                                 int16_t ParentY, int16_t ParentWidth, int16_t ParentHeight, uint32_t index, uint32_t text_color, uint32_t background) const
@@ -1475,7 +1470,7 @@ namespace grvl {
 
     void Painter::PopDrawingBoundsStackElement()
     {
-        if (drawingBoundsStackIndex <= 0) {
+        if(drawingBoundsStackIndex <= 0) {
             return;
         }
 
@@ -1494,12 +1489,12 @@ namespace grvl {
 
     uintptr_t Painter::GetFrontBuffer() const
     {
-        return (uintptr_t) framebuffers[swapper ? 1 : 0];
+        return (uintptr_t)framebuffers[swapper ? 1 : 0];
     }
 
     uintptr_t Painter::GetBackBuffer() const
     {
-        return (uintptr_t) framebuffers[swapper ? 0 : 1];
+        return (uintptr_t)framebuffers[swapper ? 0 : 1];
     }
 
     void Painter::SwapBuffers()

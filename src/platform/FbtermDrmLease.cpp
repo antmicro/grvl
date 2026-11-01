@@ -2,155 +2,150 @@
 
 #include <dbus/dbus.h>
 
-static constexpr const char *FBTERM_BUS_NAME = "com.antmicro.fbterm";
-static constexpr const char *FBTERM_OBJECT_PATH = "/com/antmicro/fbterm";
-static constexpr const char *FBTERM_INTERFACE = "com.antmicro.fbterm.Display";
-static constexpr const char *FBTERM_ACQUIRE_LEASE_METHOD = "AcquireLease";
-static constexpr const char *FBTERM_NOTIFY_LEASE_RELEASED_METHOD = "NotifyLeaseReleased";
+static constexpr const char* FBTERM_BUS_NAME = "com.antmicro.fbterm";
+static constexpr const char* FBTERM_OBJECT_PATH = "/com/antmicro/fbterm";
+static constexpr const char* FBTERM_INTERFACE = "com.antmicro.fbterm.Display";
+static constexpr const char* FBTERM_ACQUIRE_LEASE_METHOD = "AcquireLease";
+static constexpr const char* FBTERM_NOTIFY_LEASE_RELEASED_METHOD = "NotifyLeaseReleased";
 
 namespace grvl {
-  int AcquireFbtermLease()
-  {
-      DBusError error;
-      dbus_error_init(&error);
+    int AcquireFbtermLease()
+    {
+        DBusError error;
+        dbus_error_init(&error);
 
-      DBusConnection *connection =
-          dbus_bus_get(DBUS_BUS_SYSTEM, &error);
+        DBusConnection* connection = dbus_bus_get(DBUS_BUS_SYSTEM, &error);
 
-      if (!connection) {
-          Log(ERROR,
-                  "AcquireFbtermLease: dbus_bus_get failed: %s%s%s\n",
-                  dbus_error_is_set(&error) ? error.name : "",
-                  dbus_error_is_set(&error) ? ": " : "",
-                  dbus_error_is_set(&error) ? error.message
-                  : "unknown error");
-          dbus_error_free(&error);
-          return -1;
-      }
+        if(!connection) {
+            Log(ERROR,
+                "AcquireFbtermLease: dbus_bus_get failed: %s%s%s\n",
+                dbus_error_is_set(&error) ? error.name : "",
+                dbus_error_is_set(&error) ? ": " : "",
+                dbus_error_is_set(&error) ? error.message
+                                          : "unknown error");
+            dbus_error_free(&error);
+            return -1;
+        }
 
-      DBusMessage *message = dbus_message_new_method_call(
-          FBTERM_BUS_NAME,
-          FBTERM_OBJECT_PATH,
-          FBTERM_INTERFACE,
-          FBTERM_ACQUIRE_LEASE_METHOD);
+        DBusMessage* message = dbus_message_new_method_call(
+            FBTERM_BUS_NAME,
+            FBTERM_OBJECT_PATH,
+            FBTERM_INTERFACE,
+            FBTERM_ACQUIRE_LEASE_METHOD);
 
-      if (!message) {
-          Log(ERROR,
-                  "AcquireFbtermLease: failed to allocate D-Bus method call\n");
-          dbus_connection_unref(connection);
-          return -1;
-      }
+        if(!message) {
+            Log(ERROR,
+                "AcquireFbtermLease: failed to allocate D-Bus method call\n");
+            dbus_connection_unref(connection);
+            return -1;
+        }
 
-      Log(INFO,
-              "AcquireFbtermLease: calling %s.%s on %s%s\n",
-              FBTERM_INTERFACE,
-              FBTERM_ACQUIRE_LEASE_METHOD,
-              FBTERM_BUS_NAME,
-              FBTERM_OBJECT_PATH);
+        Log(INFO,
+            "AcquireFbtermLease: calling %s.%s on %s%s\n",
+            FBTERM_INTERFACE,
+            FBTERM_ACQUIRE_LEASE_METHOD,
+            FBTERM_BUS_NAME,
+            FBTERM_OBJECT_PATH);
 
-      DBusMessage *reply =
-          dbus_connection_send_with_reply_and_block(
-              connection, message, -1, &error);
+        DBusMessage* reply = dbus_connection_send_with_reply_and_block(
+            connection, message, -1, &error);
 
-      dbus_message_unref(message);
+        dbus_message_unref(message);
 
-      if (!reply) {
-          Log(ERROR,
-                  "AcquireFbtermLease: D-Bus call failed: %s%s%s\n",
-                  dbus_error_is_set(&error) ? error.name : "",
-                  dbus_error_is_set(&error) ? ": " : "",
-                  dbus_error_is_set(&error) ? error.message
-                  : "unknown error");
-          dbus_error_free(&error);
-          dbus_connection_unref(connection);
-          return -1;
-      }
+        if(!reply) {
+            Log(ERROR,
+                "AcquireFbtermLease: D-Bus call failed: %s%s%s\n",
+                dbus_error_is_set(&error) ? error.name : "",
+                dbus_error_is_set(&error) ? ": " : "",
+                dbus_error_is_set(&error) ? error.message
+                                          : "unknown error");
+            dbus_error_free(&error);
+            dbus_connection_unref(connection);
+            return -1;
+        }
 
-      int lease_fd = -1;
+        int lease_fd = -1;
 
-      DBusMessageIter iter;
-      if (!dbus_message_iter_init(reply, &iter) ||
-          dbus_message_iter_get_arg_type(&iter) != DBUS_TYPE_UNIX_FD) {
-          Log(ERROR, "AcquireFbtermLease: reply contains no arguments\n");
-          dbus_message_unref(reply);
-          dbus_error_free(&error);
-          dbus_connection_unref(connection);
-          return -1;
-      }
+        DBusMessageIter iter;
+        if(!dbus_message_iter_init(reply, &iter) || dbus_message_iter_get_arg_type(&iter) != DBUS_TYPE_UNIX_FD) {
+            Log(ERROR, "AcquireFbtermLease: reply contains no arguments\n");
+            dbus_message_unref(reply);
+            dbus_error_free(&error);
+            dbus_connection_unref(connection);
+            return -1;
+        }
 
-      dbus_message_iter_get_basic(&iter, &lease_fd);
+        dbus_message_iter_get_basic(&iter, &lease_fd);
 
-      Log(INFO, "AcquireFbtermLease: received lease FD %d\n", lease_fd);
+        Log(INFO, "AcquireFbtermLease: received lease FD %d\n", lease_fd);
 
-      dbus_message_unref(reply);
-      dbus_error_free(&error);
-      dbus_connection_unref(connection);
+        dbus_message_unref(reply);
+        dbus_error_free(&error);
+        dbus_connection_unref(connection);
 
-      return lease_fd;
-  }
+        return lease_fd;
+    }
 
-  bool ReleaseFbtermLease()
-  {
-      DBusError error;
-      dbus_error_init(&error);
+    bool ReleaseFbtermLease()
+    {
+        DBusError error;
+        dbus_error_init(&error);
 
-      DBusConnection *connection =
-          dbus_bus_get(DBUS_BUS_SYSTEM, &error);
+        DBusConnection* connection = dbus_bus_get(DBUS_BUS_SYSTEM, &error);
 
-      if (!connection) {
-          Log(ERROR,
-                  "ReleaseFbtermLease: dbus_bus_get failed: %s%s%s\n",
-                  dbus_error_is_set(&error) ? error.name : "",
-                  dbus_error_is_set(&error) ? ": " : "",
-                  dbus_error_is_set(&error) ? error.message
-                  : "unknown error");
-          dbus_error_free(&error);
-          return false;
-      }
+        if(!connection) {
+            Log(ERROR,
+                "ReleaseFbtermLease: dbus_bus_get failed: %s%s%s\n",
+                dbus_error_is_set(&error) ? error.name : "",
+                dbus_error_is_set(&error) ? ": " : "",
+                dbus_error_is_set(&error) ? error.message
+                                          : "unknown error");
+            dbus_error_free(&error);
+            return false;
+        }
 
-      DBusMessage *message = dbus_message_new_method_call(
-              FBTERM_BUS_NAME,
-              FBTERM_OBJECT_PATH,
-              FBTERM_INTERFACE,
-              FBTERM_NOTIFY_LEASE_RELEASED_METHOD);
+        DBusMessage* message = dbus_message_new_method_call(
+            FBTERM_BUS_NAME,
+            FBTERM_OBJECT_PATH,
+            FBTERM_INTERFACE,
+            FBTERM_NOTIFY_LEASE_RELEASED_METHOD);
 
-      if (!message) {
-          Log(ERROR,
-                  "ReleaseFbtermLease: failed to allocate D-Bus method call\n");
-          dbus_connection_unref(connection);
-          return false;
-      }
+        if(!message) {
+            Log(ERROR,
+                "ReleaseFbtermLease: failed to allocate D-Bus method call\n");
+            dbus_connection_unref(connection);
+            return false;
+        }
 
-      Log(INFO,
-              "ReleaseFbtermLease: calling %s.%s on %s%s\n",
-              FBTERM_INTERFACE,
-              FBTERM_NOTIFY_LEASE_RELEASED_METHOD,
-              FBTERM_BUS_NAME,
-              FBTERM_OBJECT_PATH);
+        Log(INFO,
+            "ReleaseFbtermLease: calling %s.%s on %s%s\n",
+            FBTERM_INTERFACE,
+            FBTERM_NOTIFY_LEASE_RELEASED_METHOD,
+            FBTERM_BUS_NAME,
+            FBTERM_OBJECT_PATH);
 
-      DBusMessage *reply =
-          dbus_connection_send_with_reply_and_block(
-                  connection, message, -1, &error);
+        DBusMessage* reply = dbus_connection_send_with_reply_and_block(
+            connection, message, -1, &error);
 
-      dbus_message_unref(message);
+        dbus_message_unref(message);
 
-      if (!reply) {
-          Log(ERROR,
-                  "ReleaseFbtermLease: D-Bus call failed: %s%s%s\n",
-                  dbus_error_is_set(&error) ? error.name : "",
-                  dbus_error_is_set(&error) ? ": " : "",
-                  dbus_error_is_set(&error) ? error.message
-                  : "unknown error");
-          dbus_error_free(&error);
-          dbus_connection_unref(connection);
-          return false;
-      }
+        if(!reply) {
+            Log(ERROR,
+                "ReleaseFbtermLease: D-Bus call failed: %s%s%s\n",
+                dbus_error_is_set(&error) ? error.name : "",
+                dbus_error_is_set(&error) ? ": " : "",
+                dbus_error_is_set(&error) ? error.message
+                                          : "unknown error");
+            dbus_error_free(&error);
+            dbus_connection_unref(connection);
+            return false;
+        }
 
-      dbus_message_unref(reply);
-      dbus_error_free(&error);
-      dbus_connection_unref(connection);
+        dbus_message_unref(reply);
+        dbus_error_free(&error);
+        dbus_connection_unref(connection);
 
-      Log(INFO, "ReleaseFbtermLease: lease release requested\n");
-      return true;
-  }
+        Log(INFO, "ReleaseFbtermLease: lease release requested\n");
+        return true;
+    }
 }

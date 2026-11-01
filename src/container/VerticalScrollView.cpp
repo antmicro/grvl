@@ -14,14 +14,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <grvl/component/Image.h>
 #include <grvl/Manager.h>
+#include <grvl/component/Image.h>
 #include <grvl/container/VerticalScrollView.h>
 
-//NOLINTBEGIN
+// NOLINTBEGIN
 #define min(x, y) (x < y ? x : y)
 #define max(x, y) (x < y ? y : x)
-//NOLINTEND
+// NOLINTEND
 namespace grvl {
 
     void VerticalScrollView::AddElement(Component* item)
@@ -43,16 +43,16 @@ namespace grvl {
 
     void VerticalScrollView::RemoveElement(const char* elementId)
     {
-        Component* foundComponent{nullptr};
-        for (int index = 0; index < Elements.size(); ++index) {
-            if (strcmp(Elements[index]->GetID(), elementId) == 0) {
+        Component* foundComponent { nullptr };
+        for(int index = 0; index < Elements.size(); ++index) {
+            if(strcmp(Elements[index]->GetID(), elementId) == 0) {
                 foundComponent = Elements[index];
                 Elements.erase(Elements.begin() + index);
                 break;
             }
         }
 
-        if (!foundComponent) {
+        if(!foundComponent) {
             return;
         }
 
@@ -154,7 +154,7 @@ namespace grvl {
 
     Component* VerticalScrollView::TryToGetElementFromChildContainer(Component* possible_container, const char* searched_component_id)
     {
-        if (Container* container = dynamic_cast<Container*>(possible_container)) {
+        if(Container* container = dynamic_cast<Container*>(possible_container)) {
             return container->GetElement(searched_component_id);
         }
 
@@ -212,7 +212,7 @@ namespace grvl {
         const int ScrollChangeMultiplicator = 2; // predicting a required image content
 
         {
-            Guard lock {ClearWhileDrawMutex};
+            Guard lock { ClearWhileDrawMutex };
 
             for(uint32_t i = 0; i < Elements.size(); i++) {
                 if(!Elements[i]->IsVisible()) {
@@ -318,7 +318,7 @@ namespace grvl {
         if(scrollingEnabled && ScrollMax > 0 && scrollIndicatorColor != 0 && scrollIndicatorImage) {
             uint64_t now = grvl::Callbacks()->get_timestamp();
             if((animation != 0 || touchActive) && (itemsHeight > Height)) {
-                scrollIndicatorOpacity = (0xFF000000 & scrollIndicatorColor) >> 24; //NOLINT
+                scrollIndicatorOpacity = (0xFF000000 & scrollIndicatorColor) >> 24; // NOLINT
                 scrollIndicatorTimestamp = now;
             }
 
@@ -328,7 +328,7 @@ namespace grvl {
                 // bound value to be sure
                 scrollIndicatorY = max(0, min(scrollIndicatorY, Height - (int32_t)scrollIndicatorImage->GetHeight()));
                 // fade out
-                uint32_t tempColor = (scrollIndicatorColor & 0x00FFFFFF) | (scrollIndicatorOpacity << 24); //NOLINT
+                uint32_t tempColor = (scrollIndicatorColor & 0x00FFFFFF) | (scrollIndicatorOpacity << 24); // NOLINT
                 static constexpr auto scrollXOffset = 16;
                 int scrollX = ParentRenderX + X + Width - scrollXOffset;
                 int scrollY = ParentRenderY + Y + scrollIndicatorY;
@@ -415,7 +415,7 @@ namespace grvl {
 
                 if(ownCheck) { // Container selected
                     touchActive = true;
-                    Guard lock {ClearWhileTouchMutex};
+                    Guard lock { ClearWhileTouchMutex };
 
                     for(uint32_t i = 0; i < Elements.size(); i++) {
                         Touch::TouchResponse touch = Elements[i]->ProcessTouch(tp, ParentRenderX + X, ParentRenderY + Y - Scroll);
@@ -602,8 +602,8 @@ namespace grvl {
     void VerticalScrollView::Refresh()
     {
         itemsHeight = 0;
-        for (auto& child : Elements) {
-            if (child->IsVisible()) {
+        for(auto& child : Elements) {
+            if(child->IsVisible()) {
                 AdjustScrollViewHeight(child);
             }
         }
@@ -622,7 +622,7 @@ namespace grvl {
         duk_push_this(ctx);
         duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
         VerticalScrollView* verticalScrollView = static_cast<VerticalScrollView*>(duk_to_pointer(ctx, -1));
-        if (!verticalScrollView) {
+        if(!verticalScrollView) {
             return 0;
         }
 

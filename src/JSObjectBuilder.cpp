@@ -21,7 +21,9 @@
 namespace grvl {
 
     JSObjectBuilder::JSObjectBuilder(duk_context* ctx, Component* sourceObject)
-        : ctx{ctx}, sourceObject{sourceObject}, objIdx{CreateObject()}
+        : ctx { ctx }
+        , sourceObject { sourceObject }
+        , objIdx { CreateObject() }
     {
         AttachAllocatedObjectPointer();
     }

@@ -435,7 +435,7 @@ namespace grvl {
 
         uint32_t width;
         uint32_t height;
-        std::function<void(Painter&)> render_callback = [] (Painter& painter) { /* do nothing */ };
+        std::function<void(Painter&)> render_callback = [](Painter& painter) { /* do nothing */ };
         typedef std::map<std::string, Event::CallbackPointer> EventsContainerMap;
         typedef std::unordered_map<std::string, Font*> FontContainerMap;
         typedef std::unordered_map<uint32_t, KeyData> KeyMappingMap;

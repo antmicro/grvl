@@ -14,11 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <grvl/container/Keyboard.h>
 #include <grvl/component/KeyboardKey.h>
+#include <grvl/container/Keyboard.h>
 
 #include <cassert>
-
 
 namespace grvl {
 
@@ -46,8 +45,8 @@ namespace grvl {
 
     void Keyboard::SwitchKeys()
     {
-        for (auto& possibleKey : Elements) {
-            if (auto key = dynamic_cast<KeyboardKey*>(possibleKey)) {
+        for(auto& possibleKey : Elements) {
+            if(auto key = dynamic_cast<KeyboardKey*>(possibleKey)) {
                 key->SwitchKeyValue();
             }
         }

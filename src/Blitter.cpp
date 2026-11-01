@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <grvl/Blitter.h>
-#include <grvl/Misc.h>
 #include <grvl/ImageContent.h>
+#include <grvl/Misc.h>
 #include <grvl/grvl.h>
 
 // unless stated otherwise enable default blitter
@@ -30,17 +30,28 @@ namespace grvl {
 
     uint32_t FormatToDma2d(Format format)
     {
-        if (format == Format::ARGB8888) return 0x00000000;
-        if (format == Format::RGB888) return 0x00000001;
-        if (format == Format::RGB565) return 0x00000002;
-        if (format == Format::ARGB1555) return 0x00000003;
-        if (format == Format::ARGB4444) return 0x00000004;
-        if (format == Format::L8) return 0x00000005;
-        if (format == Format::AL44) return 0x00000006;
-        if (format == Format::AL88) return 0x00000007;
-        if (format == Format::A8) return 0x00000009;
-        if (format == Format::ARGB6666) return 0x0000000B;
-        if (format == Format::AXXX8888) return 0x00000100;
+        if(format == Format::ARGB8888)
+            return 0x00000000;
+        if(format == Format::RGB888)
+            return 0x00000001;
+        if(format == Format::RGB565)
+            return 0x00000002;
+        if(format == Format::ARGB1555)
+            return 0x00000003;
+        if(format == Format::ARGB4444)
+            return 0x00000004;
+        if(format == Format::L8)
+            return 0x00000005;
+        if(format == Format::AL44)
+            return 0x00000006;
+        if(format == Format::AL88)
+            return 0x00000007;
+        if(format == Format::A8)
+            return 0x00000009;
+        if(format == Format::ARGB6666)
+            return 0x0000000B;
+        if(format == Format::AXXX8888)
+            return 0x00000100;
 
         return 0;
     }
@@ -52,11 +63,11 @@ namespace grvl {
         Color bc = DecomposeColorFormat(bcol, Format::ARGB8888);
 
         // Fast paths avoiding the per-channel divisions below, results are identical
-        if (fc.a == 0xff) {
+        if(fc.a == 0xff) {
             return icol;
         }
 
-        if (fc.a == 0) {
+        if(fc.a == 0) {
             return bc.a ? bcol : 0;
         }
 
@@ -64,7 +75,7 @@ namespace grvl {
         uint8_t ar = fc.a + bc.a - am;
 
         // Checking for zero here is much faster than checking if `fc.a == 0`
-        if (ar == 0) {
+        if(ar == 0) {
             return 0;
         }
 
@@ -77,12 +88,12 @@ namespace grvl {
     }
 
     void UseBlitAsBlitClt(uintptr_t imem, uintptr_t bmem, uintptr_t omem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff,
-        uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL)
+                          uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL)
     {
         // we ignore those and use color index directly as brightness
         // this is fine in most cases (e.g. when we load the image from file)
-        (void) backCLT;
-        (void) frontCTL;
+        (void)backCLT;
+        (void)frontCTL;
 
         grvl::Callbacks()->blit(imem, bmem, omem, columns, rows, ioff, boff, ooff, ifmt, bfmt, ofmt, font_color);
     }
@@ -93,8 +104,8 @@ namespace grvl {
      * Default Blitter
      */
 
-    using BakedFillFunc = void (*) (uint8_t* dst, uint32_t color, uint32_t columns, uint32_t rows, uint32_t offset);
-    using BakedBlitFunc = void (*) (uintptr_t omem, uintptr_t imem, uintptr_t bmem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff, uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL);
+    using BakedFillFunc = void (*)(uint8_t* dst, uint32_t color, uint32_t columns, uint32_t rows, uint32_t offset);
+    using BakedBlitFunc = void (*)(uintptr_t omem, uintptr_t imem, uintptr_t bmem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff, uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL);
 
     template <Format format>
     static uint32_t LookupClt(uint8_t* mem, uint8_t* clt)
@@ -128,7 +139,7 @@ namespace grvl {
     template <size_t stride, Format input, Format output, typename T>
     static uint32_t FastConvertPixel(const T* data)
     {
-        if constexpr (stride == 0) {
+        if constexpr(stride == 0) {
             return 0;
         }
 
@@ -149,7 +160,7 @@ namespace grvl {
         uint32_t ocol = 0;
 
         // dummy case
-        if constexpr (istride == 0 || ostride == 0) {
+        if constexpr(istride == 0 || ostride == 0) {
             return;
         }
 
@@ -162,7 +173,7 @@ namespace grvl {
             }
         }
 
-        if constexpr (transparency) {
+        if constexpr(transparency) {
             if(GetFormatUsesColorLookup(bfmt)) {
                 bcol = LookupClt<bfmt>((uint8_t*)bmem, (uint8_t*)backCLT);
             } else {
@@ -180,15 +191,15 @@ namespace grvl {
     template <bool transparency, Format ifmt, Format bfmt, Format ofmt>
     struct FastBlitPixel_tibo {
 
-        void operator() (uintptr_t omem, uintptr_t imem, uintptr_t bmem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff, uint32_t ooff, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL) const
+        void operator()(uintptr_t omem, uintptr_t imem, uintptr_t bmem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff, uint32_t ooff, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL) const
         {
 
             constexpr size_t istride = GetFormatStride(ifmt);
             constexpr size_t bstride = transparency ? GetFormatStride(bfmt) : 0;
             constexpr size_t ostride = GetFormatStride(ofmt);
 
-            for (uint32_t y = 0; y < rows; y++) {
-                for (uint32_t x = 0; x < columns; x++) {
+            for(uint32_t y = 0; y < rows; y++) {
+                for(uint32_t x = 0; x < columns; x++) {
                     PixelFormatConvert<transparency, ifmt, bfmt, ofmt>(imem, bmem, omem, font_color, backCLT, frontCTL);
                     omem += ostride;
                     imem += istride;
@@ -199,9 +210,7 @@ namespace grvl {
                 imem += ioff * istride;
                 bmem += boff * bstride;
             }
-
         };
-
     };
 
     template <bool transparency, Format ifmt, Format bfmt>
@@ -210,15 +219,12 @@ namespace grvl {
         template <Format T>
         using Next = FastBlitPixel_tibo<transparency, ifmt, bfmt, T>;
 
-        void operator() (uintptr_t omem, uintptr_t imem, uintptr_t bmem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff, uint32_t ooff, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL) const
+        void operator()(uintptr_t omem, uintptr_t imem, uintptr_t bmem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff, uint32_t ooff, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL) const
         {
             static_format_lookup<Next>(
                 ofmt,
-                omem, imem, bmem, columns, rows, ioff, boff, ooff, font_color, backCLT, frontCTL
-            );
-
+                omem, imem, bmem, columns, rows, ioff, boff, ooff, font_color, backCLT, frontCTL);
         };
-
     };
 
     template <bool transparency, Format ifmt>
@@ -227,15 +233,12 @@ namespace grvl {
         template <Format T>
         using Next = FastBlitPixel_tib<transparency, ifmt, T>;
 
-        void operator() (uintptr_t omem, uintptr_t imem, uintptr_t bmem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff, uint32_t ooff, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL) const
+        void operator()(uintptr_t omem, uintptr_t imem, uintptr_t bmem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff, uint32_t ooff, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL) const
         {
             static_format_lookup<Next>(
                 bfmt,
-                omem, imem, bmem, columns, rows, ioff, boff, ooff, ofmt, font_color, backCLT, frontCTL
-            );
-
+                omem, imem, bmem, columns, rows, ioff, boff, ooff, ofmt, font_color, backCLT, frontCTL);
         };
-
     };
 
     template <bool transparency>
@@ -248,10 +251,8 @@ namespace grvl {
         {
             static_format_lookup<Next>(
                 ifmt,
-                omem, imem, bmem, columns, rows, ioff, boff, ooff, bfmt, ofmt, font_color, backCLT, frontCTL
-            );
+                omem, imem, bmem, columns, rows, ioff, boff, ooff, bfmt, ofmt, font_color, backCLT, frontCTL);
         }
-
     };
 
     static void DefaultBlitClt(uintptr_t imem, uintptr_t bmem, uintptr_t omem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff, uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t backCLT, uintptr_t frontCTL)
@@ -259,13 +260,13 @@ namespace grvl {
         const bool blend = GetFormatAlphaChannel(ifmt) && (bmem != 0);
 
         // Same-format opaque copy needs no per-pixel work, copy whole rows instead
-        if (ifmt == ofmt && !GetFormatAlphaChannel(ifmt)) {
+        if(ifmt == ofmt && !GetFormatAlphaChannel(ifmt)) {
             const size_t stride = GetFormatStride(ifmt);
             auto* in = reinterpret_cast<const uint8_t*>(imem);
             auto* out = reinterpret_cast<uint8_t*>(omem);
 
-            for (uint32_t y = 0; y < rows; y++) {
-                if (in != out) {
+            for(uint32_t y = 0; y < rows; y++) {
+                if(in != out) {
                     memmove(out, in, columns * stride);
                 }
                 in += (columns + ioff) * stride;
@@ -284,8 +285,8 @@ namespace grvl {
     }
 
     void DefaultBlit(uintptr_t imem, uintptr_t bmem, uintptr_t omem,
-        uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff,
-        uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color)
+                     uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff,
+                     uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color)
     {
         DefaultBlitClt(imem, bmem, omem, columns, rows, ioff, boff, ooff, ifmt, bfmt, ofmt, font_color, 0, 0);
     }
@@ -300,17 +301,16 @@ namespace grvl {
         uint8_t bytes[stride * columns];
         uint8_t* ptr = bytes;
 
-        for (uint32_t x = 0; x < columns; x++) {
+        for(uint32_t x = 0; x < columns; x++) {
             memcpy(ptr, &color, stride);
             ptr += stride;
         }
 
-        for (uint32_t y = 0; y < rows; y++) {
+        for(uint32_t y = 0; y < rows; y++) {
             memcpy(dst, bytes, stride * columns);
             dst += (columns + offset) * stride;
         }
     }
-
 
     static void DefaultFill(uintptr_t dst, uint32_t columns, uint32_t rows, uint32_t offset, uint32_t color_index, Format pixel_format)
     {
@@ -324,7 +324,7 @@ namespace grvl {
             FastFillPixel<4>
         };
 
-        func[stride - 1]((uint8_t*) dst, color, columns, rows, offset);
+        func[stride - 1]((uint8_t*)dst, color, columns, rows, offset);
     }
 
 #endif
@@ -333,9 +333,9 @@ namespace grvl {
      * Fallback
      */
 
-    static void FallbackFill(uintptr_t dst, uint32_t columns, uint32_t rows, uint32_t offset, uint32_t color_index, Format fmt) {}
-    static void FallbackBlit(uintptr_t imem, uintptr_t bmem, uintptr_t omem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff,  uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t fcol) {}
-    static void FallbackBlitClt(uintptr_t imem, uintptr_t bmem, uintptr_t omem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff, uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t bctl, uintptr_t fctl) {}
+    static void FallbackFill(uintptr_t dst, uint32_t columns, uint32_t rows, uint32_t offset, uint32_t color_index, Format fmt) { }
+    static void FallbackBlit(uintptr_t imem, uintptr_t bmem, uintptr_t omem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff, uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t fcol) { }
+    static void FallbackBlitClt(uintptr_t imem, uintptr_t bmem, uintptr_t omem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff, uint32_t ooff, Format ifmt, Format bfmt, Format ofmt, uint32_t font_color, uintptr_t bctl, uintptr_t fctl) { }
 
     /*
      * Getters

@@ -26,7 +26,7 @@ namespace grvl {
     Event::ArgVector ParsingUtils::GetArguments(const std::string& CallbackString)
     {
         Event::ArgVector Vec;
-        size_t start_pos = CallbackString.find_first_of("(", 0); //NOLINT
+        size_t start_pos = CallbackString.find_first_of("(", 0); // NOLINT
 
         unsigned int currentChar = start_pos + 1;
         std::string argument;

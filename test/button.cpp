@@ -1,9 +1,9 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include <grvl/grvl.h>
-#include <grvl/Manager.h>
 #include <grvl/JSEngine.h>
+#include <grvl/Manager.h>
+#include <grvl/grvl.h>
 
 using namespace grvl;
 
@@ -59,7 +59,6 @@ TEST_CASE("Button Component", "[component]")
     REQUIRE(last_callback == 0);
 
     grvl::grvl::Destroy();
-
 }
 
 TEST_CASE("Checkbox Component", "[component]")
@@ -101,5 +100,4 @@ TEST_CASE("Checkbox Component", "[component]")
     REQUIRE(box->GetSwitchState() == true);
 
     grvl::grvl::Destroy();
-
 }

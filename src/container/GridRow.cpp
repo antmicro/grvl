@@ -14,16 +14,16 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <grvl/component/Button.h>
-#include <grvl/container/GridRow.h>
 #include <grvl/Manager.h>
 #include <grvl/XMLSupport.h>
+#include <grvl/component/Button.h>
+#include <grvl/container/GridRow.h>
 
 namespace grvl {
 
     GridRow& GridRow::operator=(const GridRow& other)
     {
-        if (this == &other) {
+        if(this == &other) {
             return *this;
         }
 

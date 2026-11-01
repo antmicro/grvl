@@ -14,10 +14,10 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <grvl/container/GridView.h>
 #include <grvl/Key.h>
 #include <grvl/Manager.h>
 #include <grvl/XMLSupport.h>
+#include <grvl/container/GridView.h>
 
 #include <cassert>
 

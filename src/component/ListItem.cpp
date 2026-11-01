@@ -14,9 +14,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <grvl/component/ListItem.h>
 #include <grvl/Manager.h>
 #include <grvl/XMLSupport.h>
+#include <grvl/component/ListItem.h>
 
 namespace grvl {
 
@@ -119,7 +119,7 @@ namespace grvl {
                     DescriptionFont, ParentRenderX + BeginX + ButtonFont->GetWidth(Text.c_str()) + listItemBeginOffset,
                     ParentRenderY + BeginY - (ButtonFont->GetFontHeight() - DescriptionFont->GetFontHeight()), ParentRenderX + X, ParentRenderY + Y,
                     Width, Height, Description.c_str(), DescColor);
-            } else if(ButtonFont && DescriptionFont){
+            } else if(ButtonFont && DescriptionFont) {
                 BeginX = BeginX + listItemBeginOffsetSmall;
                 BeginY = BeginY + Height / 2 + (ButtonFont->GetFontHeight() + DescriptionFont->GetFontHeight() / 2) - YOffset;
                 painter.DisplayBoundedAntialiasedString(

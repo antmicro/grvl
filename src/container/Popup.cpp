@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <grvl/Manager.h>
-#include <grvl/container/Popup.h>
 #include <grvl/XMLSupport.h>
+#include <grvl/container/Popup.h>
 
 namespace grvl {
 

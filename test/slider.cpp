@@ -39,7 +39,7 @@ TEST_CASE("Horizontal slider keeps its track width", "[component][slider]")
     painter.CreateFramebuffersCollection(grvl::Format::ARGB8888, pixels.data(), pixels.data());
     painter.ResetDrawingBounds();
 
-    grvl::Slider slider { };
+    grvl::Slider slider {};
     slider.SetPosition(3, 4);
     slider.SetSize(width, 20);
     slider.SetBackgroundColor(0);

@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <grvl/component/Button.h>
-#include <grvl/component/Component.h>
 #include <grvl/JSEngine.h>
 #include <grvl/JSObject.h>
 #include <grvl/JSObjectBuilder.h>
 #include <grvl/Manager.h>
 #include <grvl/XMLSupport.h>
+#include <grvl/component/Button.h>
+#include <grvl/component/Component.h>
 #include <grvl/grvl.h>
 
 namespace grvl {
@@ -41,7 +41,6 @@ namespace grvl {
 
         return defaultValue;
     }
-
 
     Component* Button::Clone() const
     {
@@ -131,11 +130,10 @@ namespace grvl {
 
         SetContentAlignment(XMLSupport::ParseAlignmentOrDefault(xmlElement, "alignment", HorizontalAlignment::Center));
         SetContentLayoutMode(ParseButtonContentLayoutOrDefault(xmlElement, "contentLayout", ButtonContentLayoutMode::Overlay));
-        if (ButtonFont) {
+        if(ButtonFont) {
             SetImageTextGap(XMLSupport::GetAttributeOrDefault(xmlElement, "imageTextGap", ButtonFont->GetCharWidth(' ')));
         }
         SetHorizontalPadding(XMLSupport::GetAttributeOrDefault(xmlElement, "padding", 0));
-
     }
 
     Button* Button::BuildFromXML(XMLElement* xmlElement)
@@ -182,7 +180,7 @@ namespace grvl {
         }
 
         if(TempBackgroundColor > 0 && TempBackgroundColor & 0xFF000000) {
-            if (BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
+            if(BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
                 painter.FillRoundRectangle(RenderX, RenderY, RenderWidth, RenderHeight, TempBackgroundColor, BorderArcRadius);
             } else {
                 painter.FillRectangle(RenderX, RenderY, RenderWidth, RenderHeight, TempBackgroundColor);
@@ -195,11 +193,11 @@ namespace grvl {
             const int32_t oldImageX = ButtonImage.GetX();
             const int32_t oldImageY = ButtonImage.GetY();
 
-            if (ContentLayoutMode == ButtonContentLayoutMode::Inline) {
+            if(ContentLayoutMode == ButtonContentLayoutMode::Inline) {
                 ButtonImage.SetPosition(layout.imageX, layout.imageY);
             }
             ButtonImage.Draw(painter, RenderX, RenderY);
-            if (ContentLayoutMode == ButtonContentLayoutMode::Inline) {
+            if(ContentLayoutMode == ButtonContentLayoutMode::Inline) {
                 ButtonImage.SetPosition(oldImageX, oldImageY);
             }
         }
@@ -360,7 +358,7 @@ namespace grvl {
             }
         };
 
-        if (layout.hasImage && layout.hasText && ContentLayoutMode == ButtonContentLayoutMode::Inline) {
+        if(layout.hasImage && layout.hasText && ContentLayoutMode == ButtonContentLayoutMode::Inline) {
             const int32_t contentWidth = imageWidth + ImageTextGap + textWidth;
             const int32_t contentX = alignedX(contentWidth);
 
@@ -371,20 +369,20 @@ namespace grvl {
             layout.textX = alignedX(textWidth);
         }
 
-        if (layout.hasImage) {
+        if(layout.hasImage) {
             layout.imageY = (Height - imageHeight) / 2;
         }
-        if (layout.hasText) {
+        if(layout.hasText) {
             layout.textY = (Height + textHeight) / 2;
         }
-        if (layout.hasIco) {
+        if(layout.hasIco) {
             const int32_t icoYOffset = Height / 3;
             layout.imageY += icoYOffset;
             layout.textY += icoYOffset;
 
             layout.icoX = alignedX(icoWidth);
             layout.icoY = (Height + IcoFont->GetFontHeight()) / 2;
-            if (layout.hasText || (layout.hasImage && ContentLayoutMode == ButtonContentLayoutMode::Inline)) {
+            if(layout.hasText || (layout.hasImage && ContentLayoutMode == ButtonContentLayoutMode::Inline)) {
                 static constexpr auto charPositionOffsetScale = 5;
                 layout.icoY -= Height / charPositionOffsetScale;
             }

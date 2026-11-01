@@ -22,7 +22,7 @@ namespace grvl {
 
     BorderTypeBits Border::ParseBorderTypeFromString(const std::string& BorderType)
     {
-        if (BORDER_TYPE_BITS_MAPPINGS.count(BorderType) <= 0) {
+        if(BORDER_TYPE_BITS_MAPPINGS.count(BorderType) <= 0) {
             return BorderTypeBits::NONE;
         }
 

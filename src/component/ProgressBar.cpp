@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <grvl/Manager.h>
-#include <grvl/component/ProgressBar.h>
 #include <grvl/XMLSupport.h>
+#include <grvl/component/ProgressBar.h>
 #include <grvl/grvl.h>
 
 namespace grvl {
@@ -54,7 +54,7 @@ namespace grvl {
             return;
         }
 
-        if (BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
+        if(BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
             painter.FillRoundRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor, BorderArcRadius);
         } else {
             painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor);

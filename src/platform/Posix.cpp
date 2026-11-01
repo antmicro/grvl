@@ -1,5 +1,5 @@
-#include <grvl/platform/PosixApp.h>
 #include <grvl/Manager.h>
+#include <grvl/platform/PosixApp.h>
 
 #include <chrono>
 #include <cstdio>

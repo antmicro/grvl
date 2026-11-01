@@ -48,18 +48,19 @@ namespace grvl {
     class Atomic {
     public:
         Atomic(T initial)
-        : value(initial)
-        {}
+            : value(initial)
+        {
+        }
 
         T load()
         {
-            Guard guard {mutex};
+            Guard guard { mutex };
             return value;
         }
 
         void store(T value)
         {
-            Guard guard {mutex};
+            Guard guard { mutex };
             this->value = value;
         }
 

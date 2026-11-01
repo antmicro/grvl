@@ -1,24 +1,24 @@
-#include <grvl/platform/LinuxNativeApp.h>
 #include <grvl/Manager.h>
-#include <grvl/platform/XrandrDrmLease.h>
 #include <grvl/platform/FbtermDrmLease.h>
+#include <grvl/platform/LinuxNativeApp.h>
+#include <grvl/platform/XrandrDrmLease.h>
 
 #include <algorithm>
-#include <glob.h>
-#include <fcntl.h>
-#include <linux/input.h>
-#include <linux/input-event-codes.h>
-#include <linux/vt.h>
-#include <sys/ioctl.h>
+#include <chrono>
 #include <cstdlib>
+#include <fcntl.h>
+#include <glob.h>
+#include <linux/input-event-codes.h>
+#include <linux/input.h>
+#include <linux/vt.h>
+#include <poll.h>
 #include <pthread.h>
 #include <sched.h>
-#include <poll.h>
-#include <chrono>
+#include <sys/ioctl.h>
 
-#include <poll.h>
 #include <libdrm/drm.h>
 #include <libdrm/drm_mode.h>
+#include <poll.h>
 
 #include <xf86drm.h>
 #include <xf86drmMode.h>
@@ -67,16 +67,12 @@ namespace grvl {
 
     static bool IsBuiltInConnector(uint32_t connector_type)
     {
-        return connector_type == DRM_MODE_CONNECTOR_eDP ||
-               connector_type == DRM_MODE_CONNECTOR_LVDS ||
-               connector_type == DRM_MODE_CONNECTOR_DSI;
+        return connector_type == DRM_MODE_CONNECTOR_eDP || connector_type == DRM_MODE_CONNECTOR_LVDS || connector_type == DRM_MODE_CONNECTOR_DSI;
     }
 
     static bool IsUsableConnector(drmModeConnectorPtr connector)
     {
-        return connector != nullptr &&
-               connector->connection == DRM_MODE_CONNECTED &&
-               connector->count_modes > 0;
+        return connector != nullptr && connector->connection == DRM_MODE_CONNECTED && connector->count_modes > 0;
     }
 
     static drmModeConnectorPtr PickConnector(int fd, drmModeResPtr resource, int requested_connector_id = -1)
@@ -84,15 +80,15 @@ namespace grvl {
         std::vector<drmModeConnectorPtr> connectors;
         int selected = -1;
 
-        for (int i = 0; i < resource->count_connectors; i++) {
+        for(int i = 0; i < resource->count_connectors; i++) {
             const auto connector = drmModeGetConnector(fd, resource->connectors[i]);
             connectors.push_back(connector);
 
-            if (!IsUsableConnector(connector)) {
+            if(!IsUsableConnector(connector)) {
                 continue;
             }
 
-            if ((requested_connector_id >= 0) && (connector->connector_id != requested_connector_id)) {
+            if((requested_connector_id >= 0) && (connector->connector_id != requested_connector_id)) {
                 continue;
             }
 
@@ -100,13 +96,13 @@ namespace grvl {
             break;
         }
 
-        for (size_t i = 0; i < connectors.size(); i++) {
-            if (i != selected) {
+        for(size_t i = 0; i < connectors.size(); i++) {
+            if(i != selected) {
                 drmModeFreeConnector(connectors[i]);
             }
         }
 
-        if (selected == -1) {
+        if(selected == -1) {
             Log(ERROR, "No valid DRM connectors found!");
             return nullptr;
         }
@@ -119,32 +115,32 @@ namespace grvl {
         size_t pixels = 0;
         drmModeModeInfoPtr preferred = nullptr, highest = nullptr;
 
-        for (int i = 0; i < connector->count_modes; i++) {
+        for(int i = 0; i < connector->count_modes; i++) {
             const auto mode = &connector->modes[i];
-            if (width == mode->hdisplay && height == mode->vdisplay) {
-                if (refresh == -1 || refresh == mode->vrefresh) {
+            if(width == mode->hdisplay && height == mode->vdisplay) {
+                if(refresh == -1 || refresh == mode->vrefresh) {
                     return mode;
                 }
             }
 
-            if (mode->type & DRM_MODE_TYPE_PREFERRED) {
+            if(mode->type & DRM_MODE_TYPE_PREFERRED) {
                 preferred = mode;
             }
 
             const size_t size = mode->vdisplay * mode->hdisplay;
 
             // pick the mode with the highest resolution
-            if (size > pixels) {
+            if(size > pixels) {
                 pixels = size;
                 highest = mode;
             }
         }
 
-        if (preferred) {
+        if(preferred) {
             return preferred;
         }
 
-        if (highest) {
+        if(highest) {
             return highest;
         }
 
@@ -154,15 +150,15 @@ namespace grvl {
     static std::vector<std::string> GetDrmCardPaths()
     {
         const char* override_path = std::getenv("DRM_PATH");
-        if (override_path && override_path[0] != '\0') {
-            return {override_path};
+        if(override_path && override_path[0] != '\0') {
+            return { override_path };
         }
 
         std::vector<std::string> paths;
 
         glob_t result = {};
-        if (glob("/dev/dri/card*", 0, nullptr, &result) == 0) {
-            for (size_t i = 0; i < result.gl_pathc; ++i) {
+        if(glob("/dev/dri/card*", 0, nullptr, &result) == 0) {
+            for(size_t i = 0; i < result.gl_pathc; ++i) {
                 paths.emplace_back(result.gl_pathv[i]);
             }
         }
@@ -171,7 +167,7 @@ namespace grvl {
         return paths;
     }
     const static struct libinput_interface interface = {
-        .open_restricted = [] (const char* path, int flags, void* user) {
+        .open_restricted = [](const char* path, int flags, void* user) {
             const int fd = open(path, flags);
             if (fd < 0) {
                 Log(WARN, "Can't open '%s': %s", path, strerror(errno));
@@ -216,15 +212,13 @@ namespace grvl {
                 Log(WARN, "Call to ioctl EVIOCGRAB failed for file descriptor %d: %s", fd, strerror(errno));
             }
 
-            return fd;
-        },
-        .close_restricted = [] (int fd, void* user) {
+            return fd; },
+        .close_restricted = [](int fd, void* user) {
             ioctl(fd, EVIOCGRAB, 0);
-            close(fd);
-        }
+            close(fd); }
     };
 
-// implementation
+    // implementation
 
     static NativeDisplayMode MakeNativeDisplayMode(const drmModeModeInfo& mode)
     {
@@ -237,27 +231,26 @@ namespace grvl {
         return display_mode;
     }
 
-
     std::vector<NativeDisplay> LinuxNativeApp::EnumerateConnectedDisplays()
     {
         std::vector<NativeDisplay> displays;
 
-        for (const auto& path : GetDrmCardPaths()) {
+        for(const auto& path : GetDrmCardPaths()) {
             const int display_fd = open(path.c_str(), O_RDWR | O_CLOEXEC);
-            if (display_fd < 0) {
+            if(display_fd < 0) {
                 continue;
             }
 
             drmModeResPtr resources = drmModeGetResources(display_fd);
-            if (!resources) {
+            if(!resources) {
                 close(display_fd);
                 continue;
             }
 
-            for (int i = 0; i < resources->count_connectors; ++i) {
+            for(int i = 0; i < resources->count_connectors; ++i) {
                 drmModeConnectorPtr connector = drmModeGetConnector(display_fd, resources->connectors[i]);
 
-                if (!IsUsableConnector(connector)) {
+                if(!IsUsableConnector(connector)) {
                     drmModeFreeConnector(connector);
                     continue;
                 }
@@ -271,11 +264,11 @@ namespace grvl {
                 display.connector_type_id = connector->connector_type_id;
                 display.built_in = IsBuiltInConnector(connector->connector_type);
 
-                for (int mode_index = 0; mode_index < connector->count_modes; ++mode_index) {
+                for(int mode_index = 0; mode_index < connector->count_modes; ++mode_index) {
                     display.modes.push_back(MakeNativeDisplayMode(connector->modes[mode_index]));
                 }
 
-                if (selected_mode != nullptr) {
+                if(selected_mode != nullptr) {
                     display.width = selected_mode->hdisplay;
                     display.height = selected_mode->vdisplay;
                     display.refresh = selected_mode->vrefresh;
@@ -298,7 +291,7 @@ namespace grvl {
         xkb_ctx = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
 
         xkb_keymap = xkb_keymap_new_from_names(xkb_ctx, nullptr, XKB_KEYMAP_COMPILE_NO_FLAGS);
-        if (!xkb_keymap) {
+        if(!xkb_keymap) {
             // @TODO: make configurable
             struct xkb_rule_names names = {
                 .rules = NULL,
@@ -343,35 +336,36 @@ namespace grvl {
 
     int LinuxNativeApp::AcquireDrmLease(int fd)
     {
-      Log(INFO, "DRM lease: trying XRandR lease for fd=%d", fd);
-      int lease_fd = AcquireXrandrLease(fd);
-      if (lease_fd >= 0) {
-        Log(INFO, "DRM lease: acquired XRandR lease fd=%d", lease_fd);
-        drm_access_type = DrmAccessType::XrandrLease;
+        Log(INFO, "DRM lease: trying XRandR lease for fd=%d", fd);
+        int lease_fd = AcquireXrandrLease(fd);
+        if(lease_fd >= 0) {
+            Log(INFO, "DRM lease: acquired XRandR lease fd=%d", lease_fd);
+            drm_access_type = DrmAccessType::XrandrLease;
+            return lease_fd;
+        }
+
+        lease_fd = AcquireFbtermLease();
+        if(lease_fd >= 0) {
+            drm_access_type = DrmAccessType::FbtermLease;
+        }
+
         return lease_fd;
-      }
-
-      lease_fd = AcquireFbtermLease();
-      if (lease_fd >= 0) {
-        drm_access_type = DrmAccessType::FbtermLease;
-      }
-
-      return lease_fd;
     }
-
 
     uint32_t LinuxNativeApp::GetPropertyId(uint32_t obj_id, uint32_t obj_type, const char* name)
     {
         uint32_t prop_id = 0;
 
-        drmModeObjectProperties *props = drmModeObjectGetProperties(fd, obj_id, obj_type);
-        if (!props) return 0;
+        drmModeObjectProperties* props = drmModeObjectGetProperties(fd, obj_id, obj_type);
+        if(!props)
+            return 0;
 
-        for (uint32_t i = 0; i < props->count_props; i++) {
-            drmModePropertyRes *prop = drmModeGetProperty(fd, props->props[i]);
-            if (!prop) continue;
+        for(uint32_t i = 0; i < props->count_props; i++) {
+            drmModePropertyRes* prop = drmModeGetProperty(fd, props->props[i]);
+            if(!prop)
+                continue;
 
-            if (std::strcmp(prop->name, name) == 0) {
+            if(std::strcmp(prop->name, name) == 0) {
                 prop_id = prop->prop_id;
                 drmModeFreeProperty(prop);
                 break;
@@ -387,14 +381,16 @@ namespace grvl {
     {
         uint64_t prop_value = 0;
 
-        drmModeObjectProperties *props = drmModeObjectGetProperties(fd, obj_id, obj_type);
-        if (!props) return 0;
+        drmModeObjectProperties* props = drmModeObjectGetProperties(fd, obj_id, obj_type);
+        if(!props)
+            return 0;
 
-        for (uint32_t i = 0; i < props->count_props; i++) {
-            drmModePropertyRes *prop = drmModeGetProperty(fd, props->props[i]);
-            if (!prop) continue;
+        for(uint32_t i = 0; i < props->count_props; i++) {
+            drmModePropertyRes* prop = drmModeGetProperty(fd, props->props[i]);
+            if(!prop)
+                continue;
 
-            if (std::strcmp(prop->name, name) == 0) {
+            if(std::strcmp(prop->name, name) == 0) {
                 prop_value = props->prop_values[i];
                 drmModeFreeProperty(prop);
                 break;
@@ -408,16 +404,16 @@ namespace grvl {
 
     uint32_t LinuxNativeApp::GetPlaneType(uint32_t plane_id)
     {
-        drmModeObjectProperties *props = drmModeObjectGetProperties(fd, plane_id, DRM_MODE_OBJECT_PLANE);
-        if (!props) {
+        drmModeObjectProperties* props = drmModeObjectGetProperties(fd, plane_id, DRM_MODE_OBJECT_PLANE);
+        if(!props) {
             Log(ERROR, "Failed to get properties for DRM plane %u!", plane_id);
             return uint32_t(-1);
         }
 
         uint32_t type_prop_id = GetPropertyId(plane_id, DRM_MODE_OBJECT_PLANE, "type");
 
-        for (uint32_t i = 0; i < props->count_props; i++) {
-            if (props->props[i] == type_prop_id) {
+        for(uint32_t i = 0; i < props->count_props; i++) {
+            if(props->props[i] == type_prop_id) {
                 uint32_t type_val = (uint32_t)props->prop_values[i];
                 drmModeFreeObjectProperties(props);
                 return type_val;
@@ -431,29 +427,30 @@ namespace grvl {
     uint32_t LinuxNativeApp::FindPlaneByType(uint32_t plane_type)
     {
         drmModePlaneResPtr plane_res = drmModeGetPlaneResources(fd);
-        if (!plane_res) return 0;
+        if(!plane_res)
+            return 0;
 
         uint32_t found_id = 0;
         bool selected = false;
 
-        for (uint32_t i = 0; i < plane_res->count_planes; i++) {
+        for(uint32_t i = 0; i < plane_res->count_planes; i++) {
             uint32_t plane_id = plane_res->planes[i];
 
-            if (GetPlaneType(plane_id) != plane_type) {
+            if(GetPlaneType(plane_id) != plane_type) {
                 continue;
             }
 
             drmModePlanePtr plane = drmModeGetPlane(fd, plane_id);
-            if (!plane) {
-              Log(ERROR, "Failed to get DRM plane %u!", plane_id);
-              continue;
+            if(!plane) {
+                Log(ERROR, "Failed to get DRM plane %u!", plane_id);
+                continue;
             }
 
             uint32_t crtcs = plane->possible_crtcs;
             drmModeFreePlane(plane);
 
             // Only select planes compatible with our CRTC
-            if (!(crtcs & (1 << crtc_index))) {
+            if(!(crtcs & (1 << crtc_index))) {
                 continue;
             }
 
@@ -464,7 +461,7 @@ namespace grvl {
 
         drmModeFreePlaneResources(plane_res);
 
-        if (!selected) {
+        if(!selected) {
             Log(ERROR, "Failed to select DRM plane matching type %x!", plane_type);
         }
 
@@ -473,29 +470,29 @@ namespace grvl {
 
     void LinuxNativeApp::CloseDriver()
     {
-        if (fd < 0) {
+        if(fd < 0) {
             return;
         }
 
         DestroyDumbBuffer(cursor);
         DestroyDumbBuffer(primary);
 
-        if (resource) {
+        if(resource) {
             drmModeFreeResources(resource);
             resource = nullptr;
         }
 
-        if (conn) {
+        if(conn) {
             drmModeFreeConnector(conn);
             conn = nullptr;
         }
 
-        if (encoder) {
+        if(encoder) {
             drmModeFreeEncoder(encoder);
             encoder = nullptr;
         }
 
-        if (crtc) {
+        if(crtc) {
             drmModeFreeCrtc(crtc);
             crtc = nullptr;
         }
@@ -503,19 +500,19 @@ namespace grvl {
         mode = nullptr;
         crtc_index = -1;
 
-        if (fd >= 0) {
+        if(fd >= 0) {
             close(fd);
             fd = -1;
         }
 
-        if (drm_access_type == DrmAccessType::FbtermLease) {
-            if (!ReleaseFbtermLease()) {
+        if(drm_access_type == DrmAccessType::FbtermLease) {
+            if(!ReleaseFbtermLease()) {
                 Log(ERROR, "Failed to release fbterm lease");
             }
         }
 
-        if (drm_access_type == DrmAccessType::XrandrLease) {
-            if (!RestoreXrandrDpms()) {
+        if(drm_access_type == DrmAccessType::XrandrLease) {
+            if(!RestoreXrandrDpms()) {
                 Log(ERROR, "Failed to restore DPMS!");
             }
         }
@@ -528,7 +525,7 @@ namespace grvl {
         this->fd = driver;
 
         this->resource = drmModeGetResources(fd);
-        if (!resource) {
+        if(!resource) {
             Log(ERROR, "Unable to get DRM resources!");
             CloseDriver();
             return false;
@@ -538,7 +535,7 @@ namespace grvl {
             fd, resource->count_connectors, resource->count_crtcs, resource->count_encoders);
 
         Log(INFO, "DRM init: attempting drmSetMaster(fd=%d)", fd);
-        if (drmSetMaster(fd) == 0) {
+        if(drmSetMaster(fd) == 0) {
             Log(INFO, "DRM init: DRM master acquired on fd=%d", fd);
             drm_access_type = DrmAccessType::Master;
         } else {
@@ -551,12 +548,12 @@ namespace grvl {
             close(fd);
             this->fd = lease_fd;
 
-            if (this->fd < 0) {
+            if(this->fd < 0) {
                 return false;
             }
 
             this->resource = drmModeGetResources(fd);
-            if (!resource) {
+            if(!resource) {
                 Log(ERROR, "Unable to get DRM resources!");
                 CloseDriver();
                 return false;
@@ -581,7 +578,7 @@ namespace grvl {
             drmModeFreeConnector(candidate);
         }
         this->conn = PickConnector(fd, resource, requested_connector_id);
-        if (!conn) {
+        if(!conn) {
             Log(ERROR, "Unable to pick DRM connection!");
             CloseDriver();
             return false;
@@ -591,17 +588,17 @@ namespace grvl {
             conn->connector_id, conn->connector_type, conn->connector_type_id, conn->encoder_id, conn->count_modes);
 
         this->mode = PickMode(conn, width, height, refresh);
-        if (!mode) {
+        if(!mode) {
             Log(ERROR, "Unable to pick DRM mode!");
             CloseDriver();
             return false;
         }
 
-        if (drm_access_type == DrmAccessType::XrandrLease) {
+        if(drm_access_type == DrmAccessType::XrandrLease) {
             // Resolve the selected connector's CRTC through its encoder, just like
             // the DRM master path does. Connector CRTC_ID may read as 0 on a lease FD.
             this->encoder = drmModeGetEncoder(fd, conn->encoder_id);
-            if (!encoder) {
+            if(!encoder) {
                 Log(ERROR, "DRM selection: unable to get encoder=%u for leased connector=%u",
                     conn->encoder_id, conn->connector_id);
             } else {
@@ -609,24 +606,24 @@ namespace grvl {
                 Log(INFO, "DRM selection: leased connector=%u encoder=%u current_CRTC=%u",
                     conn->connector_id, encoder->encoder_id, selected_crtc_id);
 
-                for (int i = 0; i < resource->count_crtcs; i++) {
+                for(int i = 0; i < resource->count_crtcs; i++) {
                     Log(INFO, "DRM selection: lease CRTC[%d]=%u%s", i, resource->crtcs[i],
                         resource->crtcs[i] == selected_crtc_id ? " [selected]" : "");
-                    if (resource->crtcs[i] == selected_crtc_id) {
+                    if(resource->crtcs[i] == selected_crtc_id) {
                         crtc_index = i;
                         break;
                     }
                 }
 
-                if (crtc_index >= 0) {
+                if(crtc_index >= 0) {
                     this->crtc = drmModeGetCrtc(fd, resource->crtcs[crtc_index]);
                     Log(INFO, "DRM selection: selected leased CRTC index=%d id=%u", crtc_index, resource->crtcs[crtc_index]);
                 } else {
                     Log(ERROR, "DRM selection: encoder CRTC=%u not present in lease", selected_crtc_id);
                 }
             }
-        } else if (drm_access_type == DrmAccessType::FbtermLease) {
-            if (resource->count_crtcs != 1) {
+        } else if(drm_access_type == DrmAccessType::FbtermLease) {
+            if(resource->count_crtcs != 1) {
                 Log(ERROR, "Expected exactly one CRTC in DRM lease, found %d!", resource->count_crtcs);
                 CloseDriver();
                 return false;
@@ -636,26 +633,26 @@ namespace grvl {
             this->crtc = drmModeGetCrtc(fd, resource->crtcs[crtc_index]);
         } else {
             this->encoder = drmModeGetEncoder(fd, conn->encoder_id);
-            if (!encoder) {
+            if(!encoder) {
                 Log(ERROR, "Unable to get DRM encoder!");
                 CloseDriver();
                 return false;
             }
 
             // Find index of the CRTC we are using
-            for (int i = 0; i < resource->count_crtcs; i++) {
-                if (resource->crtcs[i] == encoder->crtc_id) {
+            for(int i = 0; i < resource->count_crtcs; i++) {
+                if(resource->crtcs[i] == encoder->crtc_id) {
                     crtc_index = i;
                     break;
                 }
             }
 
-            if (crtc_index >= 0) {
+            if(crtc_index >= 0) {
                 this->crtc = drmModeGetCrtc(fd, resource->crtcs[crtc_index]);
             }
         }
 
-        if (!crtc || crtc_index < 0) {
+        if(!crtc || crtc_index < 0) {
             Log(ERROR, "Unable to get DRM CRTC!");
             CloseDriver();
             return false;
@@ -666,15 +663,15 @@ namespace grvl {
 
     bool LinuxNativeApp::TryUsingDriver(const char* path, uint16_t width, uint16_t height, uint32_t refresh, int requested_connector_id)
     {
-        if (path != nullptr && (strlen(path) != 0)) {
+        if(path != nullptr && (strlen(path) != 0)) {
             int fh = open(path, O_RDWR);
 
-            if (fh < 0) {
+            if(fh < 0) {
                 Log(ERROR, "Failed to open device '%s'!", path);
                 return false;
             }
 
-            if (!InitDriver(fh, width, height, refresh, requested_connector_id)) {
+            if(!InitDriver(fh, width, height, refresh, requested_connector_id)) {
                 Log(ERROR, "Failed to initialize DRM using device '%s'!", path);
                 return false;
             }
@@ -687,10 +684,14 @@ namespace grvl {
 
     void LinuxNativeApp::UpdateCursorPos()
     {
-        if (x < 0) x = 0;
-        if (x >= width) x = width - 1;
-        if (y < 0) y = 0;
-        if (y >= height) y = height - 1;
+        if(x < 0)
+            x = 0;
+        if(x >= width)
+            x = width - 1;
+        if(y < 0)
+            y = 0;
+        if(y >= height)
+            y = height - 1;
 
         cursor_state.x = x;
         cursor_state.y = y;
@@ -703,16 +704,16 @@ namespace grvl {
 
     void LinuxNativeApp::CommitPlanes()
     {
-        if (cursor_state.pending){
+        if(cursor_state.pending) {
             return;
         }
 
         int x = cursor_state.x.load();
         int y = cursor_state.y.load();
 
-        drmModeAtomicReq *req = drmModeAtomicAlloc();
+        drmModeAtomicReq* req = drmModeAtomicAlloc();
 
-        if (cursor.plane) {
+        if(cursor.plane) {
             // setting fb and crtc to 0 disables the cursor plane
             const bool show_cursor = draw_mouse_icon && cursor_visible;
 
@@ -721,11 +722,11 @@ namespace grvl {
             drmModeAtomicAddProperty(req, cursor.plane, cursor.props.x, x);
             drmModeAtomicAddProperty(req, cursor.plane, cursor.props.y, y);
 
-            if (cursor.props.hotspot_x) {
+            if(cursor.props.hotspot_x) {
                 drmModeAtomicAddProperty(req, cursor.plane, cursor.props.hotspot_x, cursor_hotspot_x);
             }
 
-            if (cursor.props.hotspot_y) {
+            if(cursor.props.hotspot_y) {
                 drmModeAtomicAddProperty(req, cursor.plane, cursor.props.hotspot_y, cursor_hotspot_y);
             }
         }
@@ -737,9 +738,9 @@ namespace grvl {
 
         drmModeAtomicFree(req);
 
-        if (rc == 0) {
-             cursor_state.pending = true;
-             return;
+        if(rc == 0) {
+            cursor_state.pending = true;
+            return;
         }
     }
 
@@ -751,29 +752,30 @@ namespace grvl {
 
         int ret = poll(&pfd, 1, drm_event_timeout);
 
-        if (ret > 0 && (pfd.revents & POLLIN)) {
+        if(ret > 0 && (pfd.revents & POLLIN)) {
             drmHandleEvent(fd, &ev);
         }
     }
 
-    bool LinuxNativeApp::CreateDumbBuffer(DumbBuffer &buffer,
-                                       uint32_t buffer_width,
-                                       uint32_t buffer_height,
-                                       uint32_t bpp)
+    bool LinuxNativeApp::CreateDumbBuffer(DumbBuffer& buffer,
+                                          uint32_t buffer_width,
+                                          uint32_t buffer_height,
+                                          uint32_t bpp)
     {
         buffer = {};
         buffer.dumb.width = buffer_width;
         buffer.dumb.height = buffer_height;
         buffer.dumb.bpp = bpp;
 
-        if (drmIoctl(fd,
+        if(drmIoctl(fd,
                     DRM_IOCTL_MODE_CREATE_DUMB,
-                    &buffer.dumb) != 0) {
+                    &buffer.dumb)
+           != 0) {
             Log(ERROR,
-                    "Failed to create %ux%u dumb buffer: %s",
-                    buffer_width,
-                    buffer_height,
-                    strerror(errno));
+                "Failed to create %ux%u dumb buffer: %s",
+                buffer_width,
+                buffer_height,
+                strerror(errno));
             return false;
         }
 
@@ -784,91 +786,93 @@ namespace grvl {
         drm_mode_map_dumb map_request = {};
         map_request.handle = buffer.dumb.handle;
 
-        if (drmIoctl(fd,
+        if(drmIoctl(fd,
                     DRM_IOCTL_MODE_MAP_DUMB,
-                    &map_request) != 0) {
+                    &map_request)
+           != 0) {
             Log(ERROR,
-                    "Failed to map %ux%u dumb buffer: %s",
-                    buffer_width,
-                    buffer_height,
-                    strerror(errno));
+                "Failed to map %ux%u dumb buffer: %s",
+                buffer_width,
+                buffer_height,
+                strerror(errno));
             return false;
         }
 
         buffer.map = mmap(nullptr,
-                buffer.dumb.size,
-                PROT_READ | PROT_WRITE,
-                MAP_SHARED,
-                fd,
-                map_request.offset);
+                          buffer.dumb.size,
+                          PROT_READ | PROT_WRITE,
+                          MAP_SHARED,
+                          fd,
+                          map_request.offset);
 
-        if (buffer.map == MAP_FAILED) {
+        if(buffer.map == MAP_FAILED) {
             buffer.map = nullptr;
 
             Log(ERROR,
-                    "Failed to mmap %ux%u dumb buffer: %s",
-                    buffer_width,
-                    buffer_height,
-                    strerror(errno));
+                "Failed to mmap %ux%u dumb buffer: %s",
+                buffer_width,
+                buffer_height,
+                strerror(errno));
             return false;
         }
 
         return true;
     }
 
-    bool LinuxNativeApp::AddFramebuffer(DumbBuffer &buffer,
+    bool LinuxNativeApp::AddFramebuffer(DumbBuffer& buffer,
                                         uint32_t buffer_width,
                                         uint32_t buffer_height,
                                         uint32_t format)
     {
-        if (drmModeAddFB2(fd,
-                    buffer_width,
-                    buffer_height,
-                    format,
-                    buffer.handles,
-                    buffer.pitches,
-                    buffer.offsets,
-                    &buffer.fb,
-                    0) != 0) {
+        if(drmModeAddFB2(fd,
+                         buffer_width,
+                         buffer_height,
+                         format,
+                         buffer.handles,
+                         buffer.pitches,
+                         buffer.offsets,
+                         &buffer.fb,
+                         0)
+           != 0) {
             Log(ERROR,
-                    "Failed to create framebuffer for %ux%u dumb buffer: %s",
-                    buffer_width,
-                    buffer_height,
-                    strerror(errno));
+                "Failed to create framebuffer for %ux%u dumb buffer: %s",
+                buffer_width,
+                buffer_height,
+                strerror(errno));
             return false;
         }
 
         return true;
     }
 
-    void LinuxNativeApp::DestroyDumbBuffer(DumbBuffer &buffer)
+    void LinuxNativeApp::DestroyDumbBuffer(DumbBuffer& buffer)
     {
         Log(INFO, "Destroying dumb buffer %u\n", buffer.fb);
-        if (buffer.fb != 0) {
-            if (drmModeRmFB(fd, buffer.fb) != 0) {
+        if(buffer.fb != 0) {
+            if(drmModeRmFB(fd, buffer.fb) != 0) {
                 Log(ERROR,
-                        "drmModeRmFB(%u) failed: %s",
-                        buffer.fb,
-                        strerror(errno));
+                    "drmModeRmFB(%u) failed: %s",
+                    buffer.fb,
+                    strerror(errno));
             }
 
             buffer.fb = 0;
         }
 
-        if (buffer.map != nullptr && buffer.map != MAP_FAILED) {
+        if(buffer.map != nullptr && buffer.map != MAP_FAILED) {
             munmap(buffer.map, buffer.dumb.size);
             buffer.map = nullptr;
         }
 
-        if (buffer.dumb.handle != 0) {
+        if(buffer.dumb.handle != 0) {
             drm_mode_destroy_dumb destroy = {};
             destroy.handle = buffer.dumb.handle;
 
-            if (drmIoctl(fd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroy) != 0) {
+            if(drmIoctl(fd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroy) != 0) {
                 Log(ERROR,
-                        "DRM_IOCTL_MODE_DESTROY_DUMB(%u) failed: %s",
-                        buffer.dumb.handle,
-                        strerror(errno));
+                    "DRM_IOCTL_MODE_DESTROY_DUMB(%u) failed: %s",
+                    buffer.dumb.handle,
+                    strerror(errno));
             }
 
             buffer.dumb.handle = 0;
@@ -880,7 +884,7 @@ namespace grvl {
     static int GetActiveVT()
     {
         int tty_fd = open("/dev/tty", O_RDWR | O_CLOEXEC);
-        if (tty_fd < 0) {
+        if(tty_fd < 0) {
             return -1;
         }
 
@@ -888,7 +892,7 @@ namespace grvl {
         const int ret = ioctl(tty_fd, VT_GETSTATE, &state);
         close(tty_fd);
 
-        if (ret < 0) {
+        if(ret < 0) {
             return -1;
         }
 
@@ -897,11 +901,11 @@ namespace grvl {
 
     bool LinuxNativeApp::SuspendForVTSwitch()
     {
-        if (vt_suspended) {
+        if(vt_suspended) {
             return true;
         }
 
-        switch (drm_access_type) {
+        switch(drm_access_type) {
             case DrmAccessType::Master:
                 break;
 
@@ -916,7 +920,7 @@ namespace grvl {
         }
 
         const int active_vt = GetActiveVT();
-        if (active_vt < 0) {
+        if(active_vt < 0) {
             Log(ERROR, "Failed to determine the active VT before suspending DRM");
             return false;
         }
@@ -930,12 +934,12 @@ namespace grvl {
 
         {
             std::lock_guard<std::mutex> lock(drm_mutex);
-            if (drmDropMaster(fd) != 0) {
+            if(drmDropMaster(fd) != 0) {
                 Log(ERROR, "Failed to drop DRM master before VT switch: %s", strerror(errno));
 
                 {
                     std::lock_guard<std::mutex> input_lock(input_mutex);
-                    if (libinput_resume(li) != 0) {
+                    if(libinput_resume(li) != 0) {
                         Log(ERROR, "Failed to resume libinput after DRM suspend failure");
                     }
                 }
@@ -954,11 +958,11 @@ namespace grvl {
 
     bool LinuxNativeApp::ResumeAfterVTSwitch()
     {
-        if (!vt_suspended) {
+        if(!vt_suspended) {
             return true;
         }
 
-        if (drm_access_type != DrmAccessType::Master) {
+        if(drm_access_type != DrmAccessType::Master) {
             Log(WARN, "Resuming VT after a DRM lease is not implemented yet");
             return false;
         }
@@ -966,12 +970,12 @@ namespace grvl {
         {
             std::lock_guard<std::mutex> lock(drm_mutex);
 
-            if (drmSetMaster(fd) != 0) {
+            if(drmSetMaster(fd) != 0) {
                 Log(ERROR, "Failed to regain DRM master after VT switch: %s", strerror(errno));
                 return false;
             }
 
-            if (!ApplyMode(false)) {
+            if(!ApplyMode(false)) {
                 Log(ERROR, "Failed to restore DRM mode after VT switch");
                 drmDropMaster(fd);
                 return false;
@@ -982,7 +986,7 @@ namespace grvl {
 
         {
             std::lock_guard<std::mutex> lock(input_mutex);
-            if (libinput_resume(li) != 0) {
+            if(libinput_resume(li) != 0) {
                 Log(ERROR, "Failed to resume libinput after VT switch");
                 drmDropMaster(fd);
                 return false;
@@ -1004,16 +1008,16 @@ namespace grvl {
     {
         drmModeAtomicReqPtr req = drmModeAtomicAlloc();
 
-        if (drm_access_type == DrmAccessType::XrandrLease) {
+        if(drm_access_type == DrmAccessType::XrandrLease) {
             Log(INFO, "XRandR blank: selected connector=%u CRTC=%u; blank all other leased outputs",
                 conn->connector_id, crtc->crtc_id);
 
             // Xorg deliberately leaves leased primary planes scanning out their last
             // framebuffer. Detach every non-selected connector/CRTC/plane so no X
             // content remains visible on the other leased outputs.
-            for (int i = 0; i < resource->count_connectors; i++) {
+            for(int i = 0; i < resource->count_connectors; i++) {
                 const uint32_t connector_id = resource->connectors[i];
-                if (connector_id == conn->connector_id) {
+                if(connector_id == conn->connector_id) {
                     continue;
                 }
 
@@ -1021,7 +1025,7 @@ namespace grvl {
                 const uint32_t connector_crtc = GetPropertyId(connector_id, DRM_MODE_OBJECT_CONNECTOR, "CRTC_ID");
                 Log(INFO, "XRandR blank: connector=%u old_CRTC=%llu -> CRTC_ID=0",
                     connector_id, static_cast<unsigned long long>(old_crtc));
-                if (connector_crtc) {
+                if(connector_crtc) {
                     drmModeAtomicAddProperty(req, connector_id, connector_crtc, 0);
                 } else {
                     Log(WARN, "XRandR blank: connector=%u missing CRTC_ID property", connector_id);
@@ -1029,24 +1033,26 @@ namespace grvl {
             }
 
             drmModePlaneResPtr plane_res = drmModeGetPlaneResources(fd);
-            if (plane_res) {
-                for (uint32_t i = 0; i < plane_res->count_planes; i++) {
+            if(plane_res) {
+                for(uint32_t i = 0; i < plane_res->count_planes; i++) {
                     const uint32_t plane_id = plane_res->planes[i];
                     drmModePlanePtr plane = drmModeGetPlane(fd, plane_id);
-                    if (!plane) {
+                    if(!plane) {
                         continue;
                     }
 
                     Log(INFO, "XRandR blank: plane=%u type=%u CRTC=%u FB=%u%s",
                         plane_id, GetPlaneType(plane_id), plane->crtc_id, plane->fb_id,
                         plane->crtc_id == crtc->crtc_id ? " [selected CRTC]" : "");
-                    if (plane->crtc_id != 0 && plane->crtc_id != crtc->crtc_id) {
+                    if(plane->crtc_id != 0 && plane->crtc_id != crtc->crtc_id) {
                         Log(INFO, "XRandR blank: detach plane=%u from CRTC=%u FB=%u",
                             plane_id, plane->crtc_id, plane->fb_id);
                         const uint32_t plane_fb = GetPropertyId(plane_id, DRM_MODE_OBJECT_PLANE, "FB_ID");
                         const uint32_t plane_crtc = GetPropertyId(plane_id, DRM_MODE_OBJECT_PLANE, "CRTC_ID");
-                        if (plane_fb) drmModeAtomicAddProperty(req, plane_id, plane_fb, 0);
-                        if (plane_crtc) drmModeAtomicAddProperty(req, plane_id, plane_crtc, 0);
+                        if(plane_fb)
+                            drmModeAtomicAddProperty(req, plane_id, plane_fb, 0);
+                        if(plane_crtc)
+                            drmModeAtomicAddProperty(req, plane_id, plane_crtc, 0);
                     }
 
                     drmModeFreePlane(plane);
@@ -1054,9 +1060,9 @@ namespace grvl {
                 drmModeFreePlaneResources(plane_res);
             }
 
-            for (int i = 0; i < resource->count_crtcs; i++) {
+            for(int i = 0; i < resource->count_crtcs; i++) {
                 const uint32_t crtc_id = resource->crtcs[i];
-                if (crtc_id == crtc->crtc_id) {
+                if(crtc_id == crtc->crtc_id) {
                     continue;
                 }
 
@@ -1066,8 +1072,10 @@ namespace grvl {
                     crtc_id, static_cast<unsigned long long>(old_active), static_cast<unsigned long long>(old_mode));
                 const uint32_t active = GetPropertyId(crtc_id, DRM_MODE_OBJECT_CRTC, "ACTIVE");
                 const uint32_t mode_id = GetPropertyId(crtc_id, DRM_MODE_OBJECT_CRTC, "MODE_ID");
-                if (active) drmModeAtomicAddProperty(req, crtc_id, active, 0);
-                if (mode_id) drmModeAtomicAddProperty(req, crtc_id, mode_id, 0);
+                if(active)
+                    drmModeAtomicAddProperty(req, crtc_id, active, 0);
+                if(mode_id)
+                    drmModeAtomicAddProperty(req, crtc_id, mode_id, 0);
             }
         }
 
@@ -1078,7 +1086,7 @@ namespace grvl {
         uint32_t crtc_mode_id = GetPropertyId(crtc->crtc_id, DRM_MODE_OBJECT_CRTC, "MODE_ID");
 
         uint32_t mode_blob = 0;
-        if (drmModeCreatePropertyBlob(fd, mode, sizeof(*mode), &mode_blob) != 0) {
+        if(drmModeCreatePropertyBlob(fd, mode, sizeof(*mode), &mode_blob) != 0) {
             Log(ERROR, "Failed to create mode blob");
             drmModeAtomicFree(req);
             return false;
@@ -1092,7 +1100,7 @@ namespace grvl {
         primary.props.crtc = GetPropertyId(primary.plane, DRM_MODE_OBJECT_PLANE, "CRTC_ID");
 
         // Set up cursor request
-        if (cursor.plane) {
+        if(cursor.plane) {
             cursor.props.fb = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "FB_ID");
             cursor.props.crtc = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "CRTC_ID");
             cursor.props.x = GetPropertyId(cursor.plane, DRM_MODE_OBJECT_PLANE, "CRTC_X");
@@ -1105,10 +1113,10 @@ namespace grvl {
             drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, 0);
             drmModeAtomicAddProperty(req, cursor.plane, cursor.props.x, 0);
             drmModeAtomicAddProperty(req, cursor.plane, cursor.props.y, 0);
-            if (cursor.props.hotspot_x) {
+            if(cursor.props.hotspot_x) {
                 drmModeAtomicAddProperty(req, cursor.plane, cursor.props.hotspot_x, cursor_hotspot_x);
             }
-            if (cursor.props.hotspot_y) {
+            if(cursor.props.hotspot_y) {
                 drmModeAtomicAddProperty(req, cursor.plane, cursor.props.hotspot_y, cursor_hotspot_y);
             }
 
@@ -1151,13 +1159,13 @@ namespace grvl {
         drmModeAtomicAddProperty(req, primary.plane, src_h, height << 16);
 
         uint32_t flags = DRM_MODE_ATOMIC_ALLOW_MODESET;
-        if (nonblock) {
+        if(nonblock) {
             flags |= DRM_MODE_ATOMIC_NONBLOCK;
         }
         const int ret = drmModeAtomicCommit(fd, req, flags, nullptr);
         drmModeAtomicFree(req);
         drmModeDestroyPropertyBlob(fd, mode_blob);
-        if (ret != 0) {
+        if(ret != 0) {
             Log(ERROR, "Atomic commit failed: %s", strerror(errno));
             return false;
         }
@@ -1166,7 +1174,7 @@ namespace grvl {
 
     void LinuxNativeApp::UpdateMonitorState()
     {
-        if (monitor_blanking_ms == 0) {
+        if(monitor_blanking_ms == 0) {
             SetMonitorActive(true);
             return;
         }
@@ -1180,7 +1188,7 @@ namespace grvl {
 
     void LinuxNativeApp::UpdateCursorState()
     {
-        if (cursor_timeout_ms == 0) {
+        if(cursor_timeout_ms == 0) {
             cursor_visible = true;
             return;
         }
@@ -1192,7 +1200,7 @@ namespace grvl {
         const uint64_t reference_ms = std::max(pointer_activity_ms, app_start_ms);
         const bool visible = (now_ms - reference_ms) < cursor_timeout_ms;
 
-        if (cursor_visible != visible) {
+        if(cursor_visible != visible) {
             Log(INFO, "Setting cursor visible=%d", visible);
             cursor_visible = visible;
         }
@@ -1202,7 +1210,7 @@ namespace grvl {
     {
         int rc = -1;
 
-        if (monitor_active == active)
+        if(monitor_active == active)
             return;
 
         Log(INFO, "Setting monitor active=%d", active);
@@ -1211,19 +1219,19 @@ namespace grvl {
         int active_new_value = active ? 1 : 0;
 
         drmModeAtomicReqPtr req = drmModeAtomicAlloc();
-        if (req == nullptr) {
+        if(req == nullptr) {
             return;
         }
 
         rc = drmModeAtomicAddProperty(req, crtc->crtc_id, active_prop_id, active_new_value);
-        if (rc < 0) {
+        if(rc < 0) {
             Log(ERROR, "Add property failed: %s", strerror(errno));
             drmModeAtomicFree(req);
             return;
         }
 
         rc = drmModeAtomicCommit(fd, req, DRM_MODE_ATOMIC_ALLOW_MODESET, NULL);
-        if (rc) {
+        if(rc) {
             Log(ERROR, "Atomic commit failed: %s", strerror(errno));
             drmModeAtomicFree(req);
             return;
@@ -1241,18 +1249,19 @@ namespace grvl {
 
         bool driver_found = false;
 
-        if (has_selected_display) {
-            if (TryUsingDriver(selected_display.drm_path.c_str(), selected_display.width, selected_display.height, selected_display.refresh, selected_display.connector_id)) {
+        if(has_selected_display) {
+            if(TryUsingDriver(selected_display.drm_path.c_str(), selected_display.width, selected_display.height, selected_display.refresh, selected_display.connector_id)) {
                 driver_found = true;
             }
-        } else for (const auto& path : GetDrmCardPaths()) {
-            if (TryUsingDriver(path.c_str(), width, height, -1)) {
-                driver_found = true;
-                break;
+        } else
+            for(const auto& path : GetDrmCardPaths()) {
+                if(TryUsingDriver(path.c_str(), width, height, -1)) {
+                    driver_found = true;
+                    break;
+                }
             }
-        }
 
-        if (!driver_found) {
+        if(!driver_found) {
             Log(ERROR, "No usable DRM device found!");
             return false;
         }
@@ -1261,13 +1270,13 @@ namespace grvl {
 
         // set drm caps
         int ret = drmSetClientCap(fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
-        if (ret != 0) {
+        if(ret != 0) {
             Log(ERROR, "Failed to enable Universal Planes!");
             return false;
         }
 
         ret = drmSetClientCap(fd, DRM_CLIENT_CAP_ATOMIC, 1);
-        if (ret != 0) {
+        if(ret != 0) {
             Log(ERROR, "Failed to enable Atomic Modesetting!");
             return false;
         }
@@ -1280,29 +1289,29 @@ namespace grvl {
          */
 #ifdef DRM_CLIENT_CAP_CURSOR_PLANE_HOTSPOT
         ret = drmSetClientCap(fd, DRM_CLIENT_CAP_CURSOR_PLANE_HOTSPOT, 1);
-        if (ret != 0 && errno != EOPNOTSUPP) {
+        if(ret != 0 && errno != EOPNOTSUPP) {
             Log(ERROR, "Failed to enable cursor plane hotspot client cap: %s", strerror(errno));
         }
 #else
         Log(ERROR, "DRM cursor plane hotspot not supported!");
 #endif
 
-        if (!CreateDumbBuffer(cursor, 64, 64, 32))
+        if(!CreateDumbBuffer(cursor, 64, 64, 32))
             return false;
 
-        if (!AddFramebuffer(cursor, 64, 64, DRM_FORMAT_ARGB8888))
+        if(!AddFramebuffer(cursor, 64, 64, DRM_FORMAT_ARGB8888))
             return false;
 
         cursor.plane = FindPlaneByType(DRM_PLANE_TYPE_CURSOR);
 
-        if (!cursor.plane) {
+        if(!cursor.plane) {
             Log(ERROR, "Failed to find DRM cursor plane!");
         }
 
-        if (!CreateDumbBuffer(primary, width, height, 32))
+        if(!CreateDumbBuffer(primary, width, height, 32))
             return false;
 
-        if (!AddFramebuffer(primary, width, height, DRM_FORMAT_XRGB8888))
+        if(!AddFramebuffer(primary, width, height, DRM_FORMAT_XRGB8888))
             return false;
 
         // Clear the buffer (black)
@@ -1312,17 +1321,16 @@ namespace grvl {
         primary.plane = FindPlaneByType(DRM_PLANE_TYPE_PRIMARY);
 
         // draw the cursor (once)
-        for (int by = 0, iy = y; iy < cursor_map_height; iy ++) {
-            for (int bx = 0, ix = x; ix < cursor_map_width; ix ++) {
-                ((uint32_t*)cursor.map)[ix + 64 * iy] =
-                    cursor_map[ix + cursor_map_width * iy];
-                bx ++;
+        for(int by = 0, iy = y; iy < cursor_map_height; iy++) {
+            for(int bx = 0, ix = x; ix < cursor_map_width; ix++) {
+                ((uint32_t*)cursor.map)[ix + 64 * iy] = cursor_map[ix + cursor_map_width * iy];
+                bx++;
             }
 
-            by ++;
+            by++;
         }
 
-        if (!ApplyMode(true)) {
+        if(!ApplyMode(true)) {
             return false;
         }
 
@@ -1330,15 +1338,15 @@ namespace grvl {
         ev.page_flip_handler = PageFlipHandler;
 
         thread_run = true;
-        drm_thread = std::thread([this] () -> void {
+        drm_thread = std::thread([this]() -> void {
             first_frame_signal.Wait();
-            while (thread_run) {
-                if (vt_suspended) {
+            while(thread_run) {
+                if(vt_suspended) {
                     std::this_thread::sleep_for(std::chrono::milliseconds(suspend_sleep_time_ms));
                     continue;
                 }
                 std::lock_guard<std::mutex> lock(drm_mutex);
-                if (!vt_suspended) {
+                if(!vt_suspended) {
                     CommitPlanes();
                     DRMWait();
                     frame_signal.Post();
@@ -1346,14 +1354,14 @@ namespace grvl {
             }
         });
 
-        input_thread = std::thread([this] () -> void {
-            while (thread_run) {
-                if (vt_suspended) {
+        input_thread = std::thread([this]() -> void {
+            while(thread_run) {
+                if(vt_suspended) {
                     std::this_thread::sleep_for(std::chrono::milliseconds(suspend_sleep_time_ms));
                     continue;
                 }
                 std::lock_guard<std::mutex> lock(input_mutex);
-                if (!vt_suspended || !monitor_active) {
+                if(!vt_suspended || !monitor_active) {
                     HandleInput();
                 }
             }
@@ -1374,7 +1382,7 @@ namespace grvl {
 
     void LinuxNativeApp::SetVSync(bool enabled)
     {
-        if (enabled) {
+        if(enabled) {
             // this could be -1 (blocking), but let's make it a long drm_event_timeout
             // so we never block indefinitely, e.g. be easy on exit
             drm_event_timeout = 300;
@@ -1387,7 +1395,7 @@ namespace grvl {
 
     void LinuxNativeApp::SetMonitorBlanking(uint32_t inactivity_ms)
     {
-    	monitor_blanking_ms = inactivity_ms;
+        monitor_blanking_ms = inactivity_ms;
     }
 
     void LinuxNativeApp::SetCursorTimeout(uint32_t inactivity_ms)
@@ -1402,7 +1410,7 @@ namespace grvl {
 
     void LinuxNativeApp::Render()
     {
-        if (!thread_run || vt_suspended) {
+        if(!thread_run || vt_suspended) {
             frame_drawn = false;
             return;
         }
@@ -1412,7 +1420,7 @@ namespace grvl {
 
         bool expected = true;
 
-        if (set_idle_throttle.compare_exchange_strong(expected, false, std::memory_order_relaxed)) {
+        if(set_idle_throttle.compare_exchange_strong(expected, false, std::memory_order_relaxed)) {
             manager.SetIdleThrottle(idle_throttle.load(std::memory_order_relaxed));
             Log(WARN, "Idle throttle configured using deprecated LinuxNativeApp::SetIdleThrottle(), use Manager::SetIdleThrottle() & LinuxNativeApp::SetVSync()");
         }
@@ -1428,7 +1436,7 @@ namespace grvl {
     void LinuxNativeApp::Swap()
     {
         // nothing was rendered, the previous frame is still being displayed
-        if (vt_suspended || !frame_drawn) {
+        if(vt_suspended || !frame_drawn) {
             return;
         }
 
@@ -1441,10 +1449,10 @@ namespace grvl {
         // copy framebuffer to primary plane buffer
         // DRM dumb buffers may have pitch != width * 4, so do not copy the
         // whole logical image as one tightly packed block.
-        if (row_bytes == primary.dumb.pitch) {
+        if(row_bytes == primary.dumb.pitch) {
             memcpy(dst, src, row_bytes * height);
         } else {
-            for (int y = 0; y < height; ++y, src += row_bytes, dst += primary.dumb.pitch) {
+            for(int y = 0; y < height; ++y, src += row_bytes, dst += primary.dumb.pitch) {
                 memcpy(dst, src, row_bytes);
             }
         }
@@ -1459,11 +1467,11 @@ namespace grvl {
 
     void LinuxNativeApp::Poll()
     {
-        if (vt_suspended) {
+        if(vt_suspended) {
             // Drop queued input and avoid dispatching to a suspended display.
-            while (events.pop()) {
+            while(events.pop()) {
             }
-            if (IsSuspendedVTActive()) {
+            if(IsSuspendedVTActive()) {
                 ResumeAfterVTSwitch();
             } else {
                 std::this_thread::sleep_for(std::chrono::milliseconds(suspend_sleep_time_ms));
@@ -1471,16 +1479,16 @@ namespace grvl {
             return;
         }
 
-        while (true) {
+        while(true) {
             auto event = events.pop();
 
-            if (!event) {
+            if(!event) {
                 break;
             }
 
             (*event)();
 
-            if (vt_suspended) {
+            if(vt_suspended) {
                 return;
             }
         }
@@ -1496,71 +1504,72 @@ namespace grvl {
         xkb_keysym_t keysym = xkb_state_key_get_one_sym(xkb_state, xkb_keycode);
         const bool ctrl_pressed = xkb_state_mod_name_is_active(xkb_state, XKB_MOD_NAME_CTRL, XKB_STATE_MODS_EFFECTIVE);
 
-        if (pressed) switch (keysym) {
-            case XKB_KEY_BackSpace:
-            case XKB_KEY_Return:
+        if(pressed)
+            switch(keysym) {
+                case XKB_KEY_BackSpace:
+                case XKB_KEY_Return:
 
-            case XKB_KEY_Tab:
-            case XKB_KEY_Escape:
-            case XKB_KEY_Delete:
-            case XKB_KEY_Home:
-            case XKB_KEY_End:
-            case XKB_KEY_Left:
-            case XKB_KEY_Right:
-            case XKB_KEY_Up:
-            case XKB_KEY_Down:
-            case XKB_KEY_Page_Up:
-            case XKB_KEY_Page_Down:
+                case XKB_KEY_Tab:
+                case XKB_KEY_Escape:
+                case XKB_KEY_Delete:
+                case XKB_KEY_Home:
+                case XKB_KEY_End:
+                case XKB_KEY_Left:
+                case XKB_KEY_Right:
+                case XKB_KEY_Up:
+                case XKB_KEY_Down:
+                case XKB_KEY_Page_Up:
+                case XKB_KEY_Page_Down:
 
-            case XKB_KEY_F1:
-            case XKB_KEY_F2:
-            case XKB_KEY_F3:
-            case XKB_KEY_F4:
-            case XKB_KEY_F5:
-            case XKB_KEY_F6:
-            case XKB_KEY_F7:
-            case XKB_KEY_F8:
-            case XKB_KEY_F9:
-            case XKB_KEY_F10:
-            case XKB_KEY_F11:
-            case XKB_KEY_F12:
-                break;
-
-            default:
-                if (ctrl_pressed) {
+                case XKB_KEY_F1:
+                case XKB_KEY_F2:
+                case XKB_KEY_F3:
+                case XKB_KEY_F4:
+                case XKB_KEY_F5:
+                case XKB_KEY_F6:
+                case XKB_KEY_F7:
+                case XKB_KEY_F8:
+                case XKB_KEY_F9:
+                case XKB_KEY_F10:
+                case XKB_KEY_F11:
+                case XKB_KEY_F12:
                     break;
-                }
 
-                char* buffer;
-                size_t size = xkb_state_key_get_utf8(xkb_state, xkb_keycode, nullptr, 0);
-
-                if (size > 0) {
-                    std::vector<char> buffer (size + 1);
-                    if (xkb_state_key_get_utf8(xkb_state, xkb_keycode, buffer.data(), buffer.size()) > 0) {
-
-                        // move the buffer to the handler
-                        events.push([buffer = std::move(buffer)] () {
-                            Manager::GetInstance().ProcessTextInput(buffer.data());
-                        });
+                default:
+                    if(ctrl_pressed) {
+                        break;
                     }
-                }
-        }
+
+                    char* buffer;
+                    size_t size = xkb_state_key_get_utf8(xkb_state, xkb_keycode, nullptr, 0);
+
+                    if(size > 0) {
+                        std::vector<char> buffer(size + 1);
+                        if(xkb_state_key_get_utf8(xkb_state, xkb_keycode, buffer.data(), buffer.size()) > 0) {
+
+                            // move the buffer to the handler
+                            events.push([buffer = std::move(buffer)]() {
+                                Manager::GetInstance().ProcessTextInput(buffer.data());
+                            });
+                        }
+                    }
+            }
 
         xkb_state_update_key(xkb_state, xkb_keycode, pressed ? XKB_KEY_DOWN : XKB_KEY_UP);
 
         uint16_t modifiers = 0;
-        if (xkb_state_mod_name_is_active(xkb_state, XKB_MOD_NAME_CTRL, XKB_STATE_MODS_EFFECTIVE)) {
+        if(xkb_state_mod_name_is_active(xkb_state, XKB_MOD_NAME_CTRL, XKB_STATE_MODS_EFFECTIVE)) {
             modifiers |= 0x01; // Control
         }
-        if (xkb_state_mod_name_is_active(xkb_state, XKB_MOD_NAME_ALT, XKB_STATE_MODS_EFFECTIVE)) {
+        if(xkb_state_mod_name_is_active(xkb_state, XKB_MOD_NAME_ALT, XKB_STATE_MODS_EFFECTIVE)) {
             modifiers |= 0x02; // Alt
         }
-        if (xkb_state_mod_name_is_active(xkb_state, XKB_MOD_NAME_SHIFT, XKB_STATE_MODS_EFFECTIVE)) {
+        if(xkb_state_mod_name_is_active(xkb_state, XKB_MOD_NAME_SHIFT, XKB_STATE_MODS_EFFECTIVE)) {
             modifiers |= 0x04; // Shift
         }
         modifiers <<= 10;
 
-        events.push([pressed, evdev_keycode, modifiers] () {
+        events.push([pressed, evdev_keycode, modifiers]() {
             Manager::GetInstance().ProcessKeyInput(pressed, modifiers | evdev_keycode);
         });
     }
@@ -1569,17 +1578,16 @@ namespace grvl {
     {
         auto type = libinput_event_get_type(event);
 
-        switch (type) {
+        switch(type) {
 
             // Relative movement (e.g. mouse)
-            case LIBINPUT_EVENT_POINTER_MOTION:
-            {
+            case LIBINPUT_EVENT_POINTER_MOTION: {
                 libinput_event_pointer* pointer = libinput_event_get_pointer_event(event);
 
                 const double dx = libinput_event_pointer_get_dx(pointer);
                 const double dy = libinput_event_pointer_get_dy(pointer);
 
-                if (dx != 0 || dy != 0) {
+                if(dx != 0 || dy != 0) {
                     last_pointer_activity_ms = CurrentTimestamp();
                 }
 
@@ -1591,14 +1599,13 @@ namespace grvl {
             }
 
             // Digitizers and touch controls (e.g. drawing tablets)
-            case LIBINPUT_EVENT_POINTER_MOTION_ABSOLUTE:
-            {
+            case LIBINPUT_EVENT_POINTER_MOTION_ABSOLUTE: {
                 libinput_event_pointer* pointer = libinput_event_get_pointer_event(event);
 
                 const int new_x = libinput_event_pointer_get_absolute_x_transformed(pointer, width);
                 const int new_y = libinput_event_pointer_get_absolute_y_transformed(pointer, height);
 
-                if (new_x != x || new_y != y) {
+                if(new_x != x || new_y != y) {
                     last_pointer_activity_ms = CurrentTimestamp();
                 }
 
@@ -1609,32 +1616,33 @@ namespace grvl {
                 break;
             }
 
-            case LIBINPUT_EVENT_POINTER_BUTTON:
-            {
+            case LIBINPUT_EVENT_POINTER_BUTTON: {
                 libinput_event_pointer* pointer = libinput_event_get_pointer_event(event);
                 uint32_t button = libinput_event_pointer_get_button(pointer);
                 bool pressed = (libinput_event_pointer_get_button_state(pointer) == LIBINPUT_BUTTON_STATE_PRESSED);
 
-                if (pressed) {
+                if(pressed) {
                     last_pointer_activity_ms = CurrentTimestamp();
                 }
 
-                if (button == BTN_LEFT) {
+                if(button == BTN_LEFT) {
                     left_mouse_pressed = pressed;
                 }
                 break;
             }
 
-            case LIBINPUT_EVENT_KEYBOARD_KEY:
-            {
+            case LIBINPUT_EVENT_KEYBOARD_KEY: {
                 libinput_event_keyboard* keyboard = libinput_event_get_keyboard_event(event);
                 uint32_t evdev_key = libinput_event_keyboard_get_key(keyboard);
                 bool pressed = libinput_event_keyboard_get_key_state(keyboard) == LIBINPUT_KEY_STATE_PRESSED;
 
-                if (pressed) {
-                    if (evdev_key == KEY_NUMLOCK) leds ^= LIBINPUT_LED_NUM_LOCK;
-                    if (evdev_key == KEY_CAPSLOCK) leds ^= LIBINPUT_LED_CAPS_LOCK;
-                    if (evdev_key == KEY_SCROLLLOCK) leds ^= LIBINPUT_LED_SCROLL_LOCK;
+                if(pressed) {
+                    if(evdev_key == KEY_NUMLOCK)
+                        leds ^= LIBINPUT_LED_NUM_LOCK;
+                    if(evdev_key == KEY_CAPSLOCK)
+                        leds ^= LIBINPUT_LED_CAPS_LOCK;
+                    if(evdev_key == KEY_SCROLLLOCK)
+                        leds ^= LIBINPUT_LED_SCROLL_LOCK;
 
                     libinput_device* dev = libinput_event_get_device(event);
                     libinput_device_led_update(dev, static_cast<libinput_led>(leds));
@@ -1645,7 +1653,6 @@ namespace grvl {
                 HandleKeycode(evdev_key + 8, evdev_key, pressed);
                 break;
             }
-
         }
     }
 
@@ -1655,14 +1662,14 @@ namespace grvl {
         pfd.fd = libinput_get_fd(li);
         pfd.events = POLLIN;
 
-        while (true) {
+        while(true) {
             // wait for up to 5ms
             poll(&pfd, 1, 5);
 
             libinput_dispatch(li);
             struct libinput_event* event = libinput_get_event(li);
 
-            if (event == nullptr) {
+            if(event == nullptr) {
                 break;
             }
 
@@ -1671,7 +1678,8 @@ namespace grvl {
         }
     }
 
-    void LinuxNativeApp::DrawMouseIcon(bool flag) {
+    void LinuxNativeApp::DrawMouseIcon(bool flag)
+    {
         draw_mouse_icon = flag;
     }
 }

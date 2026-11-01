@@ -36,7 +36,7 @@ namespace {
     {
         framebuffer.assign(2 * WIDTH * HEIGHT * 4, 0);
 
-        gui_callbacks_t callbacks { };
+        gui_callbacks_t callbacks {};
         callbacks.get_timestamp = FakeTimestamp;
         grvl::grvl::Init(&callbacks);
 

@@ -2,14 +2,14 @@
 #include <cstdlib>
 #include <ctime>
 
+#include <grvl/Manager.h>
 #include <grvl/grvl.h>
-#include <grvl/Manager.h>
 
-#include <grvl/platform/Application.h>
 #include <grvl/Manager.h>
+#include <grvl/platform/Application.h>
 
 #ifndef ROMFS_PATH
-#   define ROMFS_PATH "/romfs"
+#define ROMFS_PATH "/romfs"
 #endif
 
 void run(grvl::Application& app)
@@ -25,7 +25,7 @@ void run(grvl::Application& app)
     mgr->InitializationFinished();
     mgr->SetActiveScreen("home", 0);
 
-    while (app.ShouldRun()) {
+    while(app.ShouldRun()) {
         app.Render();
         app.Swap();
         app.Poll();
@@ -62,19 +62,19 @@ static void setup_romfs()
     // while we are still using the filesystem.
     mount.type = FS_EXT2;
     mount.mnt_point = ROMFS_PATH;
-    mount.storage_dev = (void*) "SD";
+    mount.storage_dev = (void*)"SD";
     mount.flags = FS_MOUNT_FLAG_NO_FORMAT | FS_MOUNT_FLAG_READ_ONLY;
 
-    if (rc = fs_mount(&mount)) {
+    if(rc = fs_mount(&mount)) {
         LOG_ERR("Failed to mount sdcard (err: %d)", rc);
     }
 }
 
-static void grvl_thread(void *a1, void *a2, void *a3)
+static void grvl_thread(void* a1, void* a2, void* a3)
 {
     const device* display = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
     setup_romfs();
-    grvl::ZephyrApp app {display};
+    grvl::ZephyrApp app { display };
 
     run(app);
 

@@ -14,14 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <grvl/component/Graph.h>
 #include <grvl/Manager.h>
+#include <grvl/component/Graph.h>
 
-#include <iomanip>
-#include <sstream>
 #include <cassert>
 #include <cmath>
-
+#include <iomanip>
+#include <sstream>
 
 namespace grvl {
 
@@ -32,21 +31,21 @@ namespace grvl {
         Graph* graph = new Graph(0, 0, 0, 0);
         graph->InitFromXML(xmlElement);
 
-        static constexpr int32_t DEFAULT_PADDING{0};
+        static constexpr int32_t DEFAULT_PADDING { 0 };
         graph->SetHorizontalPadding(XMLSupport::GetAttributeOrDefault(xmlElement, "horizontalPadding", DEFAULT_PADDING));
         graph->SetVerticalPadding(XMLSupport::GetAttributeOrDefault(xmlElement, "verticalPadding", DEFAULT_PADDING));
 
-        int32_t topPaddingValue{0};
-        if (XMLSupport::TryGetIntAttribute(xmlElement, "topPadding", &topPaddingValue)) {
+        int32_t topPaddingValue { 0 };
+        if(XMLSupport::TryGetIntAttribute(xmlElement, "topPadding", &topPaddingValue)) {
             graph->SetTopPadding(topPaddingValue);
         }
 
-        int32_t bottomPaddingValue{0};
-        if (XMLSupport::TryGetIntAttribute(xmlElement, "bottomPadding", &bottomPaddingValue)) {
+        int32_t bottomPaddingValue { 0 };
+        if(XMLSupport::TryGetIntAttribute(xmlElement, "bottomPadding", &bottomPaddingValue)) {
             graph->SetBottomPadding(bottomPaddingValue);
         }
 
-        static constexpr uint32_t DEFAULT_TEXT_VERTICAL_OFFSET{0};
+        static constexpr uint32_t DEFAULT_TEXT_VERTICAL_OFFSET { 0 };
         graph->SetTextVerticalOffset(XMLSupport::GetAttributeOrDefault(xmlElement, "textVerticalOffset", DEFAULT_TEXT_VERTICAL_OFFSET));
 
         static const char* defaultTextColor = "0xFFFFFFFF";
@@ -117,7 +116,7 @@ namespace grvl {
         graphMaxValue = std::numeric_limits<float>::lowest();
 
         graphData.clear();
-        cubicSpline = CubicSpline{};
+        cubicSpline = CubicSpline {};
     }
 
     // From https://en.wikipedia.org/wiki/Spline_(mathematics)#Algorithm_for_computing_natural_cubic_splines
@@ -125,23 +124,23 @@ namespace grvl {
     {
         int n = dataValues.size() - 1;
 
-        if (n < 2) {
-            return CubicSpline{};
+        if(n < 2) {
+            return CubicSpline {};
         }
 
-        CubicSpline cubicSpline{};
+        CubicSpline cubicSpline {};
 
         cubicSpline.a.insert(cubicSpline.a.begin(), dataValues.begin(), dataValues.end());
         cubicSpline.b = std::vector<float>(n);
         cubicSpline.d = std::vector<float>(n);
         std::vector<float> h;
-        for (int i = 0; i < n; ++i) {
+        for(int i = 0; i < n; ++i) {
             h.emplace_back(1);
         }
 
         std::vector<float> alpha;
         alpha.emplace_back(0);
-        for (int i = 1; i < n; ++i) {
+        for(int i = 1; i < n; ++i) {
             alpha.emplace_back(3 * (cubicSpline.a[i + 1] - cubicSpline.a[i]) / h[i] - 3 * (cubicSpline.a[i] - cubicSpline.a[i - 1]) / h[i - 1]);
         }
 
@@ -154,7 +153,7 @@ namespace grvl {
         mu[0] = 0;
         z[0] = 0;
 
-        for (int i = 1; i < n; ++i) {
+        for(int i = 1; i < n; ++i) {
             l[i] = 2 * (i + 1 - (i - 1)) - h[i - 1] * mu[i - 1];
             mu[i] = h[i] / l[i];
             z[i] = (alpha[i] - h[i - 1] * z[i - 1]) / l[i];
@@ -164,7 +163,7 @@ namespace grvl {
         z[n] = 0;
         cubicSpline.c[n] = 0;
 
-        for (int j = n - 1; j >= 0; --j) {
+        for(int j = n - 1; j >= 0; --j) {
             cubicSpline.c[j] = z[j] - mu[j] * cubicSpline.c[j + 1];
             cubicSpline.b[j] = (cubicSpline.a[j + 1] - cubicSpline.a[j]) / h[j] - h[j] * (cubicSpline.c[j + 1] + 2 * cubicSpline.c[j]) / 3;
             cubicSpline.d[j] = (cubicSpline.c[j + 1] - cubicSpline.c[j]) / 3 / h[j];
@@ -175,7 +174,7 @@ namespace grvl {
 
     void Graph::Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY)
     {
-        if (!Visible) {
+        if(!Visible) {
             return;
         }
 
@@ -204,13 +203,13 @@ namespace grvl {
 
     void Graph::DrawLinesConnectingColumnPoints(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight)
     {
-        if (graphData.size() <= 2) {
+        if(graphData.size() <= 2) {
             return;
         }
 
         int interval = RenderWidth / (graphData.size() - 1);
 
-        for (int index = 0; index < graphData.size() - 1; ++index) {
+        for(int index = 0; index < graphData.size() - 1; ++index) {
             DrawCubicSpline(painter, RenderX + interval * index, RenderY, RenderX + interval * (index + 1), RenderHeight, cubicSpline.a[index], cubicSpline.b[index], cubicSpline.c[index], cubicSpline.d[index]);
 
             Point currentPoint = CalculateGraphPointFromData(index, RenderWidth, RenderHeight);
@@ -232,14 +231,14 @@ namespace grvl {
         float normalizedYCoordinate = 1.0f - (data - graphMinValue) / (graphMaxValue - graphMinValue);
         int32_t YPosition = RenderHeight * normalizedYCoordinate;
 
-        return {XPosition, YPosition};
+        return { XPosition, YPosition };
     }
 
     void Graph::DrawCubicSpline(Painter& painter, int32_t StartX, int32_t StartY, int32_t EndX, int32_t GraphHeight, float a, float b, float c, float d)
     {
         float dx = 1.0f / static_cast<float>(EndX - StartX);
 
-        for (int i = 0; i < EndX - StartX; ++i) {
+        for(int i = 0; i < EndX - StartX; ++i) {
             float x = dx * i;
             float curveValue = a + b * x + c * x * x + d * x * x * x;
             float normalizedCurveValue = 1.0f - (curveValue - graphMinValue) / (graphMaxValue - graphMinValue);
@@ -262,7 +261,7 @@ namespace grvl {
 
     void Graph::DrawGradientUnderTheCurveIfNeeded(Painter& painter, int32_t PixelX, int32_t PixelY, int32_t EndY, float normalizedCurveYPosition)
     {
-        if (HasGradientBackground()) {
+        if(HasGradientBackground()) {
             painter.DrawGradientVLine(PixelX, PixelY, EndY, GradientStartColor, GradientEndColor, normalizedCurveYPosition);
         }
     }
@@ -293,7 +292,7 @@ namespace grvl {
         duk_push_this(ctx);
         duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
         auto graph = static_cast<Graph*>(duk_to_pointer(ctx, -1));
-        if (!graph) {
+        if(!graph) {
             return 0;
         }
 
@@ -308,7 +307,7 @@ namespace grvl {
         duk_push_this(ctx);
         duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
         auto graph = static_cast<Graph*>(duk_to_pointer(ctx, -1));
-        if (!graph) {
+        if(!graph) {
             return 0;
         }
 

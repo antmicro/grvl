@@ -14,12 +14,12 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <grvl/component/Component.h>
 #include <grvl/JSObject.h>
 #include <grvl/JSObjectBuilder.h>
-#include <grvl/component/Label.h>
 #include <grvl/Manager.h>
 #include <grvl/XMLSupport.h>
+#include <grvl/component/Component.h>
+#include <grvl/component/Label.h>
 
 namespace grvl {
 
@@ -61,7 +61,7 @@ namespace grvl {
 
         const auto* fontName = XMLSupport::GetAttributeOrDefault(xmlElement, "font", "normal");
         Font* font = man->GetFontPointer(fontName);
-        if(!font){
+        if(!font) {
             Log(WARN, "Setting invalid label font %s, the label isn't going to be drawn", fontName);
         }
         result->SetTextFont(font);
@@ -76,7 +76,7 @@ namespace grvl {
     {
         static constexpr auto alpha = 0xff000000;
 
-        if (!Visible || Width <= 0 || Height <= 0) {
+        if(!Visible || Width <= 0 || Height <= 0) {
             return;
         }
 
@@ -88,7 +88,8 @@ namespace grvl {
         if(BackgroundColor & alpha) {
             painter.FillRectangle(RenderX, RenderY, Width, Height, BackgroundColor);
         }
-        if(!TextFont) return;
+        if(!TextFont)
+            return;
         int32_t TextWidth = TextFont->GetWidth(Text.c_str());
         uint16_t BeginX = 0;
         uint16_t BeginY = (Height / 2) + (TextFont->GetFontHeight() / 2);

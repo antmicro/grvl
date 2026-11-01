@@ -14,20 +14,23 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <grvl/component/AbstractButton.h>
 #include <grvl/Manager.h>
 #include <grvl/XMLSupport.h>
+#include <grvl/component/AbstractButton.h>
 
 namespace grvl {
 
     AbstractButton::AbstractButton(const AbstractButton& other)
-        : Component{other}, Text{other.Text}, ButtonImage{other.ButtonImage}, ButtonFont{other.ButtonFont}
+        : Component { other }
+        , Text { other.Text }
+        , ButtonImage { other.ButtonImage }
+        , ButtonFont { other.ButtonFont }
     {
     }
 
     AbstractButton& AbstractButton::operator=(const AbstractButton& other)
     {
-        if (this == &other) {
+        if(this == &other) {
             return *this;
         }
 

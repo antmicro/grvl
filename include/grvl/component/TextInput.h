@@ -94,7 +94,7 @@ namespace grvl {
         };
 
         TextInput()
-            : Button { }
+            : Button {}
         {
         }
 
@@ -161,10 +161,10 @@ namespace grvl {
         GENERATE_DUK_STRING_SETTER(TextInput, BasicText, SetBasicText);
 
     protected:
-        Event onTextInput { };
-        Event onSubmit { };
-        std::string basicText { };
-        std::string masked { };
+        Event onTextInput {};
+        Event onSubmit {};
+        std::string basicText {};
+        std::string masked {};
         InputType type { InputType::TEXT };
         bool autoFocus { false };
         bool cursorEnabled { false };

@@ -18,7 +18,9 @@
 
 namespace grvl {
 
-    Ico::Ico(int32_t charCode, Font* IcoFont) : IcoChar(charCode), IcoFont(IcoFont)
+    Ico::Ico(int32_t charCode, Font* IcoFont)
+        : IcoChar(charCode)
+        , IcoFont(IcoFont)
     {
         if(IcoFont) {
             AdjustSize();
@@ -58,7 +60,7 @@ namespace grvl {
         }
 
         if(IcoChar != -1 && IcoFont != NULL) {
-            if (BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
+            if(BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
                 painter.FillRoundRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor, BorderArcRadius);
             } else {
                 painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor);

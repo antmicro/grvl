@@ -14,13 +14,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <grvl/component/Component.h>
 #include <grvl/JSEngine.h>
 #include <grvl/JSObject.h>
 #include <grvl/JSObjectBuilder.h>
 #include <grvl/Manager.h>
 #include <grvl/Misc.h>
 #include <grvl/XMLSupport.h>
+#include <grvl/component/Component.h>
 #include <grvl/grvl.h>
 
 #include <cassert>
@@ -75,15 +75,31 @@ namespace grvl {
     }
 
     Component::Component(const Component& other)
-        : uniqueID{AssignUniqueID()}, parentID{other.parentID}, ID{other.ID}, X{other.X}, Y{other.Y}, Height{other.Height}, Width{other.Width},
-        ForegroundColor{other.ForegroundColor}, ActiveForegroundColor{other.ActiveForegroundColor},
-        BackgroundColor{other.BackgroundColor}, ActiveBackgroundColor{other.ActiveBackgroundColor},
-        onPress{other.onPress}, onRelease{other.onRelease}, onClick{other.onClick},
-        TouchActivatedTimestamp{other.TouchActivatedTimestamp}, longTouchActive{other.longTouchActive},
-        onLongPress{other.onLongPress}, onLongPressRepeat{other.onLongPressRepeat},
-        touchActive{other.touchActive}, childDroppedTouch{other.childDroppedTouch},
-        previousResponse{other.previousResponse}, Visible{other.Visible}, BorderColor{other.BorderColor},
-        BorderType{other.BorderType}, BorderArcRadius{other.BorderArcRadius}
+        : uniqueID { AssignUniqueID() }
+        , parentID { other.parentID }
+        , ID { other.ID }
+        , X { other.X }
+        , Y { other.Y }
+        , Height { other.Height }
+        , Width { other.Width }
+        , ForegroundColor { other.ForegroundColor }
+        , ActiveForegroundColor { other.ActiveForegroundColor }
+        , BackgroundColor { other.BackgroundColor }
+        , ActiveBackgroundColor { other.ActiveBackgroundColor }
+        , onPress { other.onPress }
+        , onRelease { other.onRelease }
+        , onClick { other.onClick }
+        , TouchActivatedTimestamp { other.TouchActivatedTimestamp }
+        , longTouchActive { other.longTouchActive }
+        , onLongPress { other.onLongPress }
+        , onLongPressRepeat { other.onLongPressRepeat }
+        , touchActive { other.touchActive }
+        , childDroppedTouch { other.childDroppedTouch }
+        , previousResponse { other.previousResponse }
+        , Visible { other.Visible }
+        , BorderColor { other.BorderColor }
+        , BorderType { other.BorderType }
+        , BorderArcRadius { other.BorderArcRadius }
     {
         onPress.SetSenderPointer(this);
         onRelease.SetSenderPointer(this);
@@ -94,7 +110,7 @@ namespace grvl {
 
     Component& Component::operator=(const Component& other)
     {
-        if (this == &other) {
+        if(this == &other) {
             return *this;
         }
 
@@ -135,7 +151,7 @@ namespace grvl {
 
     Component::~Component()
     {
-        if (JavascriptObject != nullptr) {
+        if(JavascriptObject != nullptr) {
             JSEngine::ForgetObject(JavascriptObject);
         }
     }
@@ -274,11 +290,11 @@ namespace grvl {
 
     uint32_t Component::GetCurrentBackgroundColor()
     {
-        if(State == Released){
-            if(State == Off){
+        if(State == Released) {
+            if(State == Off) {
                 return BackgroundColor;
             }
-            if (State == On){
+            if(State == On) {
                 return ActiveBackgroundColor;
             }
         }
@@ -549,7 +565,7 @@ namespace grvl {
 
     const char* Component::GetMetadata(const char* key)
     {
-        if (metadata.count(key) == 0) {
+        if(metadata.count(key) == 0) {
             return "";
         }
 
@@ -558,11 +574,11 @@ namespace grvl {
 
     void Component::PushJSObjectOnStack(duk_context* ctx)
     {
-        if (JavascriptObject != nullptr) {
+        if(JavascriptObject != nullptr) {
             duk_push_heapptr(ctx, JavascriptObject);
             return;
         }
-        JSObjectBuilder jsObjectBuilder{ctx, this};
+        JSObjectBuilder jsObjectBuilder { ctx, this };
         JavascriptObject = duk_get_heapptr(ctx, -1);
         JSEngine::RememberObject(JavascriptObject);
         PopulateJavaScriptObject(jsObjectBuilder);
@@ -593,7 +609,7 @@ namespace grvl {
         duk_push_this(ctx);
         duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
         Component* component = static_cast<Component*>(duk_to_pointer(ctx, -1));
-        if (component) {
+        if(component) {
             Component* clonedComponent = component->Clone();
             clonedComponent->PushJSObjectOnStack(ctx);
 
@@ -603,13 +619,12 @@ namespace grvl {
         return 0;
     }
 
-
     duk_ret_t Component::JSAddMetadataWrapper(duk_context* ctx)
     {
         duk_push_this(ctx);
         duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
         Component* component = static_cast<Component*>(duk_to_pointer(ctx, -1));
-        if (!component) {
+        if(!component) {
             return 0;
         }
 
@@ -625,7 +640,7 @@ namespace grvl {
         duk_push_this(ctx);
         duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
         Component* component = static_cast<Component*>(duk_to_pointer(ctx, -1));
-        if (!component) {
+        if(!component) {
             return 0;
         }
 
@@ -645,36 +660,28 @@ namespace grvl {
             tempBorderColor = BorderColor;
         }
 
-        switch (BorderType) {
-            case BorderTypeBits::BOX:
-            {
-                if (BorderArcRadius > 0)
-                {
+        switch(BorderType) {
+            case BorderTypeBits::BOX: {
+                if(BorderArcRadius > 0) {
                     painter.DrawRoundRectangle(StartX, StartY, BorderWidth, BorderHeight, tempBorderColor, BorderArcRadius);
-                }
-                else
-                {
+                } else {
                     painter.DrawRectangle(StartX, StartY, BorderWidth, BorderHeight, tempBorderColor);
                 }
                 break;
             }
-            case BorderTypeBits::TOP:
-            {
+            case BorderTypeBits::TOP: {
                 painter.DrawHLine(StartX, StartY, BorderWidth, tempBorderColor);
                 break;
             }
-            case BorderTypeBits::RIGHT:
-            {
+            case BorderTypeBits::RIGHT: {
                 painter.DrawVLine(StartX + BorderWidth - 1, StartY, BorderHeight, tempBorderColor);
                 break;
             }
-            case BorderTypeBits::BOTTOM:
-            {
+            case BorderTypeBits::BOTTOM: {
                 painter.DrawHLine(StartX, StartY + BorderHeight - 1, BorderWidth, tempBorderColor);
                 break;
             }
-            case BorderTypeBits::LEFT:
-            {
+            case BorderTypeBits::LEFT: {
                 painter.DrawVLine(StartX, StartY, BorderHeight, tempBorderColor);
                 break;
             }

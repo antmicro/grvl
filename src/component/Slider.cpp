@@ -18,7 +18,7 @@
 #include <grvl/component/Slider.h>
 #include <grvl/grvl.h>
 
-//NOLINTBEGIN(readability-magic-numbers, bugprone-branch-clone, bugprone-integer-division)
+// NOLINTBEGIN(readability-magic-numbers, bugprone-branch-clone, bugprone-integer-division)
 
 namespace grvl {
 
@@ -60,7 +60,7 @@ namespace grvl {
 #define EPSILON 2.2204460492503131e-16
     void Slider::SetValueRange(float min, float max)
     {
-        if (static_cast<double>(max - min) < EPSILON) {
+        if(static_cast<double>(max - min) < EPSILON) {
             Log(WARN, "Ignoring invalid Slider value range (%f..%f)", min, max);
             return;
         }
@@ -90,7 +90,7 @@ namespace grvl {
 
     void Slider::SetDivision(uint8_t value)
     {
-        if (value == 0) {
+        if(value == 0) {
             Log(WARN, "Ignoring slider division equal 0");
         }
         division = value;
@@ -152,7 +152,6 @@ namespace grvl {
     {
         return Value;
     }
-
 
     bool AreSame(float a, float b)
     {
@@ -227,8 +226,8 @@ namespace grvl {
             return;
         }
 
-        if (ScaleType == SliderScaleType::CONTINUOUS) {
-            if (BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
+        if(ScaleType == SliderScaleType::CONTINUOUS) {
+            if(BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
                 painter.FillRoundRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor, BorderArcRadius);
             } else {
                 painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor);
@@ -292,7 +291,7 @@ namespace grvl {
 
                 ScrollImage.Draw(painter, ParentRenderX + X, ParentRenderY + Y);
             }
-        } else if (ScaleType == SliderScaleType::DISCRETE) {
+        } else if(ScaleType == SliderScaleType::DISCRETE) {
             uint8_t j = 0;
             for(uint32_t i = MinValue; i <= MaxValue; i = i + step) {
                 uint16_t x = ParentRenderX + X + j * (Width / division);
@@ -313,7 +312,7 @@ namespace grvl {
             }
 
             ScrollImage.Draw(painter, ParentRenderX + X, ParentRenderY + Y);
-        } else if (ScaleType == SliderScaleType::LIST) {
+        } else if(ScaleType == SliderScaleType::LIST) {
             for(uint16_t i = MinValue; i <= MaxValue; i++) {
                 float x = ParentRenderX + X + (float)i * (float)Width / (float)MaxValue;
                 painter.DrawLine(x, Y, x, Y + Height, 0xFFFFFFFF);
@@ -398,15 +397,15 @@ namespace grvl {
         if(Width > Height) { // Horizontal
             int imgModificator = KeepBoundaries ? 0 : (ScrollImage.GetWidth() / 2);
             return (bool)(x > X - modificator - imgModificator
-                            && x < (X + Width + modificator + imgModificator)
-                            && y > (Y + (Height / 2) - (ScrollImage.GetHeight() / 2) - modificator)
-                            && y < (Y + (Height / 2) + (ScrollImage.GetHeight() / 2) + modificator));
+                          && x < (X + Width + modificator + imgModificator)
+                          && y > (Y + (Height / 2) - (ScrollImage.GetHeight() / 2) - modificator)
+                          && y < (Y + (Height / 2) + (ScrollImage.GetHeight() / 2) + modificator));
         }
         int imgModificator = KeepBoundaries ? 0 : (ScrollImage.GetHeight() / 2);
         return (bool)(x > (X + (Width / 2) - (ScrollImage.GetWidth() / 2) - modificator)
-                        && x < (X + (Width / 2) + (ScrollImage.GetWidth() / 2) + modificator)
-                        && y > (Y - modificator - imgModificator)
-                        && y < (Y + Height + modificator + imgModificator));
+                      && x < (X + (Width / 2) + (ScrollImage.GetWidth() / 2) + modificator)
+                      && y > (Y - modificator - imgModificator)
+                      && y < (Y + Height + modificator + imgModificator));
     }
 
     void Slider::OnPress()
@@ -445,18 +444,18 @@ namespace grvl {
         result->SetScrollColor(XMLSupport::ParseColor(xmlElement, "scrollColor", (uint32_t)COLOR_ARGB8888_BLUE));
         result->SetActiveScrollColor(XMLSupport::ParseColor(xmlElement, "activeScrollColor", (uint32_t)result->GetScrollColor()));
 
-        result->SetValueRange(XMLSupport::GetAttributeOrDefault(xmlElement, "minValue", (uint32_t)0),XMLSupport::GetAttributeOrDefault(xmlElement, "maxValue", (uint32_t)100));
+        result->SetValueRange(XMLSupport::GetAttributeOrDefault(xmlElement, "minValue", (uint32_t)0), XMLSupport::GetAttributeOrDefault(xmlElement, "maxValue", (uint32_t)100));
 
         result->SetKeepBoundaries(XMLSupport::GetAttributeOrDefault(xmlElement, "keepBoundaries", false));
 
         const char* typeName = XMLSupport::GetAttributeOrDefault(xmlElement, "type", "Continuous");
-        if (strcmp(typeName, "Discrete") == 0) {
+        if(strcmp(typeName, "Discrete") == 0) {
             result->SetDivision(XMLSupport::GetAttributeOrDefault(xmlElement, "division", (uint32_t)1));
             result->SetSliderType(SliderScaleType::DISCRETE);
-        } else if (strcmp(typeName, "Integer") == 0) {
+        } else if(strcmp(typeName, "Integer") == 0) {
             result->SetSliderType(SliderScaleType::LIST);
         } else { // fallback to continuous scale as a default
-            if (strcmp(typeName, "Continuous") != 0) { // but warn about invalid type
+            if(strcmp(typeName, "Continuous") != 0) { // but warn about invalid type
                 Log(WARN, "Ignoring invalid value given for slider type (%s)", typeName);
             }
 
@@ -523,13 +522,13 @@ namespace grvl {
     {
         float range = MaxValue - MinValue;
 
-        if (ScaleType == DISCRETE) {
+        if(ScaleType == DISCRETE) {
             float newValue = range * position;
             int val = newValue / step;
             newValue = val * step;
             return newValue + MinValue;
         }
-        if (ScaleType == LIST) {
+        if(ScaleType == LIST) {
             float newValue = (int)roundf(range * position);
             return newValue + MinValue;
         }
@@ -572,4 +571,4 @@ namespace grvl {
 
 } /* namespace grvl */
 
-//NOLINTEND(readability-magic-numbers, bugprone-branch-clone, bugprone-integer-division)
+// NOLINTEND(readability-magic-numbers, bugprone-branch-clone, bugprone-integer-division)

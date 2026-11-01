@@ -7,9 +7,9 @@
 #include <cerrno>
 #include <cstring>
 #include <string>
-#include <unordered_set>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <unordered_set>
 #include <vector>
 #include <xcb/dpms.h>
 #include <xcb/randr.h>
@@ -103,32 +103,32 @@ namespace grvl {
         return atom;
     }
 
-    static bool CheckDpmsRequest( xcb_connection_t *conn, xcb_void_cookie_t cookie, const char *action)
+    static bool CheckDpmsRequest(xcb_connection_t* conn, xcb_void_cookie_t cookie, const char* action)
     {
-        xcb_generic_error_t *error = xcb_request_check(conn, cookie);
+        xcb_generic_error_t* error = xcb_request_check(conn, cookie);
 
-        if (!error)
+        if(!error)
             return true;
 
         Log(ERROR,
-                "%s: code=%u resource_id=0x%x sequence=%u major=%u minor=%u",
-                action,
-                error->error_code,
-                error->resource_id,
-                error->sequence,
-                error->major_code,
-                error->minor_code);
+            "%s: code=%u resource_id=0x%x sequence=%u major=%u minor=%u",
+            action,
+            error->error_code,
+            error->resource_id,
+            error->sequence,
+            error->major_code,
+            error->minor_code);
 
         free(error);
         return false;
     }
 
-    static bool SaveDpmsState(xcb_connection_t *conn)
+    static bool SaveDpmsState(xcb_connection_t* conn)
     {
         xcb_dpms_capable_cookie_t capable_cookie = xcb_dpms_capable(conn);
-        xcb_dpms_capable_reply_t *capable = xcb_dpms_capable_reply(conn, capable_cookie, nullptr);
+        xcb_dpms_capable_reply_t* capable = xcb_dpms_capable_reply(conn, capable_cookie, nullptr);
 
-        if (!capable) {
+        if(!capable) {
             Log(ERROR, "Failed to query DPMS capability");
             return false;
         }
@@ -136,15 +136,15 @@ namespace grvl {
         bool is_capable = capable->capable;
         free(capable);
 
-        if (!is_capable) {
+        if(!is_capable) {
             Log(ERROR, "X server does not support DPMS");
             return false;
         }
 
         xcb_dpms_info_cookie_t info_cookie = xcb_dpms_info(conn);
-        xcb_dpms_info_reply_t *info = xcb_dpms_info_reply(conn, info_cookie, nullptr);
+        xcb_dpms_info_reply_t* info = xcb_dpms_info_reply(conn, info_cookie, nullptr);
 
-        if (!info) {
+        if(!info) {
             Log(ERROR, "Failed to query current DPMS state");
             return false;
         }
@@ -154,72 +154,71 @@ namespace grvl {
         saved_dpms_state.valid = true;
 
         Log(INFO,
-                "Saved DPMS state: enabled=%d power_level=0x%x",
-                saved_dpms_state.enabled,
-                saved_dpms_state.power_level);
+            "Saved DPMS state: enabled=%d power_level=0x%x",
+            saved_dpms_state.enabled,
+            saved_dpms_state.power_level);
 
         free(info);
         return true;
     }
 
-    static bool RestoreDpmsState(xcb_connection_t *conn)
+    static bool RestoreDpmsState(xcb_connection_t* conn)
     {
-        if (!saved_dpms_state.valid) {
+        if(!saved_dpms_state.valid) {
             Log(ERROR, "No saved DPMS state to restore");
             return false;
         }
 
-        if (saved_dpms_state.enabled) {
-            if (!CheckDpmsRequest(
-                        conn,
-                        xcb_dpms_enable_checked(conn),
-                        "Failed to enable DPMS during restoration"))
+        if(saved_dpms_state.enabled) {
+            if(!CheckDpmsRequest(
+                   conn,
+                   xcb_dpms_enable_checked(conn),
+                   "Failed to enable DPMS during restoration"))
                 return false;
 
-            if (!CheckDpmsRequest(
-                        conn,
-                        xcb_dpms_force_level_checked(
-                            conn, saved_dpms_state.power_level),
-                        "Failed to restore DPMS power level"))
+            if(!CheckDpmsRequest(
+                   conn,
+                   xcb_dpms_force_level_checked(
+                       conn, saved_dpms_state.power_level),
+                   "Failed to restore DPMS power level"))
                 return false;
         } else {
-            if (!CheckDpmsRequest(
-                        conn,
-                        xcb_dpms_disable_checked(conn),
-                        "Failed to restore disabled DPMS state"))
+            if(!CheckDpmsRequest(
+                   conn,
+                   xcb_dpms_disable_checked(conn),
+                   "Failed to restore disabled DPMS state"))
                 return false;
         }
 
         xcb_flush(conn);
 
         Log(INFO,
-                "Restored DPMS state: enabled=%d power_level=0x%x",
-                saved_dpms_state.enabled,
-                saved_dpms_state.power_level);
+            "Restored DPMS state: enabled=%d power_level=0x%x",
+            saved_dpms_state.enabled,
+            saved_dpms_state.power_level);
 
         saved_dpms_state.valid = false;
         return true;
     }
 
-    static int SetDpms(xcb_connection_t *conn, uint16_t level)
+    static int SetDpms(xcb_connection_t* conn, uint16_t level)
     {
-        if (!CheckDpmsRequest(
-                    conn,
-                    xcb_dpms_enable_checked(conn),
-                    "Failed to enable DPMS"))
+        if(!CheckDpmsRequest(
+               conn,
+               xcb_dpms_enable_checked(conn),
+               "Failed to enable DPMS"))
             return -1;
 
-        if (!CheckDpmsRequest(
-                    conn,
-                    xcb_dpms_force_level_checked(conn, level),
-                    "Failed to force DPMS power level"))
+        if(!CheckDpmsRequest(
+               conn,
+               xcb_dpms_force_level_checked(conn, level),
+               "Failed to force DPMS power level"))
             return -1;
 
         xcb_dpms_info_cookie_t info_cookie = xcb_dpms_info(conn);
-        xcb_dpms_info_reply_t *info =
-            xcb_dpms_info_reply(conn, info_cookie, NULL);
+        xcb_dpms_info_reply_t* info = xcb_dpms_info_reply(conn, info_cookie, NULL);
 
-        if (info) {
+        if(info) {
             Log(INFO, "DPMS: power_level=0x%x state=0x%x", info->power_level, info->state);
             free(info);
         }
@@ -229,31 +228,31 @@ namespace grvl {
     }
 
     // implementation
-    static int CreateXrandrLease( xcb_connection_t* connection, xcb_window_t root, xcb_randr_lease_t lease, const DrmDevice& device, dev_t driver_device)
+    static int CreateXrandrLease(xcb_connection_t* connection, xcb_window_t root, xcb_randr_lease_t lease, const DrmDevice& device, dev_t driver_device)
     {
         xcb_generic_error_t* error = nullptr;
         xcb_randr_create_lease_reply_t* reply = xcb_randr_create_lease_reply(
+            connection,
+            xcb_randr_create_lease(
                 connection,
-                xcb_randr_create_lease(
-                    connection,
-                    root,
-                    lease,
-                    static_cast<uint16_t>(device.lease_crtcs.size()),
-                    static_cast<uint16_t>(device.lease_outputs.size()),
-                    device.lease_crtcs.data(),
-                    device.lease_outputs.data()),
-                &error);
+                root,
+                lease,
+                static_cast<uint16_t>(device.lease_crtcs.size()),
+                static_cast<uint16_t>(device.lease_outputs.size()),
+                device.lease_crtcs.data(),
+                device.lease_outputs.data()),
+            &error);
 
         if(!reply) {
             if(error) {
                 Log(ERROR,
-                        "Failed to create XRandR lease: "
-                        "code=%u resource_id=0x%x sequence=%u major=%u minor=%u",
-                        error->error_code,
-                        error->resource_id,
-                        error->sequence,
-                        error->major_code,
-                        error->minor_code);
+                    "Failed to create XRandR lease: "
+                    "code=%u resource_id=0x%x sequence=%u major=%u minor=%u",
+                    error->error_code,
+                    error->resource_id,
+                    error->sequence,
+                    error->major_code,
+                    error->minor_code);
                 free(error);
             } else {
                 Log(ERROR, "Failed to create XRandR lease: no X11 error");
@@ -262,7 +261,7 @@ namespace grvl {
         }
 
         Log(INFO, "XRandR lease: CreateLease reply nfd=%u",
-                static_cast<unsigned>(reply->nfd));
+            static_cast<unsigned>(reply->nfd));
 
         int lease_fd = -1;
         int* fds = xcb_randr_create_lease_reply_fds(connection, reply);
@@ -288,26 +287,26 @@ namespace grvl {
 
         if(lease_device != driver_device) {
             Log(ERROR, "XRandR lease: created lease fd=%d belongs to DRM device=%llu, requested DRM device=%llu; ignoring lease",
-                    lease_fd,
-                    static_cast<unsigned long long>(lease_device),
-                    static_cast<unsigned long long>(driver_device));
+                lease_fd,
+                static_cast<unsigned long long>(lease_device),
+                static_cast<unsigned long long>(driver_device));
             close(lease_fd);
             return -1;
         }
 
         Log(INFO, "XRandR lease: SUCCESS fd=%d root=%u outputs=%zu CRTCs=%zu",
-                lease_fd,
-                static_cast<unsigned>(root),
-                device.lease_outputs.size(),
-                device.lease_crtcs.size());
+            lease_fd,
+            static_cast<unsigned>(root),
+            device.lease_outputs.size(),
+            device.lease_crtcs.size());
 
         for(size_t i = 0; i < device.outputs.size(); ++i) {
             Log(INFO,
-                    "XRandR lease:   leased output #%zu '%s' randr_id=%u CRTC=%u",
-                    i,
-                    device.outputs[i].str(),
-                    static_cast<unsigned>(device.outputs[i].output),
-                    static_cast<unsigned>(device.outputs[i].crtc));
+                "XRandR lease:   leased output #%zu '%s' randr_id=%u CRTC=%u",
+                i,
+                device.outputs[i].str(),
+                static_cast<unsigned>(device.outputs[i].output),
+                static_cast<unsigned>(device.outputs[i].crtc));
         }
 
         return lease_fd;
@@ -361,8 +360,7 @@ namespace grvl {
 
         std::vector<DrmDevice> devices;
 
-        const xcb_atom_t connector_id_atom =
-            GetAtom(connection, "CONNECTOR_ID");
+        const xcb_atom_t connector_id_atom = GetAtom(connection, "CONNECTOR_ID");
 
         std::unordered_set<uint32_t> driver_connector_ids;
 
@@ -380,11 +378,10 @@ namespace grvl {
         drmModeFreeResources(resources);
 
         /*
-        * Enumerate XRandR providers. Each provider corresponds to one DRM
-        * device and owns a set of outputs and CRTCs.
-        */
-        xcb_screen_iterator_t screen =
-            xcb_setup_roots_iterator(xcb_get_setup(connection));
+         * Enumerate XRandR providers. Each provider corresponds to one DRM
+         * device and owns a set of outputs and CRTCs.
+         */
+        xcb_screen_iterator_t screen = xcb_setup_roots_iterator(xcb_get_setup(connection));
 
         while(screen.rem) {
             const xcb_window_t root = screen.data->root;
@@ -405,15 +402,14 @@ namespace grvl {
                 "XRandR lease: root=%u providers=%u",
                 static_cast<unsigned>(root), static_cast<unsigned>(providers->num_providers));
 
-            xcb_randr_provider_t* provider_ids =
-                xcb_randr_get_providers_providers(providers);
+            xcb_randr_provider_t* provider_ids = xcb_randr_get_providers_providers(providers);
 
             for(int i = 0; i < providers->num_providers; ++i) {
                 const xcb_randr_provider_t provider = provider_ids[i];
 
                 auto* info = xcb_randr_get_provider_info_reply(
                     connection,
-                    xcb_randr_get_provider_info( connection, provider, XCB_CURRENT_TIME),
+                    xcb_randr_get_provider_info(connection, provider, XCB_CURRENT_TIME),
                     nullptr);
 
                 if(!info) {
@@ -435,21 +431,18 @@ namespace grvl {
                 std::unordered_set<uint32_t> matched_connector_ids;
 
                 /*
-                * Provider outputs are already grouped by the DRM device,
-                * so no CONNECTOR_ID -> DRM-device mapping is necessary here.
-                */
-                xcb_randr_output_t* outputs =
-                    xcb_randr_get_provider_info_outputs(info);
+                 * Provider outputs are already grouped by the DRM device,
+                 * so no CONNECTOR_ID -> DRM-device mapping is necessary here.
+                 */
+                xcb_randr_output_t* outputs = xcb_randr_get_provider_info_outputs(info);
 
                 for(int output_index = 0;
                     output_index < info->num_outputs;
                     ++output_index) {
 
-                    const xcb_randr_output_t output =
-                        outputs[output_index];
+                    const xcb_randr_output_t output = outputs[output_index];
 
-                    const int connector_id =
-                        GetConnectorId(connection, output, connector_id_atom);
+                    const int connector_id = GetConnectorId(connection, output, connector_id_atom);
 
                     if(driver_connector_ids.find(connector_id) != driver_connector_ids.end()) {
                         matched_connector_ids.insert(connector_id);
@@ -468,12 +461,10 @@ namespace grvl {
                         continue;
                     }
 
-                    const int name_len =
-                        xcb_randr_get_output_info_name_length(output_info);
+                    const int name_len = xcb_randr_get_output_info_name_length(output_info);
 
-                    const char* name =
-                        reinterpret_cast<const char*>(
-                            xcb_randr_get_output_info_name(output_info));
+                    const char* name = reinterpret_cast<const char*>(
+                        xcb_randr_get_output_info_name(output_info));
 
                     RandrOutput output_result {};
                     output_result.root = root;
@@ -492,12 +483,7 @@ namespace grvl {
                     device.outputs.push_back(output_result);
                     device.lease_outputs.push_back(output);
 
-                    if(output_info->crtc != XCB_NONE &&
-                    std::find(
-                        device.lease_crtcs.begin(),
-                        device.lease_crtcs.end(),
-                        output_info->crtc) ==
-                        device.lease_crtcs.end()) {
+                    if(output_info->crtc != XCB_NONE && std::find(device.lease_crtcs.begin(), device.lease_crtcs.end(), output_info->crtc) == device.lease_crtcs.end()) {
 
                         Log(INFO, "XRandR lease: add active CRTC=%u for output '%s'",
                             static_cast<unsigned>(output_info->crtc),
@@ -615,7 +601,7 @@ namespace grvl {
 
         Log(INFO, "XRandR lease: Saving DPMS state...");
 
-        if (!SaveDpmsState(connection)) {
+        if(!SaveDpmsState(connection)) {
             Log(ERROR, "XRandR lease: Failed to save DPMS state");
             close(lease_fd);
             xcb_disconnect(connection);
@@ -624,10 +610,10 @@ namespace grvl {
 
         Log(INFO, "XRandR lease: Setting DPMS off...");
 
-        if (SetDpms(connection, XCB_DPMS_DPMS_MODE_OFF) != 0) {
+        if(SetDpms(connection, XCB_DPMS_DPMS_MODE_OFF) != 0) {
             Log(ERROR, "XRandR lease: Failed to set DPMS off");
 
-            if (!RestoreDpmsState(connection))
+            if(!RestoreDpmsState(connection))
                 Log(ERROR, "XRandR lease: Failed to restore DPMS after acquisition failure");
 
             close(lease_fd);
@@ -656,7 +642,7 @@ namespace grvl {
         bool restored = RestoreDpmsState(connection);
         xcb_disconnect(connection);
 
-        if (!restored) {
+        if(!restored) {
             Log(ERROR, "XRandR lease: Failed to restore DPMS state");
             return false;
         }

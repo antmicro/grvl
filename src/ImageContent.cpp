@@ -16,11 +16,11 @@
 
 // NOLINTBEGIN
 
+#include <grvl/Endian.h>
 #include <grvl/ImageContent.h>
-#include <grvl/grvl.h>
 #include <grvl/Misc.h>
 #include <grvl/Painter.h>
-#include <grvl/Endian.h>
+#include <grvl/grvl.h>
 
 // save on binary size
 #define STBI_ONLY_JPEG
@@ -39,13 +39,12 @@ namespace grvl {
         uint32_t data;
     };
 
-
     ImageContent::ImageContent(const char* path, std::optional<Format> format)
     {
         Format image_format = Format::ARGB8888;
         Format target_format = format.value_or(Format::ARGB8888);
 
-        if (target_format == Format::L8 || target_format == Format::AL88) {
+        if(target_format == Format::L8 || target_format == Format::AL88) {
             image_format = target_format;
         }
 
@@ -91,18 +90,18 @@ namespace grvl {
             this->frames = this->data ? 1 : 0;
         }
 
-        if (!this->data) {
+        if(!this->data) {
             Log(ERROR, "Failed to load image %s: %s", path, stbi_failure_reason());
             return;
         }
 
         // grvl and STB use a different channel order, we swap them here
-        if (image_format == Format::ARGB8888 || image_format == Format::XRGB8888) {
+        if(image_format == Format::ARGB8888 || image_format == Format::XRGB8888) {
             Pixel* pixels = reinterpret_cast<Pixel*>(this->data);
             const uint32_t length = width * height * frames;
             uint8_t alpha_and = 0xff;
 
-            for (uint32_t i = 0; i < length; i ++) {
+            for(uint32_t i = 0; i < length; i++) {
                 Pixel& pixel = pixels[i];
                 alpha_and &= pixel.channels.a;
 
@@ -115,7 +114,7 @@ namespace grvl {
 
             // if the user did not select any specific format we will choose one based
             // on whether or not the image contains trasparent pixels
-            if (alpha_and == 0xff && !format.has_value()) {
+            if(alpha_and == 0xff && !format.has_value()) {
                 target_format = Format::XRGB8888;
             }
         }
@@ -151,7 +150,7 @@ namespace grvl {
     {
         const auto size = other.GetDataLength();
         data = static_cast<uint8_t*>(malloc(size));
-        if (data && other.data) {
+        if(data && other.data) {
             memcpy(data, other.data, size);
         }
 
@@ -165,14 +164,15 @@ namespace grvl {
 
     ImageContent& ImageContent::operator=(const ImageContent& other)
     {
-        if (this == &other) {
+        if(this == &other) {
             return *this;
         }
 
         const auto size = other.GetDataLength();
-        if (data) free(data);
+        if(data)
+            free(data);
         data = static_cast<uint8_t*>(malloc(size));
-        if (data && other.data) {
+        if(data && other.data) {
             memcpy(data, other.data, size);
         }
 
@@ -188,7 +188,7 @@ namespace grvl {
 
     ImageContent::~ImageContent()
     {
-        if (data) {
+        if(data) {
             free(data);
             data = nullptr;
         }
@@ -196,7 +196,7 @@ namespace grvl {
 
     void ImageContent::Transcode(Format target)
     {
-        if (format == target) {
+        if(format == target) {
             return;
         }
 
@@ -209,7 +209,7 @@ namespace grvl {
         const uint8_t* input_buffer = data;
         uint8_t* output_buffer = static_cast<uint8_t*>(malloc(output_size));
 
-        for (uint32_t j = 0, i = 0; i < input_size; i += input_stride) {
+        for(uint32_t j = 0, i = 0; i < input_size; i += input_stride) {
             ConvertPixel(input_buffer + i, output_buffer + j, format, target);
             j += output_stride;
         }
@@ -230,7 +230,6 @@ namespace grvl {
         if(this->rotated) {
             return;
         }
-
 
         uint8_t* frame_copy = static_cast<uint8_t*>(malloc(GetFrameDataLength()));
         uint32_t bytes_per_pixel = GetBytesPerPixel();

@@ -15,8 +15,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <grvl/Manager.h>
-#include <grvl/container/Panel.h>
 #include <grvl/XMLSupport.h>
+#include <grvl/container/Panel.h>
 
 namespace grvl {
 
@@ -60,7 +60,7 @@ namespace grvl {
         if(BackgroundImage) {
             BackgroundImage->Draw(painter, X + ParentRenderX, Y + ParentRenderY);
         } else {
-            if (BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
+            if(BorderArcRadius > 0 && BorderType == BorderTypeBits::BOX) {
                 painter.FillRoundRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor, BorderArcRadius);
             } else {
                 painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, Width, Height, BackgroundColor);
