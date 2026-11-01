@@ -105,17 +105,27 @@ namespace grvl {
                     return -1;
                 }
 
+                if(ProcessIncludes(&sub, DirOf(path), depth + 1) != 0) {
+                    return -1;
+                }
+
+                // Get the root after the nested includes: the root itself
+                // can be an xi:include that was replaced.
                 XMLElement* subRoot = sub.RootElement();
                 if(subRoot == nullptr) {
                     return -1;
                 }
 
-                if(ProcessIncludes(&sub, DirOf(path), depth + 1) != 0) {
-                    return -1;
+                // A <doc> root is a wrapper for a file with more than one
+                // top-level element: insert its children, not the wrapper.
+                XMLNode* last = child;
+                if(std::strcmp(subRoot->Name(), "doc") == 0) {
+                    for(const XMLNode* node = subRoot->FirstChild(); node != nullptr; node = node->NextSibling()) {
+                        last = parent->InsertAfterChild(last, node->DeepClone(parent->GetDocument()));
+                    }
+                } else {
+                    parent->InsertAfterChild(last, subRoot->DeepClone(parent->GetDocument()));
                 }
-
-                XMLNode* copy = subRoot->DeepClone(parent->GetDocument());
-                parent->InsertAfterChild(child, copy);
                 parent->DeleteChild(child);
             }
             else if(elem != nullptr) {

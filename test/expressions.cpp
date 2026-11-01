@@ -4,6 +4,7 @@
 #include <grvl/File.h>
 #include <grvl/JSEngine.h>
 #include <grvl/Manager.h>
+#include <grvl/container/Division.h>
 #include <grvl/XMLPreprocessor.h>
 #include <grvl/grvl.h>
 
@@ -236,4 +237,48 @@ TEST_CASE_METHOD(JSFixture, "Expressions: documents with no span are unchanged",
     std::string error;
     REQUIRE(XMLPreprocessor::EscapeExpressions(document, source, error));
     REQUIRE(source == document);
+}
+
+TEST_CASE_METHOD(JSFixture, "Expressions: an included <doc> root is a wrapper", "[xml][expressions]")
+{
+    static char views[] = R"XML(<doc>
+        <prefab id="item" width="${screenWidth / 4}" height="10"/>
+        <customView id="list">
+          <button id="ok" text="" x="0" y="0" width="${screenWidth / 2}" height="10"/>
+        </customView>
+    </doc>)XML";
+
+    std::unordered_map<std::string, File::MapEntry> files {
+        { "views.xml", { reinterpret_cast<unsigned char*>(views), sizeof(views) - 1 } },
+    };
+
+    const bool hadFilesystem = !File::noFS;
+    File::NoFilesystem(&files);
+
+    Manager::Initialize(200, 100, 4, false);
+    Manager& manager = Manager::GetInstance();
+    manager.SetWorkingDirectory("romfs");
+
+    const int32_t parsed = manager.BuildFromXMLString(R"XML(
+        <doc xmlns:xi="http://www.w3.org/2001/XInclude">
+          <stylesheet></stylesheet>
+          <xi:include href="views.xml"/>
+        </doc>
+    )XML");
+
+    REQUIRE(parsed != -1);
+    manager.InitializationFinished();
+
+    Division* item = manager.GetPrefabByID("item");
+    REQUIRE(item != nullptr);
+    REQUIRE(item->GetWidth() == 50);
+
+    manager.SetActiveScreen("list", 0);
+    Component* button = manager.FindElementInTheActiveScreenById("ok");
+    REQUIRE(button != nullptr);
+    REQUIRE(button->GetWidth() == 100);
+
+    if(hadFilesystem) {
+        File::noFS = false;
+    }
 }
