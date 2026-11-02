@@ -703,10 +703,56 @@ namespace grvl {
         reinterpret_cast<LinuxNativeApp*>(app)->cursor_state.pending = false;
     }
 
-    void LinuxNativeApp::CommitPlanes()
+    static uint64_t MonotonicUs()
+    {
+        return std::chrono::duration_cast<std::chrono::microseconds>(
+                   std::chrono::steady_clock::now().time_since_epoch())
+            .count();
+    }
+
+    int LinuxNativeApp::RefreshPeriodUs() const
+    {
+        if(mode && mode->htotal && mode->vtotal && mode->clock) {
+            // mode->clock is in kHz
+            return int(uint64_t(mode->htotal) * mode->vtotal * 1000 / mode->clock);
+        }
+        if(mode && mode->vrefresh) {
+            return 1000000 / mode->vrefresh;
+        }
+        return 16667;
+    }
+
+    void LinuxNativeApp::WaitForVBlank()
+    {
+        // Pace on the real vblank of our CRTC when no flip event is coming.
+        // The CRTC index is relative to our resources, which is what the kernel
+        // expects, also for a DRM lease.
+        drmVBlank vbl = {};
+        uint32_t type = DRM_VBLANK_RELATIVE;
+        if(crtc_index == 1) {
+            type |= DRM_VBLANK_SECONDARY;
+        } else if(crtc_index > 1) {
+            type |= (uint32_t(crtc_index) << DRM_VBLANK_HIGH_CRTC_SHIFT) & DRM_VBLANK_HIGH_CRTC_MASK;
+        }
+        vbl.request.type = static_cast<drmVBlankSeqType>(type);
+        vbl.request.sequence = 1;
+
+        if(drmWaitVBlank(fd, &vbl) != 0) {
+            // e.g. CRTC is off: fall back to a plain sleep of one period
+            std::this_thread::sleep_for(std::chrono::microseconds(RefreshPeriodUs()));
+        }
+    }
+
+    LinuxNativeApp::PacingStats LinuxNativeApp::GetPacingStats() const
+    {
+        return { stat_busy.load(), stat_failed.load(), stat_late.load(), stat_lost.load(), stat_slow.load() };
+    }
+
+    // returns 0 when a flip is in flight (new or earlier one), -errno on failure
+    int LinuxNativeApp::CommitPlanes()
     {
         if(cursor_state.pending) {
-            return;
+            return 0;
         }
 
         int x = cursor_state.x.load();
@@ -714,10 +760,18 @@ namespace grvl {
 
         drmModeAtomicReq* req = drmModeAtomicAlloc();
 
-        if(cursor.plane) {
-            // setting fb and crtc to 0 disables the cursor plane
-            const bool show_cursor = draw_mouse_icon && cursor_visible;
+        // setting fb and crtc to 0 disables the cursor plane
+        const bool show_cursor = draw_mouse_icon && cursor_visible;
 
+        // Add the cursor plane only when its state changes. A disabled plane
+        // (no CRTC) in a commit is tracked by the kernel with a "fake" commit.
+        // Its flip_done completes only when the driver's commit worker runs
+        // after the vblank, which can be later than our flip event. Our next
+        // nonblocking commit then got EBUSY ("busy with a previous commit").
+        const bool cursor_changed = !cursor_committed || show_cursor != committed_cursor_shown
+            || (show_cursor && (x != committed_cursor_x || y != committed_cursor_y));
+
+        if(cursor.plane && cursor_changed) {
             drmModeAtomicAddProperty(req, cursor.plane, cursor.props.fb, show_cursor ? cursor.fb : 0);
             drmModeAtomicAddProperty(req, cursor.plane, cursor.props.crtc, show_cursor ? crtc->crtc_id : 0);
             drmModeAtomicAddProperty(req, cursor.plane, cursor.props.x, x);
@@ -741,21 +795,33 @@ namespace grvl {
 
         if(rc == 0) {
             cursor_state.pending = true;
-            return;
+            pending_timeouts = 0;
+
+            if(cursor.plane && cursor_changed) {
+                cursor_committed = true;
+                committed_cursor_shown = show_cursor;
+                committed_cursor_x = x;
+                committed_cursor_y = y;
+            }
         }
+
+        return rc;
     }
 
-    void LinuxNativeApp::DRMWait()
+    bool LinuxNativeApp::DRMWait(int timeout_ms)
     {
         pollfd pfd = {};
         pfd.fd = fd;
         pfd.events = POLLIN;
 
-        int ret = poll(&pfd, 1, drm_event_timeout);
+        int ret = poll(&pfd, 1, timeout_ms);
 
         if(ret > 0 && (pfd.revents & POLLIN)) {
             drmHandleEvent(fd, &ev);
+            return true;
         }
+
+        return false;
     }
 
     bool LinuxNativeApp::CreateDumbBuffer(DumbBuffer& buffer,
@@ -1007,6 +1073,9 @@ namespace grvl {
 
     bool LinuxNativeApp::ApplyMode(bool nonblock)
     {
+        // this commit hides the cursor plane, send its state again on the next flip
+        cursor_committed = false;
+
         drmModeAtomicReqPtr req = drmModeAtomicAlloc();
 
         if(drm_access_type == DrmAccessType::XrandrLease) {
@@ -1209,7 +1278,16 @@ namespace grvl {
 
     void LinuxNativeApp::SetMonitorActive(bool active)
     {
+        // Called from the render thread. Only record the request: a blocking
+        // modeset from this thread raced with the nonblocking flips of the DRM thread.
+        monitor_wanted = active;
+    }
+
+    void LinuxNativeApp::ApplyMonitorState()
+    {
+        // DRM thread only, with drm_mutex held
         int rc = -1;
+        const bool active = monitor_wanted.load();
 
         if(monitor_active == active)
             return;
@@ -1347,12 +1425,57 @@ namespace grvl {
                     std::this_thread::sleep_for(std::chrono::milliseconds(suspend_sleep_time_ms));
                     continue;
                 }
-                std::lock_guard<std::mutex> lock(drm_mutex);
-                if(!vt_suspended) {
-                    CommitPlanes();
-                    DRMWait();
-                    frame_signal.Post();
+                std::unique_lock<std::mutex> lock(drm_mutex);
+                if(vt_suspended) {
+                    continue;
                 }
+
+                ApplyMonitorState();
+
+                if(!monitor_active) {
+                    // CRTC is off: a flip commit would fail with EINVAL and then
+                    // block in poll() for the whole event timeout. Just tick.
+                    lock.unlock();
+                    std::this_thread::sleep_for(std::chrono::microseconds(RefreshPeriodUs()));
+                    frame_signal.Post();
+                    continue;
+                }
+
+                if(drm_event_timeout == 0) {
+                    // vsync off: keep the old free-running behaviour
+                    CommitPlanes();
+                    DRMWait(0);
+                    frame_signal.Post();
+                    continue;
+                }
+
+                const int rc = CommitPlanes();
+
+                if(rc == 0) {
+                    // Wait at most 3 periods for the flip, never the full 300 ms.
+                    const int timeout_ms = std::min(drm_event_timeout, 3 * RefreshPeriodUs() / 1000 + 1);
+                    if(!DRMWait(timeout_ms) && cursor_state.pending) {
+                        stat_late++;
+                        // the event got lost, do not stop committing forever
+                        if(++pending_timeouts >= 4) {
+                            stat_lost++;
+                            pending_timeouts = 0;
+                            cursor_state.pending = false;
+                        }
+                    }
+                } else {
+                    // No event will come for a rejected commit. Before this fix
+                    // the loop sat in poll() for 300 ms here. Wait for one real
+                    // vblank instead, and retry on the next iteration.
+                    if(rc == -EBUSY) {
+                        stat_busy++;
+                    } else {
+                        stat_failed++;
+                    }
+                    WaitForVBlank();
+                }
+
+                frame_signal.Post();
             }
         });
 
@@ -1418,7 +1541,16 @@ namespace grvl {
         }
 
         Manager& manager = Manager::GetInstance();
-        manager.perf.status = drm_event_timeout ? "vsync=on" : "vsync=off";
+        {
+            const auto st = GetPacingStats();
+            status_text = drm_event_timeout ? "vsync=on" : "vsync=off";
+            if(st.busy || st.failed || st.late || st.lost || st.slow) {
+                status_text += " busy=" + std::to_string(st.busy) + " fail=" + std::to_string(st.failed)
+                    + " late=" + std::to_string(st.late) + " lost=" + std::to_string(st.lost)
+                    + " slow=" + std::to_string(st.slow);
+            }
+            manager.perf.status = status_text.c_str();
+        }
 
         bool expected = true;
 
@@ -1427,7 +1559,14 @@ namespace grvl {
             Log(WARN, "Idle throttle configured using deprecated LinuxNativeApp::SetIdleThrottle(), use Manager::SetIdleThrottle() & LinuxNativeApp::SetVSync()");
         }
 
+        // time since the previous wake = app loop work (draw, JS, swap, poll)
+        const uint64_t loop_start_us = MonotonicUs();
+        if(last_wake_us != 0 && drm_event_timeout != 0 && frame_drawn && monitor_active && (loop_start_us - last_wake_us) > uint64_t(RefreshPeriodUs())) {
+            stat_slow++;
+        }
+
         frame_signal.Wait();
+        last_wake_us = MonotonicUs();
         UpdateMonitorState();
         UpdateCursorState();
         this->frame_drawn = monitor_active && (!first_frame_ready || manager.ShouldRedraw());

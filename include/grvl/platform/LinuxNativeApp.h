@@ -153,6 +153,19 @@ namespace grvl {
         FrameSignal first_frame_signal { false };
         bool first_frame_ready = false;
 
+        // frame pacing state and counters (see GetPacingStats())
+        int pending_timeouts = 0;
+
+        // cursor plane state of the last successful commit; the cursor plane is
+        // only added to a commit when this changes (see CommitPlanes())
+        bool cursor_committed = false;
+        bool committed_cursor_shown = false;
+        int committed_cursor_x = 0;
+        int committed_cursor_y = 0;
+        uint64_t last_wake_us = 0;
+        std::string status_text;
+        std::atomic<uint64_t> stat_busy { 0 }, stat_failed { 0 }, stat_late { 0 }, stat_lost { 0 }, stat_slow { 0 };
+
         drmEventContext ev = {};
         struct libinput* li = nullptr;
         struct udev* ud = nullptr;
@@ -170,7 +183,10 @@ namespace grvl {
         std::atomic<bool> idle_throttle { false };
         std::atomic<bool> set_idle_throttle { false };
         bool frame_drawn = true;
-        bool monitor_active = true;
+        // monitor_wanted is set by the render thread, the DRM thread applies it
+        // and then updates monitor_active (only the DRM thread commits to KMS)
+        std::atomic<bool> monitor_active { true };
+        std::atomic<bool> monitor_wanted { true };
         uint32_t monitor_blanking_ms = 0;
         uint64_t app_start_ms = 0;
         std::atomic<bool> cursor_visible { true };
@@ -203,11 +219,14 @@ namespace grvl {
         bool Setup() override;
         bool ApplyMode(bool nonblock);
         bool IsSuspendedVTActive() const;
-        void CommitPlanes();
-        void DRMWait();
+        int CommitPlanes();
+        bool DRMWait(int timeout_ms);
+        void WaitForVBlank();
+        int RefreshPeriodUs() const;
 
         void UpdateMonitorState();
         void SetMonitorActive(bool active);
+        void ApplyMonitorState();
         void UpdateCursorState();
 
     public:
@@ -232,6 +251,17 @@ namespace grvl {
 
         // Limit swapping speed to the display referesh rate
         void SetVSync(bool enabled);
+
+        // Frame pacing counters, also shown in the grvl perf overlay status:
+        // busy   - commit rejected with EBUSY (KMS still busy with an earlier commit)
+        // failed - commit rejected for any other reason
+        // late   - flip event did not arrive within 3 refresh periods
+        // lost   - flip event never arrived, the DRM thread recovered by itself
+        // slow   - the app loop (draw, JS, swap, poll) took longer than one refresh period
+        struct PacingStats {
+            uint64_t busy, failed, late, lost, slow;
+        };
+        PacingStats GetPacingStats() const;
 
         // When enabled, frames are only rendered while there was recent input, while the Manager
         // reports ongoing activity or at a low rate.
