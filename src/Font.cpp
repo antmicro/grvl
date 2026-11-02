@@ -350,7 +350,28 @@ namespace grvl {
 
     int8_t TrueTypeFont::GetKerning(uint32_t leftCode, uint32_t rightCode) const
     {
-        return round(scale * stbtt_GetCodepointKernAdvance(ttf->info(), leftCode, rightCode));
+        constexpr size_t size = CONFIG_GRVL_KERNING_CACHE_SIZE;
+        constexpr uint32_t code_mask = 0x1fffff; // all Unicode codepoints fit in 21 bits
+
+        if constexpr(size == 0) {
+            return round(scale * stbtt_GetCodepointKernAdvance(ttf->info(), leftCode, rightCode));
+        } else {
+            if((leftCode | rightCode) & ~code_mask) {
+                return round(scale * stbtt_GetCodepointKernAdvance(ttf->info(), leftCode, rightCode));
+            }
+
+            const uint64_t tag = (uint64_t(1) << 50) | (uint64_t(leftCode) << 29) | (uint64_t(rightCode) << 8);
+            const size_t slot = ((leftCode * 0x9e3779b1u) ^ rightCode) & (size - 1);
+
+            const uint64_t entry = kerning_cache[slot];
+            if((entry & ~uint64_t(0xff)) == tag) {
+                return static_cast<int8_t>(entry & 0xff);
+            }
+
+            const int8_t kerning = round(scale * stbtt_GetCodepointKernAdvance(ttf->info(), leftCode, rightCode));
+            kerning_cache[slot] = tag | static_cast<uint8_t>(kerning);
+            return kerning;
+        }
     }
 
     float TrueTypeFont::GetCodepointAdvance(int unicode, float scale) const

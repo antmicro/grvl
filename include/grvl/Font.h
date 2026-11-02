@@ -17,6 +17,7 @@
 #ifndef GRVL_Font_H_
 #define GRVL_Font_H_
 
+#include <array>
 #include <memory>
 #include <stdint.h>
 #include <string>
@@ -24,6 +25,14 @@
 #include <vector>
 
 struct stbtt_fontinfo;
+
+// Entries in the TrueType kerning cache of each font (8 bytes each), 0 disables it
+#ifndef CONFIG_GRVL_KERNING_CACHE_SIZE
+#define CONFIG_GRVL_KERNING_CACHE_SIZE 256
+#endif
+
+static_assert((CONFIG_GRVL_KERNING_CACHE_SIZE & (CONFIG_GRVL_KERNING_CACHE_SIZE - 1)) == 0,
+              "CONFIG_GRVL_KERNING_CACHE_SIZE must be 0 or a power of two");
 
 namespace grvl {
 
@@ -134,6 +143,11 @@ namespace grvl {
 
         std::shared_ptr<const TrueTypeData> ttf;
         float scale;
+
+        // stbtt kerning lookups are slow, and text is drawn again on each frame.
+        // Fixed-size direct-mapped cache: no heap use, constant memory
+        // (8 bytes per entry), size 0 disables it. Entry: valid:1 left:21 right:21 value:8
+        mutable std::array<uint64_t, CONFIG_GRVL_KERNING_CACHE_SIZE> kerning_cache {};
     };
 
     /// Class for loading .GBF fonts.

@@ -1,3 +1,4 @@
+#include <algorithm>
 // Copyright 2014-2024 Antmicro <antmicro.com>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -57,7 +58,7 @@ namespace grvl {
     }
 
     // Based on the ST documentation
-    uint32_t Blend(uint32_t bcol, uint32_t icol)
+    static inline uint32_t BlendInline(uint32_t bcol, uint32_t icol)
     {
         Color fc = DecomposeColorFormat(icol, Format::ARGB8888);
         Color bc = DecomposeColorFormat(bcol, Format::ARGB8888);
@@ -85,6 +86,11 @@ namespace grvl {
         fc.a = ar;
 
         return fc.pack(Format::ARGB8888);
+    }
+
+    uint32_t Blend(uint32_t bcol, uint32_t icol)
+    {
+        return BlendInline(bcol, icol);
     }
 
     void UseBlitAsBlitClt(uintptr_t imem, uintptr_t bmem, uintptr_t omem, uint32_t columns, uint32_t rows, uint32_t ioff, uint32_t boff,
@@ -179,7 +185,7 @@ namespace grvl {
             } else {
                 bcol = FastConvertPixel<bstride, bfmt, Format::ARGB8888>((const unsigned char*)bmem);
             }
-            ocol = Blend(bcol, icol);
+            ocol = BlendInline(bcol, icol);
         } else {
             ocol = icol;
         }
@@ -275,6 +281,45 @@ namespace grvl {
             return;
         }
 
+        // Text: A8 glyph blended onto ARGB8888, by far the most common blit.
+        // Same results as the generic path, without the per-pixel dispatch.
+        if(blend && ifmt == Format::A8 && bfmt == ofmt && (ofmt == Format::ARGB8888 || ofmt == Format::XRGB8888)) {
+            auto* in = reinterpret_cast<const uint8_t*>(imem);
+            auto* bg = reinterpret_cast<const uint8_t*>(bmem);
+            auto* out = reinterpret_cast<uint8_t*>(omem);
+            const uint32_t rgb = font_color & 0x00ffffff;
+            // XRGB8888 reads and writes as opaque ARGB8888
+            const uint32_t opaque = (ofmt == Format::XRGB8888) ? 0xff000000 : 0;
+
+            for(uint32_t y = 0; y < rows; y++) {
+                for(uint32_t x = 0; x < columns; x++) {
+                    const uint32_t a = in[x];
+                    uint32_t px;
+                    memcpy(&px, bg + x * 4, 4);
+                    const uint32_t bcol = px | opaque;
+
+                    uint32_t ocol;
+                    if(a == 0) {
+                        ocol = (bcol >> 24) ? bcol : 0;
+                    } else if(a == 0xff) {
+                        ocol = 0xff000000 | rgb;
+                    } else {
+                        ocol = BlendInline(bcol, (a << 24) | rgb);
+                    }
+
+                    ocol |= opaque;
+                    if(ocol != px || bg != out) {
+                        memcpy(out + x * 4, &ocol, 4);
+                    }
+                }
+
+                in += columns + ioff;
+                bg += (columns + boff) * 4;
+                out += (columns + ooff) * 4;
+            }
+            return;
+        }
+
         BakedBlitFunc blit = blend
             ? FastBlitPixel_t<true>::call
             : FastBlitPixel_t<false>::call;
@@ -298,6 +343,21 @@ namespace grvl {
     template <size_t stride>
     static void FastFillPixel(uint8_t* dst, uint32_t color, uint32_t columns, uint32_t rows, uint32_t offset)
     {
+        if constexpr(stride == 4) {
+            // Build one row with plain stores, then copy it to all rows. The
+            // generic loop below does a fortified memcpy() call per pixel.
+            uint32_t row[columns];
+            for(uint32_t x = 0; x < columns; x++) {
+                row[x] = color;
+            }
+
+            for(uint32_t y = 0; y < rows; y++) {
+                memcpy(dst, row, sizeof(row));
+                dst += (columns + offset) * stride;
+            }
+            return;
+        }
+
         uint8_t bytes[stride * columns];
         uint8_t* ptr = bytes;
 

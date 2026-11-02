@@ -25,3 +25,11 @@ config GRVL_USE_STM32_DMA2D
     select USE_STM32_LL_DMA2D
     help
         Enable DMA2D hardware acceleration, this makes grvl much faster.
+
+config GRVL_KERNING_CACHE_SIZE
+    int "TrueType kerning cache entries per font"
+    default 64
+    help
+        Size of the kerning cache of each TrueTypeFont. Each entry uses
+        8 bytes of RAM, inside the font object. Must be 0 or a power of
+        two, 0 disables the cache. GrvlBakedFont (.gbf) does not use it.
