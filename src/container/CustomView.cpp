@@ -139,7 +139,7 @@ namespace grvl {
             Elements[i]->Draw(painter, ParentRenderX + X, ParentRenderY + Y);
         }
 
-        painter.PopDrawingBoundsStackElement();
+        painter.PopDrawingBound();
     }
 
     Touch::TouchResponse CustomView::ProcessTouch(const Touch& tp, int32_t ParentX, int32_t ParentY, int32_t modificator)

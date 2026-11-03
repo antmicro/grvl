@@ -98,8 +98,14 @@ namespace grvl {
     /// operations invoked on the library.
     class Manager {
     public:
+        static void Initialize(uint32_t width, uint32_t height, Painter* painter);
+
+        [[deprecated]]
         static void Initialize(uint32_t xSize, uint32_t ySize, int bpp, bool rotate90);
+
+        [[deprecated]]
         static void Initialize(uint32_t xSize, uint32_t ySize, int bpp, bool rotate90, uint8_t* framebuffer);
+
         static Manager& GetInstance();
 
         typedef Queue<Event*> EventQueue;
@@ -400,7 +406,7 @@ namespace grvl {
         /// Deprecated. Do not use painter directly, painter can only be used from specific contexts!
         /// Set a render hook with SetRenderCallback() to gain access to a Painter methods correctly.
         /// TODO make private
-        Painter painter;
+        std::unique_ptr<Painter> painter;
         Performance perf;
 
         Component* FindElementInTheActiveScreenById(const char* id);
@@ -430,6 +436,9 @@ namespace grvl {
         uint64_t GetLastInputTimestamp();
 
     private:
+        Manager(uint32_t width, uint32_t height, Painter* rasterizer);
+
+        [[deprecated]]
         Manager(uint32_t xSize, uint32_t ySize, Format fmt, bool rotate90 = false, void* framebuffer_1 = nullptr, void* framebuffer_2 = nullptr);
 
         [[deprecated("For Removal")]]

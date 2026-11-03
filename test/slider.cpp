@@ -1,9 +1,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
 
-#include <grvl/Painter.h>
 #include <grvl/component/Slider.h>
 #include <grvl/grvl.h>
+#include <grvl/render/SoftwareRasterizer.h>
 
 #include <array>
 
@@ -34,10 +34,11 @@ TEST_CASE("Horizontal slider keeps its track width", "[component][slider]")
     constexpr uint32_t handle = 0xFFFCBA03;
     std::array<uint32_t, displayWidth * displayHeight> pixels;
 
-    grvl::Painter painter;
-    painter.SetDisplaySize(displayWidth, displayHeight);
-    painter.CreateFramebuffersCollection(grvl::Format::ARGB8888, pixels.data(), pixels.data());
-    painter.ResetDrawingBounds();
+    auto painter = new grvl::SoftwareRasterizer();
+    painter->SetRotation(false);
+    painter->SetDisplaySize(displayWidth, displayHeight);
+    painter->CreateFramebuffersCollection(grvl::Format::ARGB8888, pixels.data(), pixels.data());
+    painter->InitFramebuffersCollection();
 
     grvl::Slider slider {};
     slider.SetPosition(3, 4);
@@ -55,7 +56,7 @@ TEST_CASE("Horizontal slider keeps its track width", "[component][slider]")
     constexpr int y = 4 + 3;
     for(int frame = 0; frame < 2; ++frame) {
         pixels.fill(background);
-        slider.Draw(painter, 2, 3);
+        slider.Draw(*painter, 2, 3);
         for(int row = 0; row < displayHeight; ++row) {
             for(int column = 0; column < displayWidth; ++column) {
                 INFO("width=" << width << ", value=" << value << ", frame=" << frame

@@ -48,12 +48,12 @@ namespace grvl {
         int32_t RenderX = ParentRenderX + X;
         int32_t RenderY = ParentRenderY + Y;
 
-        painter.PushDrawingBoundsStackElement(RenderX, RenderY, RenderX + Width, RenderY + Height);
+        painter.PushDrawingBound(RenderX, RenderY, RenderX + Width, RenderY + Height);
 
         DrawBackgroundItems(painter, RenderX, RenderY);
         DrawChildrenComponents(painter, RenderX, RenderY);
 
-        painter.PopDrawingBoundsStackElement();
+        painter.PopDrawingBound();
     }
 
     void Division::DrawBackgroundItems(Painter& painter, int32_t RenderX, int32_t RenderY)

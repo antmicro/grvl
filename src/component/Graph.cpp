@@ -236,6 +236,10 @@ namespace grvl {
     {
         float dx = 1.0f / static_cast<float>(EndX - StartX);
 
+        bool draw = false;
+        float prevX = 0;
+        float prevY = 0;
+
         for(int i = 0; i < EndX - StartX; ++i) {
             float x = dx * i;
             float curveValue = a + b * x + c * x * x + d * x * x * x;
@@ -243,7 +247,14 @@ namespace grvl {
             float PixelX = StartX + i;
             float PixelY = static_cast<float>(StartY) + static_cast<float>(GraphHeight) * normalizedCurveValue;
             DrawGradientUnderTheCurveIfNeeded(painter, PixelX, PixelY, StartY + GraphHeight, normalizedCurveValue);
-            painter.DrawAntialiasedPixel(PixelX, PixelY, ForegroundColor);
+
+            if(draw && (static_cast<int>(prevX) != static_cast<int>(PixelX))) {
+                painter.DrawLine(prevX, prevY, PixelX, PixelY, ForegroundColor);
+            }
+
+            prevX = PixelX;
+            prevY = PixelY;
+            draw = true;
         }
     }
 

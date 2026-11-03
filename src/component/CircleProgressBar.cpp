@@ -81,9 +81,9 @@ namespace grvl {
             endColor = EndColor;
         }
 
-        painter.FillArc(ParentX + X, ParentY + Y, StartAngle, middleAngle, Radius, Thickness, StartColor, endColor);
+        painter.DrawArc(ParentX + X, ParentY + Y, Radius, StartAngle, middleAngle, Thickness, StartColor, endColor);
         if(BackgroundColor) { // Do not draw when background is transparent
-            painter.FillArc(ParentX + X, ParentY + Y, middleAngle, EndAngle, Radius, Thickness, BackgroundColor, BackgroundColor);
+            painter.DrawArc(ParentX + X, ParentY + Y, Radius, middleAngle, EndAngle, Thickness, BackgroundColor, BackgroundColor);
         }
 
         DrawBorderIfNecessary(painter, ParentX + X, ParentY + Y, Width, Height);

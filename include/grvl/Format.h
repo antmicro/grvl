@@ -301,6 +301,16 @@ namespace grvl {
         return DecomposeColorFormat(color, input).pack(output);
     }
 
+    constexpr bool IsColorTransparent(uint32_t color)
+    {
+        return (color & 0xFF000000) == 0;
+    }
+
+    constexpr bool IsColorOpaque(uint32_t color)
+    {
+        return (color & 0xff000000) == 0xff000000;
+    }
+
 }
 
 #endif

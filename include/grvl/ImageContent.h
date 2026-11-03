@@ -42,91 +42,108 @@ namespace grvl {
 
         ~ImageContent();
 
-        uint8_t* GetData()
+        constexpr uint8_t* GetData()
         {
             return data;
         }
 
-        const uint8_t* GetData() const
+        constexpr const uint8_t* GetData() const
         {
             return data;
         }
 
-        uint8_t* GetFrameData(uint32_t frame)
+        constexpr uint8_t* GetFrameData(uint32_t frame)
         {
             return data + GetFrameDataLength() * frame;
         }
 
-        const uint8_t* GetFrameData(uint32_t frame) const
+        constexpr const uint8_t* GetFrameData(uint32_t frame) const
         {
             return data + GetFrameDataLength() * frame;
         }
 
-        uint32_t GetDataLength() const
+        constexpr uint32_t GetDataLength() const
         {
             return GetWidth() * GetHeight() * GetNumberOfFrames() * GetBytesPerPixel();
         }
 
-        uint32_t GetFrameDataLength() const
+        constexpr uint32_t GetFrameDataLength() const
         {
             return GetWidth() * GetHeight() * GetBytesPerPixel();
         }
 
-        uint16_t GetNumberOfFrames() const
+        constexpr uint16_t GetNumberOfFrames() const
         {
             return frames;
         }
 
-        uint32_t GetWidth() const
+        constexpr uint32_t GetWidth() const
         {
             return width;
         }
 
-        uint32_t GetHeight() const
+        constexpr uint32_t GetHeight() const
         {
             return height;
         }
 
-        uint32_t GetBytesPerPixel() const
+        constexpr uint32_t GetBytesPerPixel() const
         {
             return GetFormatStride(format);
         }
 
-        bool HasAlphaChannel() const
+        constexpr bool HasAlphaChannel() const
         {
             return GetFormatAlphaChannel(format);
         }
 
-        bool IsRotated() const
+        constexpr bool IsRotated() const
         {
             return rotated;
         }
 
-        bool IsEmpty() const
+        constexpr bool IsEmpty() const
         {
             return !data;
         }
 
-        Format GetColorFormat() const
+        constexpr Format GetColorFormat() const
         {
             return format;
         }
 
-        uint32_t GetNumberOfLines() const
+        constexpr uint32_t GetNumberOfLines() const
         {
             return rotated ? width : height;
         }
 
-        uint32_t GetPixelsPerLine() const
+        constexpr uint32_t GetPixelsPerLine() const
         {
             return rotated ? height : width;
         }
 
-        uintptr_t GetColorPalette() const
+        constexpr uintptr_t GetColorPalette() const
         {
             return 0;
         }
 
+        constexpr void* At(int x, int y, int frame = 0)
+        {
+            return static_cast<void*>(GetFrameData(frame) + GetBytesPerPixel() * (GetPixelsPerLine() * y + x));
+        }
+
+        constexpr const void* At(int x, int y, int frame = 0) const
+        {
+            return static_cast<const void*>(GetFrameData(frame) + GetBytesPerPixel() * (GetPixelsPerLine() * y + x));
+        }
+
+        uint32_t ReadPixel(int x, int y, int frame) const;
+        void WritePixel(int x, int y, int frame, uint32_t color);
+
+        void Blit(int x, int y, int target_frame, const ImageContent* content, int source_frame);
+        void Fill(uint8_t value, int frame = 0);
+
+        ImageContent* Resize(int width, int height) const;
         void Transcode(Format format);
         void Rotate90();
 
@@ -146,6 +163,19 @@ namespace grvl {
         const std::vector<uint32_t>& GetFrameDurations() const
         {
             return frameDurations;
+        }
+
+        // Take ownership of the underlying buffer away from ImageContent,
+        // the ImageContent gets reset afte rthis operation.
+        [[nodiscard]] constexpr void* TakeData()
+        {
+            uint8_t* tmp = GetData();
+            width = 0;
+            height = 0;
+            frames = 0;
+            rotated = false;
+            data = nullptr;
+            return tmp;
         }
 
     private:

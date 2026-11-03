@@ -22,6 +22,7 @@
 #include <cassert>
 #include <grvl/File.h>
 #include <grvl/JSEngine.h>
+#include <grvl/render/SoftwareRasterizer.h>
 #include <iomanip>
 #include <sstream>
 
@@ -240,7 +241,7 @@ namespace grvl {
 
     static constexpr auto defaultScrollingDuration = 400;
 
-    Manager::Manager(uint32_t xSize, uint32_t ySize, Format format, bool rotate90, void* framebuffer_1, void* framebuffer_2)
+    Manager::Manager(uint32_t width, uint32_t height, Painter* rasterizer)
         : flips(0)
         , TopPanel(nullptr)
         , BottomPanel(nullptr)
@@ -276,19 +277,14 @@ namespace grvl {
         , fadeEndTimestamp(0)
     {
 
-        width = xSize;
-        height = ySize;
+        this->width = width;
+        this->height = height;
 
-        painter.SetRotation(rotate90);
+        rasterizer->SetDisplaySize(width, height);
+        rasterizer->SetContentManager(&contentManager);
+        rasterizer->SetBackgroundColor(0xFF000000);
 
-        painter.SetContentManager(&contentManager);
-        painter.SetDisplaySize(xSize, ySize);
-
-        painter.CreateFramebuffersCollection(format, framebuffer_1, framebuffer_2);
-
-        painter.InitFramebuffersCollection();
-        static constexpr auto defaultBGColor = 0xFF000000;
-        painter.SetBackgroundColor(defaultBGColor);
+        this->painter.reset(rasterizer);
 
         this->last_input_timestamp.store(grvl::Callbacks()->get_timestamp());
         this->last_redraw_timestamp.store(0);
@@ -301,6 +297,23 @@ namespace grvl {
         AddCallbackToContainer("ClearCurrentInput", ClearCurrentInputCallback);
         AddCallbackToContainer("SwitchKeyboardKeys", SwitchKeyboardKeysCallback);
         AddCallbackToContainer("ShowPopup", ShowPopupCallback);
+    }
+
+    static SoftwareRasterizer* CreateSoftwarePainter(bool rotate90, uint32_t width, uint32_t height, Format format, void* framebuffer_1, void* framebuffer_2)
+    {
+        auto rasterizer = new SoftwareRasterizer();
+
+        rasterizer->SetRotation(rotate90);
+        rasterizer->SetDisplaySize(width, height);
+        rasterizer->CreateFramebuffersCollection(format, framebuffer_1, framebuffer_2);
+        rasterizer->InitFramebuffersCollection();
+
+        return rasterizer;
+    }
+
+    Manager::Manager(uint32_t width, uint32_t height, Format format, bool rotate90, void* framebuffer_1, void* framebuffer_2)
+        : Manager(width, height, CreateSoftwarePainter(rotate90, width, height, format, framebuffer_1, framebuffer_2))
+    {
     }
 
     static Format GuessFormatByStride(int bpp)
@@ -318,8 +331,8 @@ namespace grvl {
         return Format::ARGB8888;
     }
 
-    Manager::Manager(uint32_t xSize, uint32_t ySize, int bpp, bool rotate90, uint8_t* framebuffer)
-        : Manager(xSize, ySize, GuessFormatByStride(bpp), rotate90, framebuffer, framebuffer ? (framebuffer + (xSize * ySize * bpp)) : nullptr)
+    Manager::Manager(uint32_t width, uint32_t height, int bpp, bool rotate90, uint8_t* framebuffer)
+        : Manager(width, height, GuessFormatByStride(bpp), rotate90, framebuffer, framebuffer ? (framebuffer + (width * height * bpp)) : nullptr)
     {
 
         if(framebuffer) {
@@ -360,7 +373,7 @@ namespace grvl {
 
     Manager& Manager::SetBackgroundColor(uint32_t color)
     {
-        painter.SetBackgroundColor(color);
+        painter->SetBackgroundColor(color);
         return *this;
     }
 
@@ -507,17 +520,16 @@ namespace grvl {
 
         AnimationWindowOffset = width;
 
-        painter.SetActiveBuffer((direction == 1) ? 1 : 0);
-        startScreen->Draw(
-            painter, 0, startHeadersHeight);
+        painter->SetActiveBuffer((direction == 1) ? 1 : 0);
+        startScreen->Draw(*painter, 0, startHeadersHeight);
 
-        painter.SetActiveBuffer((direction == 1) ? 0 : 1);
+        painter->SetActiveBuffer((direction == 1) ? 0 : 1);
         targetScreen->Draw(
-            painter, 0, targetHeadersHeight);
+            *painter, 0, targetHeadersHeight);
 
         if(targetHeadersHeight) { // Fill space under header
-            painter.FillRectangle(0, (uint32_t)GetTopPanelHeight(), (uint32_t)targetScreen->GetWidth(),
-                                  (uint32_t)targetHeadersHeight, (uint32_t)targetScreen->GetBackgroundColor());
+            painter->FillRectangle(0, (uint32_t)GetTopPanelHeight(), (uint32_t)targetScreen->GetWidth(),
+                                   (uint32_t)targetHeadersHeight, (uint32_t)targetScreen->GetBackgroundColor());
         }
 
         BeginTimestamp = grvl::Callbacks()->get_timestamp();
@@ -536,10 +548,10 @@ namespace grvl {
         Draw();
 
 #ifdef ZEPHYR
-        LOG_HEXDUMP_INF((void*)painter.GetBuffer(0), 64, "p0");
-        LOG_HEXDUMP_INF((void*)painter.GetBuffer(1), 64, "p1");
-        LOG_HEXDUMP_INF((void*)painter.GetBuffer(2), 64, "p2");
-        LOG_HEXDUMP_INF((void*)painter.GetBuffer(3), 64, "p3");
+        LOG_HEXDUMP_INF((void*)painter->GetBuffer(0), 64, "p0");
+        LOG_HEXDUMP_INF((void*)painter->GetBuffer(1), 64, "p1");
+        LOG_HEXDUMP_INF((void*)painter->GetBuffer(2), 64, "p2");
+        LOG_HEXDUMP_INF((void*)painter->GetBuffer(3), 64, "p3");
 #endif
     }
 
@@ -561,9 +573,9 @@ namespace grvl {
                 uint32_t activeFrame = (grvl::Callbacks()->get_timestamp() % freqTwicePerSecond) / ceil((double)freqTwicePerSecond / frames);
                 LoadingImage.SetActiveFrame(activeFrame);
             }
-            LoadingImage.Draw(painter, 0, 0);
+            LoadingImage.Draw(*painter, 0, 0);
             if(!LogoImage.IsEmpty()) {
-                LogoImage.Draw(painter, 0, 0);
+                LogoImage.Draw(*painter, 0, 0);
             }
         }
     }
@@ -583,7 +595,7 @@ namespace grvl {
 
     Manager& Manager::AddImageContentToContainer(std::string name, ImageContent* image)
     {
-        if(painter.IsRotated())
+        if(painter->IsRotated())
             if(!image->IsRotated())
                 image->Rotate90();
 
@@ -642,7 +654,7 @@ namespace grvl {
             || keyActive
             || timeoutedPopupMode
             || TouchEvent.GetState() != Touch::Idle
-            || painter.IsNextFrameRequested();
+            || painter->IsNextFrameRequested();
     }
 
     Manager& Manager::AddFontToFontContainer(const std::string& name, Font* font)
@@ -990,7 +1002,7 @@ namespace grvl {
 
     uintptr_t Manager::GetFramebufferPointer(Manager::BufferName name) const
     {
-        return painter.GetBuffer(name);
+        return painter->GetBuffer(name);
     }
 
     bool Manager::ShouldRedraw()
@@ -1035,18 +1047,21 @@ namespace grvl {
         last_redraw_timestamp.store(grvl::Callbacks()->get_timestamp());
         Guard lock { DrawMutex };
 
-        painter.ClearNextFrameRequest();
-        painter.ResetDrawingBounds();
+        painter->ClearNextFrameRequest();
+        painter->ResetDrawingBounds();
+        painter->BeginFrame();
 
         switch(ManagerState) {
             case Loading: {
-                painter.SetActiveBuffer(painter.GetSwapperValue() ? 2 : 3);
-                painter.FillRectangle(0, 0, width, height, painter.GetBackgroundColor());
+                painter->SetActiveBuffer(painter->GetSwapperValue() ? 2 : 3);
+                painter->FillRectangle(0, 0, width, height, painter->GetBackgroundColor());
                 DrawNextLoadingFrame();
                 ApplyTransparency();
-                painter.SwapSynchronizeBuffers();
+                painter->SwapBuffers();
                 return;
             }
+            case ToTheLeft:
+            case ToTheRight:
             case CrossFade: {
                 if(UpdateAnimationWindowOffset()) {
                     // TODO: do the actual blending.
@@ -1057,15 +1072,15 @@ namespace grvl {
                         TopPanel->SetVisible(ActiveScreen->GetGlobalPanelVisibility());
                     }
                     ManagerState = Refreshing;
-                    grvl::Callbacks()->set_layer_pointer(painter.GetBuffer(0));
-                    painter.FillRectangle(0, 0, width, height, COLOR_ARGB8888_TRANSPARENT);
+                    grvl::Callbacks()->set_layer_pointer(painter->GetBuffer(0));
+                    painter->FillRectangle(0, 0, width, height, COLOR_ARGB8888_TRANSPARENT);
                 }
                 break;
             }
             case Refreshing: {
                 if(ActiveScreen) {
                     ActiveScreen->SetSize(width, height - GetTotalHeadersHeight() - GetBottomPanelHeight());
-                    ActiveScreen->Draw(painter, 0, GetTotalHeadersHeight());
+                    ActiveScreen->Draw(*painter, 0, GetTotalHeadersHeight());
                 }
                 break;
             }
@@ -1076,15 +1091,15 @@ namespace grvl {
         }
 
         if(TopPanel && TopPanel->IsVisible() && GetGlobalTopPanelVisibility()) {
-            TopPanel->Draw(painter, 0, 0);
+            TopPanel->Draw(*painter, 0, 0);
         }
 
         if(ActiveScreen && ActiveScreen->GetHeader() && ActiveScreen->GetHeader()->IsVisible()) {
-            ActiveScreen->GetHeader()->Draw(painter, 0, GetTopPanelHeight());
+            ActiveScreen->GetHeader()->Draw(*painter, 0, GetTopPanelHeight());
         }
 
         if(BottomPanel && BottomPanel->IsVisible()) {
-            BottomPanel->Draw(painter, 0, height - GetBottomPanelHeight());
+            BottomPanel->Draw(*painter, 0, height - GetBottomPanelHeight());
         }
 
         if(ActiveScreen && ActiveScreen->GetCollectionSize() > 0) {
@@ -1092,8 +1107,8 @@ namespace grvl {
         }
 
         if(CurrentPopup && CurrentPopup->IsVisible()) {
-            painter.ShadowBuffer(0x7F);
-            CurrentPopup->Draw(painter, 0, 0);
+            painter->ShadowBuffer(0x7F);
+            CurrentPopup->Draw(*painter, 0, 0);
         }
 
         ApplyTransparency();
@@ -1103,13 +1118,13 @@ namespace grvl {
         if(debugDot && (TouchEvent.GetState() != Touch::Idle || PointerTimestamp > (grvl::Callbacks()->get_timestamp() - touchDelay))) {
             static constexpr auto maxAlpha = 0xff;
             uint8_t alpha = maxAlpha - ((float)(grvl::Callbacks()->get_timestamp() - PointerTimestamp) / touchDelay) * maxAlpha;
-            painter.FillCircle(TouchEvent.GetCurrentX(), TouchEvent.GetCurrentY(), 5, // NOLINT
-                               alpha << 24 | (0x00FFFFFF & COLOR_ARGB8888_RED)); // NOLINT
+            painter->FillCircle(TouchEvent.GetCurrentX(), TouchEvent.GetCurrentY(), 5, // NOLINT
+                                alpha << 24 | (0x00FFFFFF & COLOR_ARGB8888_RED)); // NOLINT
         }
 
-        render_callback(painter);
+        render_callback(*painter);
         DrawOverlay();
-        painter.SwapSynchronizeBuffers();
+        painter->SwapBuffers();
         flips++;
     }
 
@@ -1132,7 +1147,7 @@ namespace grvl {
 
         int32_t y = 20;
         auto drawLine = [&](const std::string& text) {
-            painter.DrawString(font, 4, y, text, fg, bg);
+            painter->DrawString(font, 4, y, text, fg, bg);
             y += 20;
         };
 
@@ -1150,6 +1165,7 @@ namespace grvl {
 
         std::string res = std::to_string(GetWidth()) + "x" + std::to_string(GetHeight());
         drawLine("FPS: " + std::to_string(perf.fps) + " (~" + ftos(perf.mspt, 2) + "ms/t) " + res + config + (perf.status ? std::string(" ") + perf.status : ""));
+        drawLine(painter->GetDebugString());
         drawLine(std::string("grvl: ") + GRVL_VER);
 
         if(!overlayInfo.empty()) {
@@ -1188,7 +1204,7 @@ namespace grvl {
         }
         // Apply transparency
         if(currentTransparency < 1.0f) {
-            painter.ShadowBuffer(0xff - 0xff * currentTransparency);
+            painter->ShadowBuffer(0xff - 0xff * currentTransparency);
         }
     }
 
@@ -1219,19 +1235,19 @@ namespace grvl {
             // Empty dot
             if(i + 1 != activeDot) {
                 if(CollectionImage.IsEmpty()) {
-                    painter.FillCircle(pos, dotYPos, dotRadius, dotColor);
+                    painter->FillCircle(pos, dotYPos, dotRadius, dotColor);
                 } else {
                     CollectionImage.SetActiveFrame(0);
-                    CollectionImage.Draw(painter, pos, dotYPos - CollectionImage.GetHeight() / 2);
+                    CollectionImage.Draw(*painter, pos, dotYPos - CollectionImage.GetHeight() / 2);
                 }
             }
             // Filled dot
             else {
                 if(CollectionImage.IsEmpty()) {
-                    painter.FillCircle(pos, dotYPos, dotRadius, dotActiveColor);
+                    painter->FillCircle(pos, dotYPos, dotRadius, dotActiveColor);
                 } else {
                     CollectionImage.SetActiveFrame(1);
-                    CollectionImage.Draw(painter, pos, dotYPos - CollectionImage.GetHeight() / 2);
+                    CollectionImage.Draw(*painter, pos, dotYPos - CollectionImage.GetHeight() / 2);
                 }
             }
         }
@@ -1722,7 +1738,7 @@ namespace grvl {
     Manager& Manager::SetLogoImage(const Image& logo)
     {
         LogoImage = logo;
-        if(painter.IsRotated() && !LogoImage.GetContent()->IsRotated()) {
+        if(painter->IsRotated() && !LogoImage.GetContent()->IsRotated()) {
             LogoImage.GetContent()->Rotate90();
         }
         return *this;
@@ -1795,18 +1811,22 @@ namespace grvl {
         }
     }
 
-    void Manager::Initialize(uint32_t xSize, uint32_t ySize, int bpp, bool rotate90)
+    void Manager::Initialize(uint32_t width, uint32_t height, Painter* painter)
     {
-
         delete instance;
-        instance = new Manager(xSize, ySize, bpp, rotate90);
+        instance = new Manager(width, height, painter);
     }
 
-    void Manager::Initialize(uint32_t xSize, uint32_t ySize, int bpp, bool rotate90, uint8_t* framebuffer)
+    void Manager::Initialize(uint32_t width, uint32_t height, int bpp, bool rotate90)
     {
-
         delete instance;
-        instance = new Manager(xSize, ySize, bpp, rotate90, framebuffer);
+        instance = new Manager(width, height, bpp, rotate90);
+    }
+
+    void Manager::Initialize(uint32_t width, uint32_t height, int bpp, bool rotate90, uint8_t* framebuffer)
+    {
+        delete instance;
+        instance = new Manager(width, height, bpp, rotate90, framebuffer);
     }
 
     void Manager::ResetScreens()
@@ -1838,12 +1858,12 @@ namespace grvl {
 
     void Manager::ClearBuffers()
     {
-        painter.FillRectangle(0, 0, width, height, COLOR_ARGB8888_TRANSPARENT);
-        painter.SwapBuffers();
-        painter.FillRectangle(0, 0, width, height, COLOR_ARGB8888_TRANSPARENT);
+        painter->FillRectangle(0, 0, width, height, COLOR_ARGB8888_TRANSPARENT);
+        painter->SwapBuffers();
+        painter->FillRectangle(0, 0, width, height, COLOR_ARGB8888_TRANSPARENT);
     }
 
-    Manager* Manager::instance = NULL;
+    Manager* Manager::instance = nullptr;
     Manager& Manager::GetInstance()
     {
         return *instance;

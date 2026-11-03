@@ -84,7 +84,7 @@ namespace grvl {
         int32_t RenderX = ParentRenderX + X;
         int32_t RenderY = ParentRenderY + Y;
 
-        painter.PushDrawingBoundsStackElement(RenderX, RenderY, RenderX + Width, RenderY + Height);
+        painter.PushDrawingBound(RenderX, RenderY, RenderX + Width, RenderY + Height);
 
         painter.FillRectangle(RenderX, RenderY, Width, Height, BackgroundColor);
 
@@ -92,7 +92,7 @@ namespace grvl {
             Elements[i]->Draw(painter, RenderX, RenderY);
         }
 
-        painter.PopDrawingBoundsStackElement();
+        painter.PopDrawingBound();
     }
 
     void GridRow::SetElementWidth(int32_t elementWidth)

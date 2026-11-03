@@ -180,7 +180,7 @@ namespace grvl {
             return;
         }
 
-        painter.PushDrawingBoundsStackElement(ParentRenderX + X, ParentRenderY + Y, ParentRenderX + X + Width, ParentRenderY + Y + Height);
+        painter.PushDrawingBound(ParentRenderX + X, ParentRenderY + Y, ParentRenderX + X + Width, ParentRenderY + Y + Height);
 
         static constexpr auto speedMultipler = 30;
         static constexpr auto speedScale = 1000;
@@ -334,7 +334,7 @@ namespace grvl {
                 int scrollY = ParentRenderY + Y + scrollIndicatorY;
 
                 // Fill allocated space
-                painter.FillMemory((uintptr_t)scrollIndicatorImage->GetData(),
+                painter.FillMemory(scrollIndicatorImage->GetData(),
                                    scrollIndicatorImage->GetWidth(),
                                    scrollIndicatorImage->GetHeight(),
                                    tempColor);
@@ -374,7 +374,7 @@ namespace grvl {
             painter.AddBackgroundBlock(ParentRenderY + Y + itemsHeight, Height - itemsHeight, BackgroundColor);
         }
 
-        painter.PopDrawingBoundsStackElement();
+        painter.PopDrawingBound();
     }
 
     void VerticalScrollView::PrepareToOpen()

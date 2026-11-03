@@ -55,10 +55,10 @@ int main(int argc, char** argv)
 
     const auto drawSquare = [&](grvl::Painter& painter, int32_t x, int32_t y, uint32_t frame) {
         painter.DrawImage(x - 20, y - 20, &gray_square);
-        painter.PushDrawingBoundsStackElement(startX, startY, startX + width, startY + height);
+        painter.PushDrawingBound(startX, startY, startX + width, startY + height);
         painter.DrawImage(x - 20, y - 20, &red_square);
         painter.DrawImage(x - 50, y - 50, &spinner, frame);
-        painter.PopDrawingBoundsStackElement();
+        painter.PopDrawingBound();
     };
 
     const auto drawHook = [&](grvl::Painter& painter) {

@@ -50,7 +50,7 @@ namespace grvl {
             return;
         }
 
-        painter.PushDrawingBoundsStackElement(ParentRenderX, ParentRenderY, ParentRenderX + Width, ParentRenderY + Height);
+        painter.PushDrawingBound(ParentRenderX, ParentRenderY, ParentRenderX + Width, ParentRenderY + Height);
 
         if(BackgroundImage) {
             BackgroundImage->Draw(painter, X + ParentRenderX, Y + ParentRenderY);
@@ -68,7 +68,7 @@ namespace grvl {
             Elements[i]->Draw(painter, ParentRenderX + X, ParentRenderY + Y);
         }
 
-        painter.PopDrawingBoundsStackElement();
+        painter.PopDrawingBound();
     }
 
 } /* namespace grvl */

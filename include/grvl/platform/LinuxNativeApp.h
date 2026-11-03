@@ -272,8 +272,7 @@ namespace grvl {
         // reports ongoing activity or at a low rate.
         // This avoids redrawing an unchanged screen.
         // Disabled by default.
-        [[deprecated("Use Manager::SetIdleThrottle() and LinuxNativeApp::SetVSync()")]]
-        void SetIdleThrottle(bool enabled);
+        [[deprecated("Use Manager::SetIdleThrottle() and LinuxNativeApp::SetVSync()")]] void SetIdleThrottle(bool enabled);
 
         // When set to a non-zero value, grvl will disable the display after the specified period.
         // Disabled by default.
@@ -286,8 +285,7 @@ namespace grvl {
         void SetCursorTimeout(uint32_t inactivity_ms);
 
         // Make sure the next frames are rendered, call after changing the UI outside of input handling.
-        [[deprecated("Use Manager::ScheduleRedraw()")]]
-        void RequestRedraw();
+        [[deprecated("Use Manager::ScheduleRedraw()")]] void RequestRedraw();
     };
 }
 

@@ -3,10 +3,19 @@
 #include <grvl/Manager.h>
 #include <grvl/platform/KeyMappings.h>
 #include <grvl/platform/LinuxDesktopApp.h>
+#include <grvl/render/SoftwareRasterizer.h>
 
 #include <SDL2/SDL.h>
 
 namespace grvl {
+
+    static int GetEnvInt(const char* name, int fallback)
+    {
+        const char* value = getenv(name);
+        if(value == nullptr)
+            return fallback;
+        return atoi(value);
+    }
 
     LinuxDesktopApp::LinuxDesktopApp(int width, int height, bool rotate_sideways)
         : PosixApp(width, height, rotate_sideways)
@@ -15,22 +24,22 @@ namespace grvl {
 
     LinuxDesktopApp::~LinuxDesktopApp()
     {
-        SDL_DestroyTexture(texture);
-        SDL_DestroyRenderer(renderer);
-        SDL_DestroyWindow(window);
+        if(texture)
+            SDL_DestroyTexture(texture);
+        if(renderer)
+            SDL_DestroyRenderer(renderer);
+
+        if(context)
+            SDL_GL_DeleteContext(context);
+        if(window)
+            SDL_DestroyWindow(window);
 
         SDL_Quit();
         grvl::grvl::Destroy();
     }
 
-    bool LinuxDesktopApp::Setup()
+    bool LinuxDesktopApp::SetupLegacy()
     {
-
-        if(SDL_Init(SDL_INIT_VIDEO) != 0) {
-            Log(ERROR, "SDL_Init() Failed: %s", SDL_GetError());
-            return false;
-        }
-
         window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
         renderer = SDL_GetRenderer(window);
 
@@ -45,11 +54,26 @@ namespace grvl {
 
         texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_STREAMING, width, height);
 
-        Manager::Initialize(width, height, 4, sideways);
+        auto rasterizer = new SoftwareRasterizer();
+        rasterizer->SetRotation(sideways);
+        rasterizer->SetDisplaySize(width, height);
+        rasterizer->CreateFramebuffersCollection(Format::XRGB8888, nullptr, nullptr);
+        rasterizer->InitFramebuffersCollection();
+
+        Manager::Initialize(width, height, rasterizer);
         InstallLinuxDesktopKeyMappings(Manager::GetInstance());
         Manager::GetInstance().SetIdleThrottle(true);
-
         return true;
+    }
+
+    bool LinuxDesktopApp::Setup()
+    {
+        if(SDL_Init(SDL_INIT_VIDEO) != 0) {
+            Log(ERROR, "SDL_Init() Failed: %s", SDL_GetError());
+            return false;
+        }
+
+        return SetupLegacy();
     }
 
     void LinuxDesktopApp::Render()

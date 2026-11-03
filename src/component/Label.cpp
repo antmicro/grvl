@@ -72,7 +72,7 @@ namespace grvl {
         int32_t RenderX = ParentRenderX + X;
         int32_t RenderY = ParentRenderY + Y;
 
-        painter.PushDrawingBoundsStackElement(RenderX, RenderY, RenderX + Width, RenderY + Height);
+        painter.PushDrawingBound(RenderX, RenderY, RenderX + Width, RenderY + Height);
 
         if(BackgroundColor & alpha) {
             painter.FillRectangle(RenderX, RenderY, Width, Height, BackgroundColor);
@@ -99,7 +99,7 @@ namespace grvl {
 
         DrawBorderIfNecessary(painter, ParentRenderX + X, ParentRenderY + Y, Width, Height);
 
-        painter.PopDrawingBoundsStackElement();
+        painter.PopDrawingBound();
     }
 
     void Label::SetTextFont(Font* font)

@@ -83,7 +83,7 @@ namespace grvl {
         int32_t renderX = ParentRenderX + X;
         int32_t renderY = ParentRenderY + Y;
 
-        painter.PushDrawingBoundsStackElement(renderX, renderY, renderX + Width, renderY + Height);
+        painter.PushDrawingBound(renderX, renderY, renderX + Width, renderY + Height);
 
         if(BackgroundImage) {
             BackgroundImage->Draw(painter, renderX, renderY);
@@ -99,7 +99,7 @@ namespace grvl {
             Message->Draw(painter, renderX, renderY);
         }
 
-        painter.PopDrawingBoundsStackElement();
+        painter.PopDrawingBound();
     }
 
     void Popup::SetMessagePointer(Label* message)

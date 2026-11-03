@@ -194,6 +194,55 @@ namespace grvl {
         }
     }
 
+    uint32_t ImageContent::ReadPixel(int x, int y, int frame) const
+    {
+        const uint8_t* data = (const uint8_t*)At(x, y, frame);
+        return ConvertPixel(data, format, Format::ARGB8888);
+    }
+
+    void ImageContent::WritePixel(int x, int y, int frame, uint32_t color)
+    {
+        uint8_t* data = (uint8_t*)At(x, y, frame);
+        ConvertPixel((uint8_t*)&color, data, Format::ARGB8888, format);
+    }
+
+    void ImageContent::Blit(int tx, int ty, int tf, const ImageContent* other, int sf)
+    {
+        for(int y = 0; y < other->GetNumberOfLines(); y++) {
+            for(int x = 0; x < other->GetPixelsPerLine(); x++) {
+
+                int dx = x + tx;
+                int dy = y + ty;
+
+                if(dx < 0 || dy < 0 || dx >= GetPixelsPerLine() || dy >= GetNumberOfLines()) {
+                    continue;
+                }
+
+                WritePixel(dx, dy, tf, other->ReadPixel(x, y, sf));
+            }
+        }
+    }
+
+    void ImageContent::Fill(uint8_t value, int frame)
+    {
+        uint8_t* begin = GetFrameData(frame);
+        size_t size = GetBytesPerPixel() * GetPixelsPerLine() * GetNumberOfLines();
+
+        memset(begin, value, size);
+    }
+
+    ImageContent* ImageContent::Resize(int width, int height) const
+    {
+        ImageContent* target = new ImageContent(width, height, frames, format);
+        target->frameDurations = frameDurations;
+
+        for(int i = 0; i < frames; i++) {
+            target->Blit(0, 0, i, this, i);
+        }
+
+        return target;
+    }
+
     void ImageContent::Transcode(Format target)
     {
         if(format == target) {

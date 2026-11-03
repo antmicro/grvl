@@ -5,7 +5,6 @@
 
 #include <grvl/platform/PosixApp.h>
 
-class InputSystem;
 class SDL_Window;
 class SDL_Renderer;
 class SDL_Texture;
@@ -23,12 +22,17 @@ namespace grvl {
     // it is recomended to create the instance before the main render loop and only destroy it after the loop exits.
     class LinuxDesktopApp : public PosixApp {
     private:
-        SDL_Texture* texture = nullptr;
         SDL_Window* window = nullptr;
+        void* context = nullptr;
+
+        // used only when OpenGL is NOT used
+        SDL_Texture* texture = nullptr;
         SDL_Renderer* renderer = nullptr;
 
         const char* title = "Untitled";
         bool frame_drawn = true;
+
+        bool SetupLegacy();
 
         bool Setup() override;
 
