@@ -304,7 +304,7 @@ namespace grvl {
         this->scale = stbtt_ScaleForPixelHeight(ttf->info(), size);
         stbtt_GetFontVMetrics(ttf->info(), &ascent, &descent, &gap);
 
-        this->height = round((ascent - descent + gap) * scale);
+        this->height = round((ascent + descent + gap) * scale);
     }
 
     Glyph TrueTypeFont::GetGlyph(uint32_t unicode)
