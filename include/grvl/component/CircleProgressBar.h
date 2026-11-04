@@ -20,8 +20,6 @@
 #include <grvl/Painter.h>
 #include <grvl/component/ProgressBar.h>
 
-#include <tinyxml2.h>
-
 namespace grvl {
 
     /// Represents circular progress bar widget.
@@ -47,6 +45,7 @@ namespace grvl {
     ///
     class CircleProgressBar : public ProgressBar {
     public:
+        static constexpr const char* name = "CircleProgressBar";
         CircleProgressBar()
             : ProgressBar()
             , Radius(0)
@@ -88,7 +87,7 @@ namespace grvl {
         void UseStaticGradient();
         void UseProportionalGradient();
 
-        static CircleProgressBar* BuildFromXML(XMLElement* xmlElement);
+        static CircleProgressBar* BuildFromXML(XmlElement xml);
 
         void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
 

@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <grvl/Manager.h>
-#include <grvl/XMLSupport.h>
 #include <grvl/component/Clock.h>
 
 namespace grvl {
@@ -35,29 +34,27 @@ namespace grvl {
         return isRunning;
     }
 
-    Clock* Clock::BuildFromXML(XMLElement* xmlElement)
+    Clock* Clock::BuildFromXML(XmlElement xml)
     {
-        Manager* man = &Manager::GetInstance();
+        Manager& man = Manager::GetInstance();
 
         Clock* result = new Clock();
-        result->InitFromXML(xmlElement);
+        result->InitFromXML(xml);
 
         result->SetText("");
 
         result->SetTextColor(result->GetForegroundColor());
-        result->SetTextFont(man->GetFontPointer(XMLSupport::GetAttributeOrDefault(xmlElement, "font", "normal")));
-        result->SetHorizontalAlignment(
-            XMLSupport::ParseAlignmentOrDefault(xmlElement, "alignment", HorizontalAlignment::Center));
-        result->SetVisible(XMLSupport::GetAttributeOrDefault(xmlElement, "visible", true));
+        result->SetTextFont(man.GetFontPointer(xml.Attribute("font").ElseStyle().GetOr("normal")));
+        result->SetHorizontalAlignment(xml.Attribute("alignment").ElseStyle().ParseEnum(HORIZONTAL_ALIGNMENT_ENUM).GetOr(HorizontalAlignment::Center));
+        result->SetVisible(xml.Attribute("visible").ElseStyle().Parse<bool>().GetOr(true));
 
-        const char* format = xmlElement->Attribute("format");
-        if(format != NULL) {
-            result->SetTimeFormat(format);
+        if(auto format = xml.Attribute("format").ElseStyle()) {
+            result->SetTimeFormat(format.Get());
         }
 
-        result->SetOnClickEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onClick"))));
-        result->SetOnReleaseEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onRelease"))));
-        result->SetOnPressEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onPress"))));
+        result->SetOnClickEvent(man.GetOrCreateCallback(xml.Attribute("onClick").ParseCallback().GetOr({})));
+        result->SetOnReleaseEvent(man.GetOrCreateCallback(xml.Attribute("onRelease").ParseCallback().GetOr({})));
+        result->SetOnPressEvent(man.GetOrCreateCallback(xml.Attribute("onPress").ParseCallback().GetOr({})));
 
         result->Start();
 

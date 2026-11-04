@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <grvl/Manager.h>
-#include <grvl/XMLSupport.h>
 #include <grvl/container/Panel.h>
 
 namespace grvl {
@@ -25,25 +24,21 @@ namespace grvl {
         return new Panel(*this);
     }
 
-    Panel* Panel::BuildFromXML(XMLElement* xmlElement)
+    Panel* Panel::BuildFromXML(XmlElement xml)
     {
         Panel* parent = new Panel(0, 0, 0, 0);
         Manager* man = &Manager::GetInstance();
 
-        parent->InitFromXML(xmlElement);
+        parent->InitFromXML(xml);
 
-        int32_t hValue;
-        if(xmlElement->QueryIntAttribute("height", (int*)&hValue) != XML_SUCCESS) {
-            static constexpr auto defaultHeight = 30;
-            hValue = defaultHeight;
-        }
-        parent->SetSize((int32_t)man->GetWidth(), hValue);
+        parent->SetSize(
+            (int32_t)man->GetWidth(),
+            xml.Attribute("height").ElseStyle().Parse<int32_t>().GetOr(30));
 
-        XMLElement* child = xmlElement->FirstChildElement();
-        for(; child != NULL; child = child->NextSiblingElement()) {
-            Component* element = create_component(child->Name(), (void*)child);
-            if(element)
+        for(XmlElement child : xml) {
+            if(Component* element = component_from_xml(child)) {
                 parent->AddElement(element);
+            }
         }
 
         return parent;

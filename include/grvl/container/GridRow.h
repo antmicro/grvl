@@ -20,14 +20,13 @@
 #include <grvl/Painter.h>
 #include <grvl/container/Container.h>
 
-#include <tinyxml2.h>
-
 namespace grvl {
 
     /// Widget representing single row of a grid displayed by GridRow.
     /// The widget can contain buttons only.
     class GridRow : public Container {
     public:
+        static constexpr const char* name = "GridRow";
         GridRow()
             : Container()
             , ElementWidth(0)
@@ -59,7 +58,7 @@ namespace grvl {
 
         void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
 
-        static GridRow* BuildFromXML(XMLElement* xmlElement);
+        static GridRow* BuildFromXML(XmlElement xml);
 
         void SetElementWidth(int32_t elementWidth);
         void SetHorizontalOffset(int32_t horizontalOffset);

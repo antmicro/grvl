@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <grvl/Manager.h>
-#include <grvl/XMLSupport.h>
 #include <grvl/container/Popup.h>
 
 namespace grvl {
@@ -56,22 +55,22 @@ namespace grvl {
     }
 
     // TODO: shouldn't popup be just a screen? i see duplicate code here
-    Popup* Popup::BuildFromXML(XMLElement* xmlElement)
+    Popup* Popup::BuildFromXML(XmlElement xml)
     {
         Popup* parent = new Popup();
 
-        parent->InitFromXML(xmlElement);
+        parent->InitFromXML(xml);
 
         if(parent->GetMessagePointer()) {
             parent->GetMessagePointer()->SetBackgroundColor(parent->GetBackgroundColor());
         }
 
-        XMLElement* child = xmlElement->FirstChildElement();
-        for(; child != NULL; child = child->NextSiblingElement()) {
-            Component* element = create_component(child->Name(), (void*)child);
-            if(element)
+        for(XmlElement child : xml) {
+            if(Component* element = component_from_xml(child)) {
                 parent->AddElement(element);
+            }
         }
+
         return parent;
     }
 

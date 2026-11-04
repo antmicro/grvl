@@ -15,6 +15,7 @@ add_executable(tests
     text_input_cursor.cpp
     text_input_autofocus.cpp
     key_mappings.cpp
+    xml.cpp
 )
 
 target_link_libraries(tests PRIVATE grvl Catch2::Catch2WithMain)

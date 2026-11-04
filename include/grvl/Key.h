@@ -18,7 +18,6 @@
 #define GRVL_KEY_H_
 
 #include <grvl/Event.h>
-#include <grvl/XMLSupport.h>
 #include <grvl/component/Component.h>
 
 #include <stdint.h>
@@ -54,7 +53,7 @@ namespace grvl {
         {
         }
 
-        static Key BuildFromXML(XMLElement* xmlElement);
+        static Key BuildFromXML(XmlElement xml);
 
         void SetID(const char* id);
         void SetOnPressEvent(const Event& event);

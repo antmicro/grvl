@@ -22,16 +22,13 @@
 #include <grvl/Painter.h>
 #include <grvl/component/Button.h>
 
-#include <tinyxml2.h>
-
-using namespace tinyxml2;
-
 namespace grvl {
 
     class Keyboard;
 
     class KeyboardKey : public Button {
     public:
+        static constexpr const char* name = "KeyboardKey";
         KeyboardKey()
             : Button {}
         {
@@ -65,7 +62,7 @@ namespace grvl {
 
         Component* Clone() const override;
 
-        static KeyboardKey* BuildFromXML(XMLElement* xmlElement);
+        static KeyboardKey* BuildFromXML(XmlElement xml);
 
     protected:
         Keyboard* parentKeyboard { nullptr };

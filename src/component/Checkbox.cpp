@@ -24,18 +24,17 @@ namespace grvl {
         return new Checkbox(*this);
     }
 
-    Checkbox* Checkbox::BuildFromXML(XMLElement* xmlElement)
+    Checkbox* Checkbox::BuildFromXML(XmlElement xml)
     {
-        Manager* man = &Manager::GetInstance();
+        Manager& man = Manager::GetInstance();
         Checkbox* result = new Checkbox();
 
-        result->InitFromXML(xmlElement);
-        static constexpr auto defaultTextColor = 0xFFFFFFFF;
+        result->InitFromXML(xml);
 
-        result->SetOnSwitchONEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onSwitchON"))));
-        result->SetOnSwitchOFFEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onSwitchOFF"))));
-        result->SetOnLongPressEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPress"))));
-        result->SetOnLongPressRepeatEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPressRepeat"))));
+        result->SetOnSwitchONEvent(man.GetOrCreateCallback(xml.Attribute("onSwitchON").ParseCallback().GetOr({})));
+        result->SetOnSwitchOFFEvent(man.GetOrCreateCallback(xml.Attribute("onSwitchOFF").ParseCallback().GetOr({})));
+        result->SetOnLongPressEvent(man.GetOrCreateCallback(xml.Attribute("onLongPress").ParseCallback().GetOr({})));
+        result->SetOnLongPressRepeatEvent(man.GetOrCreateCallback(xml.Attribute("onLongPressRepeat").ParseCallback().GetOr({})));
 
         return result;
     }

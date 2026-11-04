@@ -85,19 +85,19 @@ namespace grvl {
         return Key::NA;
     }
 
-    Key Key::BuildFromXML(XMLElement* xmlElement)
+    Key Key::BuildFromXML(XmlElement xml)
     {
-        Key result = Key();
         Manager* man = &Manager::GetInstance();
-        const char* tempChar = xmlElement->Attribute("id");
-        if(tempChar) {
-            result.SetID(tempChar);
+        Key result {};
+
+        if(auto id = xml.Attribute("id")) {
+            result.SetID(id.Get());
         }
 
-        result.SetOnReleaseEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onRelease"))));
-        result.SetOnPressEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onPress"))));
-        result.SetOnLongPressEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPress"))));
-        result.SetOnLongPressRepeatEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPressRepeat"))));
+        result.SetOnReleaseEvent(man->GetOrCreateCallback(xml.Attribute("onRelease").ParseCallback().GetOr({})));
+        result.SetOnPressEvent(man->GetOrCreateCallback(xml.Attribute("onPress").ParseCallback().GetOr({})));
+        result.SetOnLongPressEvent(man->GetOrCreateCallback(xml.Attribute("onLongPress").ParseCallback().GetOr({})));
+        result.SetOnLongPressRepeatEvent(man->GetOrCreateCallback(xml.Attribute("onLongPressRepeat").ParseCallback().GetOr({})));
 
         return result;
     }

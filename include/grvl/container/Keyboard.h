@@ -18,7 +18,6 @@
 #define GRVL_KEYBOARD_H_
 
 #include <grvl/Event.h>
-#include <grvl/XMLSupport.h>
 #include <grvl/component/TextInput.h>
 #include <grvl/container/Popup.h>
 
@@ -39,7 +38,7 @@ namespace grvl {
         {
         }
 
-        static Keyboard* BuildFromXML(XMLElement* xmlElement);
+        static Keyboard* BuildFromXML(XmlElement xml);
 
         void SetCurrentInputDestination(TextInput* destinationInput);
         TextInput* GetCurrentInputDestination() const { return currentDestinationInput; }

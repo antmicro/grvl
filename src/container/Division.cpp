@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <grvl/Manager.h>
-#include <grvl/XMLSupport.h>
 #include <grvl/container/Division.h>
 
 namespace grvl {
@@ -25,18 +24,16 @@ namespace grvl {
         return new Division(*this);
     }
 
-    Division* Division::BuildFromXML(XMLElement* xmlElement)
+    Division* Division::BuildFromXML(XmlElement xml)
     {
         Division* parent = new Division(0, 0, 0, 0);
-        Manager* man = &Manager::GetInstance();
 
-        parent->InitFromXML(xmlElement);
+        parent->InitFromXML(xml);
 
-        XMLElement* child = xmlElement->FirstChildElement();
-        for(; child != NULL; child = child->NextSiblingElement()) {
-            Component* element = create_component(child->Name(), (void*)child);
-            if(element)
+        for(XmlElement child : xml) {
+            if(Component* element = component_from_xml(child)) {
                 parent->AddElement(element);
+            }
         }
 
         return parent;

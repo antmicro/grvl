@@ -19,12 +19,14 @@
 
 #include <grvl/Painter.h>
 #include <grvl/container/AbstractView.h>
+#include <grvl/impl/Element.h>
 
 namespace grvl {
 
     /// Represents a screen type supporting any element placement except for listItems and gridRows.
     class CustomView : public AbstractView {
     public:
+        static constexpr const char* name = "CustomView";
         CustomView()
             : AbstractView()
         {
@@ -35,7 +37,7 @@ namespace grvl {
         {
         }
 
-        static CustomView* BuildFromXML(XMLElement* xmlElement);
+        static CustomView* BuildFromXML(XmlElement xml);
 
         void AddElement(Component* element);
         virtual Component* GetElement(uint32_t index);

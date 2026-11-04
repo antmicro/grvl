@@ -21,7 +21,6 @@
 #include <grvl/Mutex.h>
 #include <grvl/Painter.h>
 #include <grvl/Queue.h>
-#include <grvl/XMLSupport.h>
 #include <grvl/component/Button.h>
 #include <grvl/component/Checkbox.h>
 #include <grvl/component/CircleProgressBar.h>
@@ -49,7 +48,7 @@
 #include <grvl/container/VerticalScrollView.h>
 #include <grvl/grvl.h>
 
-#include <tinyxml2.h>
+#include <grvl/impl/Element.h>
 
 #include <chrono>
 #include <map>
@@ -60,8 +59,6 @@
 #include <unistd.h>
 #include <unordered_map>
 #include <vector>
-
-using namespace tinyxml2;
 
 namespace grvl {
 
@@ -350,7 +347,7 @@ namespace grvl {
         /// Installs a backend default without replacing an existing mapping.
         void AddDefaultKeyMappingToContainer(uint32_t code, const std::string& name, uint32_t repeat);
 
-        Font* GetFontFromContainer(const char* name) const;
+        Font* GetFontFromContainer(const std::string& name) const;
         Font* GetDefaultFontFromContainer() const;
         Popup* GetPopupFromContainer(std::string_view id);
         Font* GetFontPointer(const char* fontName) const;
@@ -508,11 +505,11 @@ namespace grvl {
         Mutex DrawMutex {};
 
         // XML private
-        void ParseGuiConfiguration(XMLElement* ConfigNode);
-        void ParseKeypadMapping(XMLElement* KeypadNode);
-        void ParseStylesheet(XMLElement* stylesheet);
-        void ParseFontStyles(XMLElement* stylesheet);
-        void ParseScripts(XMLElement* scripts);
+        void ParseGuiConfiguration(XmlElement ConfigNode);
+        void ParseKeypadMapping(XmlElement KeypadNode);
+        void ParseStylesheet(XmlElement stylesheet);
+        void ParseFontStyles(XmlElement stylesheet);
+        void ParseScripts(XmlElement scripts);
         void ParseStyle(char* active_object, char* active_parameter, char* active_parameter_value);
 
         Popup* OpenPopup(const char* name);

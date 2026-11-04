@@ -20,11 +20,7 @@
 #include <grvl/Font.h>
 #include <grvl/component/Label.h>
 
-#include <tinyxml2.h>
-
 #include <time.h>
-
-using namespace tinyxml2;
 
 namespace grvl {
     class Manager;
@@ -54,6 +50,7 @@ namespace grvl {
     ///
     class Clock : public Label {
     public:
+        static constexpr const char* name = "Clock";
         Clock()
             : Label()
             , isRunning(false)
@@ -75,7 +72,7 @@ namespace grvl {
         {
         }
 
-        static Clock* BuildFromXML(XMLElement* xmlElement);
+        static Clock* BuildFromXML(XmlElement xml);
 
         void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
 

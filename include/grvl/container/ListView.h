@@ -20,6 +20,7 @@
 #include <grvl/Painter.h>
 #include <grvl/component/ListItem.h>
 #include <grvl/container/VerticalScrollView.h>
+#include <grvl/impl/Element.h>
 #include <string>
 
 namespace grvl {
@@ -57,6 +58,7 @@ namespace grvl {
     ///
     class ListView : public VerticalScrollView {
     public:
+        static constexpr const char* name = "ListView";
         ListView()
             : VerticalScrollView()
         {
@@ -82,7 +84,7 @@ namespace grvl {
         void ClearList();
         bool AddToList(Manager* man, std::string& listContent);
 
-        static ListView* BuildFromXML(XMLElement* xmlElement);
+        static ListView* BuildFromXML(XmlElement xml);
 
     private:
         uint32_t verticalGap { 0 };

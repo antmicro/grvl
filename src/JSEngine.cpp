@@ -17,6 +17,7 @@
 #include <grvl/JSEngine.h>
 #include <grvl/JSObjectBuilder.h>
 #include <grvl/Manager.h>
+#include <grvl/component/Component.h>
 
 #include <duktape.h>
 #include <filesystem>
@@ -79,6 +80,7 @@ namespace grvl {
         AddGlobalFunction("GetBottomPanel", JSEngine::GetBottomPanel, 0);
         AddGlobalFunction("ScheduleRedraw", JSEngine::ScheduleRedraw, 0);
         AddGlobalFunction("GetPrefabById", JSEngine::GetPrefabById, 1);
+        AddGlobalFunction("GetViewport", JSEngine::GetViewport, 0);
     }
 
     void JSEngine::AddGlobalFunction(const char* functionName, duk_c_function func, duk_idx_t nargs)
@@ -92,7 +94,7 @@ namespace grvl {
         duk_push_object(ctx);
 
         duk_push_pointer(ctx, ptr);
-        duk_put_prop_string(ctx, -2, JSObject::C_OBJECT_POINTER_KEY);
+        duk_put_prop_string(ctx, -2, C_OBJECT_POINTER_KEY);
 
         for(auto const& [methodName, func] : methods) {
             duk_push_c_function(ctx, func, DUK_VARARGS);
@@ -397,6 +399,35 @@ namespace grvl {
         Manager& managerInstance = Manager::GetInstance();
         Component* prefab = managerInstance.GetPrefabByID(prefabId);
         prefab->PushJSObjectOnStack(ctx);
+
+        return RETURN_VALUE_PRESENT;
+    }
+
+    static duk_ret_t GetViewportWidth(duk_context* ctx)
+    {
+        duk_push_uint(ctx, Manager::GetInstance().GetWidth());
+        return JSEngine::RETURN_VALUE_PRESENT;
+    }
+
+    static duk_ret_t GetViewportHeight(duk_context* ctx)
+    {
+        duk_push_uint(ctx, Manager::GetInstance().GetHeight());
+        return JSEngine::RETURN_VALUE_PRESENT;
+    }
+
+    duk_ret_t JSEngine::GetViewport(duk_context* ctx)
+    {
+        Manager& manager = Manager::GetInstance();
+
+        duk_push_object(ctx);
+
+        duk_push_string(ctx, "width");
+        duk_push_c_function(ctx, GetViewportWidth, 0);
+        duk_def_prop(ctx, -3, DUK_DEFPROP_HAVE_GETTER);
+
+        duk_push_string(ctx, "height");
+        duk_push_c_function(ctx, GetViewportHeight, 0);
+        duk_def_prop(ctx, -3, DUK_DEFPROP_HAVE_GETTER);
 
         return RETURN_VALUE_PRESENT;
     }

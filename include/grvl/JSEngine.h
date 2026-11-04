@@ -19,8 +19,6 @@
 
 #include <grvl/CallbackDefinition.h>
 #include <grvl/Event.h>
-#include <grvl/JSObject.h>
-#include <grvl/component/Component.h>
 #include <grvl/grvl.h>
 
 #include <duktape.h>
@@ -67,9 +65,11 @@ namespace grvl {
         static duk_ret_t GetBottomPanel(duk_context* ctx);
         static duk_ret_t GetPrefabById(duk_context* ctx);
         static duk_ret_t ScheduleRedraw(duk_context* ctx);
+        static duk_ret_t GetViewport(duk_context* ctx);
 
         static constexpr duk_ret_t NO_RETURN_VALUE { 0 };
         static constexpr duk_ret_t RETURN_VALUE_PRESENT { 1 };
+        static constexpr const char* C_OBJECT_POINTER_KEY { "ptr" };
 
     private:
         /// Evaluates an expression and leaves the result on the Duktape stack.

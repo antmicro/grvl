@@ -18,28 +18,28 @@
 #include <grvl/component/Image.h>
 #include <grvl/container/ListView.h>
 
+#include <tinyxml2.h>
+
 namespace grvl {
 
-    ListView* ListView::BuildFromXML(XMLElement* xmlElement)
+    ListView* ListView::BuildFromXML(XmlElement xml)
     {
         ListView* parent = new ListView();
 
         parent->EnableScrolling();
 
-        parent->SetSplitLineColor(XMLSupport::ParseColor(xmlElement, "splitLineColor", (uint32_t)COLOR_ARGB8888_TRANSPARENT));
-        parent->SetOverscrollBarColor(XMLSupport::ParseColor(xmlElement, "overscrollColor", (uint32_t)COLOR_ARGB8888_LIGHTGRAY));
-        parent->SetScrollIndicatorColor(XMLSupport::ParseColor(xmlElement, "scrollIndicatorColor", (uint32_t)COLOR_ARGB8888_DARKGRAY));
+        parent->SetSplitLineColor(xml.Attribute("splitLineColor").ElseStyle().ParseColor().GetOr(COLOR_ARGB8888_TRANSPARENT));
+        parent->SetOverscrollBarColor(xml.Attribute("overscrollColor").ElseStyle().ParseColor().GetOr(COLOR_ARGB8888_LIGHTGRAY));
+        parent->SetScrollIndicatorColor(xml.Attribute("scrollIndicatorColor").ElseStyle().ParseColor().GetOr(COLOR_ARGB8888_DARKGRAY));
 
-        parent->SetVerticalGap(XMLSupport::GetAttributeOrDefault(xmlElement, "verticalGap", 0));
+        parent->SetVerticalGap(xml.Attribute("verticalGap").ElseStyle().Parse<int>().GetOr(0));
 
-        parent->InitFromXML(xmlElement);
+        parent->InitFromXML(xml);
 
-        XMLElement* child = xmlElement->FirstChildElement();
-        for(; child != NULL; child = child->NextSiblingElement()) {
-            // TODO: we should verify the correct class
-            Component* element = create_component(child->Name(), (void*)child);
-            if(element)
-                parent->AddElement(element);
+        for(XmlElement child : xml) {
+            if(Component* component = component_from_xml(child)) {
+                parent->AddElement(component);
+            }
         }
 
         return parent;
@@ -161,7 +161,7 @@ namespace grvl {
 
     bool ListView::AddToList(Manager* man, std::string& listContent)
     {
-
+        using namespace tinyxml2;
         XMLDocument xmlContent;
 
         if(listContent.length() == 0) {
@@ -173,20 +173,17 @@ namespace grvl {
         if(Error != XML_SUCCESS) {
             return false;
         }
-        XMLNode* Root = xmlContent.LastChild();
+        XMLElement* raw = xmlContent.LastChild()->ToElement();
 
-        if(Root == 0) {
+        if(raw == nullptr) {
             return false;
         }
 
-        XMLElement* childElement = Root->FirstChildElement("listItem");
-        while(childElement != 0) {
-            ListItem* item = ListItem::BuildFromXML(childElement);
+        XmlElement root { raw };
 
-            if(item) {
-                this->AddElement(item);
-            }
-            childElement = (XMLElement*)childElement->NextSiblingElement("listItem");
+        for(auto child : root.ForEach("listItem")) {
+            ListItem* item = ListItem::BuildFromXML(child);
+            this->AddElement(item);
         }
 
         xmlContent.Clear();

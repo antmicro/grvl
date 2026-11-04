@@ -20,16 +20,13 @@
 #include <grvl/Painter.h>
 #include <grvl/component/Component.h>
 
-#include <tinyxml2.h>
-
 #include <limits>
-
-using namespace tinyxml2;
 
 namespace grvl {
 
     class Graph : public Component {
     public:
+        static constexpr const char* name = "Graph";
         Graph() = default;
 
         Graph(int32_t x, int32_t y, int32_t width, int32_t height)
@@ -37,7 +34,7 @@ namespace grvl {
         {
         }
 
-        static Graph* BuildFromXML(XMLElement* xmlElement);
+        static Graph* BuildFromXML(XmlElement xml);
 
         void SetHorizontalPadding(uint32_t horizontalPadding);
         void SetVerticalPadding(uint32_t verticalPadding);

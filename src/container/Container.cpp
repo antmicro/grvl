@@ -16,7 +16,6 @@
 
 #include <grvl/JSEngine.h>
 #include <grvl/Manager.h>
-#include <grvl/XMLSupport.h>
 #include <grvl/container/Container.h>
 
 #include <cassert>
@@ -213,11 +212,10 @@ namespace grvl {
         }
     }
 
-    void Container::InitFromXML(tinyxml2::XMLElement* xmlElement)
+    void Container::InitFromXML(XmlElement xml)
     {
-        Component::InitFromXML(xmlElement);
-
-        SetAsSelection(XMLSupport::GetAttributeOrDefault(xmlElement, "selection", false));
+        Component::InitFromXML(xml);
+        SetAsSelection(xml.Attribute("selection").ElseStyle().Parse<bool>().GetOr(false));
     }
 
     Touch::TouchResponse Container::ProcessTouch(const Touch& tp, int32_t ParentX, int32_t ParentY, int32_t modificator)
@@ -278,7 +276,7 @@ namespace grvl {
     duk_ret_t Container::JSGetElementByIdWrapper(duk_context* ctx)
     {
         duk_push_this(ctx);
-        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
+        duk_get_prop_string(ctx, -1, JSEngine::C_OBJECT_POINTER_KEY);
         Container* container = static_cast<Container*>(duk_to_pointer(ctx, -1));
         if(!container) {
             return 0;
@@ -296,7 +294,7 @@ namespace grvl {
     duk_ret_t Container::JSGetElementByIndexWrapper(duk_context* ctx)
     {
         duk_push_this(ctx);
-        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
+        duk_get_prop_string(ctx, -1, JSEngine::C_OBJECT_POINTER_KEY);
         Container* container = static_cast<Container*>(duk_to_pointer(ctx, -1));
         if(!container) {
             return 0;
@@ -310,7 +308,7 @@ namespace grvl {
     duk_ret_t Container::JSHasElementWrapper(duk_context* ctx)
     {
         duk_push_this(ctx);
-        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
+        duk_get_prop_string(ctx, -1, JSEngine::C_OBJECT_POINTER_KEY);
         Container* container = static_cast<Container*>(duk_to_pointer(ctx, -1));
         if(!container) {
             return 0;
@@ -324,11 +322,11 @@ namespace grvl {
 
     duk_ret_t Container::JSAddElementWrapper(duk_context* ctx)
     {
-        duk_get_prop_string(ctx, 0, JSObject::C_OBJECT_POINTER_KEY);
+        duk_get_prop_string(ctx, 0, JSEngine::C_OBJECT_POINTER_KEY);
         Component* componentToAdd = static_cast<Component*>(duk_to_pointer(ctx, -1));
 
         duk_push_this(ctx);
-        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
+        duk_get_prop_string(ctx, -1, JSEngine::C_OBJECT_POINTER_KEY);
         Container* container = static_cast<Container*>(duk_to_pointer(ctx, -1));
         if(!container || !componentToAdd) {
             return 0;
@@ -342,7 +340,7 @@ namespace grvl {
     duk_ret_t Container::JSRemoveElementWrapper(duk_context* ctx)
     {
         duk_push_this(ctx);
-        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
+        duk_get_prop_string(ctx, -1, JSEngine::C_OBJECT_POINTER_KEY);
         AbstractView* container = static_cast<AbstractView*>(duk_to_pointer(ctx, -1));
         if(!container) {
             return 0;
@@ -357,7 +355,7 @@ namespace grvl {
     duk_ret_t Container::JSSetCurrentlySelectedItemWrapper(duk_context* ctx)
     {
         duk_push_this(ctx);
-        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
+        duk_get_prop_string(ctx, -1, JSEngine::C_OBJECT_POINTER_KEY);
         AbstractView* container = static_cast<AbstractView*>(duk_to_pointer(ctx, -1));
         if(!container) {
             return 0;
@@ -372,7 +370,7 @@ namespace grvl {
     duk_ret_t Container::JSGetNumberOfComponentsWrapper(duk_context* ctx)
     {
         duk_push_this(ctx);
-        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
+        duk_get_prop_string(ctx, -1, JSEngine::C_OBJECT_POINTER_KEY);
         Container* container = static_cast<Container*>(duk_to_pointer(ctx, -1));
         if(!container) {
             return 0;

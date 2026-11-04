@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <grvl/Manager.h>
-#include <grvl/XMLSupport.h>
 #include <grvl/component/ProgressBar.h>
 #include <grvl/grvl.h>
 
@@ -38,12 +37,12 @@ namespace grvl {
         return ProgressValue;
     }
 
-    ProgressBar* ProgressBar::BuildFromXML(XMLElement* xmlElement)
+    ProgressBar* ProgressBar::BuildFromXML(XmlElement xml)
     {
         ProgressBar* result = new ProgressBar();
-        result->InitFromXML(xmlElement);
+        result->InitFromXML(xml);
 
-        result->SetForegroundColor(XMLSupport::ParseColor(xmlElement, "progressBarColor", "#ffffffff"));
+        result->SetForegroundColor(xml.Attribute("progressBarColor").ElseStyle().ParseColor().GetOr(COLOR_ARGB8888_WHITE));
 
         return result;
     }
@@ -65,11 +64,6 @@ namespace grvl {
         if(barWidth > 0) {
             painter.FillRectangle(ParentRenderX + X, ParentRenderY + Y, barWidth, Height, ForegroundColor);
         }
-    }
-
-    void ProgressBar::InitFromXML(XMLElement* xmlElement)
-    {
-        Component::InitFromXML(xmlElement);
     }
 
     void ProgressBar::PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder)

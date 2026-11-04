@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <grvl/Manager.h>
-#include <grvl/XMLSupport.h>
 #include <grvl/component/AbstractButton.h>
 
 namespace grvl {
@@ -83,13 +82,16 @@ namespace grvl {
         return &ButtonImage;
     }
 
-    void AbstractButton::InitFromXML(XMLElement* xmlElement)
+    void AbstractButton::InitFromXML(XmlElement xml)
     {
         Manager* man = &Manager::GetInstance();
-        Component::InitFromXML(xmlElement);
+        Component::InitFromXML(xml);
 
-        this->SetText(XMLSupport::GetAttributeOrDefault(xmlElement, "text", ""));
-        this->SetTextFont(man->GetFontPointer(XMLSupport::GetAttributeOrDefault(xmlElement, "font", "normal")));
+        const std::string text = xml.Attribute("text").ElseStyle().GetOr("");
+        this->SetText(text.c_str());
+
+        const std::string font = xml.Attribute("font").ElseStyle().GetOr("normal");
+        this->SetTextFont(man->GetFontPointer(font.c_str()));
     }
 
     void AbstractButton::PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder)

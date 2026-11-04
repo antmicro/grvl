@@ -22,14 +22,11 @@
 #include <grvl/Painter.h>
 #include <grvl/component/SwitchButton.h>
 
-#include <tinyxml2.h>
-
-using namespace tinyxml2;
-
 namespace grvl {
 
     class Checkbox : public SwitchButton {
     public:
+        static constexpr const char* name = "Checkbox";
         Checkbox()
             : SwitchButton {}
         {
@@ -42,7 +39,7 @@ namespace grvl {
 
         Component* Clone() const override;
 
-        static Checkbox* BuildFromXML(XMLElement* xmlElement);
+        static Checkbox* BuildFromXML(XmlElement xml);
 
     protected:
         virtual void DrawActiveState(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight);

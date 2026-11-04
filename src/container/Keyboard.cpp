@@ -21,20 +21,20 @@
 
 namespace grvl {
 
-    Keyboard* Keyboard::BuildFromXML(XMLElement* xmlElement)
+    Keyboard* Keyboard::BuildFromXML(XmlElement xml)
     {
         Keyboard* keyboard = new Keyboard();
 
-        keyboard->InitFromXML(xmlElement);
-        keyboard->SetAutoPopup(XMLSupport::GetAttributeOrDefault(xmlElement, "autoPopup", true));
+        keyboard->InitFromXML(xml);
+        keyboard->SetAutoPopup(xml.Attribute("autoPopup").Parse<bool>().GetOr(true));
 
-        XMLElement* child = xmlElement->FirstChildElement();
-        for(; child != NULL; child = child->NextSiblingElement()) {
-            KeyboardKey* keyboardKey = dynamic_cast<KeyboardKey*>(create_component(child->Name(), (void*)child));
+        for(XmlElement child : xml) {
+            KeyboardKey* keyboardKey = dynamic_cast<KeyboardKey*>(component_from_xml(child));
             assert(keyboardKey && "Child component must be valid keyboard key");
             keyboardKey->SetParentKeyboard(keyboard);
             keyboard->AddElement(keyboardKey);
         }
+
         return keyboard;
     }
 

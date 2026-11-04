@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <grvl/JSEngine.h>
-#include <grvl/JSObject.h>
 #include <grvl/JSObjectBuilder.h>
 
 namespace grvl {
@@ -35,7 +34,7 @@ namespace grvl {
 
     void JSObjectBuilder::AttachAllocatedObjectPointer()
     {
-        duk_push_string(ctx, JSObject::C_OBJECT_POINTER_KEY);
+        duk_push_string(ctx, JSEngine::C_OBJECT_POINTER_KEY);
         duk_push_pointer(ctx, sourceObject);
         duk_put_prop(ctx, objIdx);
     }

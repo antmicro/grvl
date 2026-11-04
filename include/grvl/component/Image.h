@@ -25,8 +25,6 @@
 
 #include <chrono>
 
-using namespace tinyxml2;
-
 namespace grvl {
     class Manager;
 
@@ -44,6 +42,7 @@ namespace grvl {
     /// Width and height of a widget are deduced from image content.
     class Image : public Component {
     public:
+        static constexpr const char* name = "Image";
         Image()
             : Component()
             , ActiveFrame(0)
@@ -124,7 +123,7 @@ namespace grvl {
 
         static duk_ret_t JSRestartAnimationWrapper(duk_context* ctx);
 
-        static Image* BuildFromXML(XMLElement* xmlElement);
+        static Image* BuildFromXML(XmlElement xml);
 
         void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
 

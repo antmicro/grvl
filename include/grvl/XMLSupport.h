@@ -17,33 +17,16 @@
 #ifndef GRVL_XMLSUPPORT_H_
 #define GRVL_XMLSUPPORT_H_
 
-#include <grvl/Alignment.h>
-#include <grvl/CallbackDefinition.h>
-
 #include <string>
-#include <tinyxml2.h>
 #include <unordered_map>
-
-using namespace tinyxml2;
 
 namespace grvl {
 
+    class XmlElement;
+
     class XMLSupport {
     public:
-        static uint32_t GetAttributeOrDefault(XMLElement* element, const char* attributeName, uint32_t defaultValue);
-        static int32_t GetAttributeOrDefault(XMLElement* element, const char* attributeName, int32_t defaultValue);
-        static bool GetAttributeOrDefault(XMLElement* element, const char* attributeName, bool defaultValue);
-        static const char* GetAttributeOrDefault(XMLElement* element, const char* attributeName, const char* defaultValue);
-        static CallbackDefinition ParseCallback(const char* callbackDefinition);
-        static HorizontalAlignment ParseAlignmentOrDefault(XMLElement* element, const char* attributeName,
-                                                           HorizontalAlignment defaultValue);
-        static bool TryGetAttribute(XMLElement* element, const char* attributeName, const char** value);
-        static bool TryGetIntAttribute(XMLElement* element, const char* attributeName, int32_t* value);
-        static uint32_t GetPositionInCollection(const std::string& collectionString);
-        static uint32_t GetCollectionSize(const std::string& collectionString);
-
-        static uint32_t ParseColor(XMLElement* xmlElement, const char* attributeName, const char* defaultValue);
-        static uint32_t ParseColor(XMLElement* xmlElement, const char* attributeName, uint32_t defaultValue);
+        static const char* GetAttributeFromStylesheet(XmlElement element, const char* attributeName);
     };
 
 } /* namespace grvl */

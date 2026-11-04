@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <grvl/Manager.h>
-#include <grvl/XMLSupport.h>
 #include <grvl/component/SwitchButton.h>
 
 namespace grvl {
@@ -178,32 +177,34 @@ namespace grvl {
         stateIndicatorArcRadius = value;
     }
 
-    SwitchButton* SwitchButton::BuildFromXML(XMLElement* xmlElement)
+    SwitchButton* SwitchButton::BuildFromXML(XmlElement xml)
     {
-        Manager* man = &Manager::GetInstance();
+        Manager& man = Manager::GetInstance();
         SwitchButton* result = new SwitchButton();
 
-        result->InitFromXML(xmlElement);
+        result->InitFromXML(xml);
         static constexpr auto defaultTextColor = 0xFFFFFFFF;
 
-        const char* tempChar = xmlElement->Attribute("image");
-        if(tempChar) {
+        if(auto image = xml.Attribute("image").ElseStyle()) {
+            const std::string id = image.Get();
             result->SetImage(Image());
-            man->BindImageContentToImage(tempChar, result->GetImagePointer());
+            man.BindImageContentToImage(id.c_str(), result->GetImagePointer());
         }
 
         if((result->GetWidth() + result->GetHeight()) <= 0 && !result->GetImagePointer()->IsEmpty()) {
             result->SetSize(result->GetImagePointer()->GetWidth(), result->GetImagePointer()->GetHeight());
         }
 
-        result->SetOnSwitchONEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onSwitchON"))));
-        result->SetOnSwitchOFFEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onSwitchOFF"))));
-        result->SetOnLongPressEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPress"))));
-        result->SetOnLongPressRepeatEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPressRepeat"))));
-        result->SetStateIndicatorWidth(XMLSupport::GetAttributeOrDefault(xmlElement, "stateIndicatorWidth", result->GetHeight()));
-        result->SetStateIndicatorHeight(XMLSupport::GetAttributeOrDefault(xmlElement, "stateIndicatorHeight", result->GetHeight()));
-        result->SetStateIndicatorArcRadius(XMLSupport::GetAttributeOrDefault(xmlElement, "stateIndicatorArcRadius", result->GetBorderArcRadius()));
-        result->SetSwitchState(XMLSupport::GetAttributeOrDefault(xmlElement, "state", false));
+        result->SetOnSwitchONEvent(man.GetOrCreateCallback(xml.Attribute("onSwitchON").ParseCallback().GetOr({})));
+        result->SetOnSwitchOFFEvent(man.GetOrCreateCallback(xml.Attribute("onSwitchOFF").ParseCallback().GetOr({})));
+        result->SetOnLongPressEvent(man.GetOrCreateCallback(xml.Attribute("onLongPress").ParseCallback().GetOr({})));
+        result->SetOnLongPressRepeatEvent(man.GetOrCreateCallback(xml.Attribute("onLongPressRepeat").ParseCallback().GetOr({})));
+
+        result->SetStateIndicatorWidth(xml.Attribute("stateIndicatorWidth").ElseStyle().Parse<int32_t>().GetOr(result->GetHeight()));
+        result->SetStateIndicatorHeight(xml.Attribute("stateIndicatorHeight").ElseStyle().Parse<int32_t>().GetOr(result->GetHeight()));
+        result->SetStateIndicatorArcRadius(xml.Attribute("stateIndicatorArcRadius").ElseStyle().Parse<int32_t>().GetOr(result->GetBorderArcRadius()));
+
+        result->SetSwitchState(xml.Attribute("state").ElseStyle().Parse<bool>().GetOr(false));
 
         return result;
     }

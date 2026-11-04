@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <grvl/Manager.h>
-#include <grvl/XMLSupport.h>
 #include <grvl/component/Button.h>
 #include <grvl/container/GridRow.h>
 
@@ -111,17 +110,16 @@ namespace grvl {
         ReorderElements();
     }
 
-    GridRow* GridRow::BuildFromXML(XMLElement* xmlElement)
+    GridRow* GridRow::BuildFromXML(XmlElement xml)
     {
         GridRow* parent = new GridRow();
-        parent->InitFromXML(xmlElement);
+        parent->InitFromXML(xml);
 
-        XMLElement* child = xmlElement->FirstChildElement();
-        for(; child != NULL; child = child->NextSiblingElement()) {
+        for(XmlElement child : xml) {
             // TODO: we should verify right class
-            Component* element = create_component(child->Name(), (void*)child);
-            if(element)
+            if(Component* element = component_from_xml(child)) {
                 parent->AddElement(element);
+            }
         }
 
         return parent;

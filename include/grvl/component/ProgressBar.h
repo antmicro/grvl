@@ -20,10 +20,6 @@
 #include <grvl/Painter.h>
 #include <grvl/component/Component.h>
 
-#include <tinyxml2.h>
-
-using namespace tinyxml2;
-
 namespace grvl {
     class Manager;
 
@@ -42,6 +38,7 @@ namespace grvl {
     ///
     class ProgressBar : public Component {
     public:
+        static constexpr const char* name = "ProgressBar";
         ProgressBar()
             : Component()
         {
@@ -55,7 +52,7 @@ namespace grvl {
         void SetProgressValue(float value);
         int32_t GetProgressValue() const;
 
-        static ProgressBar* BuildFromXML(XMLElement* xmlElement);
+        static ProgressBar* BuildFromXML(XmlElement xml);
 
         void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
 
@@ -66,7 +63,6 @@ namespace grvl {
 
     protected:
         float ProgressValue { 0.0f };
-        virtual void InitFromXML(XMLElement* xmlElement);
     };
 
 } /* namespace grvl */

@@ -25,6 +25,8 @@
 #include <iomanip>
 #include <sstream>
 
+#include <tinyxml2.h>
+
 #ifndef GRVL_VER
 #define GRVL_VER "unknown"
 #endif
@@ -35,29 +37,37 @@ LOG_MODULE_REGISTER(MANAGER, LOG_LEVEL_INF);
 #endif
 
 namespace grvl {
-    // Widget list
-    WIDGET(Button);
-    WIDGET(Separator);
-    WIDGET(Clock);
-    WIDGET(Label);
-    WIDGET(Image);
-    WIDGET(CircleProgressBar);
-    WIDGET(GridView);
-    WIDGET(CustomView);
-    WIDGET(ListView);
-    WIDGET(ListItem);
-    WIDGET(GridRow);
-    WIDGET(Panel);
-    WIDGET(ProgressBar);
-    WIDGET(Slider);
-    WIDGET(SwitchButton);
-    WIDGET(ScrollPanel);
-    WIDGET(Division);
-    WIDGET(Checkbox);
-    WIDGET(Graph);
-    WIDGET(GridCanvas);
-    WIDGET(KeyboardKey);
-    WIDGET(TextInput);
+
+    static bool register_core_widgets()
+    {
+        register_widget<Button>();
+        register_widget<Separator>();
+        register_widget<Clock>();
+        register_widget<Label>();
+        register_widget<Image>();
+        register_widget<CircleProgressBar>();
+        register_widget<GridView>();
+        register_widget<CustomView>();
+        register_widget<ListView>();
+        register_widget<ListItem>();
+        register_widget<GridRow>();
+        register_widget<Panel>();
+        register_widget<ProgressBar>();
+        register_widget<Slider>();
+        register_widget<SwitchButton>();
+        register_widget<ScrollPanel>();
+        register_widget<Division>();
+        register_widget<Checkbox>();
+        register_widget<Graph>();
+        register_widget<GridCanvas>();
+        register_widget<KeyboardKey>();
+        register_widget<TextInput>();
+
+        return true;
+    }
+
+    // facilities widget registration
+    static bool registry_sentinel = register_core_widgets();
 
     static std::string DirOf(const std::string& path)
     {
@@ -65,8 +75,10 @@ namespace grvl {
         return (pos == std::string::npos) ? std::string(".") : path.substr(0, pos);
     }
 
-    static int32_t ProcessIncludes(XMLNode* parent, const std::string& baseDir, int depth)
+    static int32_t ProcessIncludes(tinyxml2::XMLNode* parent, const std::string& baseDir, int depth)
     {
+        using namespace tinyxml2;
+
         if(depth > 16) {
             return -1; // Include loop
         }
@@ -669,9 +681,9 @@ namespace grvl {
         this->render_callback = callback;
     }
 
-    Font* Manager::GetFontFromContainer(const char* name) const
+    Font* Manager::GetFontFromContainer(const std::string& name) const
     {
-        if(name == nullptr || *name == 0) {
+        if(name.empty()) {
             return nullptr;
         }
 
@@ -1397,37 +1409,30 @@ namespace grvl {
         return BuildFromXMLString(file.ReadString());
     }
 
-    void Manager::ParseGuiConfiguration(XMLElement* ConfigNode)
+    void Manager::ParseGuiConfiguration(XmlElement ConfigNode)
     {
-        static constexpr auto dotDistanceDefault = 20;
-        static constexpr auto dotRadiusDefault = 5;
-        touchAreaModificator = (int32_t)XMLSupport::GetAttributeOrDefault(
-            ConfigNode, "touchRegionModificator", (uint32_t)0);
-
-        dotColor = XMLSupport::ParseColor(ConfigNode, "dotColor", "#00000000");
-        dotActiveColor = XMLSupport::ParseColor(ConfigNode, "dotActiveColor", "#00000000");
-        dotDistance = (int32_t)XMLSupport::GetAttributeOrDefault(ConfigNode, "dotDistance", (uint32_t)dotDistanceDefault);
-        dotRadius = (int32_t)XMLSupport::GetAttributeOrDefault(ConfigNode, "dotRadius", (uint32_t)dotRadiusDefault);
-        dotYPos = (int32_t)XMLSupport::GetAttributeOrDefault(ConfigNode, "dotYPos", (uint32_t)0);
-        debugDot = (int32_t)XMLSupport::GetAttributeOrDefault(ConfigNode, "debugDot", (uint32_t)0);
+        touchAreaModificator = ConfigNode.Attribute("touchRegionModificator").Parse<int32_t>().GetOr(0);
+        dotColor = ConfigNode.Attribute("dotColor").ParseColor().GetOr(COLOR_ARGB8888_TRANSPARENT);
+        dotActiveColor = ConfigNode.Attribute("dotActiveColor").ParseColor().GetOr(COLOR_ARGB8888_TRANSPARENT);
+        dotDistance = ConfigNode.Attribute("dotDistance").Parse<uint32_t>().GetOr(20);
+        dotRadius = ConfigNode.Attribute("dotRadius").Parse<uint32_t>().GetOr(5);
+        dotYPos = ConfigNode.Attribute("dotYPos").Parse<uint32_t>().GetOr(0);
+        debugDot = ConfigNode.Attribute("debugDot").Parse<uint32_t>().GetOr(0);
     }
 
-    void Manager::ParseKeypadMapping(XMLElement* KeypadNode)
+    void Manager::ParseKeypadMapping(XmlElement KeypadNode)
     {
-        XMLElement* nextElement = KeypadNode->FirstChildElement("key");
-        while(nextElement != 0) {
-            const char* id = nextElement->Attribute("id");
+        for(XmlElement key : KeypadNode.ForEach("key")) {
+            const char* id = key.Attribute("id").GetOr(nullptr);
+            const uint32_t code_int = key.Attribute("code").Parse<uint32_t>().GetOr(-1);
+            const uint32_t repeat = key.Attribute("repeat").Parse<uint32_t>().GetOr(100);
 
-            uint32_t code_int = -1;
-            nextElement->QueryUnsignedAttribute("code", (unsigned int*)&code_int);
-
-            static constexpr auto defaultRepeat = 100;
-            uint32_t repeat = defaultRepeat;
-            nextElement->QueryUnsignedAttribute("repeat", (unsigned int*)&repeat);
+            if(id == nullptr) {
+                Log(ERROR, "Missing ID for keypad mapping, skipped!");
+                continue;
+            }
 
             AddKeyMappingToContainer(code_int, std::string(id), repeat);
-
-            nextElement = nextElement->NextSiblingElement("key");
         }
     }
     // NOLINTBEGIN
@@ -1463,17 +1468,15 @@ namespace grvl {
         // TODO: actually add this style to a list, and interpret those.
     }
 
-    void Manager::ParseFontStyles(XMLElement* styles)
+    void Manager::ParseFontStyles(XmlElement element)
     {
-        if(!styles)
-            return;
-        XMLElement* nextElement = styles->FirstChildElement("font-style");
-        while(nextElement) {
-            uint32_t size = (uint32_t)XMLSupport::GetAttributeOrDefault(nextElement, "size", (uint32_t)0);
-            const char* fname = XMLSupport::GetAttributeOrDefault(nextElement, "name", "");
-            const char* flname = XMLSupport::GetAttributeOrDefault(nextElement, "file", "");
+        for(XmlElement style : element.ForEach("font-style")) {
+            uint32_t size = style.Attribute("size").Parse<uint32_t>().GetOr(0);
+            std::string fname = style.Attribute("name").GetOr("");
+            std::string flname = style.Attribute("file").GetOr("");
+
             Font* tfont = GetFontFromContainer(fname);
-            if(tfont == NULL) {
+            if(tfont == nullptr) {
                 std::string font_path = std::string("fonts/") + fname;
                 const char* c_font_path = font_path.c_str();
 
@@ -1481,19 +1484,18 @@ namespace grvl {
                     AddFontToFontContainer(fname, new GrvlBakedFont(c_font_path));
                 }
             } else {
-                Log(WARN, "Font \"%s\" of size %d mapping to \"%s\" already loaded", flname, size, fname);
+                Log(WARN, "Font \"%s\" of size %d mapping to \"%s\" already loaded", flname.c_str(), size, fname.c_str());
             }
-            nextElement = nextElement->NextSiblingElement("font-style");
         }
     }
 
-    void Manager::ParseStylesheet(XMLElement* stylesheet)
+    void Manager::ParseStylesheet(XmlElement stylesheet)
     {
-        if(!stylesheet)
+        std::string_view data = stylesheet.GetRawText();
+
+        if(data.empty()) {
             return;
-        char* data = (char*)stylesheet->GetText();
-        if(!data)
-            return;
+        }
 
         size_t SIZE = 255;
 
@@ -1504,8 +1506,10 @@ namespace grvl {
         int count = 0;
         int level = 0;
 
-        while(data[0] != 0x0) {
-            switch(data[0]) {
+        int i = 0;
+
+        while(i < data.length()) {
+            switch(data[i]) {
                 case '{': {
                     if(level != 0)
                         break;
@@ -1550,13 +1554,13 @@ namespace grvl {
                     break;
                 }
                 default: {
-                    active[count++] = data[0];
+                    active[count++] = data[i];
                     if(count > SIZE)
                         return;
                     active[count] = 0;
                 }
             }
-            data++;
+            i++;
         }
     }
     // NOLINTEND
@@ -1574,18 +1578,20 @@ namespace grvl {
             return -1;
         }
 
-        XMLDocument doc;
+        tinyxml2::XMLDocument doc;
+        tinyxml2::XMLError Error = doc.Parse(source.c_str(), source.length());
 
-        XMLError Error = doc.Parse(source.c_str(), source.length());
+        if(Error == tinyxml2::XML_SUCCESS) {
 
-        if(Error == XML_SUCCESS) {
             if(ProcessIncludes(&doc, workingDirectory, 0) != 0) {
                 return -1;
             }
-            XMLElement* Root = doc.RootElement();
+
+            tinyxml2::XMLElement* rootPtr = doc.RootElement();
 
             // Adding screens
-            if(Root) {
+            if(rootPtr) {
+                XmlElement root { rootPtr };
 
                 JSEngine::DefineGlobalNumber("screenWidth", width);
                 JSEngine::DefineGlobalNumber("screenHeight", height);
@@ -1594,96 +1600,73 @@ namespace grvl {
 
                 // The scripts run first, so a <define> and a ${...} span can
                 // call the functions they declare.
-                for(XMLElement* script = Root->FirstChildElement("script"); script != nullptr;
-                    script = script->NextSiblingElement("script")) {
-                    ParseScripts(script);
+                for(XmlElement child : root.ForEach("script")) {
+                    ParseScripts(child);
                 }
 
-                if(!XMLPreprocessor::CollectDefines(Root, error)
+                if(!XMLPreprocessor::CollectDefines(rootPtr, error)
                    || !XMLPreprocessor::ExpandExpressions(&doc, error)) {
                     Log(ERROR, "XML expression error: %s", error.c_str());
                     return -1;
                 }
 
-                XMLElement* nextElement = Root->FirstChildElement("guiConfig");
-                if(nextElement) {
-                    ParseGuiConfiguration(nextElement);
+                if(auto child = root.FirstChild("guiConfig")) {
+                    ParseGuiConfiguration(child.value());
                 }
 
-                nextElement = Root->FirstChildElement("stylesheet");
-                if(nextElement) {
-                    ParseStylesheet(nextElement);
+                if(auto child = root.FirstChild("stylesheet")) {
+                    ParseStylesheet(child.value());
                 }
 
-                nextElement = Root->FirstChildElement("font-styles");
-                if(nextElement) {
-                    ParseFontStyles(nextElement);
+                for(XmlElement child : root.ForEach("font-styles")) {
+                    ParseFontStyles(child);
                 }
 
-                nextElement = Root->FirstChildElement("keypadMapping");
-                if(nextElement) {
-                    ParseKeypadMapping(nextElement);
+                if(auto child = root.FirstChild("keypadMapping")) {
+                    ParseKeypadMapping(child.value());
                 }
 
-                nextElement = Root->FirstChildElement("keyboard");
-                if(nextElement) {
-                    keyboard = Keyboard::BuildFromXML(nextElement);
+                if(auto child = root.FirstChild("keyboard")) {
+                    keyboard = Keyboard::BuildFromXML(child.value());
                 }
 
-                nextElement = Root->FirstChildElement("header");
-                if(nextElement) {
-                    TopPanel = Panel::BuildFromXML(nextElement);
+                if(auto child = root.FirstChild("header")) {
+                    TopPanel = Panel::BuildFromXML(child.value());
                 }
 
-                nextElement = Root->FirstChildElement("footer");
-                if(nextElement) {
-                    BottomPanel = Panel::BuildFromXML(nextElement);
+                if(auto child = root.FirstChild("footer")) {
+                    BottomPanel = Panel::BuildFromXML(child.value());
                 }
 
-                nextElement = Root->FirstChildElement("popup");
-                while(nextElement) {
-                    Popup* popup = Popup::BuildFromXML(nextElement);
-                    if(popup) {
+                for(XmlElement child : root.ForEach("popup")) {
+                    if(Popup* popup = Popup::BuildFromXML(child)) {
                         AddPopup(popup);
                     }
-                    nextElement = nextElement->NextSiblingElement("popup");
                 }
 
-                nextElement = Root->FirstChildElement("prefab");
-                while(nextElement) {
-                    Division* prefab = Division::BuildFromXML(nextElement);
-                    if(prefab) {
+                for(XmlElement child : root.ForEach("prefab")) {
+                    if(Division* prefab = Division::BuildFromXML(child)) {
                         Prefabs.emplace_back(prefab);
                     }
-                    nextElement = nextElement->NextSiblingElement("prefab");
                 }
 
-                nextElement = Root->FirstChildElement("customView");
-                while(nextElement) {
-                    AbstractView* Screen = CustomView::BuildFromXML(nextElement);
-                    if(Screen) {
-                        AddScreen(Screen);
+                for(XmlElement child : root.ForEach("customView")) {
+                    if(AbstractView* screen = CustomView::BuildFromXML(child)) {
+                        AddScreen(screen);
                         Log(INFO, "Added screen for CustomView");
                     }
-                    nextElement = nextElement->NextSiblingElement("customView");
                 }
 
-                nextElement = Root->FirstChildElement("ListView");
-                while(nextElement) {
-                    AbstractView* Screen = ListView::BuildFromXML(nextElement);
-                    if(Screen) {
-                        AddScreen(Screen);
+                for(XmlElement child : root.ForEach("ListView")) {
+                    if(AbstractView* screen = ListView::BuildFromXML(child)) {
+                        AddScreen(screen);
                     }
-                    nextElement = nextElement->NextSiblingElement("ListView");
                 }
 
-                nextElement = Root->FirstChildElement("GridView");
-                while(nextElement) {
-                    AbstractView* Screen = GridView::BuildFromXML(nextElement);
-                    if(Screen) {
-                        AddScreen(Screen);
+                for(XmlElement child : root.ForEach("GridView")) {
+                    if(AbstractView* screen = GridView::BuildFromXML(child)) {
+                        AddScreen(screen);
                     }
-                    nextElement = nextElement->NextSiblingElement("GridView");
                 }
             }
         } else { // Parsing failed
@@ -1698,15 +1681,16 @@ namespace grvl {
         return 0;
     }
 
-    void Manager::ParseScripts(XMLElement* script)
+    void Manager::ParseScripts(XmlElement script)
     {
-        if(const char* embeddedJavaScriptCode = script->GetText()) {
-            std::size_t embeddedJavaScriptCodeSize = strlen(embeddedJavaScriptCode);
-            JSEngine::LoadJavaScriptCode(embeddedJavaScriptCode, embeddedJavaScriptCodeSize);
+        std::string_view embedded = script.GetRawText();
+
+        if(!embedded.empty()) {
+            JSEngine::LoadJavaScriptCode(embedded.data(), embedded.size());
         }
 
-        const char* linkedJavaScriptCodePath = XMLSupport::GetAttributeOrDefault(script, "src", "");
-        JSEngine::LoadJavaScriptCode(linkedJavaScriptCodePath);
+        const char* path = script.Attribute("src").Else("").Get();
+        JSEngine::LoadJavaScriptCode(path);
     }
 
     Event Manager::GetEventWithArguments(const char* eventName) const

@@ -22,16 +22,17 @@
 #include <grvl/Painter.h>
 #include <grvl/component/AbstractButton.h>
 
-#include <tinyxml2.h>
-
-using namespace tinyxml2;
-
 namespace grvl {
     class Manager;
 
     enum class ButtonContentLayoutMode {
         Overlay,
         Inline,
+    };
+
+    static inline std::unordered_map<std::string_view, ButtonContentLayoutMode> BUTTON_CONTENT_LAYOUT_ENUM = {
+        { "Overlay", ButtonContentLayoutMode::Overlay },
+        { "Inline", ButtonContentLayoutMode::Inline }
     };
 
     struct ButtonContentLayout {
@@ -87,6 +88,7 @@ namespace grvl {
     ///
     class Button : public AbstractButton {
     public:
+        static constexpr const char* name = "Button";
         Button()
             : AbstractButton()
             , IcoColor(COLOR_ARGB8888_BLACK)
@@ -145,8 +147,8 @@ namespace grvl {
         int32_t GetImageTextGap() const;
         int32_t GetHorizontalPadding() const;
 
-        virtual void InitFromXML(tinyxml2::XMLElement* xmlElement);
-        static Button* BuildFromXML(XMLElement* xmlElement);
+        virtual void InitFromXML(XmlElement xml) override;
+        static Button* BuildFromXML(XmlElement xml);
 
         void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
 

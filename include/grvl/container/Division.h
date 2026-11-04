@@ -18,8 +18,7 @@
 #define GRVL_DIVISION_H_
 
 #include <grvl/container/Container.h>
-
-using namespace tinyxml2;
+#include <grvl/impl/Element.h>
 
 namespace grvl {
     class Manager;
@@ -27,6 +26,7 @@ namespace grvl {
     class Division : public Container {
 
     public:
+        static constexpr const char* name = "Division";
         Division() = default;
 
         Division(int32_t x, int32_t y, int32_t width, int32_t height)
@@ -36,7 +36,7 @@ namespace grvl {
 
         Component* Clone() const override;
 
-        static Division* BuildFromXML(XMLElement* xmlElement);
+        static Division* BuildFromXML(XmlElement xml);
 
         virtual void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY);
 

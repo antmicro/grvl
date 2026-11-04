@@ -18,7 +18,6 @@
 #define GRVL_TEXT_INPUT_H_
 
 #include <grvl/Event.h>
-#include <grvl/XMLSupport.h>
 #include <grvl/component/Button.h>
 
 #include <array>
@@ -28,6 +27,7 @@ namespace grvl {
 
     class TextInput : public Button {
     public:
+        static constexpr const char* name = "TextInput";
         class InputType {
         public:
             enum InputTypeValue {
@@ -107,7 +107,7 @@ namespace grvl {
         TextInput& operator=(const TextInput& other);
         Component* Clone() const override;
 
-        static TextInput* BuildFromXML(XMLElement* xmlElement);
+        static TextInput* BuildFromXML(XmlElement xml);
 
         void SetOnTextInputEvent(Event event);
         void SetOnSubmitCallback(Event event);

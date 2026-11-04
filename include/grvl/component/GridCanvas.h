@@ -17,7 +17,6 @@
 #ifndef GRVL_GRID_CANVAS_H_
 #define GRVL_GRID_CANVAS_H_
 
-#include <grvl/XMLSupport.h>
 #include <grvl/component/Canvas.h>
 
 namespace grvl {
@@ -25,6 +24,7 @@ namespace grvl {
     /// GUI widget for drawing regular grid as background.
     class GridCanvas : public Canvas {
     public:
+        static constexpr const char* name = "GridCanvas";
         GridCanvas() = default;
 
         GridCanvas(int32_t x, int32_t y, int32_t width, int32_t height)
@@ -32,7 +32,7 @@ namespace grvl {
         {
         }
 
-        static GridCanvas* BuildFromXML(XMLElement* xmlElement);
+        static GridCanvas* BuildFromXML(XmlElement xml);
 
         void SetHorizontalGridElementWidth(int32_t width);
         void SetHorizontalGridElementHeight(int32_t height);

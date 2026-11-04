@@ -20,31 +20,25 @@
 #include <grvl/Border.h>
 #include <grvl/Definitions.h>
 #include <grvl/Event.h>
-#include <grvl/JSObject.h>
 #include <grvl/JSObjectBuilder.h>
 #include <grvl/Painter.h>
 #include <grvl/Touch.h>
+#include <grvl/impl/Element.h>
 
 #include <duktape.h>
-#include <tinyxml2.h>
 
 #include <stdint.h>
+#include <string>
 #include <string_view>
 #include <unordered_map>
 
 namespace grvl {
 
-#define WIDGET2(id, name)                                                                                                    \
-    static Component* WidgetCreate##name##id(XMLElement* xmlElement) { return (Component*)name::BuildFromXML(xmlElement); }; \
-    void __attribute__((used))* TEMP_##name##id = register_widget_constructor((void*)&WidgetCreate##name##id, (char*)#name);
-#define WIDGET1(id, name) WIDGET2(id, name)
-#define WIDGET(name) WIDGET1(__COUNTER__, name)
-
 #define GENERATE_DUK_GETTER(class, property_name, getter_func_name, duk_push_func_name) \
     static duk_ret_t JSGet##property_name##Wrapper(duk_context* ctx)                    \
     {                                                                                   \
         duk_push_this(ctx);                                                             \
-        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);                   \
+        duk_get_prop_string(ctx, -1, JSEngine::C_OBJECT_POINTER_KEY);                   \
         class* component = static_cast<class*>(duk_to_pointer(ctx, -1));                \
         if(component) {                                                                 \
             duk_push_func_name(ctx, component->getter_func_name());                     \
@@ -58,7 +52,7 @@ namespace grvl {
     static duk_ret_t JSSet##property_name##Wrapper(duk_context* ctx)                   \
     {                                                                                  \
         duk_push_this(ctx);                                                            \
-        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);                  \
+        duk_get_prop_string(ctx, -1, JSEngine::C_OBJECT_POINTER_KEY);                  \
         class* component = static_cast<class*>(duk_to_pointer(ctx, -1));               \
         if(component) {                                                                \
             component->setter_func_name(duk_get_func_name(ctx, 0));                    \
@@ -82,7 +76,7 @@ namespace grvl {
     static duk_ret_t JS##func_name##Wrapper(duk_context* ctx)            \
     {                                                                    \
         duk_push_this(ctx);                                              \
-        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);    \
+        duk_get_prop_string(ctx, -1, JSEngine::C_OBJECT_POINTER_KEY);    \
         class* component = static_cast<class*>(duk_to_pointer(ctx, -1)); \
         if(component) {                                                  \
             component->func_name();                                      \
@@ -91,17 +85,24 @@ namespace grvl {
         return 0;                                                        \
     }
 
-    typedef struct {
-        void* fun;
-        char name[80];
-    } component_list_item;
-
-    extern int ComponentCount;
-    extern component_list_item list[150];
-
-    void* register_widget_constructor(void* con, char* nm);
     class Component;
-    Component* create_component(const char* nm, void* el);
+    using ComponentFactory = Component* (*)(XmlElement xml);
+
+    void register_component_factory(ComponentFactory factory, const char* name);
+
+    template <typename T>
+    void register_widget()
+    {
+        // needed to safely adapt the return type
+        static constexpr ComponentFactory factory = [](XmlElement xml) -> Component* {
+            return static_cast<Component*>(T::BuildFromXML(xml));
+        };
+
+        register_component_factory(factory, T::name);
+    }
+
+    Component* component_from_xml(XmlElement xml);
+    Component* create_named_component(const char* name, XmlElement xml);
 
     /// Represents base class for all widgets.
     class Component {
@@ -316,7 +317,7 @@ namespace grvl {
         virtual Touch::TouchResponse ProcessMove(int32_t StartX, int32_t StartY, int32_t DeltaX, int32_t DeltaY);
         Touch::TouchResponse OnMoveCase(const Touch& tp, int32_t ParentX, int32_t ParentY);
 
-        virtual void InitFromXML(tinyxml2::XMLElement* xmlElement);
+        virtual void InitFromXML(XmlElement xml);
 
         void* JavascriptObject { nullptr };
     };

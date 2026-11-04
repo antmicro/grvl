@@ -19,8 +19,6 @@
 
 #include <grvl/container/Container.h>
 
-using namespace tinyxml2;
-
 namespace grvl {
     class Manager;
 
@@ -50,6 +48,7 @@ namespace grvl {
     class Panel : public Container {
 
     public:
+        static constexpr const char* name = "Panel";
         Panel() = default;
 
         Panel(int32_t x, int32_t y, int32_t width, int32_t height)
@@ -62,7 +61,7 @@ namespace grvl {
 
         Component* Clone() const override;
 
-        static Panel* BuildFromXML(XMLElement* xmlElement);
+        static Panel* BuildFromXML(XmlElement xml);
 
         void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
     };

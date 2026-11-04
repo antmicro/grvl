@@ -429,48 +429,43 @@ namespace grvl {
         Component::OnClick();
     }
 
-    Slider* Slider::BuildFromXML(XMLElement* xmlElement)
+    Slider* Slider::BuildFromXML(XmlElement xml)
     {
-        Manager* man = &Manager::GetInstance();
+        Manager& man = Manager::GetInstance();
 
         Slider* result = new Slider();
 
-        result->InitFromXML(xmlElement);
+        result->InitFromXML(xml);
 
-        result->SetFrameColor(XMLSupport::ParseColor(xmlElement, "frameColor", (uint32_t)COLOR_ARGB8888_TRANSPARENT));
-        result->SetSelectedFrameColor(XMLSupport::ParseColor(xmlElement, "selectedFrameColor", (uint32_t)result->GetFrameColor()));
-        result->SetBarColor(XMLSupport::ParseColor(xmlElement, "barColor", (uint32_t)COLOR_ARGB8888_WHITE));
-        result->SetActiveBarColor(XMLSupport::ParseColor(xmlElement, "activeBarColor", (uint32_t)result->GetBarColor()));
-        result->SetScrollColor(XMLSupport::ParseColor(xmlElement, "scrollColor", (uint32_t)COLOR_ARGB8888_BLUE));
-        result->SetActiveScrollColor(XMLSupport::ParseColor(xmlElement, "activeScrollColor", (uint32_t)result->GetScrollColor()));
+        result->SetFrameColor(xml.Attribute("frameColor").ElseStyle().ParseColor().GetOr(COLOR_ARGB8888_TRANSPARENT));
+        result->SetSelectedFrameColor(xml.Attribute("selectedFrameColor").ElseStyle().ParseColor().GetOr(result->GetFrameColor()));
+        result->SetBarColor(xml.Attribute("barColor").ElseStyle().ParseColor().GetOr(COLOR_ARGB8888_WHITE));
+        result->SetActiveBarColor(xml.Attribute("activeBarColor").ElseStyle().ParseColor().GetOr(result->GetBarColor()));
+        result->SetScrollColor(xml.Attribute("scrollColor").ElseStyle().ParseColor().GetOr(COLOR_ARGB8888_BLUE));
+        result->SetActiveScrollColor(xml.Attribute("activeScrollColor").ElseStyle().ParseColor().GetOr(result->GetScrollColor()));
 
-        result->SetValueRange(XMLSupport::GetAttributeOrDefault(xmlElement, "minValue", (uint32_t)0), XMLSupport::GetAttributeOrDefault(xmlElement, "maxValue", (uint32_t)100));
+        result->SetValueRange(
+            xml.Attribute("minValue").ElseStyle().Parse<uint32_t>().GetOr(0),
+            xml.Attribute("maxValue").ElseStyle().Parse<uint32_t>().GetOr(100));
 
-        result->SetKeepBoundaries(XMLSupport::GetAttributeOrDefault(xmlElement, "keepBoundaries", false));
+        result->SetKeepBoundaries(xml.Attribute("keepBoundaries").ElseStyle().Parse<bool>().GetOr(false));
 
-        const char* typeName = XMLSupport::GetAttributeOrDefault(xmlElement, "type", "Continuous");
-        if(strcmp(typeName, "Discrete") == 0) {
-            result->SetDivision(XMLSupport::GetAttributeOrDefault(xmlElement, "division", (uint32_t)1));
-            result->SetSliderType(SliderScaleType::DISCRETE);
-        } else if(strcmp(typeName, "Integer") == 0) {
-            result->SetSliderType(SliderScaleType::LIST);
-        } else { // fallback to continuous scale as a default
-            if(strcmp(typeName, "Continuous") != 0) { // but warn about invalid type
-                Log(WARN, "Ignoring invalid value given for slider type (%s)", typeName);
-            }
-
-            result->SetSliderType(SliderScaleType::CONTINUOUS);
+        SliderScaleType type = xml.Attribute("type").ElseStyle().ParseEnum(SLIDER_SCALE_TYPE_ENUM).GetOr(SliderScaleType::CONTINUOUS);
+        if(type == SliderScaleType::DISCRETE) {
+            result->SetDivision(xml.Attribute("division").ElseStyle().Parse<uint32_t>().GetOr(1));
         }
 
-        result->SetTextFont(man->GetFontPointer(XMLSupport::GetAttributeOrDefault(xmlElement, "font", "normal")));
+        result->SetSliderType(type);
 
-        const char* tempChar = xmlElement->Attribute("image");
-        if(tempChar) {
+        result->SetTextFont(man.GetFontPointer(xml.Attribute("font").ElseStyle().GetOr("normal")));
+
+        if(auto image = xml.Attribute("image").ElseStyle()) {
+            const std::string id = image.Get();
             result->SetScrollImage(Image());
-            man->BindImageContentToImage(tempChar, result->GetScrollImagePointer());
+            man.BindImageContentToImage(id.c_str(), result->GetScrollImagePointer());
         }
 
-        result->SetOnValueChangeEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onValueChange"))));
+        result->SetOnValueChangeEvent(man.GetOrCreateCallback(xml.Attribute("onValueChange").ParseCallback().GetOr({})));
 
         return result;
     }
@@ -522,13 +517,13 @@ namespace grvl {
     {
         float range = MaxValue - MinValue;
 
-        if(ScaleType == DISCRETE) {
+        if(ScaleType == SliderScaleType::DISCRETE) {
             float newValue = range * position;
             int val = newValue / step;
             newValue = val * step;
             return newValue + MinValue;
         }
-        if(ScaleType == LIST) {
+        if(ScaleType == SliderScaleType::LIST) {
             float newValue = (int)roundf(range * position);
             return newValue + MinValue;
         }

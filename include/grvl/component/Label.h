@@ -23,9 +23,6 @@
 #include <grvl/component/Component.h>
 
 #include <duktape.h>
-#include <tinyxml2.h>
-
-using namespace tinyxml2;
 
 namespace grvl {
     class Manager;
@@ -49,6 +46,8 @@ namespace grvl {
     ///
     class Label : public Component {
     public:
+        static constexpr const char* name = "Label";
+
     protected:
         std::string Text;
         HorizontalAlignment TextHorizontalAlignment { HorizontalAlignment::Center };
@@ -91,7 +90,7 @@ namespace grvl {
         HorizontalAlignment GetMode();
         Font* GetTextFont();
 
-        static Label* BuildFromXML(XMLElement* xmlElement);
+        static Label* BuildFromXML(XmlElement xml);
 
         void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
 

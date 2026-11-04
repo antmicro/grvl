@@ -17,7 +17,7 @@
 #ifndef GRVL_JSEOBJECTBUILDER_H_
 #define GRVL_JSEOBJECTBUILDER_H_
 
-#include <grvl/JSObject.h>
+#include <grvl/JSEngine.h>
 
 #include <duktape.h>
 

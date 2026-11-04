@@ -15,30 +15,33 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <grvl/Manager.h>
-#include <grvl/XMLSupport.h>
 #include <grvl/container/CustomView.h>
 
 namespace grvl {
 
-    CustomView* CustomView::BuildFromXML(XMLElement* xmlElement)
+    CustomView* CustomView::BuildFromXML(XmlElement xml)
     {
         CustomView* parent = new CustomView();
 
-        XMLElement* child = xmlElement->FirstChildElement();
-        for(; child != NULL; child = child->NextSiblingElement()) {
-            if(strcmp(child->Name(), "header") == 0) {
-                Panel* hdr = (Panel*)create_component("panel", (void*)child);
+        for(XmlElement child : xml) {
+
+            if(child.Is("header")) {
+                Panel* hdr = (Panel*)create_named_component(Panel::name, child);
                 parent->SetHeader(hdr);
-            } else if(strcmp("key", child->Name()) == 0) {
-                continue; // Keys are handled by parent->InitFromXML() below
-            } else {
-                Component* element = create_component(child->Name(), (void*)child);
-                if(element)
-                    parent->AddElement(element);
+                continue;
+            }
+
+            // Keys are handled by InitFromXML() below
+            if(child.Is("key")) {
+                continue;
+            }
+
+            if(Component* element = component_from_xml(child)) {
+                parent->AddElement(element);
             }
         }
 
-        parent->InitFromXML(xmlElement);
+        parent->InitFromXML(xml);
 
         return parent;
     }

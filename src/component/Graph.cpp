@@ -24,41 +24,39 @@
 
 namespace grvl {
 
-    Graph* Graph::BuildFromXML(XMLElement* xmlElement)
+    Graph* Graph::BuildFromXML(XmlElement xml)
     {
-        Manager* manager = &Manager::GetInstance();
+        Manager& manager = Manager::GetInstance();
 
         Graph* graph = new Graph(0, 0, 0, 0);
-        graph->InitFromXML(xmlElement);
+        graph->InitFromXML(xml);
 
-        static constexpr int32_t DEFAULT_PADDING { 0 };
-        graph->SetHorizontalPadding(XMLSupport::GetAttributeOrDefault(xmlElement, "horizontalPadding", DEFAULT_PADDING));
-        graph->SetVerticalPadding(XMLSupport::GetAttributeOrDefault(xmlElement, "verticalPadding", DEFAULT_PADDING));
+        const int32_t horizontal = xml.Attribute("horizontalPadding").ElseStyle().Parse<int32_t>().GetOr(0);
+        const int32_t vertical = xml.Attribute("verticalPadding").ElseStyle().Parse<int32_t>().GetOr(0);
 
-        int32_t topPaddingValue { 0 };
-        if(XMLSupport::TryGetIntAttribute(xmlElement, "topPadding", &topPaddingValue)) {
-            graph->SetTopPadding(topPaddingValue);
+        graph->SetHorizontalPadding(horizontal);
+        graph->SetVerticalPadding(vertical);
+
+        if(auto top = xml.Attribute("topPadding").ElseStyle().Parse<int32_t>()) {
+            graph->SetTopPadding(top.Get());
         }
 
-        int32_t bottomPaddingValue { 0 };
-        if(XMLSupport::TryGetIntAttribute(xmlElement, "bottomPadding", &bottomPaddingValue)) {
-            graph->SetBottomPadding(bottomPaddingValue);
+        if(auto bottom = xml.Attribute("bottomPadding").ElseStyle().Parse<int32_t>()) {
+            graph->SetBottomPadding(bottom.Get());
         }
 
-        static constexpr uint32_t DEFAULT_TEXT_VERTICAL_OFFSET { 0 };
-        graph->SetTextVerticalOffset(XMLSupport::GetAttributeOrDefault(xmlElement, "textVerticalOffset", DEFAULT_TEXT_VERTICAL_OFFSET));
+        const int32_t verticalOffset = xml.Attribute("textVerticalOffset").ElseStyle().Parse<int32_t>().GetOr(0);
+        graph->SetTextVerticalOffset(verticalOffset);
 
-        static const char* defaultTextColor = "0xFFFFFFFF";
-        graph->SetTextColor(XMLSupport::ParseColor(xmlElement, "textColor", defaultTextColor));
+        graph->SetTextColor(xml.Attribute("textColor").ElseStyle().ParseColor().GetOr(COLOR_ARGB8888_WHITE));
+        graph->SetStartingGradientColor(xml.Attribute("gradientStartColor").ElseStyle().ParseColor().GetOr(COLOR_ARGB8888_WHITE));
+        graph->SetEndingGradientColor(xml.Attribute("gradientEndColor").ElseStyle().ParseColor().GetOr(COLOR_ARGB8888_WHITE));
 
-        static const char* NoGradient = "0xFFFFFFFF";
-        graph->SetStartingGradientColor(XMLSupport::ParseColor(xmlElement, "gradientStartColor", NoGradient));
-        graph->SetEndingGradientColor(XMLSupport::ParseColor(xmlElement, "gradientEndColor", NoGradient));
+        std::string fontName = xml.Attribute("font").ElseStyle().GetOr("normal");
+        Font* font = manager.GetFontPointer(fontName.c_str());
 
-        const auto* fontName = XMLSupport::GetAttributeOrDefault(xmlElement, "font", "normal");
-        Font* font = manager->GetFontPointer(fontName);
         if(!font) {
-            Log(WARN, "Setting invalid label font %s, the label isn't going to be drawn", fontName);
+            Log(WARN, "Setting invalid label font %s, the label isn't going to be drawn", fontName.c_str());
         }
         graph->SetTextFont(font);
 
@@ -290,7 +288,7 @@ namespace grvl {
     duk_ret_t Graph::JSAddDataWrapper(duk_context* ctx)
     {
         duk_push_this(ctx);
-        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
+        duk_get_prop_string(ctx, -1, JSEngine::C_OBJECT_POINTER_KEY);
         auto graph = static_cast<Graph*>(duk_to_pointer(ctx, -1));
         if(!graph) {
             return 0;
@@ -305,7 +303,7 @@ namespace grvl {
     duk_ret_t Graph::JSClearDataWrapper(duk_context* ctx)
     {
         duk_push_this(ctx);
-        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
+        duk_get_prop_string(ctx, -1, JSEngine::C_OBJECT_POINTER_KEY);
         auto graph = static_cast<Graph*>(duk_to_pointer(ctx, -1));
         if(!graph) {
             return 0;

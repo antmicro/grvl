@@ -19,15 +19,15 @@
 
 namespace grvl {
 
-    GridCanvas* GridCanvas::BuildFromXML(XMLElement* xmlElement)
+    GridCanvas* GridCanvas::BuildFromXML(XmlElement xml)
     {
         Manager& manager = Manager::GetInstance();
         GridCanvas* gridCanvas = new GridCanvas();
 
-        gridCanvas->InitFromXML(xmlElement);
+        gridCanvas->InitFromXML(xml);
 
-        gridCanvas->SetHorizontalGridElementWidth(XMLSupport::GetAttributeOrDefault(xmlElement, "horizontalGridElementWidth", 0u));
-        gridCanvas->SetHorizontalGridElementHeight(XMLSupport::GetAttributeOrDefault(xmlElement, "horizontalGridElementHeight", 0u));
+        gridCanvas->SetHorizontalGridElementWidth(xml.Attribute("horizontalGridElementWidth").ElseStyle().Parse<int32_t>().GetOr(0));
+        gridCanvas->SetHorizontalGridElementHeight(xml.Attribute("horizontalGridElementHeight").ElseStyle().Parse<int32_t>().GetOr(0));
 
         return gridCanvas;
     }

@@ -60,7 +60,7 @@ namespace grvl {
         Image ButtonImage {};
         Font* ButtonFont { nullptr };
 
-        virtual void InitFromXML(XMLElement* xmlElement);
+        virtual void InitFromXML(XmlElement xml) override;
     };
 
 } /* namespace grvl */

@@ -20,10 +20,7 @@
 #include <grvl/Painter.h>
 #include <grvl/component/Label.h>
 #include <grvl/container/Container.h>
-
-#include <tinyxml2.h>
-
-using namespace tinyxml2;
+#include <grvl/impl/Element.h>
 
 namespace grvl {
     class Manager;
@@ -76,7 +73,7 @@ namespace grvl {
         Label* GetMessagePointer();
         uint64_t GetTimetamp() const;
 
-        static Popup* BuildFromXML(XMLElement* xmlElement);
+        static Popup* BuildFromXML(XmlElement xml);
 
         void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
 

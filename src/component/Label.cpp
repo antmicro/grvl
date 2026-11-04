@@ -14,10 +14,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <grvl/JSObject.h>
 #include <grvl/JSObjectBuilder.h>
 #include <grvl/Manager.h>
-#include <grvl/XMLSupport.h>
 #include <grvl/component/Component.h>
 #include <grvl/component/Label.h>
 
@@ -48,26 +46,17 @@ namespace grvl {
         return TextHorizontalAlignment;
     }
 
-    Label* Label::BuildFromXML(XMLElement* xmlElement)
+    Label* Label::BuildFromXML(XmlElement xml)
     {
-        Manager* man = &Manager::GetInstance();
+        Manager& man = Manager::GetInstance();
         Label* result = new Label();
-        result->InitFromXML(xmlElement);
+        result->InitFromXML(xml);
 
-        static const char* defaultTextColor = "0xFFFFFFFF";
-        result->SetTextColor(XMLSupport::ParseColor(xmlElement, "textColor", defaultTextColor));
+        result->SetTextColor(xml.Attribute("textColor").ElseStyle().ParseColor().GetOr(COLOR_ARGB8888_WHITE));
+        result->SetText(xml.Attribute("text").ElseStyle().GetOr(""));
 
-        result->SetText(XMLSupport::GetAttributeOrDefault(xmlElement, "text", ""));
-
-        const auto* fontName = XMLSupport::GetAttributeOrDefault(xmlElement, "font", "normal");
-        Font* font = man->GetFontPointer(fontName);
-        if(!font) {
-            Log(WARN, "Setting invalid label font %s, the label isn't going to be drawn", fontName);
-        }
-        result->SetTextFont(font);
-
-        result->SetHorizontalAlignment(
-            XMLSupport::ParseAlignmentOrDefault(xmlElement, "alignment", HorizontalAlignment::Center));
+        result->SetTextFont(man.GetFontPointer(xml.Attribute("font").ElseStyle().GetOr("normal")));
+        result->SetHorizontalAlignment(xml.Attribute("alignment").ElseStyle().ParseEnum(HORIZONTAL_ALIGNMENT_ENUM).GetOr(HorizontalAlignment::Center));
 
         return result;
     }

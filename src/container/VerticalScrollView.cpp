@@ -589,14 +589,13 @@ namespace grvl {
         }
     }
 
-    void VerticalScrollView::InitFromXML(XMLElement* xmlElement)
+    void VerticalScrollView::InitFromXML(XmlElement xml)
     {
-        this->SetOverscrollBar(XMLSupport::GetAttributeOrDefault(xmlElement, "overscrollEnabled", true));
-        static constexpr auto defaultOverscrollBarSize = 50;
-        this->SetOverscrollBarSize(XMLSupport::GetAttributeOrDefault(xmlElement, "overscrollHeight", (uint32_t)defaultOverscrollBarSize));
-        this->SetVisible(XMLSupport::GetAttributeOrDefault(xmlElement, "visible", true));
+        this->SetOverscrollBar(xml.Attribute("overscrollEnabled").ElseStyle().Parse<bool>().GetOr(true));
+        this->SetOverscrollBarSize(xml.Attribute("overscrollHeight").ElseStyle().Parse<uint32_t>().GetOr(50));
+        this->SetVisible(xml.Attribute("visible").ElseStyle().Parse<bool>().GetOr(true));
 
-        AbstractView::InitFromXML(xmlElement);
+        AbstractView::InitFromXML(xml);
     }
 
     void VerticalScrollView::Refresh()
@@ -620,7 +619,7 @@ namespace grvl {
     duk_ret_t VerticalScrollView::JSRefreshWrapper(duk_context* ctx)
     {
         duk_push_this(ctx);
-        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
+        duk_get_prop_string(ctx, -1, JSEngine::C_OBJECT_POINTER_KEY);
         VerticalScrollView* verticalScrollView = static_cast<VerticalScrollView*>(duk_to_pointer(ctx, -1));
         if(!verticalScrollView) {
             return 0;

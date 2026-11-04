@@ -15,10 +15,39 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <grvl/Manager.h>
-#include <grvl/XMLSupport.h>
 #include <grvl/container/AbstractView.h>
 
+#include <charconv>
+
 namespace grvl {
+
+    CollectionDefinition CollectionDefinition::Parse(const std::string& definition)
+    {
+        const std::string_view view { definition };
+        const int index = view.find_first_of("/", 0);
+
+        if(index == -1) {
+            Log(ERROR, "Missing '/' in collection definition '%s'", definition.c_str());
+            return {};
+        }
+
+        const std::string_view first = view.substr(0, index);
+        const std::string_view second = view.substr(index + 1);
+
+        CollectionDefinition result {};
+
+        if(std::from_chars(first.begin(), first.end(), result.position).ec != std::errc {}) {
+            std::string copy { first };
+            Log(WARN, "Invalid position '%s' in collection definition '%s'", copy.c_str(), definition.c_str());
+        }
+
+        if(std::from_chars(second.begin(), second.end(), result.size).ec != std::errc {}) {
+            std::string copy { second };
+            Log(WARN, "Invalid size '%s' in collection definition '%s'", copy.c_str(), definition.c_str());
+        }
+
+        return result;
+    }
 
     AbstractView::~AbstractView()
     {
@@ -170,30 +199,28 @@ namespace grvl {
         onLongPressRepeat.SetSenderPointer(this);
     }
 
-    void AbstractView::InitFromXML(XMLElement* xmlElement)
+    void AbstractView::InitFromXML(XmlElement xml)
     {
-        Container::InitFromXML(xmlElement);
+        Container::InitFromXML(xml);
         Manager* man = &Manager::GetInstance();
-        this->SetOnSlideToLeftEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onSlideToLeft"))));
-        this->SetOnSlideToRightEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onSlideToRight"))));
 
-        this->SetOnLongPressEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPress"))));
-        this->SetOnLongPressRepeatEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPressRepeat"))));
+        this->SetOnSlideToLeftEvent(man->GetOrCreateCallback(xml.Attribute("onSlideToLeft").ParseCallback().GetOr({})));
+        this->SetOnSlideToRightEvent(man->GetOrCreateCallback(xml.Attribute("onSlideToRight").ParseCallback().GetOr({})));
 
-        std::string collectionString = XMLSupport::GetAttributeOrDefault(xmlElement, "collection", "0/0");
-        this->SetCollectionSize(XMLSupport::GetCollectionSize(collectionString));
-        this->SetPositionInCollection(XMLSupport::GetPositionInCollection(collectionString));
+        this->SetOnLongPressEvent(man->GetOrCreateCallback(xml.Attribute("onLongPress").ParseCallback().GetOr({})));
+        this->SetOnLongPressRepeatEvent(man->GetOrCreateCallback(xml.Attribute("onLongPressRepeat").ParseCallback().GetOr({})));
 
-        this->SetGlobalPanelVisibility(XMLSupport::GetAttributeOrDefault(xmlElement, "globalPanelVisible", true));
+        std::string definition = xml.Attribute("collection").ElseStyle().GetOr("0/0");
+        CollectionDefinition collection = CollectionDefinition::Parse(definition);
+        this->SetCollectionSize(collection.size);
+        this->SetPositionInCollection(collection.position);
 
-        XMLElement* child = xmlElement->FirstChildElement();
-        for(; child != NULL; child = child->NextSiblingElement()) {
-            if(strcmp("key", child->Name()) == 0) {
-                Key key(Key::BuildFromXML(child));
-                key.SetEventSenderPointer(this);
-                this->AddKeyToCollection(key);
-                continue;
-            }
+        this->SetGlobalPanelVisibility(xml.Attribute("globalPanelVisible").ElseStyle().Parse<bool>().GetOr(true));
+
+        for(XmlElement child : xml.ForEach("key")) {
+            Key key(Key::BuildFromXML(child));
+            key.SetEventSenderPointer(this);
+            this->AddKeyToCollection(key);
         }
     }
 

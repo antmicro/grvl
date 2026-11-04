@@ -58,31 +58,34 @@ namespace grvl {
         return new TextInput(*this);
     }
 
-    TextInput* TextInput::BuildFromXML(XMLElement* xmlElement)
+    TextInput* TextInput::BuildFromXML(XmlElement xml)
     {
-        Manager* man = &Manager::GetInstance();
+        Manager& man = Manager::GetInstance();
         TextInput* result = new TextInput();
 
-        result->InitFromXML(xmlElement);
+        result->InitFromXML(xml);
 
-        result->SetOnTextInputEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onTextInput"))));
-        result->SetOnSubmitCallback(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onSubmit"))));
+        result->SetOnTextInputEvent(man.GetOrCreateCallback(xml.Attribute("onTextInput").ParseCallback().GetOr({})));
+        result->SetOnSubmitCallback(man.GetOrCreateCallback(xml.Attribute("onSubmit").ParseCallback().GetOr({})));
 
-        result->SetBasicText(XMLSupport::GetAttributeOrDefault(xmlElement, "basicText", ""));
+        const std::string basicText = xml.Attribute("basicText").ElseStyle().GetOr("");
+        result->SetBasicText(basicText.c_str());
 
-        result->SetTextColor(XMLSupport::ParseColor(xmlElement, "textColor", "#ffffffff"));
-        result->SetActiveTextColor(XMLSupport::ParseColor(xmlElement, "activeTextColor", result->GetTextColor()));
+        result->SetTextColor(xml.Attribute("textColor").ElseStyle().ParseColor().GetOr(COLOR_ARGB8888_WHITE));
+        result->SetActiveTextColor(xml.Attribute("activeTextColor").ElseStyle().ParseColor().GetOr(result->GetTextColor()));
 
-        result->SetType(XMLSupport::GetAttributeOrDefault(xmlElement, "type", "text"));
+        // this is an enum under the hood but it has its own to/from string system so we don't use ParseEnum here
+        const std::string inputType = xml.Attribute("type").ElseStyle().GetOr("text");
+        result->SetType(inputType.c_str());
 
-        result->SetAutoFocus(XMLSupport::GetAttributeOrDefault(xmlElement, "autoFocus", false));
+        result->SetAutoFocus(xml.Attribute("autoFocus").ElseStyle().Parse<bool>().GetOr(false));
         if(result->IsAutoFocus()) {
-            man->RequestAutoFocus(result->GetID());
+            man.RequestAutoFocus(result->GetID());
         }
 
-        result->SetCursorEnabled(XMLSupport::GetAttributeOrDefault(xmlElement, "cursor", false));
-        result->SetCursorColor(XMLSupport::ParseColor(xmlElement, "cursorColor", result->GetTextColor()));
-        result->SetCursorBlink(XMLSupport::GetAttributeOrDefault(xmlElement, "cursorBlink", true));
+        result->SetCursorEnabled(xml.Attribute("cursor").ElseStyle().Parse<bool>().GetOr(false));
+        result->SetCursorColor(xml.Attribute("cursorColor").ElseStyle().ParseColor().GetOr(result->GetTextColor()));
+        result->SetCursorBlink(xml.Attribute("cursorBlink").ElseStyle().Parse<bool>().GetOr(true));
 
         return result;
     }

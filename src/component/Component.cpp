@@ -15,55 +15,57 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <grvl/JSEngine.h>
-#include <grvl/JSObject.h>
 #include <grvl/JSObjectBuilder.h>
 #include <grvl/Manager.h>
 #include <grvl/Misc.h>
-#include <grvl/XMLSupport.h>
 #include <grvl/component/Component.h>
 #include <grvl/grvl.h>
 
+#include <algorithm>
 #include <cassert>
 
 namespace grvl {
 
-    int ComponentCount = 0;
-    component_list_item list[];
-    static constexpr auto bufferSize = 80;
-
-    void* register_widget_constructor(void* con, char* nm)
+    static std::unordered_map<std::string, ComponentFactory>& get_widget_registry()
     {
-        char nm_lower[bufferSize];
-        strncpy(nm_lower, nm, bufferSize);
-        string_to_lower(nm_lower);
-        int i;
-        for(i = 0; i < ComponentCount; i++)
-            if(strcmp(nm_lower, list[i].name) == 0)
-                return NULL;
-        ComponentCount++;
-        list[ComponentCount - 1].fun = con;
-        strncpy(list[ComponentCount - 1].name, nm_lower, bufferSize);
-        return NULL;
+        static std::unordered_map<std::string, ComponentFactory> factories {};
+        return factories;
     }
 
-    typedef Component* (*constructor_fun)(XMLElement*);
-
-    Component* create_component(const char* nm, void* el)
+    static std::string normalized_widget_name(std::string_view name)
     {
-        char nm_lower[bufferSize];
-        strncpy(nm_lower, nm, bufferSize);
-        string_to_lower(nm_lower);
-        int i;
-        for(i = 0; i < ComponentCount; i++) {
-            if(strcmp(nm_lower, list[i].name) == 0) {
-                constructor_fun fun = (constructor_fun)(list[i].fun);
-                return fun((XMLElement*)el);
-            }
+        std::string key { name };
+        std::transform(key.begin(), key.end(), key.begin(), [](unsigned char c) {
+            return std::tolower(c);
+        });
+
+        return key;
+    }
+
+    void register_component_factory(ComponentFactory factory, const char* name)
+    {
+        get_widget_registry()[normalized_widget_name(name)] = factory;
+    }
+
+    Component* component_from_xml(XmlElement xml)
+    {
+        return create_named_component(xml.Name(), xml);
+    }
+
+    Component* create_named_component(const char* name, XmlElement xml)
+    {
+        auto& factories = get_widget_registry();
+        auto key = normalized_widget_name(name);
+        auto it = factories.find(key);
+
+        if(it != factories.end()) {
+            return it->second(xml);
         }
 
-        Log(ERROR, "Widget of type %s does not exist!", nm_lower);
-        for(i = 0; i < ComponentCount; i++) {
-            Log(ERROR, " -- We have %d : %s", i, list[i].name);
+        Log(ERROR, "No such component '%s' found in registry! List of known components:", key.c_str());
+
+        for(auto entry : factories) {
+            Log(INFO, " -- %s", entry.first.c_str());
         }
 
         return nullptr;
@@ -524,38 +526,34 @@ namespace grvl {
         return true;
     }
 
-    void Component::InitFromXML(XMLElement* xmlElement)
+    void Component::InitFromXML(XmlElement xml)
     {
         Manager* man = &Manager::GetInstance();
 
-        this->X = XMLSupport::GetAttributeOrDefault(xmlElement, "x", (uint32_t)0);
-        this->Y = XMLSupport::GetAttributeOrDefault(xmlElement, "y", (uint32_t)0);
-        this->Width = XMLSupport::GetAttributeOrDefault(xmlElement, "width", (uint32_t)0);
-        this->Height = XMLSupport::GetAttributeOrDefault(xmlElement, "height", (uint32_t)0);
+        this->X = xml.Attribute("x").ElseStyle().Parse<uint32_t>().GetOr(0);
+        this->Y = xml.Attribute("y").ElseStyle().Parse<uint32_t>().GetOr(0);
+        this->Width = xml.Attribute("width").ElseStyle().Parse<uint32_t>().GetOr(0);
+        this->Height = xml.Attribute("height").ElseStyle().Parse<uint32_t>().GetOr(0);
 
-        const char* tempChar = xmlElement->Attribute("id");
-        if(tempChar) {
-            this->SetID(tempChar);
+        if(auto id = xml.Attribute("id")) {
+            this->SetID(id.Get());
         }
-        static constexpr uint32_t defaultForeground = 0xFFFFFFFF; /*white*/
-        this->SetVisible(XMLSupport::GetAttributeOrDefault(xmlElement, "visible", true));
 
-        SetBackgroundColor(XMLSupport::ParseColor(xmlElement, "backgroundColor", "0"));
-        SetActiveBackgroundColor(XMLSupport::ParseColor(xmlElement, "activeBackgroundColor", GetBackgroundColor()));
-        SetForegroundColor(XMLSupport::ParseColor(xmlElement, "foregroundColor", defaultForeground));
-        SetActiveForegroundColor(XMLSupport::ParseColor(xmlElement, "activeForegroundColor", GetForegroundColor()));
+        this->SetVisible(xml.Attribute("visible").ElseStyle().Parse<bool>().GetOr(true));
 
-        static const char* defaultBorderColor = "0x00000000"; /*transparent*/
-        static const char* defaultBorderType = "none";
-        static unsigned int defaultBorderArcRadius = 0;
-        SetBorderColor(XMLSupport::ParseColor(xmlElement, "borderColor", GetBackgroundColor()));
-        SetActiveBorderColor(XMLSupport::ParseColor(xmlElement, "activeBorderColor", GetActiveBackgroundColor()));
-        SetBorderType(Border::ParseBorderTypeFromString(XMLSupport::GetAttributeOrDefault(xmlElement, "borderType", "none")));
-        SetBorderArcRadius(XMLSupport::GetAttributeOrDefault(xmlElement, "borderArcRadius", 0u));
+        SetBackgroundColor(xml.Attribute("backgroundColor").ElseStyle().ParseColor().GetOr(COLOR_ARGB8888_TRANSPARENT));
+        SetActiveBackgroundColor(xml.Attribute("activeBackgroundColor").ElseStyle().ParseColor().GetOr(GetBackgroundColor()));
+        SetForegroundColor(xml.Attribute("foregroundColor").ElseStyle().ParseColor().GetOr(COLOR_ARGB8888_WHITE));
+        SetActiveForegroundColor(xml.Attribute("activeForegroundColor").ElseStyle().ParseColor().GetOr(GetForegroundColor()));
 
-        this->SetOnClickEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onClick"))));
-        this->SetOnReleaseEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onRelease"))));
-        this->SetOnPressEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onPress"))));
+        SetBorderColor(xml.Attribute("borderColor").ElseStyle().ParseColor().GetOr(GetBackgroundColor()));
+        SetActiveBorderColor(xml.Attribute("activeBorderColor").ElseStyle().ParseColor().GetOr(GetActiveBackgroundColor()));
+        SetBorderType(xml.Attribute("borderType").ElseStyle().ParseEnum(BORDER_TYPE_BITS_ENUM).GetOr(BorderTypeBits::NONE));
+        SetBorderArcRadius(xml.Attribute("borderArcRadius").ElseStyle().Parse<uint32_t>().GetOr(0));
+
+        this->SetOnClickEvent(man->GetOrCreateCallback(xml.Attribute("onClick").ParseCallback().GetOr({})));
+        this->SetOnReleaseEvent(man->GetOrCreateCallback(xml.Attribute("onRelease").ParseCallback().GetOr({})));
+        this->SetOnPressEvent(man->GetOrCreateCallback(xml.Attribute("onPress").ParseCallback().GetOr({})));
     }
 
     void Component::AddMetadata(std::string key, std::string value)
@@ -607,7 +605,7 @@ namespace grvl {
     duk_ret_t Component::JSCloneWrapper(duk_context* ctx)
     {
         duk_push_this(ctx);
-        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
+        duk_get_prop_string(ctx, -1, JSEngine::C_OBJECT_POINTER_KEY);
         Component* component = static_cast<Component*>(duk_to_pointer(ctx, -1));
         if(component) {
             Component* clonedComponent = component->Clone();
@@ -622,7 +620,7 @@ namespace grvl {
     duk_ret_t Component::JSAddMetadataWrapper(duk_context* ctx)
     {
         duk_push_this(ctx);
-        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
+        duk_get_prop_string(ctx, -1, JSEngine::C_OBJECT_POINTER_KEY);
         Component* component = static_cast<Component*>(duk_to_pointer(ctx, -1));
         if(!component) {
             return 0;
@@ -638,7 +636,7 @@ namespace grvl {
     duk_ret_t Component::JSGetMetadataWrapper(duk_context* ctx)
     {
         duk_push_this(ctx);
-        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
+        duk_get_prop_string(ctx, -1, JSEngine::C_OBJECT_POINTER_KEY);
         Component* component = static_cast<Component*>(duk_to_pointer(ctx, -1));
         if(!component) {
             return 0;

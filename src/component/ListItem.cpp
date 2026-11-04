@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <grvl/Manager.h>
-#include <grvl/XMLSupport.h>
 #include <grvl/component/ListItem.h>
 
 namespace grvl {
@@ -197,75 +196,41 @@ namespace grvl {
         return ActiveDescriptionColor;
     }
 
-    enum ListItem::ItemType ListItem::ParseListItemTypeOrDefault(const char* value, enum ListItem::ItemType defaultValue)
+    ListItem* ListItem::BuildFromXML(XmlElement xml)
     {
-        if(value != NULL) {
-            if(strcmp("StdListField", value) == 0) {
-                return ListItem::StdListField;
-            }
-            if(strcmp("LeftArrowField", value) == 0) {
-                return ListItem::LeftArrowField;
-            }
-            if(strcmp("RightArrowField", value) == 0) {
-                return ListItem::RightArrowField;
-            }
-            if(strcmp("EmptyField", value) == 0) {
-                return ListItem::EmptyField;
-            }
-            if(strcmp("Dots", value) == 0) {
-                return ListItem::Dots;
-            }
-            if(strcmp("DoubleImageField", value) == 0) {
-                return ListItem::DoubleImageField;
-            }
-            if(strcmp("AlarmField", value) == 0) {
-                return ListItem::AlarmField;
-            }
-        }
+        Manager& man = Manager::GetInstance();
 
-        return defaultValue;
-    }
-
-    ListItem* ListItem::BuildFromXML(XMLElement* xmlElement)
-    {
-        Manager* man = &Manager::GetInstance();
-
-        const char* tempChar = xmlElement->Attribute("type");
-        ListItem::ItemType type = (ParseListItemTypeOrDefault(tempChar, ListItem::StdListField));
-
+        const ListItem::ItemType type = xml.Attribute("type").ElseStyle().ParseEnum(ITEM_TYPE_ENUM).GetOr(ListItem::StdListField);
         ListItem* result = new ListItem(0, 0, 0, 0, type);
 
-        result->InitFromXML(xmlElement);
+        result->InitFromXML(xml);
 
-        result->SetDescription(XMLSupport::GetAttributeOrDefault(xmlElement, "description", ""));
+        const std::string description = xml.Attribute("description").ElseStyle().GetOr("");
+        result->SetDescription(description.c_str());
 
-        const char* descriptionFontName = XMLSupport::GetAttributeOrDefault(xmlElement, "descriptionFont", "");
-        if(descriptionFontName[0] != 0) { // Not an empty string
-            result->SetDescriptionFont(man->GetFontPointer(descriptionFontName));
-        }
-        static constexpr uint32_t defaultFg = 0xFFFFFFFF;
-        result->SetForegroundColor(XMLSupport::ParseColor(xmlElement, "textColor", defaultFg));
-        result->SetActiveForegroundColor(XMLSupport::ParseColor(xmlElement, "activeTextColor", result->GetForegroundColor()));
-        result->SetDescriptionColor(XMLSupport::ParseColor(xmlElement, "descriptionColor", defaultFg));
-        result->SetActiveDescriptionColor(XMLSupport::ParseColor(xmlElement, "activeDescriptionColor", result->GetDescriptionColor()));
-
-        tempChar = xmlElement->Attribute("image");
-        if(tempChar) {
-            man->BindImageContentToImage(tempChar, result->GetImagePointer());
+        if(auto font = xml.Attribute("descriptionFont").ElseStyle()) {
+            result->SetDescriptionFont(man.GetFontPointer(font.Get()));
         }
 
-        tempChar = xmlElement->Attribute("additionalImage");
-        if(tempChar) {
-            man->BindImageContentToImage(tempChar, result->GetAdditionalImagePointer());
+        result->SetForegroundColor(xml.Attribute("textColor").ElseStyle().ParseColor().GetOr(COLOR_ARGB8888_WHITE));
+        result->SetActiveForegroundColor(xml.Attribute("activeTextColor").ElseStyle().ParseColor().GetOr(result->GetForegroundColor()));
+        result->SetDescriptionColor(xml.Attribute("descriptionColor").ElseStyle().ParseColor().GetOr(COLOR_ARGB8888_WHITE));
+        result->SetActiveDescriptionColor(xml.Attribute("activeDescriptionColor").ElseStyle().ParseColor().GetOr(result->GetDescriptionColor()));
+
+        if(auto image = xml.Attribute("image").ElseStyle()) {
+            man.BindImageContentToImage(image.Get(), result->GetImagePointer());
         }
 
-        tempChar = xmlElement->Attribute("roundingImage");
-        if(tempChar) {
-            man->BindImageContentToImage(tempChar, result->GetRoundingImagePointer());
+        if(auto image = xml.Attribute("additionalImage").ElseStyle()) {
+            man.BindImageContentToImage(image.Get(), result->GetAdditionalImagePointer());
         }
 
-        result->SetOnLongPressEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPress"))));
-        result->SetOnLongPressRepeatEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPressRepeat"))));
+        if(auto image = xml.Attribute("roundingImage").ElseStyle()) {
+            man.BindImageContentToImage(image.Get(), result->GetRoundingImagePointer());
+        }
+
+        result->SetOnLongPressEvent(man.GetOrCreateCallback(xml.Attribute("onLongPress").ParseCallback().GetOr({})));
+        result->SetOnLongPressRepeatEvent(man.GetOrCreateCallback(xml.Attribute("onLongPressRepeat").ParseCallback().GetOr({})));
 
         return result;
     }

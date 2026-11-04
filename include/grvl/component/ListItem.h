@@ -20,10 +20,6 @@
 #include <grvl/Font.h>
 #include <grvl/component/AbstractButton.h>
 
-#include <tinyxml2.h>
-
-using namespace tinyxml2;
-
 namespace grvl {
     class Manager;
 
@@ -61,16 +57,27 @@ namespace grvl {
             EmptyField
         } Type;
 
+        static inline std::unordered_map<std::string_view, ItemType> ITEM_TYPE_ENUM = {
+            { "StdListField", ListItem::StdListField },
+            { "LeftArrowField", ListItem::LeftArrowField },
+            { "RightArrowField", ListItem::RightArrowField },
+            { "Dots", ListItem::Dots },
+            { "DoubleImageField", ListItem::DoubleImageField },
+            { "AlarmField", ListItem::AlarmField },
+            { "EmptyField", ListItem::EmptyField }
+        };
+
     public:
+        static constexpr const char* name = "ListItem";
         ListItem()
             : AbstractButton()
-            , Type(StdListField)
+            , Type(ListItem::StdListField)
         {
         }
 
         ListItem(int32_t x, int32_t y, int32_t width, int32_t height)
             : AbstractButton(x, y, width, height)
-            , Type(StdListField)
+            , Type(ListItem::StdListField)
         {
         }
 
@@ -110,7 +117,7 @@ namespace grvl {
         uint32_t GetDescriptionColor() const;
         uint32_t GetActiveDescriptionColor() const;
 
-        static ListItem* BuildFromXML(XMLElement* xmlElement);
+        static ListItem* BuildFromXML(XmlElement xml);
 
         virtual void PrepareContent(ContentManager* contentManager);
         virtual void CancelPreparingContent(ContentManager* contentManager);
@@ -127,7 +134,6 @@ namespace grvl {
 
         // This image is used to make rounding corners. It should be an antialiased circle.
         Image roundingImage {};
-        static ItemType ParseListItemTypeOrDefault(const char* value, ItemType defaultValue);
     };
 
 } /* namespace grvl */

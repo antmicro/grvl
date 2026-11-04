@@ -18,23 +18,22 @@
 
 namespace grvl {
 
-    ScrollPanel* ScrollPanel::BuildFromXML(XMLElement* xmlElement)
+    ScrollPanel* ScrollPanel::BuildFromXML(XmlElement xml)
     {
         ScrollPanel* parent = new ScrollPanel();
 
         parent->EnableScrolling();
 
-        parent->SetSplitLineColor(XMLSupport::ParseColor(xmlElement, "splitLineColor", (uint32_t)COLOR_ARGB8888_TRANSPARENT));
-        parent->SetOverscrollBarColor(XMLSupport::ParseColor(xmlElement, "overscrollColor", (uint32_t)COLOR_ARGB8888_LIGHTGRAY));
-        parent->SetScrollIndicatorColor(XMLSupport::ParseColor(xmlElement, "scrollIndicatorColor", (uint32_t)COLOR_ARGB8888_DARKGRAY));
+        parent->SetSplitLineColor(xml.Attribute("splitLineColor").ElseStyle().ParseColor().GetOr(COLOR_ARGB8888_TRANSPARENT));
+        parent->SetOverscrollBarColor(xml.Attribute("overscrollColor").ElseStyle().ParseColor().GetOr(COLOR_ARGB8888_LIGHTGRAY));
+        parent->SetScrollIndicatorColor(xml.Attribute("scrollIndicatorColor").ElseStyle().ParseColor().GetOr(COLOR_ARGB8888_DARKGRAY));
 
-        parent->InitFromXML(xmlElement);
+        parent->InitFromXML(xml);
 
-        XMLElement* child = xmlElement->FirstChildElement();
-        for(; child != NULL; child = child->NextSiblingElement()) {
-            Component* element = create_component(child->Name(), (void*)child);
-            if(element)
+        for(XmlElement child : xml) {
+            if(Component* element = component_from_xml(child)) {
                 parent->AddElement(element);
+            }
         }
 
         return parent;

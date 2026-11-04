@@ -28,6 +28,13 @@
 
 namespace grvl {
 
+    struct CollectionDefinition {
+        uint32_t position = 0;
+        uint32_t size = 0;
+
+        static CollectionDefinition Parse(const std::string& definition);
+    };
+
     /// Represents base class for all screens.
     class AbstractView : public Container {
     public:
@@ -125,7 +132,7 @@ namespace grvl {
         uint32_t collectionSize, positionInCollection;
         std::vector<Key> KeyCollection;
 
-        virtual void InitFromXML(XMLElement* xmlElement);
+        virtual void InitFromXML(XmlElement xml) override;
 
         uint64_t TouchActivatedTimestamp;
 

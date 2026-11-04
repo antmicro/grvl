@@ -15,32 +15,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <grvl/JSEngine.h>
-#include <grvl/JSObject.h>
 #include <grvl/JSObjectBuilder.h>
 #include <grvl/Manager.h>
-#include <grvl/XMLSupport.h>
 #include <grvl/component/Button.h>
 #include <grvl/component/Component.h>
 #include <grvl/grvl.h>
 
 namespace grvl {
-    ButtonContentLayoutMode ParseButtonContentLayoutOrDefault(XMLElement* xmlElement, const char* attributeName, ButtonContentLayoutMode defaultValue)
-    {
-        const char* value = nullptr;
-        if(!XMLSupport::TryGetAttribute(xmlElement, attributeName, &value)) {
-            return defaultValue;
-        }
-
-        if(strcmp(value, "Inline") == 0) {
-            return ButtonContentLayoutMode::Inline;
-        }
-
-        if(strcmp(value, "Overlay") == 0) {
-            return ButtonContentLayoutMode::Overlay;
-        }
-
-        return defaultValue;
-    }
 
     Component* Button::Clone() const
     {
@@ -92,31 +73,31 @@ namespace grvl {
         IcoChar = -1;
     }
 
-    void Button::InitFromXML(tinyxml2::XMLElement* xmlElement)
+    void Button::InitFromXML(XmlElement xml)
     {
-        AbstractButton::InitFromXML(xmlElement);
-
+        AbstractButton::InitFromXML(xml);
         Manager* man = &Manager::GetInstance();
-        static constexpr uint32_t noIco = 0xFFFFFFFF;
-        SetIcoChar(XMLSupport::GetAttributeOrDefault(xmlElement, "icoChar", noIco));
-        SetIcoFont(man->GetFontPointer(XMLSupport::GetAttributeOrDefault(xmlElement, "icoFont", "normal")));
 
-        SetTextColor(XMLSupport::ParseColor(xmlElement, "textColor", "#ffffffff"));
-        SetActiveTextColor(XMLSupport::ParseColor(xmlElement, "activeTextColor", GetTextColor()));
-        SetIcoColor(XMLSupport::ParseColor(xmlElement, "icoColor", GetTextColor()));
-        SetActiveIcoColor(XMLSupport::ParseColor(xmlElement, "activeIcoColor", GetIcoColor()));
+        SetIcoChar(xml.Attribute("icoChar").ElseStyle().Parse<uint32_t>().GetOr(0xFFFFFFFF));
 
-        SetTextTopOffset(XMLSupport::GetAttributeOrDefault(xmlElement, "text_top_offset", (uint32_t)0));
+        const std::string font = xml.Attribute("icoFont").ElseStyle().GetOr("normal");
+        SetIcoFont(man->GetFontPointer(font.c_str()));
 
-        SetOnClickEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onClick"))));
+        SetTextColor(xml.Attribute("textColor").ElseStyle().ParseColor().GetOr(COLOR_ARGB8888_WHITE));
+        SetActiveTextColor(xml.Attribute("activeTextColor").ElseStyle().ParseColor().GetOr(GetTextColor()));
+        SetIcoColor(xml.Attribute("icoColor").ElseStyle().ParseColor().GetOr(GetTextColor()));
+        SetActiveIcoColor(xml.Attribute("activeIcoColor").ElseStyle().ParseColor().GetOr(GetIcoColor()));
 
-        const char* tempChar = xmlElement->Attribute("image");
-        if(tempChar) {
+        SetTextTopOffset(xml.AnyAttribute("text_top_offset", "textTopOffset").ElseStyle().Parse<uint32_t>().GetOr(0));
+
+        if(auto image = xml.Attribute("image").ElseStyle()) {
+            std::string id = image.Get();
+
             Image buttonImg {};
-            man->BindImageContentToImage(tempChar, &buttonImg);
+            man->BindImageContentToImage(id, &buttonImg);
             SetImage(buttonImg);
-            int32_t imgX = XMLSupport::GetAttributeOrDefault(xmlElement, "image_x", (uint32_t)-1);
-            int32_t imgY = XMLSupport::GetAttributeOrDefault(xmlElement, "image_y", (uint32_t)-1);
+            int32_t imgX = xml.AnyAttribute("image_x", "imageX").ElseStyle().Parse<int32_t>().GetOr(-1);
+            int32_t imgY = xml.AnyAttribute("image_y", "imageY").ElseStyle().Parse<int32_t>().GetOr(-1);
             if(imgX == -1 || imgY == -1) {
                 SetImageCentered(true);
                 imgX = GetWidth() / 2 - buttonImg.GetWidth() / 2;
@@ -125,21 +106,23 @@ namespace grvl {
             SetImagePosition(imgX, imgY);
         }
 
-        SetOnLongPressEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPress"))));
-        SetOnLongPressRepeatEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPressRepeat"))));
+        SetOnLongPressEvent(man->GetOrCreateCallback(xml.Attribute("onLongPress").ParseCallback().GetOr({})));
+        SetOnLongPressRepeatEvent(man->GetOrCreateCallback(xml.Attribute("onLongPressRepeat").ParseCallback().GetOr({})));
 
-        SetContentAlignment(XMLSupport::ParseAlignmentOrDefault(xmlElement, "alignment", HorizontalAlignment::Center));
-        SetContentLayoutMode(ParseButtonContentLayoutOrDefault(xmlElement, "contentLayout", ButtonContentLayoutMode::Overlay));
+        SetContentAlignment(xml.Attribute("alignment").ElseStyle().ParseEnum(HORIZONTAL_ALIGNMENT_ENUM).GetOr(HorizontalAlignment::Center));
+        SetContentLayoutMode(xml.Attribute("contentLayout").ElseStyle().ParseEnum(BUTTON_CONTENT_LAYOUT_ENUM).GetOr(ButtonContentLayoutMode::Overlay));
+
         if(ButtonFont) {
-            SetImageTextGap(XMLSupport::GetAttributeOrDefault(xmlElement, "imageTextGap", ButtonFont->GetCharWidth(' ')));
+            SetImageTextGap(xml.Attribute("imageTextGap").ElseStyle().Parse<int32_t>().GetOr(ButtonFont->GetCharWidth(' ')));
         }
-        SetHorizontalPadding(XMLSupport::GetAttributeOrDefault(xmlElement, "padding", 0));
+
+        SetHorizontalPadding(xml.Attribute("padding").ElseStyle().Parse<int32_t>().GetOr(0));
     }
 
-    Button* Button::BuildFromXML(XMLElement* xmlElement)
+    Button* Button::BuildFromXML(XmlElement xml)
     {
         Button* result = new Button();
-        result->InitFromXML(xmlElement);
+        result->InitFromXML(xml);
         return result;
     }
 

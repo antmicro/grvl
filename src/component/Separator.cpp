@@ -21,14 +21,15 @@
 
 namespace grvl {
 
-    Separator* Separator::BuildFromXML(XMLElement* xmlElement)
+    Separator* Separator::BuildFromXML(XmlElement xml)
     {
-        Manager* man = &Manager::GetInstance();
+        Manager& man = Manager::GetInstance();
         Separator* result = new Separator();
 
-        result->InitFromXML(xmlElement);
+        result->InitFromXML(xml);
 
-        result->SetForegroundColor(XMLSupport::ParseColor(xmlElement, "foregroundColor", "0"));
+        const uint32_t foreground = xml.Attribute("foregroundColor").ElseStyle().ParseColor().GetOr(COLOR_ARGB8888_TRANSPARENT);
+        result->SetForegroundColor(foreground);
 
         return result;
     }

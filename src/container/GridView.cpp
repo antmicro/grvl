@@ -16,7 +16,6 @@
 
 #include <grvl/Key.h>
 #include <grvl/Manager.h>
-#include <grvl/XMLSupport.h>
 #include <grvl/container/GridView.h>
 
 #include <cassert>
@@ -28,26 +27,26 @@ namespace grvl {
         return new GridView(*this);
     }
 
-    GridView* GridView::BuildFromXML(XMLElement* xmlElement)
+    GridView* GridView::BuildFromXML(XmlElement xml)
     {
         GridView* gridView = new GridView();
 
-        gridView->InitFromXML(xmlElement);
+        gridView->InitFromXML(xml);
 
-        gridView->SetScrolling(XMLSupport::GetAttributeOrDefault(xmlElement, "scrollingEnabled", false));
-        gridView->SetOverscrollBarColor(XMLSupport::ParseColor(xmlElement, "overscrollColor", (uint32_t)COLOR_ARGB8888_LIGHTGRAY));
-        gridView->SetScrollIndicatorColor(XMLSupport::ParseColor(xmlElement, "scrollIndicatorColor", (uint32_t)COLOR_ARGB8888_TRANSPARENT));
+        gridView->SetScrolling(xml.Attribute("scrollingEnabled").ElseStyle().Parse<bool>().Else(false).Get());
+        gridView->SetOverscrollBarColor(xml.Attribute("overscrollColor").ElseStyle().ParseColor().Else(COLOR_ARGB8888_LIGHTGRAY).Get());
+        gridView->SetScrollIndicatorColor(xml.Attribute("scrollIndicatorColor").ElseStyle().ParseColor().Else(COLOR_ARGB8888_TRANSPARENT).Get());
 
-        int32_t elementWidth = XMLSupport::GetAttributeOrDefault(xmlElement, "elementWidth", (uint32_t)0);
-        int32_t elementHeight = XMLSupport::GetAttributeOrDefault(xmlElement, "elementHeight", (uint32_t)0);
-        int32_t horizontalOffset = XMLSupport::GetAttributeOrDefault(xmlElement, "horizontalOffset", (uint32_t)0);
-        int32_t verticalOffset = XMLSupport::GetAttributeOrDefault(xmlElement, "verticalOffset", (uint32_t)0);
+        int32_t elementWidth = xml.Attribute("elementWidth").ElseStyle().Parse<int32_t>().Else(0).Get();
+        int32_t elementHeight = xml.Attribute("elementHeight").ElseStyle().Parse<int32_t>().Else(0).Get();
+        int32_t horizontalOffset = xml.Attribute("horizontalOffset").ElseStyle().Parse<int32_t>().Else(0).Get();
+        int32_t verticalOffset = xml.Attribute("verticalOffset").ElseStyle().Parse<int32_t>().Else(0).Get();
         gridView->SetGridParameters(elementWidth, elementHeight, horizontalOffset, verticalOffset);
 
-        XMLElement* child = xmlElement->FirstChildElement();
-        for(; child != NULL; child = child->NextSiblingElement()) {
-            Component* component = create_component(child->Name(), (void*)child);
-            gridView->AddElement(component);
+        for(XmlElement child : xml) {
+            if(Component* component = component_from_xml(child)) {
+                gridView->AddElement(component);
+            }
         }
 
         return gridView;

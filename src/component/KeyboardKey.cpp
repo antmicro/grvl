@@ -15,7 +15,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <grvl/Manager.h>
-#include <grvl/XMLSupport.h>
 #include <grvl/component/KeyboardKey.h>
 
 namespace grvl {
@@ -25,32 +24,36 @@ namespace grvl {
         return new KeyboardKey(*this);
     }
 
-    KeyboardKey* KeyboardKey::BuildFromXML(XMLElement* xmlElement)
+    KeyboardKey* KeyboardKey::BuildFromXML(XmlElement xml)
     {
-        Manager* man = &Manager::GetInstance();
+        Manager& man = Manager::GetInstance();
         KeyboardKey* result = new KeyboardKey();
 
-        result->InitFromXML(xmlElement);
+        result->InitFromXML(xml);
 
-        result->SetTextColor(XMLSupport::ParseColor(xmlElement, "textColor", "#ffffffff"));
-        result->SetActiveTextColor(XMLSupport::ParseColor(xmlElement, "activeTextColor", result->GetTextColor()));
+        result->SetTextColor(xml.Attribute("textColor").ElseStyle().ParseColor().GetOr(COLOR_ARGB8888_WHITE));
+        result->SetActiveTextColor(xml.Attribute("activeTextColor").ElseStyle().ParseColor().GetOr(result->GetTextColor()));
 
-        result->SetSecondaryText(XMLSupport::GetAttributeOrDefault(xmlElement, "secondaryText", ""));
-        result->SetSecondaryTextFont(man->GetFontPointer(XMLSupport::GetAttributeOrDefault(xmlElement, "secondaryTextFont", "normal")));
-        result->SetSecondaryTextColor(XMLSupport::ParseColor(xmlElement, "secondaryTextColor", "#ffffffff"));
-        result->SetActiveSecondaryTextColor(XMLSupport::ParseColor(xmlElement, "activeSecondaryTextColor", result->GetSecondaryTextColor()));
+        const std::string secondaryText = xml.Attribute("secondaryText").ElseStyle().GetOr("");
+        const std::string secondaryTextFont = xml.Attribute("secondaryTextFont").ElseStyle().GetOr("normal");
 
-        result->SetTextTopOffset(XMLSupport::GetAttributeOrDefault(xmlElement, "text_top_offset", (uint32_t)0));
+        result->SetSecondaryText(secondaryText.c_str());
+        result->SetSecondaryTextFont(man.GetFontPointer(secondaryTextFont.c_str()));
 
-        result->SetOnClickEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onClick"))));
+        result->SetSecondaryTextColor(xml.Attribute("secondaryTextColor").ElseStyle().ParseColor().GetOr(COLOR_ARGB8888_WHITE));
+        result->SetActiveSecondaryTextColor(xml.Attribute("activeSecondaryTextColor").ElseStyle().ParseColor().GetOr(result->GetSecondaryTextColor()));
 
-        const char* tempChar = xmlElement->Attribute("image");
-        if(tempChar) {
+        result->SetTextTopOffset(xml.Attribute("text_top_offset").ElseStyle().Parse<uint32_t>().GetOr(0));
+
+        result->SetOnClickEvent(man.GetOrCreateCallback(xml.Attribute("onClick").ParseCallback().GetOr({})));
+
+        if(auto image = xml.Attribute("image").ElseStyle()) {
             Image buttonImg {};
-            man->BindImageContentToImage(tempChar, &buttonImg);
+            man.BindImageContentToImage(image.Get(), &buttonImg);
             result->SetImage(buttonImg);
-            int32_t imgX = XMLSupport::GetAttributeOrDefault(xmlElement, "image_x", (uint32_t)-1);
-            int32_t imgY = XMLSupport::GetAttributeOrDefault(xmlElement, "image_y", (uint32_t)-1);
+            int32_t imgX = xml.Attribute("image_x").ElseStyle().Parse<int32_t>().GetOr(-1);
+            int32_t imgY = xml.Attribute("image_y").ElseStyle().Parse<int32_t>().GetOr(-1);
+
             if(imgX == -1 || imgY == -1) {
                 result->SetImageCentered(true);
                 imgX = result->GetWidth() / 2 - buttonImg.GetWidth() / 2;
@@ -59,8 +62,8 @@ namespace grvl {
             result->SetImagePosition(imgX, imgY);
         }
 
-        result->SetOnLongPressEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPress"))));
-        result->SetOnLongPressRepeatEvent(man->GetOrCreateCallback(XMLSupport::ParseCallback(xmlElement->Attribute("onLongPressRepeat"))));
+        result->SetOnLongPressEvent(man.GetOrCreateCallback(xml.Attribute("onLongPress").ParseCallback().GetOr({})));
+        result->SetOnLongPressRepeatEvent(man.GetOrCreateCallback(xml.Attribute("onLongPressRepeat").ParseCallback().GetOr({})));
 
         return result;
     }

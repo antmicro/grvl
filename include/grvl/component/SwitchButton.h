@@ -22,10 +22,6 @@
 #include <grvl/Painter.h>
 #include <grvl/component/AbstractButton.h>
 
-#include <tinyxml2.h>
-
-using namespace tinyxml2;
-
 namespace grvl {
     class Manager;
 
@@ -51,6 +47,7 @@ namespace grvl {
     ///
     class SwitchButton : public AbstractButton {
     public:
+        static constexpr const char* name = "SwitchButton";
         SwitchButton()
             : AbstractButton()
         {
@@ -81,7 +78,7 @@ namespace grvl {
         void SetStateIndicatorHeight(uint32_t value);
         void SetStateIndicatorArcRadius(uint32_t value);
 
-        static SwitchButton* BuildFromXML(XMLElement* xmlElement);
+        static SwitchButton* BuildFromXML(XmlElement xml);
 
         void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
 

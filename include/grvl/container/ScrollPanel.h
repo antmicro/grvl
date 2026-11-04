@@ -23,6 +23,7 @@ namespace grvl {
 
     class ScrollPanel : public VerticalScrollView {
     public:
+        static constexpr const char* name = "ScrollPanel";
         ScrollPanel() = default;
 
         ScrollPanel(int32_t x, int32_t y, int32_t width, int32_t height)
@@ -30,7 +31,7 @@ namespace grvl {
         {
         }
 
-        static ScrollPanel* BuildFromXML(XMLElement* xmlElement);
+        static ScrollPanel* BuildFromXML(XmlElement xml);
 
     protected:
         void AdjustScrollViewHeight(Component* child) override;

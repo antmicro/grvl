@@ -18,14 +18,10 @@
 #define GRVL_SLIDER_H_
 
 #include <grvl/Painter.h>
-#include <grvl/XMLSupport.h>
 #include <grvl/component/Component.h>
 #include <grvl/component/Image.h>
 
 #include <string>
-#include <tinyxml2.h>
-
-using namespace tinyxml2;
 
 namespace grvl {
     class Manager;
@@ -62,10 +58,17 @@ namespace grvl {
     ///
     class Slider : public Component {
     public:
-        enum SliderScaleType {
+        static constexpr const char* name = "Slider";
+        enum struct SliderScaleType {
             CONTINUOUS = 0,
             DISCRETE,
             LIST
+        };
+
+        static inline std::unordered_map<std::string_view, SliderScaleType> SLIDER_SCALE_TYPE_ENUM = {
+            { "Continuous", SliderScaleType::CONTINUOUS },
+            { "Discrete", SliderScaleType::DISCRETE },
+            { "Integer", SliderScaleType::LIST }, // ???
         };
 
         Slider() = default;
@@ -151,7 +154,7 @@ namespace grvl {
         virtual Touch::TouchResponse ProcessMove(int32_t StartX, int32_t StartY, int32_t DeltaX, int32_t DeltaY);
         virtual bool IsTouchPointInObject(int32_t x, int32_t y, int32_t modificator);
 
-        static Slider* BuildFromXML(XMLElement* xmlElement);
+        static Slider* BuildFromXML(XmlElement xml);
 
         void Draw(Painter& painter, int32_t ParentRenderX, int32_t ParentRenderY) override;
 

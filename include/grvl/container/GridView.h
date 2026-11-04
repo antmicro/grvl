@@ -21,8 +21,7 @@
 #include <grvl/Painter.h>
 #include <grvl/container/GridRow.h>
 #include <grvl/container/VerticalScrollView.h>
-
-#include <tinyxml2.h>
+#include <grvl/impl/Element.h>
 
 namespace grvl {
     class Manager;
@@ -68,6 +67,7 @@ namespace grvl {
     class GridView : public VerticalScrollView {
 
     public:
+        static constexpr const char* name = "GridView";
         GridView() = default;
 
         GridView(int32_t x, int32_t y, int32_t width, int32_t height)
@@ -87,7 +87,7 @@ namespace grvl {
         virtual void PrepareToOpen() { }
         virtual void PrepareToClose() { }
 
-        static GridView* BuildFromXML(XMLElement* xmlElement);
+        static GridView* BuildFromXML(XmlElement xml);
 
     protected:
         uint32_t ElementWidth { 0 };

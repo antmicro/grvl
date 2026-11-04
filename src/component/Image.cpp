@@ -17,7 +17,6 @@
 #include <grvl/JSEngine.h>
 #include <grvl/Manager.h>
 #include <grvl/Painter.h>
-#include <grvl/XMLSupport.h>
 #include <grvl/component/Image.h>
 
 namespace grvl {
@@ -101,15 +100,15 @@ namespace grvl {
         }
     }
 
-    Image* Image::BuildFromXML(XMLElement* xmlElement)
+    Image* Image::BuildFromXML(XmlElement xml)
     {
-        Manager* man = &Manager::GetInstance();
-        const char* name;
+        Manager& man = Manager::GetInstance();
         Image* result = new Image();
-        result->InitFromXML(xmlElement);
+        result->InitFromXML(xml);
 
-        if(XMLSupport::TryGetAttribute(xmlElement, "contentId", &name)) {
-            man->BindImageContentToImage(name, result);
+        if(auto contentId = xml.Attribute("contentId").ElseStyle()) {
+            std::string name = contentId.GetOr("");
+            man.BindImageContentToImage(name.c_str(), result);
         }
         return result;
     }
@@ -182,7 +181,7 @@ namespace grvl {
     duk_ret_t Image::JSRestartAnimationWrapper(duk_context* ctx)
     {
         duk_push_this(ctx);
-        duk_get_prop_string(ctx, -1, JSObject::C_OBJECT_POINTER_KEY);
+        duk_get_prop_string(ctx, -1, JSEngine::C_OBJECT_POINTER_KEY);
 
         auto* image = static_cast<Image*>(duk_to_pointer(ctx, -1));
 

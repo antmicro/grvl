@@ -15,32 +15,26 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <grvl/Manager.h>
-#include <grvl/XMLSupport.h>
 #include <grvl/component/CircleProgressBar.h>
 #include <grvl/grvl.h>
 
 namespace grvl {
 
-    CircleProgressBar* CircleProgressBar::BuildFromXML(XMLElement* xmlElement)
+    CircleProgressBar* CircleProgressBar::BuildFromXML(XmlElement xml)
     {
-        int32_t startAngle;
-        int32_t endAngle;
-        int32_t radius;
-        int32_t thickness;
-        startAngle = XMLSupport::GetAttributeOrDefault(xmlElement, "startAngle", (uint32_t)0);
-        static constexpr auto defaultEndAngle = 360;
-        endAngle = XMLSupport::GetAttributeOrDefault(xmlElement, "endAngle", (uint32_t)defaultEndAngle);
-        radius = XMLSupport::GetAttributeOrDefault(xmlElement, "radius", (uint32_t)0);
-        thickness = XMLSupport::GetAttributeOrDefault(xmlElement, "thickness", (uint32_t)0);
-        bool staticGradient = XMLSupport::GetAttributeOrDefault(xmlElement, "staticGradient", true);
+        int32_t startAngle = xml.Attribute("startAngle").ElseStyle().Parse<int32_t>().GetOr(0);
+        int32_t endAngle = xml.Attribute("endAngle").ElseStyle().Parse<int32_t>().GetOr(360);
+        int32_t radius = xml.Attribute("radius").ElseStyle().Parse<int32_t>().GetOr(0);
+        int32_t thickness = xml.Attribute("thickness").ElseStyle().Parse<int32_t>().GetOr(0);
+        bool staticGradient = xml.Attribute("staticGradient").ElseStyle().Parse<bool>().GetOr(true);
 
         CircleProgressBar* result = new CircleProgressBar(0, 0, radius, thickness, startAngle, endAngle);
 
-        result->InitFromXML(xmlElement);
+        result->InitFromXML(xml);
 
         result->SetColors(
-            XMLSupport::ParseColor(xmlElement, "startColor", (uint32_t)COLOR_ARGB8888_TRANSPARENT),
-            XMLSupport::ParseColor(xmlElement, "endColor", (uint32_t)COLOR_ARGB8888_TRANSPARENT));
+            xml.Attribute("startColor").ElseStyle().ParseColor().GetOr(COLOR_ARGB8888_TRANSPARENT),
+            xml.Attribute("endColor").ElseStyle().ParseColor().GetOr(COLOR_ARGB8888_TRANSPARENT));
 
         if(!staticGradient) {
             result->UseProportionalGradient();

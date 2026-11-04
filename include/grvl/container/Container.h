@@ -21,7 +21,6 @@
 #include <grvl/component/Component.h>
 #include <grvl/component/Image.h>
 
-#include <tinyxml2.h>
 #include <vector>
 
 namespace grvl {
@@ -78,7 +77,7 @@ namespace grvl {
 
         bool isSelection { false };
 
-        virtual void InitFromXML(XMLElement* xmlElement);
+        virtual void InitFromXML(XmlElement xml) override;
 
         virtual Component* TryToGetElementFromChildContainer(Component* possible_container, const char* searched_component_id);
 

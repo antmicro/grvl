@@ -32,19 +32,13 @@ namespace grvl {
         LEFT = 16
     };
 
-    class Border {
-    public:
-        static BorderTypeBits ParseBorderTypeFromString(const std::string& BorderType);
-
-    private:
-        inline static std::unordered_map<std::string, BorderTypeBits> BORDER_TYPE_BITS_MAPPINGS {
-            { "none", BorderTypeBits::NONE },
-            { "box", BorderTypeBits::BOX },
-            { "top", BorderTypeBits::TOP },
-            { "right", BorderTypeBits::RIGHT },
-            { "bottom", BorderTypeBits::BOTTOM },
-            { "left", BorderTypeBits::LEFT }
-        };
+    static inline std::unordered_map<std::string_view, BorderTypeBits> BORDER_TYPE_BITS_ENUM {
+        { "none", BorderTypeBits::NONE },
+        { "box", BorderTypeBits::BOX },
+        { "top", BorderTypeBits::TOP },
+        { "right", BorderTypeBits::RIGHT },
+        { "bottom", BorderTypeBits::BOTTOM },
+        { "left", BorderTypeBits::LEFT }
     };
 
 } /* namespace grvl */

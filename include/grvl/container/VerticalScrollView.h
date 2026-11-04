@@ -112,7 +112,7 @@ namespace grvl {
 
         virtual void AdjustScrollViewHeight(Component* child);
 
-        void InitFromXML(XMLElement* xmlElement);
+        virtual void InitFromXML(XmlElement xml) override;
 
         virtual Component* TryToGetElementFromChildContainer(Component* possible_container, const char* searched_component_id);
     };

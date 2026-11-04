@@ -17,12 +17,22 @@
 #ifndef GRVL_ALIGNMENT_H_
 #define GRVL_ALIGNMENT_H_
 
+#include <string_view>
+#include <unordered_map>
+
 namespace grvl {
     enum class HorizontalAlignment {
         Left,
         Right,
         Center
     };
+
+    static inline std::unordered_map<std::string_view, HorizontalAlignment> HORIZONTAL_ALIGNMENT_ENUM = {
+        { "Left", HorizontalAlignment::Left },
+        { "Right", HorizontalAlignment::Right },
+        { "Center", HorizontalAlignment::Center }
+    };
+
 } /* namespace grvl */
 
 #endif /* GRVL_ALIGNMENT_H_ */

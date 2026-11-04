@@ -17,7 +17,6 @@
 #ifndef GRVL_SEPARATOR_H_
 #define GRVL_SEPARATOR_H_
 
-#include <grvl/XMLSupport.h>
 #include <grvl/component/Component.h>
 
 #include <cstdint>
@@ -28,6 +27,7 @@ namespace grvl {
 
     class Separator : public Component {
     public:
+        static constexpr const char* name = "Separator";
         Separator()
             : Component {}
         {
@@ -43,7 +43,7 @@ namespace grvl {
         {
         }
 
-        static Separator* BuildFromXML(XMLElement* xmlElement);
+        static Separator* BuildFromXML(XmlElement xml);
 
         void Draw(Painter& Painter, int32_t ParentX, int32_t ParentY) override;
     };
