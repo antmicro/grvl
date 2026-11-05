@@ -128,11 +128,20 @@ namespace grvl {
         return Text.c_str();
     }
 
+    int32_t Label::GetTextWidth()
+    {
+        if(!TextFont)
+            return 0;
+
+        return TextFont->GetWidth(Text.c_str());
+    }
+
     void Label::PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder)
     {
         Component::PopulateJavaScriptObject(jsObjectBuilder);
         jsObjectBuilder.AddProperty("text", Label::JSGetTextWrapper, Label::JSSetTextWrapper);
         jsObjectBuilder.AddProperty("textColor", Label::JSGetTextColorWrapper, Label::JSSetTextColorWrapper);
+        jsObjectBuilder.AddProperty("textWidth", Label::JSGetTextWidthWrapper);
     }
 
 } /* namespace grvl */

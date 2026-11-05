@@ -83,6 +83,9 @@ namespace grvl {
         /// @return Label's text.
         const char* GetText();
 
+        /// @return Width of the label's text in pixels.
+        int32_t GetTextWidth();
+
         uint32_t GetTextColor() const { return TextColor; }
 
         HorizontalAlignment GetMode();
@@ -95,6 +98,7 @@ namespace grvl {
         void PopulateJavaScriptObject(JSObjectBuilder& jsObjectBuilder) override;
 
         GENERATE_DUK_STRING_GETTER(Label, Text, GetText)
+        GENERATE_DUK_INT_GETTER(Label, TextWidth, GetTextWidth)
         GENERATE_DUK_STRING_SETTER(Label, Text, SetText)
 
         GENERATE_DUK_UNSIGNED_INT_GETTER(Label, TextColor, GetTextColor)
