@@ -176,7 +176,7 @@ namespace grvl {
         int abs_x = -1;
         int abs_y = -1;
         bool touch_down = false;
-        bool left_mouse_pressed = false;
+        std::atomic<bool> left_mouse_pressed = false;
         bool draw_mouse_icon = true;
 
         // idle frame skipping, see SetIdleThrottle()
@@ -192,6 +192,7 @@ namespace grvl {
         std::atomic<bool> cursor_visible { true };
         uint32_t cursor_timeout_ms = 0;
         std::atomic<uint64_t> last_pointer_activity_ms { 0 };
+        std::atomic<bool> any_mouse_button_pressed { false };
 
         struct xkb_context* xkb_ctx;
         struct xkb_keymap* xkb_keymap;

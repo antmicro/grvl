@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <fcntl.h>
 #include <glob.h>
+#include <libinput.h>
 #include <linux/input-event-codes.h>
 #include <linux/input.h>
 #include <linux/vt.h>
@@ -1263,12 +1264,12 @@ namespace grvl {
             return;
         }
 
-        auto now_ms = CurrentTimestamp();
         auto pointer_activity_ms = last_pointer_activity_ms.load();
+        auto now_ms = CurrentTimestamp();
 
         // the cursor should be visible shortly after the app starts, even without any input yet
         const uint64_t reference_ms = std::max(pointer_activity_ms, app_start_ms);
-        const bool visible = (now_ms - reference_ms) < cursor_timeout_ms;
+        const bool visible = any_mouse_button_pressed.load() || (now_ms - reference_ms) < cursor_timeout_ms;
 
         if(cursor_visible != visible) {
             Log(INFO, "Setting cursor visible=%d", visible);
@@ -1637,7 +1638,7 @@ namespace grvl {
         auto x = cursor_state.x.load();
         auto y = cursor_state.y.load();
 
-        Manager::GetInstance().ProcessTouchPoint(left_mouse_pressed, x, y);
+        Manager::GetInstance().ProcessTouchPoint(left_mouse_pressed.load(), x, y);
     }
 
     void LinuxNativeApp::HandleKeycode(uint32_t xkb_keycode, uint32_t evdev_keycode, bool pressed)
@@ -1762,9 +1763,9 @@ namespace grvl {
                 uint32_t button = libinput_event_pointer_get_button(pointer);
                 bool pressed = (libinput_event_pointer_get_button_state(pointer) == LIBINPUT_BUTTON_STATE_PRESSED);
 
-                if(pressed) {
-                    last_pointer_activity_ms = CurrentTimestamp();
-                }
+                // Restart the cursor inactivity timer on both press and release
+                last_pointer_activity_ms = CurrentTimestamp();
+                any_mouse_button_pressed = libinput_event_pointer_get_seat_button_count(pointer) > 0;
 
                 if(button == BTN_LEFT) {
                     left_mouse_pressed = pressed;

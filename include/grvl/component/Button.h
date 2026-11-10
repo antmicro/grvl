@@ -185,6 +185,8 @@ namespace grvl {
         virtual void DrawText(Painter& painter, int32_t RenderX, int32_t RenderY, int32_t RenderWidth, int32_t RenderHeight);
 
         void CalculateContentLayout();
+
+        bool ShouldCancelTouchOnMove(int32_t StartX, int32_t StartY, int32_t DeltaX, int32_t DeltaY) const override;
     };
 
 } /* namespace grvl */

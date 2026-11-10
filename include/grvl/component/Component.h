@@ -314,6 +314,7 @@ namespace grvl {
         BorderTypeBits BorderType { BorderTypeBits::NONE };
         uint32_t BorderArcRadius { 0 };
 
+        virtual bool ShouldCancelTouchOnMove(int32_t StartX, int32_t StartY, int32_t DeltaX, int32_t DeltaY) const;
         virtual Touch::TouchResponse ProcessMove(int32_t StartX, int32_t StartY, int32_t DeltaX, int32_t DeltaY);
         Touch::TouchResponse OnMoveCase(const Touch& tp, int32_t ParentX, int32_t ParentY);
 

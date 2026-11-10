@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+#include <cstdint>
 #include <grvl/JSEngine.h>
 #include <grvl/JSObjectBuilder.h>
 #include <grvl/Manager.h>
@@ -376,4 +377,11 @@ namespace grvl {
         }
     }
 
+    bool Button::ShouldCancelTouchOnMove(int32_t StartX, int32_t StartY, int32_t DeltaX, int32_t DeltaY) const
+    {
+        const int32_t currentX = StartX + DeltaX;
+        const int32_t currentY = StartY + DeltaY;
+        const int32_t deadband = 2;
+        return currentX <= -deadband || currentX >= Width + deadband || currentY <= -deadband || currentY >= Height + deadband;
+    }
 } /* namespace grvl */

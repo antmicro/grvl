@@ -409,25 +409,30 @@ namespace grvl {
         return response;
     }
 
+    bool Component::ShouldCancelTouchOnMove(int32_t StartX, int32_t StartY, int32_t DeltaX, int32_t DeltaY) const
+    {
+        static constexpr auto moveScale = 10;
+        return DeltaX > ceil(Width / moveScale + 1)
+            || DeltaX < -ceil(Width / moveScale + 1)
+            || DeltaY > ceil(Height / moveScale + 1)
+            || DeltaY < -ceil(Height / moveScale + 1);
+    }
+
     Touch::TouchResponse Component::ProcessMove(int32_t StartX, int32_t StartY, int32_t DeltaX, int32_t DeltaY)
     {
         static constexpr auto moveScale = 10;
-        if(DeltaX > ceil(Width / moveScale + 1)
-           || DeltaX < -ceil(Width / moveScale + 1)
-           || DeltaY > ceil(Height / moveScale + 1)
-           || DeltaY < -ceil(Height / moveScale + 1)) {
+        if(ShouldCancelTouchOnMove(StartX, StartY, DeltaX, DeltaY)) {
             return Touch::TouchReleased;
         }
 
         static constexpr auto longpressThreshold = 1000;
-        if(!longTouchActive && TouchActivatedTimestamp < (grvl::Callbacks()->get_timestamp() - longpressThreshold)) { // Long press
-            if(onLongPress.IsSet()) {
-                longTouchActive = true;
-                TouchActivatedTimestamp = grvl::Callbacks()->get_timestamp();
-                Manager::GetInstance().GetEventsQueueInstance().push(&onLongPress);
-            } else {
-                return Touch::TouchReleased;
-            }
+        const int64_t now = grvl::Callbacks()->get_timestamp();
+        if(!longTouchActive
+           && onLongPress.IsSet()
+           && TouchActivatedTimestamp < (now - longpressThreshold)) { // Long press
+            longTouchActive = true;
+            TouchActivatedTimestamp = now;
+            Manager::GetInstance().GetEventsQueueInstance().push(&onLongPress);
         }
 
         static constexpr auto longpressRepeatOffset = 500;
