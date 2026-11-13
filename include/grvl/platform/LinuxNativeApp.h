@@ -243,6 +243,10 @@ namespace grvl {
 
         bool SuspendForVTSwitch();
         bool ResumeAfterVTSwitch();
+        bool IsVTSuspended() const
+        {
+            return vt_suspended.load();
+        }
 
         // Decide whether a simple mouse icon should be drawn at the cursor position.
         //
