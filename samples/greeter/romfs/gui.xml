@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doc>
+    <stylesheet></stylesheet>
+    <script src="callbacks.js" />
+
+    <customView id="start" backgroundColor="#FF101010">
+        <image id="background" contentId="background" x="0" y="0" />
+
+        <image id="grvl_logo" contentId="grvl" x="42" y="22" />
+
+        <label id="version" x="513" y="29" width="100" height="25" text="GRVL 00000000" font="geistmono-regular-12" textColor="#FFE9E9E9" alignment="Left" />
+
+        <division id="middle" x="191" y="123" width="258" height="200">
+            <image id="avatar" contentId="avatar" x="97" y="0" />
+            <image id="success_icon" visible="false" contentId="success" x="94" y="0" />
+            <label id="username_label" x="0" y="83" width="258" height="20" text="Example User" textColor="#FFE9E9E9" alignment="Center" font="inter-medium-20" />
+            <label id="email_label" x="0" y="106" width="258" height="12" text="email@example.com" textColor="#FFA1A1A1" alignment="Center" font="inter-regular-12" />
+            <textInput id="answer" x="0" y="127" width="258" height="38" borderType="box" borderArcRadius="19" textColor="#FFA1A1A1" backgroundColor="#FF1B1B1B" borderColor="#FF2C2C2C" font="inter-regular-14" padding="19" basicText="Enter Password" type="password" onSubmit="PasswordSubmit" />
+            <button id="proceed" x="226" y="133" width="26" height="26" borderType="box" borderArcRadius="13" backgroundColor="#FFE9E9E9" align="Center" onClick="EnterClicked" image="next" />
+            <label id="bad_password_label" visible="false" text="Incorrect password. Try again." x="0" y="173" width="258" font="inter-regular-16" height="16" textColor="#FFFF3941" align="Center" />
+            <label id="good_password_label" visible="false" text="Login successful" x="0" y="127" width="258" font="inter-regular-16" height="16" textColor="#FF00BD70" align="Center" />
+        </division>
+
+        <button x="43" y="417" width="107" height="30" text="Shut down" font="inter-regular-12" textColor="#FFE9E9E9" activeTextColor="#FF464646" image="shutdown" alignment="Center" contentLayout="Inline" borderType="box" borderArcRadius="15" backgroundColor="#FF1A1A1A" borderColor="#FF2C2C2C" activeBackgroundColor="#FF0B0B0B" onClick="ShutdownClicked" />
+        <button x="158" y="417" width="90" height="30" text="Reboot" font="inter-regular-12" textColor="#FFE9E9E9" activeTextColor="#FF464646" image="reboot" alignment="Center"  contentLayout="Inline" borderType="box" borderArcRadius="15" backgroundColor="#FF1A1A1A" borderColor="#FF2C2C2C" activeBackgroundColor="#FF0B0B0B" onClick="RebootClicked" />
+
+        <key id="f12" onPress="ToggleDebugOverlay" />
+        <key id="enter" onPress="EnterClicked" />
+        <key id="backspace" onPress="RemoveLastCharacterFromCurrentInput" onLongPress="RemoveLastCharacterFromCurrentInput" onLongPressRepeat="RemoveLastCharacterFromCurrentInput" />
+        <key id="ctrl_backspace" onPress="ClearCurrentInput" />
+    </customView>
+</doc>
