@@ -1,16 +1,25 @@
 // simple_demo_callbacks.js
 
 function ButtonCallback(caller) {
-    var buttonId = caller.name
+    const buttonId = caller.name
 	Print("Button clicked! (" + buttonId + ")")
 }
 
 function SwitchCallback(caller) {
-    callerName = caller.name
+    const callerName = caller.name
     if (caller.switchState) {
         Print("Switch is ON! (" + callerName + ")")
     } else {
         Print("Switch is OFF! (" + callerName + ")")
+    }
+}
+
+function CheckboxCallback(caller) {
+    const callerName = caller.name
+    if (caller.switchState) {
+        Print("Checkbox is ON! (" + callerName + ")")
+    } else {
+        Print("Checkbox is OFF! (" + callerName + ")")
     }
 }
 

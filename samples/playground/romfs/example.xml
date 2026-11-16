@@ -5,7 +5,7 @@
     <script src="callbacks.js"></script>
 
     <header height="50" backgroundColor="#ff000000">
-        <label id="h_label" text="Header (Label)" font="roboto-medium" alignment="Center" x="0" y="0" width="800" height="50" />
+        <label id="h_label" text="Header (Label)" textColor="#ffffffff" font="roboto-medium" alignment="Center" x="0" y="0" width="800" height="50" />
     </header>
 
     <customView id="start" backgroundColor="#FF4287F5">
@@ -13,16 +13,23 @@
         <clock id="test_clock" x="150" y="10" width="100" height="100" font="roboto-medium" foregroundColor="#fffff000" seconds="true" />
         <slider id="vertical_slider" x="300" y="10" width="20" height="100" scrollColor="#ffff0000" activeBarColor="#ff00ff00" />
         <slider id="horizontal_slider" x="340" y="10" width="100" height="20" scrollColor="#fffcba03" activeBarColor="#ffa903fc" />
-        <SwitchButton id="test_switch" x="480" y="10" width="150" height="100" textColor="#ffff00ff" backgroundColor="#ffffffff" switchColor="#fffcba03" font="roboto-medium" onSwitchON="SwitchCallback" onSwitchOFF="SwitchCallback" />
+        <SwitchButton id="test_switch" x="480" y="10" width="150" height="100" stateIndicatorWidth="90" stateIndicatorHeight="90" textColor="#ffff00ff" backgroundColor="#ffc0c0c0" activeBackgroundColor="#ffffffff" foregroundColor="#ffff0000" activeForegroundColor="#ff00ff00" font="roboto-medium" onSwitchON="SwitchCallback" onSwitchOFF="SwitchCallback" />
+        <Checkbox id="test_checkbox" x="480" y="130" width="150" height="100" textColor="#ffff0000" backgroundColor="#ffc0c0c0" activeBackgroundColor="#ffffffff" font="roboto-medium" onSwitchON="CheckboxCallback" onSwitchOFF="CheckboxCallback" />
         <ProgressBar id="progress_bar" x="670" y="10" width="100" height="20" progressBarColor="#ffffff00" />
         <CircleProgressBar id="circle_progress_bar" x="710" y="130" width="100" height="100" radius="30" thickness="5" startColor="#fffcba03" endColor="#ffa903fc" />
-    
+
+        <Separator id="test_separator" x="5" y="130" width="210" foregroundColor="#ff7fff7f" />
+
         <button id="show_popup_btn" x="10" y="140" width="200" height="80" backgroundColor="#fffc790d" textColor="#ff000000" activeTextColor="#ffffffff" onClick="ShowPopupCallback('test_popup')" text="Show Popup" font="roboto-medium" />
 
-        <ListView id="list_view" x="10" y="240" width="200" height="200">
+        <TextInput id="test_text_input" x="220" y="140" width="200" height="40" borderType="box" borderColor="#ffffffff" borderArcRadius="5" padding="5" backgroundColor="#ffc0c0c0" foregroundColor="#ff101010" textColor="#ff101010" font="roboto-medium" />
+
+        <ListView id="list_view" x="10" y="240" width="200" height="200" splitLineColor="#FF000000">
             <ListItem backgroundColor="#ffff0000" id="item_1" height="50" type="StdListField" text="first" textColor="#ffffffff" font="roboto-medium" />
             <ListItem backgroundColor="#ff00ff00" id="item_2" height="50" type="StdListField" text="second" textColor="#ffffffff" font="roboto-medium" />
             <ListItem backgroundColor="#ff0000ff" id="item_3" height="50" type="StdListField" text="third" textColor="#ffffffff" font="roboto-medium" />
+            <ListItem backgroundColor="#ff8800ff" id="item_4" height="50" type="StdListField" text="fourth" textColor="#ffffffff" font="roboto-medium" />
+            <ListItem backgroundColor="#ff8888ff" id="item_5" height="50" type="StdListField" text="fifth" textColor="#ffffffff" font="roboto-medium" />
         </ListView>
 
         <GridView id="grid_view" x="240" y="240" width="200" height="200" elementWidth="100" elementHeight="100">
@@ -35,12 +42,20 @@
                 <button id="row_2_btn_2" text="4" font="roboto-medium" width="50" height="50" backgroundColor="#ffffffff" textColor="0" />
             </GridRow>
         </GridView>
+
+        <GridCanvas id="grid_canvas" x="450" y="240" width="200" height="200" foregroundColor="#ff7fff7f" horizontalGridElementWidth="20" horizontalGridElementHeight="20" />
+
+        <key id="backspace" onPress="RemoveLastCharacterFromCurrentInput" onLongPress="RemoveLastCharacterFromCurrentInput" onLongPressRepeat="RemoveLastCharacterFromCurrentInput" />
     </customView>
 
     <popup id="test_popup" backgroundColor="#ff000000" x="250" y="200" width="300" height="200">
         <button id="close_popup_btn" x="100" y="10" width="100" height="50" backgroundColor="#ffffffff" textColor="#ff0000ff" activeTextColor="#ffff00ff" onClick="ClosePopupCallback" text="Close" font="roboto-medium" />
         <label id="popup_label" font="roboto-medium" x="0" y="100" width="300" height="50" text="This is a Popup." />
     </popup>
+
+    <keypadMapping>
+        <key id="backspace" code="8" />
+    </keypadMapping>
 
     <font-styles>
         <font-style name="roboto-medium" file="Roboto-Medium.ttf" size="30"/>
