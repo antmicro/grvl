@@ -1731,6 +1731,7 @@ namespace grvl {
 
                 if(dx != 0 || dy != 0) {
                     last_pointer_activity_ms = CurrentTimestamp();
+                    Manager::GetInstance().MarkUserActivity();
                 }
 
                 x += dx;
@@ -1749,6 +1750,7 @@ namespace grvl {
 
                 if(new_x != x || new_y != y) {
                     last_pointer_activity_ms = CurrentTimestamp();
+                    Manager::GetInstance().MarkUserActivity();
                 }
 
                 x = new_x;
