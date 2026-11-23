@@ -24,6 +24,9 @@
 
 #include <duktape.h>
 
+#include <string_view>
+#include <vector>
+
 namespace grvl {
     class Manager;
 
@@ -43,6 +46,7 @@ namespace grvl {
     /// * backgroundColor         - widget background color (default: transparent)
     /// * frameColor              - widget frame color (default: transparent)
     /// * alignment               - horizontal alignment of the text (default: center)
+    /// * wrapping                - wrap text on whitespace (default: false)
     ///
     class Label : public Component {
     public:
@@ -53,6 +57,7 @@ namespace grvl {
         HorizontalAlignment TextHorizontalAlignment { HorizontalAlignment::Center };
         Font* TextFont { nullptr };
         uint32_t TextColor { 0 };
+        bool Wrapping { false };
 
     public:
         Label() = default;
@@ -78,6 +83,7 @@ namespace grvl {
         void SetText(const char* text);
         void SetHorizontalAlignment(HorizontalAlignment alignment);
         void SetTextFont(Font* font);
+        void SetWrapping(bool wrapping);
 
         /// @return Label's text.
         const char* GetText();
@@ -86,6 +92,7 @@ namespace grvl {
         int32_t GetTextWidth();
 
         uint32_t GetTextColor() const { return TextColor; }
+        bool IsWrapping() const { return Wrapping; }
 
         HorizontalAlignment GetMode();
         Font* GetTextFont();
@@ -102,6 +109,12 @@ namespace grvl {
 
         GENERATE_DUK_UNSIGNED_INT_GETTER(Label, TextColor, GetTextColor)
         GENERATE_DUK_UNSIGNED_INT_SETTER(Label, TextColor, SetTextColor)
+
+        GENERATE_DUK_BOOLEAN_GETTER(Label, Wrapping, IsWrapping)
+        GENERATE_DUK_BOOLEAN_SETTER(Label, Wrapping, SetWrapping)
+
+    private:
+        std::vector<std::string> SplitIntoLines(std::string_view text) const;
     };
 
 } /* namespace grvl */

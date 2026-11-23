@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doc>
+    <script src="callbacks.js" />
+    <customView id="home" backgroundColor="#FF101722">
+        <!-- 800x950 canvas; boxes have fixed dimensions and show clipping. -->
+        <label x="20" y="12" width="650" height="30" text="Label: multiline and word wrapping" font="normal" textColor="#FFFFFFFF" alignment="Left" />
+        <label x="20" y="43" width="680" height="24" text="Blue = normal bounds; red = intentionally too small - text is clipped." font="normal" textColor="#FFB8C9DA" alignment="Left" />
+        <button x="702" y="14" width="78" height="28" text="Exit" font="normal" onClick="OnExitButton" backgroundColor="#FF944040" activeBackgroundColor="#FFB85050" textColor="#FFFFFFFF" />
+
+        <!-- 01 / 02: same content, with and without wrapping. -->
+        <label x="20" y="88" width="370" height="24" text="01 - wrapping=false: horizontal clipping" font="normal" alignment="Left" textColor="#FFB8C9DA" />
+        <label x="410" y="88" width="370" height="24" text="02 - wrapping=true: automatic word wrap" font="normal" alignment="Left" textColor="#FFB8C9DA" />
+        <label id="no_wrap" x="20" y="117" width="370" height="90" wrapping="false" alignment="Left" font="normal" text="The very same sentence is too long to fit in one line but can be split into several shorter lines." textColor="#FFFFFFFF" backgroundColor="#FF243443" borderType="box" borderColor="#FF4A8FC0" />
+        <label id="auto_wrap" x="410" y="117" width="370" height="90" wrapping="true" alignment="Left" font="normal" text="The very same sentence is too long to fit in one line but can be split into several shorter lines." textColor="#FFFFFFFF" backgroundColor="#FF243443" borderType="box" borderColor="#FF4A8FC0" />
+
+        <!-- 03 / 04: per-line alignment left and center -->
+        <label x="20" y="218" width="370" height="24" text="03 - wrapping=true, alignment=Left" font="normal" alignment="Left" textColor="#FFB8C9DA" />
+        <label x="410" y="218" width="370" height="24" text="04 - wrapping=true, alignment=Center" font="normal" alignment="Left" textColor="#FFB8C9DA" />
+        <label id="align_left" x="20" y="247" width="370" height="90" wrapping="true" alignment="Left" font="normal" text="Short first line and then a longer sentence wrapping at the spaces between words." textColor="#FFFFFFFF" backgroundColor="#FF243443" borderType="box" borderColor="#FF4A8FC0" />
+        <label id="align_center" x="410" y="247" width="370" height="90" wrapping="true" alignment="Center" font="normal" text="Short first line and then a longer sentence wrapping at the spaces between words." textColor="#FFFFFFFF" backgroundColor="#FF243443" borderType="box" borderColor="#FF4A8FC0" />
+
+        <!-- 05 / 06: per-line alignment - right and explicit newline (NOTE: \n in xml is encoded as &#10;). -->
+        <label x="20" y="348" width="370" height="24" text="05 - wrapping=true, alignment=Right" font="normal" alignment="Left" textColor="#FFB8C9DA" />
+        <label x="410" y="348" width="370" height="24" text="06 - wrapping=false, explicit newlines" font="normal" alignment="Left" textColor="#FFB8C9DA" />
+        <label id="align_right" x="20" y="377" width="370" height="90" wrapping="true" alignment="Right" font="normal" text="Right-aligned lines are measured and positioned independently when the text wraps." textColor="#FFFFFFFF" backgroundColor="#FF243443" borderType="box" borderColor="#FF4A8FC0" />
+        <label id="manual_newlines" x="410" y="377" width="370" height="90" wrapping="false" alignment="Center" font="normal" text="Line one&#10;A longer second line&#10;Line three" textColor="#FFFFFFFF" backgroundColor="#FF243443" borderType="box" borderColor="#FF4A8FC0" />
+
+        <!-- 07 / 08: explicit paragraph breaks, and whitespace collapsing. -->
+        <label x="20" y="478" width="370" height="24" text="07 - wrapping=true with explicit newlines" font="normal" alignment="Left" textColor="#FFB8C9DA" />
+        <label x="410" y="478" width="370" height="24" text="08 - multiple spaces and tabs" font="normal" alignment="Left" textColor="#FFB8C9DA" />
+        <label id="combined_newlines" x="20" y="507" width="370" height="90" wrapping="true" alignment="Left" font="normal" text="First paragraph wraps at the available width.&#10;Second paragraph also wraps when it needs to." textColor="#FFFFFFFF" backgroundColor="#FF243443" borderType="box" borderColor="#FF4A8FC0" />
+        <label id="whitespace" x="410" y="507" width="370" height="90" wrapping="true" alignment="Left" font="normal" text="Words   separated     by many spaces and&#9;tabs should collapse to single spaces." textColor="#FFFFFFFF" backgroundColor="#FF243443" borderType="box" borderColor="#FF4A8FC0" />
+
+        <!-- 09 / 10: deliberately insufficient height and width. -->
+        <label x="20" y="608" width="370" height="24" text="09 - insufficient HEIGHT: 370 x 26" font="normal" alignment="Left" textColor="#FFFFB2A4" />
+        <label x="410" y="608" width="370" height="24" text="10 - insufficient WIDTH: 80 x 90" font="normal" alignment="Left" textColor="#FFFFB2A4" />
+        <label id="too_short" x="20" y="637" width="370" height="26" wrapping="true" alignment="Left" font="normal" text="This paragraph needs multiple lines, but the label is only one line high. The rest must be clipped." textColor="#FFFFFFFF" backgroundColor="#FF4C2C30" borderType="box" borderColor="#FFE67F7F" />
+        <label x="20" y="677" width="370" height="38" text="Vertical centering may clip both the first and last lines." font="normal" alignment="Left" wrapping="true" textColor="#FFFFB2A4" />
+        <label id="too_narrow" x="410" y="637" width="80" height="90" wrapping="true" alignment="Left" font="normal" text="A few words in a very narrow label should create many lines." textColor="#FFFFFFFF" backgroundColor="#FF4C2C30" borderType="box" borderColor="#FFE67F7F" />
+        <label x="500" y="645" width="280" height="70" text="Only 80 px wide. Words may fit individually, but the full block will exceed the available height." font="normal" alignment="Left" wrapping="true" textColor="#FFFFB2A4" />
+
+        <!-- 11 / 12: long word, runtime property and width changes. -->
+        <label x="20" y="738" width="370" height="24" text="11 - unbreakable word wider than label" font="normal" alignment="Left" textColor="#FFFFB2A4" />
+        <label x="410" y="738" width="370" height="24" text="12 - runtime wrapping / width (JavaScript)" font="normal" alignment="Left" textColor="#FFB8C9DA" />
+        <label id="long_word" x="20" y="767" width="370" height="80" wrapping="true" alignment="Left" font="normal" text="ThisIsSuperExtraVeryLongStringTheMotherOfAllStringsThatDoesNotBreakAtAll" textColor="#FFFFFFFF" backgroundColor="#FF4C2C30" borderType="box" borderColor="#FFE67F7F" />
+        <label id="dynamic_label" x="410" y="767" width="370" height="80" wrapping="true" alignment="Left" font="normal" text="Click the buttons below. Watch this label reflow when wrapping or width changes." textColor="#FFFFFFFF" backgroundColor="#FF243443" borderType="box" borderColor="#FF4A8FC0" />
+        <button x="410" y="863" width="170" height="34" text="Toggle wrapping" font="normal" textColor="#FFFFFFFF" onClick="ToggleWrapping" backgroundColor="#FF315E86" activeBackgroundColor="#FF487DAB" />
+        <button x="590" y="863" width="190" height="34" text="Toggle 370 / 180 px" font="normal" textColor="#FFFFFFFF" onClick="ToggleWidth" backgroundColor="#FF315E86" activeBackgroundColor="#FF487DAB" />
+    </customView>
+</doc>
