@@ -15,6 +15,9 @@ namespace grvl {
 
         [[deprecated("Use Manager::MarkUserActivity()")]] void MarkUserActivity();
 
+        // The effective Num Lock state
+        virtual bool IsNumLockEnabled() const = 0;
+
     protected:
         PosixApp(int width, int height, bool rotate_sideways);
 

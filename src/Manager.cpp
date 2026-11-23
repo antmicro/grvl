@@ -1363,8 +1363,21 @@ namespace grvl {
             }
 
             if(searchKey != KeyMappingContainer.end() && activeKey.name != searchKey->second.name) {
-                if(ActiveScreen->PressKey(searchKey->second.name.c_str()) != Key::NA) {
-                    activeKey = searchKey->second;
+                KeyData selected = searchKey->second;
+                Key::KeyState state = ActiveScreen->PressKey(selected.name.c_str());
+
+                // Preserve the dedicated kp_enter mapping when the application uses it,
+                // but let existing <key id="enter"> handlers accept keypad Enter too.
+                if(state == Key::NA && selected.name == "kp_enter") {
+                    auto enter = KeyMappingContainer.find(code == codeWithoutModifiers ? code : codeWithoutModifiers);
+                    (void)enter; // Only the logical name matters for the fallback.
+                    state = ActiveScreen->PressKey("enter");
+                    if(state != Key::NA) {
+                        selected.name = "enter";
+                    }
+                }
+                if(state != Key::NA) {
+                    activeKey = selected;
                     activeKeyCode = codeWithoutModifiers;
                     keyActive = true;
                     KeyPressTimestamp = grvl::Callbacks()->get_timestamp();

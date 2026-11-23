@@ -9,6 +9,39 @@
 
 namespace grvl {
 
+    static SDL_Keycode TranslateKeypad(SDL_Keycode key, SDL_Keymod mods)
+    {
+        // SDL reports keypad *physical* keys, even with NumLock disabled.
+        // As on a typical PC keyboard, Shift temporarily reverses NumLock.
+        if((bool(mods & KMOD_NUM)) == (bool(mods & KMOD_SHIFT))) {
+            switch(key) {
+                case SDLK_KP_4:
+                    return SDLK_LEFT;
+                case SDLK_KP_6:
+                    return SDLK_RIGHT;
+                case SDLK_KP_8:
+                    return SDLK_UP;
+                case SDLK_KP_2:
+                    return SDLK_DOWN;
+                case SDLK_KP_7:
+                    return SDLK_HOME;
+                case SDLK_KP_1:
+                    return SDLK_END;
+                case SDLK_KP_9:
+                    return SDLK_PAGEUP;
+                case SDLK_KP_3:
+                    return SDLK_PAGEDOWN;
+                case SDLK_KP_0:
+                    return SDLK_INSERT;
+                case SDLK_KP_PERIOD:
+                    return SDLK_DELETE;
+                default:
+                    break;
+            }
+        }
+        return key;
+    }
+
     static int GetEnvInt(const char* name, int fallback)
     {
         const char* value = getenv(name);
@@ -127,13 +160,31 @@ namespace grvl {
                     should_run = false;
                     break;
 
-                case SDL_KEYDOWN:
-                    Manager::GetInstance().ProcessKeyInput(true, event.key.keysym.sym, static_cast<uint16_t>(event.key.keysym.sym));
+                case SDL_KEYDOWN: {
+                    const int physical = static_cast<int>(event.key.keysym.scancode);
+                    auto it = pressed_keycodes.find(physical);
+                    const uint32_t code = it != pressed_keycodes.end()
+                        ? it->second
+                        : static_cast<uint32_t>(TranslateKeypad(event.key.keysym.sym,
+                                                                static_cast<SDL_Keymod>(event.key.keysym.mod)));
+                    pressed_keycodes[physical] = code;
+                    Manager::GetInstance().ProcessKeyInput(true, code, static_cast<uint16_t>(code));
                     break;
+                }
 
-                case SDL_KEYUP:
-                    Manager::GetInstance().ProcessKeyInput(false, event.key.keysym.sym, static_cast<uint16_t>(event.key.keysym.sym));
+                case SDL_KEYUP: {
+                    const int physical = static_cast<int>(event.key.keysym.scancode);
+                    const auto it = pressed_keycodes.find(physical);
+                    const uint32_t code = it != pressed_keycodes.end()
+                        ? it->second
+                        : static_cast<uint32_t>(TranslateKeypad(event.key.keysym.sym,
+                                                                static_cast<SDL_Keymod>(event.key.keysym.mod)));
+                    if(it != pressed_keycodes.end()) {
+                        pressed_keycodes.erase(it);
+                    }
+                    Manager::GetInstance().ProcessKeyInput(false, code, static_cast<uint16_t>(code));
                     break;
+                }
             }
         }
 
@@ -147,4 +198,8 @@ namespace grvl {
         this->title = title;
     }
 
+    bool LinuxDesktopApp::IsNumLockEnabled() const
+    {
+        return SDL_GetModState() & KMOD_NUM;
+    }
 }

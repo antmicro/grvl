@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doc>
+    <script src="callbacks.js" />
+    <customView id="home" backgroundColor="#ff101827">
+        <label id="heading" text="NUMPAD DEMO" font="large" x="70" y="30" width="500" height="56" textColor="#fff5f8ff" alignment="Left" />
+        <label id="subtitle" text="Press physical keypad keys to test GRVL bindings" font="small" x="70" y="87" width="500" height="28" textColor="#ffaab8ce" alignment="Left" />
+        <label id="mode_status" text="NUM LOCK ..." font="small" x="70" y="122" width="500" height="35" textColor="#ff93c5fd" alignment="Left" />
+        <label id="pad_num" text="Num" font="normal" x="70" y="171" width="110" height="86" backgroundColor="#ff263548" borderColor="#ff41516a" borderType="box" textColor="#fff0f6ff" alignment="Center" />
+        <label id="pad_divide" text="/" font="normal" x="195" y="171" width="110" height="86" backgroundColor="#ff263548" borderColor="#ff41516a" borderType="box" textColor="#fff0f6ff" alignment="Center" />
+        <label id="pad_multiply" text="*" font="normal" x="320" y="171" width="110" height="86" backgroundColor="#ff263548" borderColor="#ff41516a" borderType="box" textColor="#fff0f6ff" alignment="Center" />
+        <label id="pad_minus" text="-" font="normal" x="445" y="171" width="110" height="86" backgroundColor="#ff263548" borderColor="#ff41516a" borderType="box" textColor="#fff0f6ff" alignment="Center" />
+        <label id="pad_7" text="Home" font="normal" x="70" y="267" width="110" height="86" backgroundColor="#ff263548" borderColor="#ff41516a" borderType="box" textColor="#fff0f6ff" alignment="Center" />
+        <label id="pad_8" text="Up" font="normal" x="195" y="267" width="110" height="86" backgroundColor="#ff263548" borderColor="#ff41516a" borderType="box" textColor="#fff0f6ff" alignment="Center" />
+        <label id="pad_9" text="PageUp" font="small" x="320" y="267" width="110" height="86" backgroundColor="#ff263548" borderColor="#ff41516a" borderType="box" textColor="#fff0f6ff" alignment="Center" />
+        <label id="pad_plus" text="+" font="normal" x="445" y="267" width="110" height="182" backgroundColor="#ff263548" borderColor="#ff41516a" borderType="box" textColor="#fff0f6ff" alignment="Center" />
+        <label id="pad_4" text="Left" font="normal" x="70" y="363" width="110" height="86" backgroundColor="#ff263548" borderColor="#ff41516a" borderType="box" textColor="#fff0f6ff" alignment="Center" />
+        <label id="pad_5" text="5" font="normal" x="195" y="363" width="110" height="86" backgroundColor="#ff263548" borderColor="#ff41516a" borderType="box" textColor="#fff0f6ff" alignment="Center" />
+        <label id="pad_6" text="Right" font="normal" x="320" y="363" width="110" height="86" backgroundColor="#ff263548" borderColor="#ff41516a" borderType="box" textColor="#fff0f6ff" alignment="Center" />
+        <label id="pad_1" text="End" font="normal" x="70" y="459" width="110" height="86" backgroundColor="#ff263548" borderColor="#ff41516a" borderType="box" textColor="#fff0f6ff" alignment="Center" />
+        <label id="pad_2" text="Down" font="normal" x="195" y="459" width="110" height="86" backgroundColor="#ff263548" borderColor="#ff41516a" borderType="box" textColor="#fff0f6ff" alignment="Center" />
+        <label id="pad_3" text="PageDn" font="small" x="320" y="459" width="110" height="86" backgroundColor="#ff263548" borderColor="#ff41516a" borderType="box" textColor="#fff0f6ff" alignment="Center" />
+        <label id="pad_enter" text="Enter" font="normal" x="445" y="459" width="110" height="182" backgroundColor="#ff263548" borderColor="#ff41516a" borderType="box" textColor="#fff0f6ff" alignment="Center" />
+        <label id="pad_0" text="Insert" font="small" x="70" y="555" width="235" height="86" backgroundColor="#ff263548" borderColor="#ff41516a" borderType="box" textColor="#fff0f6ff" alignment="Center" />
+        <label id="pad_dot" text="Delete" font="small" x="320" y="555" width="110" height="86" backgroundColor="#ff263548" borderColor="#ff41516a" borderType="box" textColor="#fff0f6ff" alignment="Center" />
+        <label id="last_event_caption" text="LAST EVENT" font="small" x="70" y="660" width="500" height="28" textColor="#ff8a9bb4" alignment="Left" />
+        <label id="last_event" text="Press a key on the numeric keypad" font="small" x="70" y="691" width="500" height="31" textColor="#fff0f6ff" alignment="Left" />
+        <label id="input_caption" text="TEXT INPUT" font="small" x="70" y="748" width="500" height="25" textColor="#ff8a9bb4" alignment="Left" />
+        <textInput id="numpad_input" x="70" y="783" width="485" height="52" font="normal" basicText="Type using the numpad..." type="text" autoFocus="true" cursor="true" cursorBlink="true" borderType="box" borderColor="#ff41516a" backgroundColor="#ff263548" textColor="#fff0f6ff" cursorColor="#ff93c5fd" padding="12" />
+        <label id="footer" text="Escape exits  |  Log is printed to stdout" font="small" x="70" y="856" width="500" height="25" textColor="#ff8a9bb4" alignment="Left" />
+
+        <key id="numlock" onPress="OnKeyPressed('pad_num', 'numlock')" onRelease="OnKeyReleased('pad_num', 'numlock')" />
+        <key id="kp_divide" onPress="OnKeyPressed('pad_divide', 'kp_divide')" onRelease="OnKeyReleased('pad_divide', 'kp_divide')" />
+        <key id="kp_multiply" onPress="OnKeyPressed('pad_multiply', 'kp_multiply')" onRelease="OnKeyReleased('pad_multiply', 'kp_multiply')" />
+        <key id="kp_minus" onPress="OnKeyPressed('pad_minus', 'kp_minus')" onRelease="OnKeyReleased('pad_minus', 'kp_minus')" />
+        <key id="kp_plus" onPress="OnKeyPressed('pad_plus', 'kp_plus')" onRelease="OnKeyReleased('pad_plus', 'kp_plus')" />
+        <key id="kp_7" onPress="OnKeyPressed('pad_7', 'kp_7')" onRelease="OnKeyReleased('pad_7', 'kp_7')" />
+        <key id="kp_8" onPress="OnKeyPressed('pad_8', 'kp_8')" onRelease="OnKeyReleased('pad_8', 'kp_8')" />
+        <key id="kp_9" onPress="OnKeyPressed('pad_9', 'kp_9')" onRelease="OnKeyReleased('pad_9', 'kp_9')" />
+        <key id="kp_4" onPress="OnKeyPressed('pad_4', 'kp_4')" onRelease="OnKeyReleased('pad_4', 'kp_4')" />
+        <key id="kp_5" onPress="OnKeyPressed('pad_5', 'kp_5')" onRelease="OnKeyReleased('pad_5', 'kp_5')" />
+        <key id="kp_6" onPress="OnKeyPressed('pad_6', 'kp_6')" onRelease="OnKeyReleased('pad_6', 'kp_6')" />
+        <key id="kp_1" onPress="OnKeyPressed('pad_1', 'kp_1')" onRelease="OnKeyReleased('pad_1', 'kp_1')" />
+        <key id="kp_2" onPress="OnKeyPressed('pad_2', 'kp_2')" onRelease="OnKeyReleased('pad_2', 'kp_2')" />
+        <key id="kp_3" onPress="OnKeyPressed('pad_3', 'kp_3')" onRelease="OnKeyReleased('pad_3', 'kp_3')" />
+        <key id="kp_0" onPress="OnKeyPressed('pad_0', 'kp_0')" onRelease="OnKeyReleased('pad_0', 'kp_0')" />
+        <key id="kp_period" onPress="OnKeyPressed('pad_dot', 'kp_period')" onRelease="OnKeyReleased('pad_dot', 'kp_period')" />
+        <key id="home" onPress="OnKeyPressed('pad_7', 'home')" onRelease="OnKeyReleased('pad_7', 'home')" />
+        <key id="up" onPress="OnKeyPressed('pad_8', 'up')" onRelease="OnKeyReleased('pad_8', 'up')" />
+        <key id="pageup" onPress="OnKeyPressed('pad_9', 'pageup')" onRelease="OnKeyReleased('pad_9', 'pageup')" />
+        <key id="left" onPress="OnKeyPressed('pad_4', 'left')" onRelease="OnKeyReleased('pad_4', 'left')" />
+        <key id="right" onPress="OnKeyPressed('pad_6', 'right')" onRelease="OnKeyReleased('pad_6', 'right')" />
+        <key id="end" onPress="OnKeyPressed('pad_1', 'end')" onRelease="OnKeyReleased('pad_1', 'end')" />
+        <key id="down" onPress="OnKeyPressed('pad_2', 'down')" onRelease="OnKeyReleased('pad_2', 'down')" />
+        <key id="pagedown" onPress="OnKeyPressed('pad_3', 'pagedown')" onRelease="OnKeyReleased('pad_3', 'pagedown')" />
+        <key id="insert" onPress="OnKeyPressed('pad_0', 'insert')" onRelease="OnKeyReleased('pad_0', 'insert')" />
+        <key id="delete" onPress="OnKeyPressed('pad_dot', 'delete')" onRelease="OnKeyReleased('pad_dot', 'delete')" />
+        <key id="enter" onPress="OnKeyPressed('pad_enter', 'enter')" onRelease="OnKeyReleased('pad_enter', 'enter')" />
+        <key id="kp_enter" onPress="OnKeyPressed('pad_enter', 'kp_enter')" onRelease="OnKeyReleased('pad_enter', 'kp_enter')" />
+        <key id="escape" onPress="Exit" />
+        <key id="backspace" onPress="RemoveLastCharacterFromCurrentInput" onLongPress="RemoveLastCharacterFromCurrentInput" onLongPressRepeat="RemoveLastCharacterFromCurrentInput" />
+    </customView>
+</doc>

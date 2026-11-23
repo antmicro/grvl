@@ -23,6 +23,7 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 #include <xkbcommon/xkbcommon.h>
@@ -170,6 +171,7 @@ namespace grvl {
         struct libinput* li = nullptr;
         struct udev* ud = nullptr;
         uint32_t leds = 0;
+        std::atomic<bool> num_lock_active { false };
 
         int x = 0;
         int y = 0;
@@ -197,6 +199,9 @@ namespace grvl {
         struct xkb_context* xkb_ctx;
         struct xkb_keymap* xkb_keymap;
         struct xkb_state* xkb_state;
+
+        // Keep the logical code stable until the physical key is released.
+        std::unordered_map<uint32_t, uint32_t> pressed_keycodes;
 
         static void PageFlipHandler(int fd, unsigned int frame, unsigned int sec, unsigned int usec, void* app);
 
@@ -246,6 +251,12 @@ namespace grvl {
         bool IsVTSuspended() const
         {
             return vt_suspended.load();
+        }
+
+        // The effective Num Lock state maintained by XKB (input thread snapshot).
+        bool IsNumLockEnabled() const override
+        {
+            return num_lock_active.load();
         }
 
         // Decide whether a simple mouse icon should be drawn at the cursor position.

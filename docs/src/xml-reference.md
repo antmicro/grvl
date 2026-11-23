@@ -624,6 +624,40 @@ Letter and punctuation IDs follow SDL key symbols on desktop and physical evdev
 keys (US key names) on LinuxNative. Other platforms and applications that
 initialize `Manager` directly must provide their own mappings.
 
+#### Numeric keypad behavior (LinuxDesktop and LinuxNative)
+
+In navigation mode (normally with Num Lock disabled), the numeric keypad uses
+these existing navigation IDs rather than separate `kp_left`, `kp_home`, etc. IDs:
+
+| Keypad key | Navigation ID |
+| --- | --- |
+| `kp_7` | `home` |
+| `kp_8` | `up` |
+| `kp_9` | `pageup` |
+| `kp_4` | `left` |
+| `kp_6` | `right` |
+| `kp_1` | `end` |
+| `kp_2` | `down` |
+| `kp_3` | `pagedown` |
+| `kp_0` | `insert` |
+| `kp_period` | `delete` |
+
+With Num Lock enabled, these keys retain their normal `kp_*` mappings. Shift can
+temporarily reverse Num Lock behavior. LinuxNative uses XKB's interpretation,
+while LinuxDesktop handles Num Lock and Shift through SDL modifiers. `kp_5`
+does not have a navigation equivalent and retains its own mapping.
+
+The translation happens in the platform backend before key events reach
+`Manager`. For example, with navigation mode active, keypad 4 triggers a
+`<key id="left">` handler, even when `<key id="kp_4">` is also declared. In
+numeric mode it triggers `kp_4` instead. Applications declaring standard
+navigation keys in their view therefore need no additional keypad bindings.
+
+Keypad Enter differs: it always has the `kp_enter` mapping, independently of
+Num Lock. If the active view defines `<key id="kp_enter">`, that handler takes
+precedence. Otherwise the key falls back to `<key id="enter">`, including
+matching press and release events.
+
 `keypadMapping` is optional. Its entries override defaults **by numeric code**;
 unmentioned defaults remain. Giving another code the same ID adds an alias rather
 than removing the original binding. Codes retain their backend-specific meaning:

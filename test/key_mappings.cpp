@@ -184,6 +184,40 @@ TEST_CASE("Legacy SDL XML bindings override defaults but not full-width override
     REQUIRE(events.back() == "custom");
 }
 
+TEST_CASE("Keypad Enter falls back to Enter only when not handled", "[keyboard]")
+{
+    SECTION("An enter handler also accepts keypad Enter")
+    {
+        KeyboardFixture fixture;
+        fixture.manager().AddDefaultKeyMappingToContainer(13, "enter", 100);
+        fixture.manager().AddDefaultKeyMappingToContainer(96, "kp_enter", 100);
+        fixture.Load(R"XML(
+            <doc><customView id="home">
+                <key id="enter" onPress="Record('enter')" onRelease="Record('release')"/>
+            </customView></doc>
+        )XML");
+        fixture.Key(true, 96);
+        fixture.Key(false, 96);
+        REQUIRE(events == std::vector<std::string> { "enter", "release" });
+    }
+
+    SECTION("An explicit keypad Enter handler takes precedence")
+    {
+        KeyboardFixture fixture;
+        fixture.manager().AddDefaultKeyMappingToContainer(13, "enter", 100);
+        fixture.manager().AddDefaultKeyMappingToContainer(96, "kp_enter", 100);
+        fixture.Load(R"XML(
+            <doc><customView id="home">
+                <key id="enter" onPress="Record('enter')"/>
+                <key id="kp_enter" onPress="Record('kp_enter')" onRelease="Record('release')"/>
+            </customView></doc>
+        )XML");
+        fixture.Key(true, 96);
+        fixture.Key(false, 96);
+        REQUIRE(events == std::vector<std::string> { "kp_enter", "release" });
+    }
+}
+
 #if defined(GRVL_LINUX_DESKTOP_SUPPORT)
 TEST_CASE("SDL standard keyboard defaults", "[keyboard][sdl]")
 {

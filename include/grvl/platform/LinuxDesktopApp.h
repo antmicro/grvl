@@ -3,6 +3,8 @@
 
 #if defined(GRVL_LINUX_DESKTOP_SUPPORT)
 
+#include <unordered_map>
+
 #include <grvl/platform/PosixApp.h>
 
 class SDL_Window;
@@ -32,6 +34,9 @@ namespace grvl {
         const char* title = "Untitled";
         bool frame_drawn = true;
 
+        // SDL scancode -> keycode originally sent to Manager on KEYDOWN.
+        std::unordered_map<int, uint32_t> pressed_keycodes;
+
         bool SetupLegacy();
 
         bool Setup() override;
@@ -49,6 +54,8 @@ namespace grvl {
         // @remark
         // Must be called before this object is passed to Application::Init().
         void SetTitle(const char* title);
+
+        bool IsNumLockEnabled() const override;
     };
 
 }

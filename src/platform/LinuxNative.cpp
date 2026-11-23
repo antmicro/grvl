@@ -1646,14 +1646,73 @@ namespace grvl {
         xkb_keysym_t keysym = xkb_state_key_get_one_sym(xkb_state, xkb_keycode);
         const bool ctrl_pressed = xkb_state_mod_name_is_active(xkb_state, XKB_MOD_NAME_CTRL, XKB_STATE_MODS_EFFECTIVE);
 
+        // XKB resolves the NumLock/Shift state; evdev only identifies the physical key.
+        // Translate numpad navigation to the same codes as the dedicated navigation keys.
+        uint32_t keycode = evdev_keycode;
+        if(pressed) {
+            switch(keysym) {
+                case XKB_KEY_KP_Left:
+                    keycode = KEY_LEFT;
+                    break;
+                case XKB_KEY_KP_Right:
+                    keycode = KEY_RIGHT;
+                    break;
+                case XKB_KEY_KP_Up:
+                    keycode = KEY_UP;
+                    break;
+                case XKB_KEY_KP_Down:
+                    keycode = KEY_DOWN;
+                    break;
+                case XKB_KEY_KP_Home:
+                    keycode = KEY_HOME;
+                    break;
+                case XKB_KEY_KP_End:
+                    keycode = KEY_END;
+                    break;
+                case XKB_KEY_KP_Prior:
+                    keycode = KEY_PAGEUP;
+                    break;
+                case XKB_KEY_KP_Next:
+                    keycode = KEY_PAGEDOWN;
+                    break;
+                case XKB_KEY_KP_Insert:
+                    keycode = KEY_INSERT;
+                    break;
+                case XKB_KEY_KP_Delete:
+                    keycode = KEY_DELETE;
+                    break;
+                default:
+                    break;
+            }
+            pressed_keycodes[evdev_keycode] = keycode;
+        } else {
+            auto it = pressed_keycodes.find(evdev_keycode);
+            if(it != pressed_keycodes.end()) {
+                keycode = it->second;
+                pressed_keycodes.erase(it);
+            }
+        }
+
         if(pressed)
             switch(keysym) {
                 case XKB_KEY_BackSpace:
                 case XKB_KEY_Return:
-
+                case XKB_KEY_KP_Enter:
+                case XKB_KEY_KP_Left:
+                case XKB_KEY_KP_Right:
+                case XKB_KEY_KP_Up:
+                case XKB_KEY_KP_Down:
+                case XKB_KEY_KP_Home:
+                case XKB_KEY_KP_End:
+                case XKB_KEY_KP_Prior:
+                case XKB_KEY_KP_Next:
+                case XKB_KEY_KP_Insert:
+                case XKB_KEY_KP_Delete:
+                case XKB_KEY_KP_Begin:
                 case XKB_KEY_Tab:
                 case XKB_KEY_Escape:
                 case XKB_KEY_Delete:
+                case XKB_KEY_Insert:
                 case XKB_KEY_Home:
                 case XKB_KEY_End:
                 case XKB_KEY_Left:
@@ -1698,6 +1757,7 @@ namespace grvl {
             }
 
         xkb_state_update_key(xkb_state, xkb_keycode, pressed ? XKB_KEY_DOWN : XKB_KEY_UP);
+        num_lock_active.store(xkb_state_mod_name_is_active(xkb_state, XKB_MOD_NAME_NUM, XKB_STATE_MODS_EFFECTIVE) != 0);
 
         uint16_t modifiers = 0;
         if(xkb_state_mod_name_is_active(xkb_state, XKB_MOD_NAME_CTRL, XKB_STATE_MODS_EFFECTIVE)) {
@@ -1711,8 +1771,8 @@ namespace grvl {
         }
         modifiers <<= 10;
 
-        events.push([pressed, evdev_keycode, modifiers]() {
-            Manager::GetInstance().ProcessKeyInput(pressed, modifiers | evdev_keycode);
+        events.push([pressed, keycode, modifiers]() {
+            Manager::GetInstance().ProcessKeyInput(pressed, modifiers | keycode);
         });
     }
 
